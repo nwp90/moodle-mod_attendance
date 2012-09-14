@@ -32,6 +32,8 @@ redirect_if_major_upgrade_required();
 $testsession = optional_param('testsession', 0, PARAM_INT); // test session works properly
 $anchor      = optional_param('anchor', '', PARAM_RAW);      // Used to restore hash anchor to wantsurl.
 $resendconfirmemail = optional_param('resendconfirmemail', false, PARAM_BOOL);
+$noredirect  = optional_param('magicpony', 0, PARAM_BOOL); // don't redirect
+$noredirect |= optional_param('noredirect', 0, PARAM_BOOL); // don't redirect
 
 $context = context_system::instance();
 $PAGE->set_url("$CFG->wwwroot/login/index.php");
@@ -295,7 +297,7 @@ if (empty($SESSION->wantsurl)) {
 }
 
 /// Redirect to alternative login URL if needed
-if (!empty($CFG->alternateloginurl)) {
+if (!empty($CFG->alternateloginurl) && empty($noredirect)) {
     $loginurl = new moodle_url($CFG->alternateloginurl);
 
     $loginurlstr = $loginurl->out(false);
