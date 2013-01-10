@@ -1,0 +1,13 @@
+
+.mod_groupselect .mygroup,
+#page-mod-groupselect-view .me {
+  font-weight: bold;
+}
+
+.mod_groupselect .membershidden {
+  color:#AAAAAA;
+}
+
+.mod_groupselect .maxlimitreached {
+  color:#AAAAAA;
+}
