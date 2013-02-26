@@ -137,7 +137,8 @@ class restore_log_rule implements processable {
                 return false;
             }
             // Let's process all the tokens and matches, using them to parse the urlwrite
-            $log->url = $this->parse_tokens_and_matches($this->urltokens, $urlmatches, $this->urlwrite);
+            // Can't set $log->url here in case we fail later (may have another rule to apply to this url)
+            $newurl = $this->parse_tokens_and_matches($this->urltokens, $urlmatches, $this->urlwrite);
         }
 
         // If there are $infomatches, let's process them
@@ -150,12 +151,13 @@ class restore_log_rule implements processable {
             $log->info = $this->parse_tokens_and_matches($this->infotokens, $infomatches, $this->infowrite);
         }
 
-        // Arrived here, if there is any pending token in $log->url or $log->info, stop
-        if ($this->extract_tokens($log->url) || $this->extract_tokens($log->info)) {
+        // Arrived here, if there is any pending token in $newurl or $log->info, stop
+        if ($this->extract_tokens($newurl) || $this->extract_tokens($log->info)) {
             return false;
         }
 
-        // Finally, set module and action
+        // Finally, set url, module and action
+        $log->url = $newurl;
         $log->module = $this->modulewrite;
         $log->action = $this->actionwrite;
 
@@ -199,7 +201,12 @@ class restore_log_rule implements processable {
                 } else {
                     if ($mapping = restore_dbops::get_backup_ids_record($this->restoreid, $plaintoken, $value)) {
                         $this->allpairs[$token] = $mapping->newitemid;
-                    }
+                    } else {
+		        // failed to find id in db; presumably object has been deleted.
+                        // Not OK to just fail, as this rule may protect subsequent rule
+                        // from mismatching.
+                        $this->allpairs[$token] = '000';
+					}
                 }
             }
         }
