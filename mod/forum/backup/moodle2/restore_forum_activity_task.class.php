@@ -105,7 +105,8 @@ class restore_forum_activity_task extends restore_activity_task {
         $rules[] = new restore_log_rule('forum', 'subscribers', 'subscribers.php?id={forum}', '{forum}');
         $rules[] = new restore_log_rule('forum', 'view subscribers', 'subscribers.php?id={forum}', '{forum}');
         $rules[] = new restore_log_rule('forum', 'add discussion', 'discuss.php?d={forum_discussion}', '{forum_discussion}');
-        $rules[] = new restore_log_rule('forum', 'view discussion', 'discuss.php?d={forum_discussion}&parent={forum_post}', '{forum_discussion}');
+        // Old 'parent' param seems meaningless; was probably caused by a bug (discussions don't have parents)
+        $rules[] = new restore_log_rule('forum', 'view discussion', 'discuss.php?d={forum_discussion}&parent={foobar}', '{forum_discussion}', null, null, 'discuss.php?d={forum_discussion}');
         $rules[] = new restore_log_rule('forum', 'view discussion', 'discuss.php?d={forum_discussion}', '{forum_discussion}');
         $rules[] = new restore_log_rule('forum', 'move discussion', 'discuss.php?d={forum_discussion}', '{forum_discussion}');
         $rules[] = new restore_log_rule('forum', 'delete discussi', 'view.php?id={course_module}', '{forum}',
