@@ -235,7 +235,7 @@ abstract class restore_dbops {
         $record = array(
             'backupid' => $restoreid,
             'itemname' => $itemname,
-            'itemid'   => ($itemid === '')?null:$itemid
+            'itemid'   => ($itemid === '')?null:(($itemid === ' ')?null:$itemid)
         );
         if ($dbrec = $DB->get_record('backup_ids_temp', $record)) {
             self::$backupidsexist[$key] = $dbrec->id;
