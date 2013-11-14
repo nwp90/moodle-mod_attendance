@@ -567,6 +567,11 @@ abstract class moodleform_mod extends moodleform {
             $mform->disabledIf('completionexpected', 'completion', 'eq', COMPLETION_TRACKING_NONE);
         }
 
+        if (!empty($CFG->usetags)) {
+            $mform->addElement('header', 'tagshdr', get_string('tags', 'tag'));
+            $mform->addElement('tags', 'tags', get_string('tags'), array('display'=>'onlyofficial'));
+        }
+
         $this->standard_hidden_coursemodule_elements();
     }
 
