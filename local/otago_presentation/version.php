@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') or die();
 
-$module->version   = 2013111900;
-$module->requires  = 2013050100;
-$module->component = 'local_otago_presentation';
-$module->cron      = 60;
+$plugin->version   = 2013111901;
+$plugin->requires  = 2013050100;
+$plugin->component = 'local_otago_presentation';
+$plugin->cron      = 60;
