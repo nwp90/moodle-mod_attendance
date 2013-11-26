@@ -86,11 +86,13 @@ class supsub_texteditor extends texteditor {
     }
 
     public function use_editor($elementid, array $options=null, $fpoptions=null) {
-        global $PAGE;
+        global $PAGE, $CFG;
         if (debugging('', DEBUG_DEVELOPER)) {
-            $PAGE->requires->js('/lib/editor/tinymce/tiny_mce/'.$this->version.'/tiny_mce_src.js');
+            $PAGE->requires->js(new moodle_url($CFG->httpswwwroot . '/lib/editor/tinymce/tiny_mce/' .
+                    $this->version . '/tiny_mce_src.js'));
         } else {
-            $PAGE->requires->js('/lib/editor/tinymce/tiny_mce/'.$this->version.'/tiny_mce.js');
+            $PAGE->requires->js(new moodle_url($CFG->httpswwwroot . '/lib/editor/tinymce/tiny_mce/' .
+                    $this->version . '/tiny_mce.js'));
         }
         $PAGE->requires->js_init_call('M.editor_supsub.init_editor',
                 array($elementid, $this->get_init_params($elementid, $options)), true);
@@ -102,6 +104,11 @@ class supsub_texteditor extends texteditor {
         $directionality = get_string('thisdirection', 'langconfig');
         $lang           = current_language();
         $contentcss     = $PAGE->theme->editor_css_url()->out(false);
+
+        $langrev = -1;
+        if (!empty($CFG->cachejs)) {
+            $langrev = get_string_manager()->get_revision();
+        }
 
         $params = array(
             'apply_source_formatting' => true,
@@ -116,8 +123,12 @@ class supsub_texteditor extends texteditor {
             'force_p_newlines' => false,
             'height' => 30,
             'init_instance_callback' => 'M.editor_supsub.init_instance_callback',
+            'langrev' => $langrev,
             'language' => $lang,
+            'language_load' => false, // We load all lang strings directly from Moodle.
+            'min_height' => 30,
             'mode' => 'exact',
+            'moodle_plugin_base' => "$CFG->httpswwwroot/lib/editor/tinymce/plugins/",
             'nowrap' => true,
             'paste_auto_cleanup_on_paste' => true,
             'plugins' => '-supsub,paste',
