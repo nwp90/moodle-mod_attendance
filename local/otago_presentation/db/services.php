@@ -35,3 +35,12 @@ $functions = array(
         'capabilities' => 'mod/resource:view'
     )
 );
+$services = array(
+    'otago_presentation' => array( //the name of the web service
+        'functions' => array (
+            'local_otago_presentation_get_resources_by_tag',
+        ),
+        'restrictedusers' => 0, //if enabled, the Moodle administrator must link some user to this service
+        'enabled' => 1, //if enabled, the service can be reachable on a default installation
+    )
+);
