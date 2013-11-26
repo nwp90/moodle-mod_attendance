@@ -62,13 +62,12 @@ class local_otago_presentation_external extends external_api {
      */
     public static function get_resources_by_tag($tags = array()) {
         global $CFG, $DB, $USER;
-        require_once dirname(__FILE__).'/lib.php';
         $params = self::validate_parameters(self::get_resources_by_tag_parameters(), array('tags' => $tags));
         $return = array();
         if (!empty($tags)) {
-            list($tagsql, $tagvalues) = get_in_or_equal($tags);
+            list($tagsql, $tagvalues) = $DB->get_in_or_equal($tags);
             $sql = "select
-                        r.id, r.name, r.intro, r.introtype
+                        r.id, r.name, r.intro, r.introformat
                     from
                         mdl_resource r
                         join mdl_tag_instance ti
