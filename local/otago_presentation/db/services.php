@@ -32,7 +32,6 @@ $functions = array(
         'classpath' => 'local/otago_presentation/externallib.php',
         'description' => 'Returns a list of resources tagged with a provided set of tags.',
         'type' => 'read',
-        'capabilities' => 'mod/resource:view'
     )
 );
 $services = array(
