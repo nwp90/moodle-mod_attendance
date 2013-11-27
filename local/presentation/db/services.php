@@ -16,7 +16,7 @@
 
 /**
  * Presentation services for Otago University Faculty of Medicine, by Catalyst IT
- * @package    local_otago_presentation
+ * @package    local_presentation
  * @subpackage db
  * @copyright  1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @since      Moodle 2.5
@@ -26,18 +26,18 @@
 defined('MOODLE_INTERNAL') or die();
 
 $functions = array(
-    'local_otago_presentation_get_resources_by_tag' => array(
-        'classname' => 'local_otago_presentation_external',
+    'local_presentation_get_resources_by_tag' => array(
+        'classname' => 'local_presentation_external',
         'methodname' => 'get_resources_by_tag',
-        'classpath' => 'local/otago_presentation/externallib.php',
+        'classpath' => 'local/presentation/externallib.php',
         'description' => 'Returns a list of resources tagged with a provided set of tags.',
         'type' => 'read',
     )
 );
 $services = array(
-    'otago_presentation' => array( //the name of the web service
+    'presentation' => array( //the name of the web service
         'functions' => array (
-            'local_otago_presentation_get_resources_by_tag',
+            'local_presentation_get_resources_by_tag',
         ),
         'restrictedusers' => 0, //if enabled, the Moodle administrator must link some user to this service
         'enabled' => 1, //if enabled, the service can be reachable on a default installation
