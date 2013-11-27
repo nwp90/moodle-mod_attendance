@@ -2,7 +2,7 @@
 
 defined('MOODLE_INTERNAL') or die;
 
-function xmldb_local_otago_presentation_upgrade($oldversion) {
+function xmldb_local_presentation_upgrade($oldversion) {
     return true;
 }
 

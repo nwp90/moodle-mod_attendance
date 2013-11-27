@@ -36,7 +36,7 @@ require_once("$CFG->libdir/externallib.php");
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @since Moodle 2.5
  */
-class local_otago_presentation_external extends external_api {
+class local_presentation_external extends external_api {
 
     /**
      * Describes the parameters for get_resources_by_tag
