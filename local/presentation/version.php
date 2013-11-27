@@ -17,7 +17,7 @@
 /**
  * Presentation services for Otago University Faculty of Medicine, by Catalyst IT
  * Version information
- * @package    local_otago_presentation
+ * @package    local_presentation
  * @copyright  1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -26,5 +26,5 @@ defined('MOODLE_INTERNAL') or die();
 
 $plugin->version   = 2013111909;
 $plugin->requires  = 2013050100;
-$plugin->component = 'local_otago_presentation';
+$plugin->component = 'local_presentation';
 $plugin->cron      = 60;

@@ -1,6 +1,6 @@
 <?php
 
-function xmldb_local_otago_presentation_install() {
+function xmldb_local_presentation_install() {
     global $DB, $CFG;
     $systemcontext = get_system_context();
 
