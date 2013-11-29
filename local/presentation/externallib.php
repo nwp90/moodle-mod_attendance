@@ -66,6 +66,9 @@ class local_presentation_external extends external_api {
         $params = self::validate_parameters(self::get_resources_by_tag_parameters(), array('tags' => $tags));
         $return = array();
         if (!empty($tags)) {
+            foreach($tags as $i => $tag) {
+                $tags[$i] = strtolower($tag);
+            }
             list($tagsql, $tagvalues) = $DB->get_in_or_equal($tags);
             $sql = "select
                         f.id, r.id as resourceid, r.name as resourcename,
