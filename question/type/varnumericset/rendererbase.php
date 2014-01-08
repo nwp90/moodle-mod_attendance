@@ -50,12 +50,7 @@ class qtype_varnumeric_renderer_base extends qtype_renderer {
 
         $feedbackimg = '';
         if ($options->correctness) {
-            $answer = $question->get_matching_answer(array('answer' => $currentanswer));
-            if ($answer) {
-                $fraction = $answer->fraction;
-            } else {
-                $fraction = 0;
-            }
+            list($fraction, ) = $question->grade_response(array('answer' => $currentanswer));
             $generalattributes['class'] .= ' '.$this->feedback_class($fraction);
             $feedbackimg = $this->feedback_image($fraction);
         }
@@ -68,7 +63,7 @@ class qtype_varnumeric_renderer_base extends qtype_renderer {
         }
 
         $usehtml = false;
-        if ($question->requirescinotation) {
+        if ($question->usesupeditor) {
             $editor = get_texteditor('supsub');
             if ($editor !== false) {
                 $usehtml = true;

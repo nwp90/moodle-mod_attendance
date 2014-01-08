@@ -121,7 +121,7 @@ abstract class qtype_varnumeric_base extends question_type {
         $answers = array();
         $maxfraction = -1;
 
-        // Insert all the new answers
+        // Insert all the new answers.
         foreach ($form->answer as $key => $answerdata) {
             // Check for, and ignore, completely blank answer from the form.
             if (trim($answerdata) == '' && $form->fraction[$key] == 0 &&
@@ -173,22 +173,22 @@ abstract class qtype_varnumeric_base extends question_type {
             }
         }
 
-        //process variants
+        // Process variants.
         if ($this->recalculate_every_time() && count($assignments)) {
-            //remove any old variants in the db that are calculated
+            // Remove any old variants in the db that are calculated.
             list($varidsql, $varids) = $DB->get_in_or_equal($assignments);
             $DB->delete_records_select($this->db_table_prefix().'_variants',
                                                                     'varid '.$varidsql, $varids);
         }
         $definedvariantschanged = $this->save_variants($predefined, $variants, $varnotovarid);
 
-        //on save don't ever calculate calculated variants if the recalculate every time option
-        //is selected but if it is not recalculate whenever there is a change of predefined variants
-        //or any variable or when recalculate button is pressed.
-        if ((!$this->recalculate_every_time()) && // the recalculate every time option
-                ((!empty($form->recalculatenow)) // the recalculate now option
+        // On save don't ever calculate calculated variants if the recalculate every time option
+        // is selected but if it is not recalculate whenever there is a change of predefined variants
+        // r any variable or when recalculate button is pressed.
+        if ((!$this->recalculate_every_time()) && // The recalculate every time option.
+                ((!empty($form->recalculatenow)) // The recalculate now option.
                 || $definedvariantschanged || $varschanged)) {
-            //precalculate variant values
+            // Precalculate variant values.
             $calculatorname = $this->calculator_name();
             $calculator = new $calculatorname();
             if (empty($form->randomseed)) {
@@ -205,7 +205,7 @@ abstract class qtype_varnumeric_base extends question_type {
 
         $parentresult = parent::save_question_options($form);
         if ($parentresult !== null) {
-            // Parent function returns null if all is OK
+            // Parent function returns null if all is OK.
             return $parentresult;
         }
 
@@ -218,7 +218,7 @@ abstract class qtype_varnumeric_base extends question_type {
 
         $this->save_hints($form, true);
 
-        // Perform sanity checks on fractional grades
+        // Perform sanity checks on fractional grades.
         if ($maxfraction != 1) {
             $result->noticeyesno = get_string('fractionsnomax', 'question', $maxfraction * 100);
             return $result;
@@ -241,10 +241,10 @@ abstract class qtype_varnumeric_base extends question_type {
         list($varidsql, $varids) = $DB->get_in_or_equal($varidstoprocess);
         $oldvariants = $DB->get_records_select($this->db_table_prefix().'_variants',
                                                                     'varid '.$varidsql, $varids);
-        //variants are indexed by variantno and then var no
+        // Variants are indexed by variantno and then var no.
         foreach ($variants as $variantno => $variant) {
             foreach ($variant as $varno => $value) {
-                if ($value === '' || !in_array($varnotovarid[$varno], $varidstoprocess)) {
+                if ($value === '' || !isset($varnotovarid[$varno]) || !in_array($varnotovarid[$varno], $varidstoprocess)) {
                     continue;
                 }
                 $foundold = false;
@@ -274,7 +274,7 @@ abstract class qtype_varnumeric_base extends question_type {
                 }
             }
         }
-        //delete any remaining old variants
+        // Delete any remaining old variants.
         if (!empty($oldvariants)) {
             $changed = true;
             list($oldvariantsidsql, $oldvariantsids) =
@@ -340,7 +340,7 @@ abstract class qtype_varnumeric_base extends question_type {
             }
 
         }
-        //delete any remaining old vars
+        // Delete any remaining old vars.
         if (!empty($oldvars)) {
             $oldvarids = array();
             foreach ($oldvars as $oldvar) {
@@ -356,8 +356,8 @@ abstract class qtype_varnumeric_base extends question_type {
     }
 
     public function finished_edit_wizard($fromform) {
-        //keep browser from moving onto next page after saving question and
-        //recalculating variable values.
+        // Keep browser from moving onto next page after saving question and
+        // recalculating variable values.
         if (!empty($fromform->recalculatenow)) {
             return false;
         } else {
@@ -368,6 +368,7 @@ abstract class qtype_varnumeric_base extends question_type {
         parent::initialise_question_instance($question, $questiondata);
         $this->initialise_question_vars_and_variants($question, $questiondata);
         $this->initialise_varnumeric_answers($question, $questiondata);
+        $question->requirescinotation = $question->usesupeditor =  (bool)$questiondata->options->requirescinotation;
     }
     public function load_var_and_variants_from_db($questionid) {
         global $DB;
@@ -398,7 +399,6 @@ abstract class qtype_varnumeric_base extends question_type {
 
         list($vars, $variants) = $this->load_var_and_variants_from_db($question->id);
         $question->calculator->load_data_from_database($vars, $variants);
-        $question->requirescinotation = $questiondata->options->requirescinotation;
     }
     /**
      * Initialise question_definition::answers field.
@@ -429,10 +429,20 @@ abstract class qtype_varnumeric_base extends question_type {
     public function get_possible_responses($questiondata) {
         $responses = array();
 
+        $starfound = false;
         foreach ($questiondata->options->answers as $aid => $answer) {
             $responses[$aid] = new question_possible_response($answer->answer,
                     $answer->fraction);
+            if ($answer->answer === '*') {
+                $starfound = true;
+            }
         }
+
+        if (!$starfound) {
+            $responses[0] = new question_possible_response(
+                get_string('didnotmatchanyanswer', 'question'), 0);
+        }
+
         $responses[null] = question_possible_response::no_response();
 
         return array($questiondata->id => $responses);
@@ -442,13 +452,13 @@ abstract class qtype_varnumeric_base extends question_type {
         return question_hint_with_parts::load_from_record($hint);
     }
 
-    /// IMPORT/EXPORT FUNCTIONS /////////////////
+    // IMPORT/EXPORT FUNCTIONS.
 
-    /*
-     * Imports question from the Moodle XML format
+    /**
+     * Imports question from the Moodle XML format.
      *
      * Imports question using information from extra_question_fields function
-     * If some of you fields contains id's you'll need to reimplement this
+     * If some of you fields contains id's you'll need to reimplement this.
      */
     public function import_from_xml($data, $question, qformat_xml $format, $extra=null) {
         $qo = parent::import_from_xml($data, $question, $format, $extra);
@@ -489,11 +499,11 @@ abstract class qtype_varnumeric_base extends question_type {
         return $qo;
     }
 
-    /*
-     * Export question to the Moodle XML format
+    /**
+     * Export question to the Moodle XML format.
      *
-     * Export question using information from extra_question_fields function
-     * If some of you fields contains id's you'll need to reimplement this
+     * Export question using information from extra_question_fields function.
+     * If some of you fields contains id's you'll need to reimplement this.
      */
     public function export_to_xml($question, qformat_xml $format, $extra=null) {
         $expout = parent::export_to_xml($question, $format, $extra);

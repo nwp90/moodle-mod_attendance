@@ -15,18 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * varnumericset question type version information.
+ * Combined question embedded sub question renderer class.
  *
- * @package   qtype_varnumericset
- * @copyright 2011 The Open University
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    qtype_varnumeric
+ * @copyright  2013 The Open University
+ * @author     Jamie Pratt <me@jamiep.org>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2013070100;
-$plugin->requires  = 2013051400;
-$plugin->cron      = 0;
-$plugin->component = 'qtype_varnumericset';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.3 for Moodle 2.5+';
+
+class qtype_varnumeric_embedded_renderer extends qtype_combined_text_entry_renderer_base {
+
+}

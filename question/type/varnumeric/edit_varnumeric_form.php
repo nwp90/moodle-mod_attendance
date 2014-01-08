@@ -17,8 +17,7 @@
 /**
  * Defines the editing form for the variable numeric question type.
  *
- * @package    qtype
- * @subpackage varnumeric
+ * @package    qtype_varnumeric
  * @copyright  2011 The Open University
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -45,6 +44,7 @@ class qtype_varnumeric_edit_form extends qtype_varnumeric_edit_form_base {
         $repeatedoptions["variant0"]['disabledif'] = array('vartype', 'eq', 0);
         $repeatedoptions["variant0"]['helpbutton'] = array('value', 'qtype_varnumeric');
         $mform->setType("variant0", PARAM_RAW_TRIMMED);
+        $this->add_value_form_last_field($mform, $repeated, $repeatedoptions);
         return array($repeated, $repeatedoptions);
     }
 
