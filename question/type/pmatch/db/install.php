@@ -15,24 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Serve question type files
+ * Pattern-match question type installation code.
  *
- * @since      2.0
  * @package   qtype_pmatch
- * @copyright  2012 The Open University
- * @author     Jamie Pratt <me@jamiep.org>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright 2013 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+function xmldb_qtype_pmatch_install() {
+    global $CFG;
 
-defined('MOODLE_INTERNAL') || die();
-
-
-/**
- * Checks file access for pattern-match questions.
- */
-function qtype_pmatch_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
-    global $DB, $CFG;
-    require_once($CFG->libdir . '/questionlib.php');
-    question_pluginfile($course, $context, 'qtype_pmatch', $filearea, $args, $forcedownload, $options);
+    require_once($CFG->dirroot . '/question/type/pmatch/spellinglib.php');
+    $backends = qtype_pmatch_spell_checker::get_installed_backends();
+    end($backends);
+    set_config('spellchecker', key($backends), 'qtype_pmatch');
 }

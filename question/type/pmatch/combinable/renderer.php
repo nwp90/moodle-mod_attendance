@@ -15,11 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Serve question type files
+ * Combined question embedded sub question renderer class.
  *
- * @since      2.0
  * @package   qtype_pmatch
- * @copyright  2012 The Open University
+ * @copyright  2013 The Open University
  * @author     Jamie Pratt <me@jamiep.org>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -28,11 +27,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 
-/**
- * Checks file access for pattern-match questions.
- */
-function qtype_pmatch_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
-    global $DB, $CFG;
-    require_once($CFG->libdir . '/questionlib.php');
-    question_pluginfile($course, $context, 'qtype_pmatch', $filearea, $args, $forcedownload, $options);
+class qtype_pmatch_embedded_renderer extends qtype_combined_text_entry_renderer_base {
+
 }
