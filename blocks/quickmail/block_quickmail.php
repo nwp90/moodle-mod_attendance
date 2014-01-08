@@ -12,7 +12,17 @@ class block_quickmail extends block_list {
     function applicable_formats() {
         return array('site' => false, 'my' => false, 'course-view' => true);
     }
-
+    function has_config() {
+        return true;
+    }
+    /**
+     * Disable multiple instances of this block
+     * @return bool Returns false
+     */
+    function instance_allow_multiple() {
+        return false;
+    }
+    
     function get_content() {
         global $CFG, $COURSE, $OUTPUT;
 
@@ -34,16 +44,16 @@ class block_quickmail extends block_list {
 
         $icon_class = array('class' => 'icon');
 
+        $cparam = array('courseid' => $COURSE->id);
+        
         if ($can_send) {
-            $cparam = array('courseid' => $COURSE->id);
-
             $send_email_str = quickmail::_s('composenew');
             $send_email = html_writer::link(
                 new moodle_url('/blocks/quickmail/email.php', $cparam),
                 $send_email_str
             );
             $this->content->items[] = $send_email;
-            $this->content->icons[] = $OUTPUT->pix_icon('i/email', $send_email_str, 'moodle', $icon_class);
+            $this->content->icons[] = $OUTPUT->pix_icon('t/email', $send_email_str, 'moodle', $icon_class);
 
             $signature_str = quickmail::_s('signature');
             $signature = html_writer::link(

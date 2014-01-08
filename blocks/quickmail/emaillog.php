@@ -39,7 +39,9 @@ $can_send = has_capability('block/quickmail:cansend', $context);
 
 $proper_permission = ($can_send or !empty($config['allowstudents']));
 
-$can_delete = ($can_send or ($proper_permission and $type == 'drafts'));
+//managers can delete by capability 'candelete'; 
+//those with 'cansend' (incl students, if $config['allowstudents']) can only delete drafts; 
+$can_delete = (has_capability('block/quickmail:candelete', $context) or ($can_send and $type == 'drafts') or ($proper_permission and $type == 'drafts'));
 
 // Stops students from tempering with history
 if (!$proper_permission or (!$can_delete and in_array($action, $valid_actions))) {
@@ -87,6 +89,13 @@ switch ($action) {
     default:
         $html = quickmail::list_entries($courseid, $type, $page, $perpage, $userid, $count, $can_delete);
 }
+
+$html.= html_writer::link(
+    new moodle_url(
+            '/blocks/quickmail/email.php', 
+            array('courseid' => $courseid)),
+    quickmail::_s('composenew')
+);
 
 if($canimpersonate and $USER->id != $userid) {
     $user = $DB->get_record('user', array('id' => $userid));

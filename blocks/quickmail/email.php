@@ -60,6 +60,7 @@ $PAGE->set_title($blockname . ': '. $header);
 $PAGE->set_heading($blockname . ': '.$header);
 $PAGE->set_url('/course/view.php', array('courseid' => $courseid));
 $PAGE->set_pagetype($blockname);
+$PAGE->set_pagelayout('standard');
 
 $PAGE->requires->js('/blocks/quickmail/js/jquery.js');
 $PAGE->requires->js('/blocks/quickmail/js/selection.js');
@@ -131,7 +132,6 @@ foreach ($everyone as $userid => $user) {
     if(!$user->suspended) {
         $users[$userid] = $user;
     }
-    //print_r($user);
 }
 
 if (empty($users)) {
@@ -252,7 +252,7 @@ if ($form->is_cancelled()) {
         // Send emails
         if (isset($data->send)) {
             if ($type == 'drafts') {
-                quickmail::draft_cleanup($typeid);
+                quickmail::draft_cleanup($context->id,$typeid);
             }
 
             if (!empty($sigs) and $data->sigid > -1) {
