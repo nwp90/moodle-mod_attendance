@@ -30,6 +30,7 @@ if (!defined('MOODLE_INTERNAL')) {
 }
 
 // general
+$string['news:addinstance'] = 'Add a new news block';
 $string['pluginname'] = 'News';
 $string['defaultblocktitle'] = '(new News block)';
 $string['addnewmessage'] = 'Add new message';
@@ -77,6 +78,8 @@ $string['settingsmaxpercron'] = 'Cron feed limit';
 $string['settingsmaxpercron_info'] = 'Maximum time spent per cron run on updating feeds';
 $string['verbosecron'] = 'List each feed as retrieved in cron';
 $string['verbosecron_info'] = 'If you turn this option on, all feeds being retrieved are shown in cron. Otherwise it only shows feeds which take longer than 5 seconds.';
+$string['settingshideauthor'] = 'Hide author';
+$string['settingshideauthor_info'] = 'Set default value for the hide author option when posting news.';
 
 // edit
 $string['msgeditpghdr'] = 'News';
@@ -104,7 +107,7 @@ $string['rendermsgfuture'] = 'This message does not display to students until {$
 $string['rendermsgnext'] = 'Next (newer) message';
 $string['rendermsgprev'] = 'Previous (older) message';
 $string['rendermsgview'] = '(View)';
-$string['rendermsgaccesshide'] = 'View news {$a}';
+$string['rendermsgaccesshide'] = 'View {$a}';
 
 // message class
 $string['msgclassconfdel'] = 'Are you sure you want to delete the message \'{$a}\'? This action cannot be undone';
