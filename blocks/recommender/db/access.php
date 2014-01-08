@@ -27,6 +27,25 @@ defined('MOODLE_INTERNAL') || die();
 
 $capabilities = array(
 
+    'block/recommender:addinstance' => array(
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_BLOCK,
+        'archetypes' => array(
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
+        ),
+
+        'clonepermissionsfrom' => 'moodle/site:manageblocks'
+    ),
+
+        'block/recommender:myaddinstance' => array(
+                'captype' => 'write',
+                'contextlevel' => CONTEXT_BLOCK,
+                'archetypes' => array(
+                        'user' => CAP_ALLOW
+                ),
+        ),
+
     // view bookmark
     'block/recommender:viewbookmark' => array(
         'captype' => 'read',
@@ -49,16 +68,6 @@ $capabilities = array(
         'archetypes'    => array(
             'manager'           => CAP_ALLOW,
             'editingteacher'    => CAP_ALLOW,
-        )
-    ),
-
-    // view OER
-    'block/recommender:viewoer' => array(
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => array(
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
         )
     ),
 

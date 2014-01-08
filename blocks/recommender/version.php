@@ -15,12 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Recommender block version
+ * Recommender block version.
  *
- * @package    blocks
- * @subpackage recommender
- * @copyright  2011 Lancaster University Network Services Limited
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package block_recommender
+ * @copyright 2013 The Open University
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$plugin->version    = 2011110400;
+$plugin->version    = 2013081300;
+
+$plugin->requires     = 2013040500; // YYYYMMDDHH (This is the release version for Moodle 2.5).
+$plugin->maturity     = MATURITY_STABLE;
+$plugin->release      = '2.5';
