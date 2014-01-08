@@ -17,7 +17,8 @@ abstract class quickmail {
         // Clean up the files associated with this email
         // Fortunately, they are only db references, but
         // they shouldn't be there, nonetheless.
-        $filearea = end(explode('_', $table));
+        $tablename = explode('_', $table);
+        $filearea = end($tablename);
 
         $fs = get_file_storage();
 
@@ -231,7 +232,7 @@ abstract class quickmail {
         }
     }
 
-    function delete_dialog($courseid, $type, $typeid) {
+    static function delete_dialog($courseid, $type, $typeid) {
         global $CFG, $DB, $USER, $OUTPUT;
 
         $email = $DB->get_record('block_quickmail_'.$type, array('id' => $typeid));
@@ -260,7 +261,7 @@ abstract class quickmail {
         return $html;
     }
 
-    function list_entries($courseid, $type, $page, $perpage, $userid, $count, $can_delete) {
+    static function list_entries($courseid, $type, $page, $perpage, $userid, $count, $can_delete) {
         global $CFG, $DB, $OUTPUT;
 
         $dbtable = 'block_quickmail_'.$type;
@@ -330,11 +331,22 @@ abstract class quickmail {
      */
     public static function get_all_users($context){
         global $DB;
-        $everyone = get_role_users(0, $context, false, 'u.id, u.firstname, u.lastname,
-            u.email, u.mailformat, u.suspended, u.maildisplay, r.id AS roleid',
-            'u.lastname, u.firstname');
+        // List everyone with role in course.
+        //
+        // Note that users with multiple roles will be squashed into one
+        // record.
+
+        $sql = "SELECT DISTINCT u.id, u.firstname, u.lastname,
+        u.email, u.mailformat, u.suspended, u.maildisplay
+        FROM {role_assignments} ra
+        JOIN {user} u ON u.id = ra.userid
+        JOIN {role} r ON ra.roleid = r.id
+        WHERE (ra.contextid = ? ) ";
+        $everyone = $DB->get_records_sql($sql, array($context->id));
+        
         return $everyone;
     }
+    
 
     /**
      * @TODO this function relies on self::get_all_users, it should not have to
@@ -347,7 +359,6 @@ abstract class quickmail {
     public static function get_non_suspended_users($context, $courseid){
         global $DB;
         $everyone = self::get_all_users($context);
-
         $sql = "SELECT u.id, u.firstname, u.lastname, u.email, u.mailformat, u.suspended, u.maildisplay, ue.status  
             FROM {user} as u  
                 JOIN {user_enrolments} as ue                 
@@ -355,7 +366,8 @@ abstract class quickmail {
                 JOIN {enrol} as en
                     ON en.id = ue.enrolid                     
                 WHERE en.courseid = ?
-                    AND ue.status = ?"; 
+                    AND ue.status = ?
+                ORDER BY u.lastname, u.firstname"; 
 
         //let's use a recordset in case the enrollment is huge
         $rs_valids = $DB->get_recordset_sql($sql, array($courseid, 0));
@@ -368,12 +380,12 @@ abstract class quickmail {
          * for each chunk of the recordset,
          * insert the record into the valids container
          * using the id number as the array key;
-         * this amtches the format used by self::get_all_users
+         * this matches the format used by self::get_all_users
          */
         foreach($rs_valids as $rsv){
             $valids[$rsv->id] = $rsv;
         }
-        //required to close te recordset
+        //required to close the recordset
         $rs_valids->close();
         
         //get the intersection of self::all_users and this potentially shorter list
@@ -386,6 +398,8 @@ abstract class quickmail {
 function block_quickmail_pluginfile($course, $record, $context, $filearea, $args, $forcedownload) {
     $fs = get_file_storage();
     global $DB;
+
+    require_course_login($course, true, $record);
 
     list($itemid, $filename) = $args;
 
