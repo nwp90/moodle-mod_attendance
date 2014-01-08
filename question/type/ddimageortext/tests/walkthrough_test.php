@@ -17,9 +17,9 @@
 /**
  * Unit tests for the drag-and-drop onto image question type.
  *
- * @package    qtype_ddimageortext
- * @copyright  2010 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   qtype_ddimageortext
+ * @copyright 2010 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
@@ -33,9 +33,9 @@ require_once($CFG->dirroot . '/question/type/ddimageortext/tests/helper.php');
 /**
  * Unit tests for the drag-and-drop onto image question type.
  *
- * @copyright  2010 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @group      qtype_ddimageortext
+ * @copyright 2010 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @group qtype_ddimageortext
  */
 class qtype_ddimageortext_walkthrough_test extends qbehaviour_walkthrough_test_base {
 
@@ -127,7 +127,7 @@ class qtype_ddimageortext_walkthrough_test extends qbehaviour_walkthrough_test_b
                 $this->quba->get_field_prefix($this->slot) . 'p4', 1),
             $this->get_contains_try_again_button_expectation(true),
             new question_pattern_expectation('/' .
-                preg_quote(get_string('notcomplete', 'qbehaviour_interactive')) . '/'),
+                preg_quote(get_string('notcomplete', 'qbehaviour_interactive'), '/') . '/'),
             $this->get_contains_hint_expectation('This is the first hint'));
 
         // Do try again.
@@ -396,9 +396,9 @@ class qtype_ddimageortext_walkthrough_test extends qbehaviour_walkthrough_test_b
             $this->get_contains_hidden_expectation(
                 $this->quba->get_field_prefix($this->slot) . 'p2', 2),
             $this->get_contains_hidden_expectation(
-                $this->quba->get_field_prefix($this->slot) . 'p3', ''),
+                $this->quba->get_field_prefix($this->slot) . 'p3', 0),
             $this->get_contains_hidden_expectation(
-                $this->quba->get_field_prefix($this->slot) . 'p4', ''),
+                $this->quba->get_field_prefix($this->slot) . 'p4', 0),
             $this->get_does_not_contain_correctness_expectation(),
             $this->get_does_not_contain_feedback_expectation());
 
@@ -469,7 +469,7 @@ class qtype_ddimageortext_walkthrough_test extends qbehaviour_walkthrough_test_b
             $this->get_contains_try_again_button_expectation(true),
             $this->get_does_not_contain_correctness_expectation(),
             new question_pattern_expectation('/' .
-                preg_quote(get_string('notcomplete', 'qbehaviour_interactive')) . '/'),
+                preg_quote(get_string('notcomplete', 'qbehaviour_interactive'), '/') . '/'),
             $this->get_contains_hint_expectation('This is the first hint'),
             $this->get_contains_num_parts_correct(2),
             $this->get_contains_standard_partiallycorrect_combined_feedback_expectation(),
@@ -506,9 +506,9 @@ class qtype_ddimageortext_walkthrough_test extends qbehaviour_walkthrough_test_b
             $this->get_contains_hidden_expectation(
                 $this->quba->get_field_prefix($this->slot) . 'p2', 2),
             $this->get_contains_hidden_expectation(
-                $this->quba->get_field_prefix($this->slot) . 'p3', ''),
+                $this->quba->get_field_prefix($this->slot) . 'p3', 0),
             $this->get_contains_hidden_expectation(
-                $this->quba->get_field_prefix($this->slot) . 'p4', ''),
+                $this->quba->get_field_prefix($this->slot) . 'p4', 0),
             $this->get_contains_submit_button_expectation(true),
             $this->get_does_not_contain_try_again_button_expectation(),
             $this->get_does_not_contain_correctness_expectation(),
@@ -532,7 +532,7 @@ class qtype_ddimageortext_walkthrough_test extends qbehaviour_walkthrough_test_b
             $this->get_contains_try_again_button_expectation(true),
             $this->get_does_not_contain_correctness_expectation(),
             new question_pattern_expectation('/' .
-                preg_quote(get_string('notcomplete', 'qbehaviour_interactive')) . '/'),
+                preg_quote(get_string('notcomplete', 'qbehaviour_interactive'), '/') . '/'),
             $this->get_contains_hint_expectation('This is the second hint'),
             $this->get_contains_num_parts_correct(2),
             $this->get_contains_standard_partiallycorrect_combined_feedback_expectation(),
@@ -560,9 +560,9 @@ class qtype_ddimageortext_walkthrough_test extends qbehaviour_walkthrough_test_b
             $this->get_contains_hidden_expectation(
                 $this->quba->get_field_prefix($this->slot) . 'p1', 1),
             $this->get_contains_hidden_expectation(
-                $this->quba->get_field_prefix($this->slot) . 'p2', ''),
+                $this->quba->get_field_prefix($this->slot) . 'p2', 0),
             $this->get_contains_hidden_expectation(
-                $this->quba->get_field_prefix($this->slot) . 'p3', ''),
+                $this->quba->get_field_prefix($this->slot) . 'p3', 0),
             $this->get_contains_hidden_expectation(
                 $this->quba->get_field_prefix($this->slot) . 'p4', 2),
             $this->get_contains_submit_button_expectation(true),
@@ -786,13 +786,13 @@ class qtype_ddimageortext_walkthrough_test extends qbehaviour_walkthrough_test_b
             $this->get_contains_drag_image_home_expectation(1, 1, 2),
             $this->get_contains_drag_image_home_expectation(2, 2, 2),
             $this->get_contains_hidden_expectation(
-                $this->quba->get_field_prefix($this->slot) . 'p1', ''),
+                $this->quba->get_field_prefix($this->slot) . 'p1', 0),
             $this->get_contains_hidden_expectation(
-                $this->quba->get_field_prefix($this->slot) . 'p2', ''),
+                $this->quba->get_field_prefix($this->slot) . 'p2', 0),
             $this->get_contains_hidden_expectation(
-                $this->quba->get_field_prefix($this->slot) . 'p3', ''),
+                $this->quba->get_field_prefix($this->slot) . 'p3', 0),
             $this->get_contains_hidden_expectation(
-                $this->quba->get_field_prefix($this->slot) . 'p4', ''),
+                $this->quba->get_field_prefix($this->slot) . 'p4', 0),
             $this->get_contains_submit_button_expectation(true),
             $this->get_does_not_contain_feedback_expectation(),
             $this->get_tries_remaining_expectation(2),

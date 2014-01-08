@@ -9,10 +9,10 @@ YUI.add('moodle-qtype_ddimageortext-form', function(Y) {
     Y.extend(DDIMAGEORTEXT_FORM, M.qtype_ddimageortext.dd_base_class, {
         fp : null,
 
-        initializer : function(params) {
+        initializer : function() {
             this.fp = this.file_pickers();
-            Y.one(this.get('topnode')).append('<div class="ddarea"><div class="droparea"></div>'+
-                    '<div class="dragitems"></div>'+
+            var tn = Y.one(this.get('topnode'));
+            tn.one('div.fcontainer').append('<div class="ddarea"><div class="droparea"></div><div class="dragitems"></div>'+
                     '<div class="dropzones"></div></div>');
             this.doc = this.doc_structure(this);
             this.draw_dd_area();
@@ -76,14 +76,12 @@ YUI.add('moodle-qtype_ddimageortext-form', function(Y) {
         },
 
         load_drag_home : function (dragitemno) {
-            if ('image' === this.form.get_form_value('dragitemtype', [dragitemno])) {
-                var url =
-                    this.fp.file(this.form.to_name_with_index('dragitem', [dragitemno])).href;
-            } else {
-                var url = null;
+            var url = null;
+            if ('image' === this.form.get_form_value('drags', [dragitemno, 'dragitemtype'])) {
+                url = this.fp.file(this.form.to_name_with_index('dragitem', [dragitemno])).href;
             }
             this.doc.add_or_update_drag_item_home(dragitemno, url,
-                    this.form.get_form_value('drags', [dragitemno, 'draglabel']),
+                    this.form.get_form_value('draglabel', [dragitemno]),
                     this.form.get_form_value('drags', [dragitemno, 'draggroup']));
         },
 
@@ -102,16 +100,16 @@ YUI.add('moodle-qtype_ddimageortext-form', function(Y) {
         set_options_for_drag_item_selectors : function () {
             var dragitemsoptions = {0: ''};
             for (var i=0; i < this.form.get_form_value('noitems', []); i++) {
-                var label = this.form.get_form_value('drags', [i, 'draglabel']);
+                var label = this.form.get_form_value('draglabel', [i]);
                 var file = this.fp.file(this.form.to_name_with_index('dragitem', [i]));
-                if ('image' === this.form.get_form_value('dragitemtype', [i])
+                if ('image' === this.form.get_form_value('drags', [i, 'dragitemtype'])
                                                                         && file.name !== null) {
-                    dragitemsoptions[i+1] = (i+1)+'. '+label+' ('+file.name+')';
-                } else if (label != '') {
-                    dragitemsoptions[i+1] = (i+1)+'. '+label;
+                    dragitemsoptions[i + 1] = (i + 1) + '. ' + label + ' (' + file.name + ')';
+                } else if (label !== '') {
+                    dragitemsoptions[i + 1] = (i + 1) + '. ' + label;
                 }
             }
-            for (var i=0; i < this.form.get_form_value('nodropzone', []); i++) {
+            for (i = 0; i < this.form.get_form_value('nodropzone', []); i++) {
                 var selector = Y.one('#id_drops_'+i+'_choice');
                 var selectedvalue = selector.get('value');
                 selector.all('option').remove(true);
@@ -121,18 +119,15 @@ YUI.add('moodle-qtype_ddimageortext-form', function(Y) {
                                     + dragitemsoptions[value] +
                                     '</option>';
                     selector.append(option);
-                    var optionnode = selector.one('option[value="' + value + '"]')
+                    var optionnode = selector.one('option[value="' + value + '"]');
                     if (value === +selectedvalue) {
                         optionnode.set('selected', true);
                     } else {
                         if (value !== 0) { // no item option is always selectable
-                            var cbselector = 'fieldset#draggableitemheader_'+(value-1)
-                                                                        +' input[type="checkbox"]';
-                            var cbel = Y.one(cbselector);
-                            var infinite = cbel.get('checked');
-                            if (!infinite) {
-                                Y.all('fieldset#dropzoneheader select').some(function (selector) {
-                                    if (+selector.get('value') == value){
+                            var cbel = Y.one('#id_drags_'+(value-1)+'_infinite');
+                            if (cbel && !cbel.get('checked')) {
+                                Y.all('fieldset#id_dropzoneheader select').some(function (selector) {
+                                    if (+selector.get('value') === value) {
                                         optionnode.set('disabled', true);
                                         return true; // stop looping
                                     }
@@ -146,14 +141,14 @@ YUI.add('moodle-qtype_ddimageortext-form', function(Y) {
         },
 
         stop_selector_events : function () {
-            Y.all('fieldset#dropzoneheader select').detachAll();
+            Y.all('fieldset#id_dropzoneheader select').detachAll();
         },
 
         setup_form_events : function () {
             //events triggered by changes to form data
 
             //x and y coordinates
-            Y.all('fieldset#dropzoneheader input').on('blur', function (e){
+            Y.all('fieldset#id_dropzoneheader input').on('blur', function (e) {
                 var name = e.target.getAttribute('name');
                 var draginstanceno = this.form.from_name_with_index(name).indexes[0];
                 var fromform = [this.form.get_form_value('drops', [draginstanceno, 'xleft']),
@@ -164,7 +159,7 @@ YUI.add('moodle-qtype_ddimageortext-form', function(Y) {
             }, this);
 
             //change in selected item
-            Y.all('fieldset#dropzoneheader select').on('change', function (e){
+            Y.all('fieldset#id_dropzoneheader select').on('change', function (e) {
                 var name = e.target.getAttribute('name');
                 var draginstanceno = this.form.from_name_with_index(name).indexes[0];
                 var old = this.doc.drag_item(draginstanceno);
@@ -176,13 +171,13 @@ YUI.add('moodle-qtype_ddimageortext-form', function(Y) {
 
             for (var i=0; i < this.form.get_form_value('noitems', []); i++) {
                 //change to group selector
-                Y.all('fieldset#draggableitemheader_'+i+' select.draggroup')
-                                                                    .on('change', function (e){
+                Y.all('#fgroup_id_drags_'+i+' select.draggroup').on(
+                        'change', function () {
                     this.doc.drag_items().remove(true);
                     this.draw_dd_area();
                 }, this);
-                Y.all('fieldset#draggableitemheader_'+i+' select.dragitemtype')
-                                                                    .on('change', function (e){
+                Y.all('#fgroup_id_drags_'+i+' select.dragitemtype').on(
+                        'change', function () {
                     this.doc.drag_items().remove(true);
                     this.draw_dd_area();
                 }, this);
@@ -193,7 +188,7 @@ YUI.add('moodle-qtype_ddimageortext-form', function(Y) {
                                     .on('change', this.set_options_for_drag_item_selectors, this);
             }
             //event on file picker new file selection
-            Y.after(function (e){
+            Y.after(function (e) {
                 var name = this.fp.name(e.id);
                 if (name !== 'bgimage') {
                     this.doc.drag_items().remove(true);
@@ -204,7 +199,7 @@ YUI.add('moodle-qtype_ddimageortext-form', function(Y) {
 
         update_visibility_of_file_pickers : function() {
             for (var i=0; i < this.form.get_form_value('noitems', []); i++) {
-                if ('image' === this.form.get_form_value('dragitemtype', [i])) {
+                if ('image' === this.form.get_form_value('drags', [i, 'dragitemtype'])) {
                     Y.one('input#id_dragitem_'+i).get('parentNode').get('parentNode')
                                 .setStyle('display', 'block');
                 } else {
@@ -226,7 +221,7 @@ YUI.add('moodle-qtype_ddimageortext-form', function(Y) {
             if (null !== drag && !drag.hasClass('yui3-dd-dragging')) {
                 var fromform = [this.form.get_form_value('drops', [draginstanceno, 'xleft']),
                                 this.form.get_form_value('drops', [draginstanceno, 'ytop'])];
-                if (fromform[0] == '' && fromform[1] == '') {
+                if (fromform[0] === '' && fromform[1] === '') {
                     var dragitemno = drag.getData('dragitemno');
                     drag.setXY(this.doc.drag_item_home(dragitemno).getXY());
                 } else {
@@ -273,7 +268,7 @@ YUI.add('moodle-qtype_ddimageortext-form', function(Y) {
             },
             get_el : function (name, indexes) {
                 var form = document.getElementById('mform1');
-                return form.elements[this.to_name_with_index(name, indexes)]
+                return form.elements[this.to_name_with_index(name, indexes)];
             },
             get_form_value : function(name, indexes) {
                 var el = this.get_el(name, indexes);
@@ -312,7 +307,7 @@ YUI.add('moodle-qtype_ddimageortext-form', function(Y) {
                 draftitemidstoname = {};
                 nametoparentnode = {};
                 var filepickers = Y.all('form.mform input.filepickerhidden');
-                filepickers.each(function(filepicker, k, items) {
+                filepickers.each(function(filepicker) {
                     draftitemidstoname[filepicker.get('value')] = filepicker.get('name');
                     nametoparentnode[filepicker.get('name')] = filepicker.get('parentNode');
                 }, this);
@@ -330,14 +325,14 @@ YUI.add('moodle-qtype_ddimageortext-form', function(Y) {
                 name : function (draftitemid) {
                     return draftitemidstoname[draftitemid];
                 }
-            }
+            };
             return toreturn;
         }
     }, {NAME : DDIMAGEORTEXTFORMNAME, ATTRS : {maxsizes:{value:null}}});
     M.qtype_ddimageortext = M.qtype_ddimageortext || {};
     M.qtype_ddimageortext.init_form = function(config) {
         return new DDIMAGEORTEXT_FORM(config);
-    }
+    };
 }, '@VERSION@', {
     requires:['moodle-qtype_ddimageortext-dd', 'form_filepicker']
 });
