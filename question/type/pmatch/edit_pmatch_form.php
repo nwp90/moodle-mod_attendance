@@ -17,10 +17,9 @@
 /**
  * Defines the editing form for the pmatch question type.
  *
- * @package    qtype
- * @subpackage pmatch
- * @copyright  2007 Jamie Pratt
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   qtype_pmatch
+ * @copyright 2007 Jamie Pratt
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -30,8 +29,8 @@ require_once($CFG->dirroot.'/question/type/pmatch/pmatchlib.php');
 /**
  * Short answer question editing form definition.
  *
- * @copyright  2007 Jamie Pratt
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright 2007 Jamie Pratt
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_pmatch_edit_form extends question_edit_form {
     /**
@@ -41,29 +40,42 @@ class qtype_pmatch_edit_form extends question_edit_form {
      */
     protected function definition_inner($mform) {
         $this->general_answer_fields($mform);
-
         $this->add_synonyms($mform);
-
-        $mform->addElement('static', 'answersinstruct',
-                                                get_string('correctanswers', 'qtype_pmatch'),
-                                                get_string('filloutoneanswer', 'qtype_pmatch'));
-        $mform->closeHeaderBefore('answersinstruct');
 
         $this->add_per_answer_fields($mform, get_string('answerno', 'qtype_pmatch', '{no}'),
                 question_bank::fraction_options());
 
-        $this->add_other_answer_fields($mform);
         $this->add_interactive_settings();
     }
 
+    protected function add_per_answer_fields(&$mform, $label, $gradeoptions,
+            $minoptions = QUESTION_NUMANS_START, $addoptions = QUESTION_NUMANS_ADD){
+        parent::add_per_answer_fields($mform, $label, $gradeoptions);
+
+        $answersinstruct = $mform->createElement('static', 'answersinstruct',
+                                                get_string('correctanswers', 'qtype_pmatch'),
+                                                get_string('filloutoneanswer', 'qtype_pmatch'));
+        $mform->insertElementBefore($answersinstruct, 'answer[0]');
+
+        $this->add_other_answer_fields($mform);
+
+    }
+
+    /**
+     * Language string to use for 'Add {no} more {whatever we call answers}'.
+     */
+    protected function get_more_choices_string() {
+        return get_string('addmoreanswerblanks', 'qtype_pmatch');
+    }
     /**
      * Add answer options for any other (wrong) answer.
      *
      * @param MoodleQuickForm $mform the form being built.
      */
     protected function add_other_answer_fields($mform) {
-        $mform->addElement('header', 'otheranswerhdr',
+        $otheranswerhdr = $mform->addElement('static', 'otheranswerhdr',
                                                 get_string('anyotheranswer', 'qtype_pmatch'));
+        $otheranswerhdr->setAttributes(array('class'=>'otheranswerhdr'));
         $mform->addElement('static', 'otherfraction', get_string('grade'), '0%');
         $mform->addElement('editor', 'otherfeedback', get_string('feedback', 'question'),
                                                         array('rows' => 5), $this->editoroptions);
@@ -76,6 +88,8 @@ class qtype_pmatch_edit_form extends question_edit_form {
      */
     protected function general_answer_fields($mform) {
         $mform->addElement('header', 'generalheader',
+                                                get_string('answeroptions', 'qtype_pmatch'));
+        $mform->addElement('static', 'generaldescription', '',
                                                 get_string('answeringoptions', 'qtype_pmatch'));
         $menu = array(
             get_string('caseno', 'qtype_pmatch'),
@@ -104,6 +118,8 @@ class qtype_pmatch_edit_form extends question_edit_form {
                         get_string('converttospace', 'qtype_pmatch'),
                         array('size' => 60));
         $mform->setDefault('converttospace', ',;:');
+        $mform->setType('converttospace', PARAM_RAW_TRIMMED);
+
     }
 
     /**
@@ -119,8 +135,7 @@ class qtype_pmatch_edit_form extends question_edit_form {
     protected function get_per_answer_fields($mform, $label, $gradeoptions,
                                                             &$repeatedoptions, &$answersoption) {
         $repeated = array();
-        $repeated[] = $mform->createElement('header', 'answerhdr', $label);
-        $repeated[] = $mform->createElement('textarea', 'answer', get_string('answer', 'question'),
+        $repeated[] = $mform->createElement('textarea', 'answer', $label,
                             array('rows' => '8', 'cols' => '60', 'class' => 'textareamonospace'));
         $repeated[] = $mform->createElement('select', 'fraction',
                                                                 get_string('grade'), $gradeoptions);
@@ -134,21 +149,21 @@ class qtype_pmatch_edit_form extends question_edit_form {
     }
 
     protected function data_preprocessing_other_answer($question) {
-        //special handling of otheranswer
+        // Special handling of otheranswer.
         if (!empty($question->options->answers)) {
             foreach ($question->options->answers as $key => $answer) {
                 if ($answer->answer == '*') {
                     $question->otherfeedback = array();
-                    // Prepare the feedback editor to display files in draft area
+                    // Prepare the feedback editor to display files in draft area.
                     $draftitemid = file_get_submitted_draft_itemid('otherfeedback');
                     $question->otherfeedback['text'] = file_prepare_draft_area(
-                        $draftitemid,          // draftid
-                        $this->context->id,    // context
-                        'question',            // component
-                        'answerfeedback',      // filarea
-                        !empty($answer->id) ? (int) $answer->id : null, // itemid
-                        $this->fileoptions,    // options
-                        $answer->feedback      // text
+                        $draftitemid,
+                        $this->context->id,
+                        'question',
+                        'answerfeedback',
+                        !empty($answer->id) ? (int) $answer->id : null,
+                        $this->fileoptions,
+                        $answer->feedback
                     );
                     $question->otherfeedback['itemid'] = $draftitemid;
                     $question->otherfeedback['format'] = $answer->feedbackformat;
@@ -270,7 +285,7 @@ class qtype_pmatch_edit_form extends question_edit_form {
     }
 
     protected function place_holder_errors($questiontext, $usesubsup) {
-        //check sizes of answer box within a reasonable range
+        // Check sizes of answer box within a reasonable range.
         $errors = array();
         $placeholder = false;
         if (preg_match('/__([0-9]+)x([0-9]+)__/i', $questiontext, $matches)) {
@@ -293,11 +308,14 @@ class qtype_pmatch_edit_form extends question_edit_form {
 
 
     protected function add_synonyms($mform) {
-        $mform->addElement('header', 'synonymshdr', get_string('synonymsheader', 'qtype_pmatch'));
-
+        $mform->addElement('header', 'synonymshdr', get_string('synonym', 'qtype_pmatch'));
+        $mform->addElement('static', 'synonymsdescription', '',
+                                                get_string('synonymsheader', 'qtype_pmatch'));
         $textboxgroup = array();
         $textboxgroup[] = $mform->createElement('group', 'synonymsdata',
-                get_string('wordwithsynonym', 'qtype_pmatch'), $this->add_synonym($mform));
+                get_string('synonymsno', 'qtype_pmatch', '{no}'), $this->add_synonym($mform));
+        $repeatedoptions = array('synonymsdata[word]' => array('type' => PARAM_RAW),
+                                'synonymsdata[synonyms]' => array('type' => PARAM_RAW));
 
         if (isset($this->question->options)) {
             $countsynonyms = count($this->question->options->synonyms);
@@ -311,16 +329,14 @@ class qtype_pmatch_edit_form extends question_edit_form {
             $repeatsatstart = $countsynonyms;
         }
 
-        $this->repeat_elements($textboxgroup, $repeatsatstart, array(), 'nosynonyms',
-                        'addsynonyms', 2, get_string('addmoresynonymblanks', 'qtype_pmatch'));
+        $this->repeat_elements($textboxgroup, $repeatsatstart, $repeatedoptions, 'nosynonyms',
+                        'addsynonyms', 2, get_string('addmoresynonymblanks', 'qtype_pmatch'), true);
     }
 
     protected function add_synonym($mform) {
         $grouparray = array();
         $grouparray[] = $mform->createElement('text', 'word',
                             get_string('wordwithsynonym', 'qtype_pmatch'), array('size'=>15));
-        $grouparray[] = $mform->createElement('static', '', '',
-                            ' '.get_string('synonym', 'qtype_pmatch').' ');
         $grouparray[] = $mform->createElement('text', 'synonyms',
                             get_string('synonym', 'qtype_pmatch'), array('size'=>50));
         return $grouparray;
