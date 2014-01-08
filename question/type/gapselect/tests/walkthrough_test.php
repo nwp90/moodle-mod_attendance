@@ -18,10 +18,9 @@
  * This file contains tests that walks a question through the interactive
  * behaviour.
  *
- * @package    qtype
- * @subpackage gapselect
- * @copyright  2012 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   qtype_gapselect
+ * @copyright 2012 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
@@ -35,9 +34,9 @@ require_once($CFG->dirroot . '/question/type/gapselect/tests/helper.php');
 /**
  * Unit tests for the gap-select question type.
  *
- * @copyright  2012 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @group      qtype_gapselect
+ * @copyright 2012 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @group qtype_gapselect
  */
 class qtype_gapselect_walkthrough_test extends qbehaviour_walkthrough_test_base {
     public function test_interactive_behaviour() {
@@ -102,7 +101,7 @@ class qtype_gapselect_walkthrough_test extends qbehaviour_walkthrough_test_base 
                 $this->get_contains_try_again_button_expectation(true),
                 $this->get_does_not_contain_correctness_expectation(),
                 new question_pattern_expectation('/' . preg_quote(
-                        get_string('notcomplete', 'qbehaviour_interactive')) . '/'),
+                        get_string('notcomplete', 'qbehaviour_interactive'), '/') . '/'),
                 $this->get_contains_hint_expectation('This is the first hint'));
 
         // Do try again.

@@ -17,10 +17,9 @@
 /**
  * Unit tests for the select missing words question question definition class.
  *
- * @package    qtype
- * @subpackage gapselect
- * @copyright  2012 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   qtype_gapselect
+ * @copyright 2012 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
@@ -34,9 +33,9 @@ require_once($CFG->dirroot . '/question/type/gapselect/tests/helper.php');
 /**
  * Unit tests for the select missing words question definition class.
  *
- * @copyright  2012 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @group      qtype_gapselect
+ * @copyright 2012 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @group qtype_gapselect
  */
 class qtype_gapselect_test extends question_testcase {
     /** @var qtype_gapselect instance of the question type class to test. */
@@ -211,13 +210,13 @@ class qtype_gapselect_test extends question_testcase {
 
         $expectedq->shuffleanswers = 1;
         $expectedq->correctfeedback = array('text' => '<p>Your answer is correct.</p>',
-                'format' => FORMAT_MOODLE, 'files' => array());
+                'format' => FORMAT_MOODLE);
         $expectedq->partiallycorrectfeedback = array(
                 'text' => '<p>Your answer is partially correct.</p>',
-                'format' => FORMAT_MOODLE, 'files' => array());
+                'format' => FORMAT_MOODLE);
         $expectedq->shownumcorrect = true;
         $expectedq->incorrectfeedback = array('text' => '<p>Your answer is incorrect.</p>',
-                'format' => FORMAT_MOODLE, 'files' => array());
+                'format' => FORMAT_MOODLE);
 
         $expectedq->choices = array(
             array('answer' => 'Alpha', 'choicegroup' => 1),
@@ -226,9 +225,9 @@ class qtype_gapselect_test extends question_testcase {
         );
 
         $expectedq->hint = array(
-                array('text' => 'Try again.', 'format' => FORMAT_MOODLE, 'files' => array()),
+                array('text' => 'Try again.', 'format' => FORMAT_MOODLE),
                 array('text' => 'These are the first three letters of the Greek alphabet.',
-                        'format' => FORMAT_MOODLE, 'files' => array()));
+                        'format' => FORMAT_MOODLE));
         $expectedq->hintshownumcorrect = array(true, true);
         $expectedq->hintclearwrong = array(false, true);
         $this->assert(new question_check_specified_fields_expectation($expectedq), $q);

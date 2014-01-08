@@ -17,8 +17,7 @@
 /**
  * Question type class for the embedded element in question text question types.
  *
- * @package    qtype
- * @subpackage gapselect
+ * @package    qtype_gapselect
  * @copyright  2011 The Open University
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -56,7 +55,7 @@ abstract class qtype_gapselect_base extends question_type {
         $oldanswers = $DB->get_records('question_answers',
                 array('question' => $question->id), 'id ASC');
 
-        // Insert all the new answers
+        // Insert all the new answers.
         foreach ($question->choices as $key => $choice) {
 
             if (trim($choice['answer']) == '') {
@@ -82,7 +81,7 @@ abstract class qtype_gapselect_base extends question_type {
             }
         }
 
-        // Delete old answer records
+        // Delete old answer records.
         foreach ($oldanswers as $oa) {
             $DB->delete_records('question_answers', array('id' => $oa->id));
         }
@@ -259,7 +258,7 @@ abstract class qtype_gapselect_base extends question_type {
             return false;
         }
 
-        //get the slots
+        // Get the slots.
         $slots = $this->getEmbeddedTextArray($question);
 
         if (!$slots) {
@@ -269,7 +268,7 @@ abstract class qtype_gapselect_base extends question_type {
 
         $output = array();
         foreach ($slots as $slot) {
-            $output[] = substr($slot, 2, strlen($slot) - 4); //2 is for '[[' and 4 is for '[[]]'.
+            $output[] = substr($slot, 2, strlen($slot) - 4); // 2 is for '[[' and 4 is for '[[]]'.
         }
         return $output;
     }
@@ -282,7 +281,7 @@ abstract class qtype_gapselect_base extends question_type {
             }
         }
 
-        // Shuffle answers within this group
+        // Shuffle answers within this group.
         if ($question->options->shuffleanswers == 1) {
             shuffle($goupofanswers);
         }
