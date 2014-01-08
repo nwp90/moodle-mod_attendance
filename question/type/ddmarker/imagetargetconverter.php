@@ -17,11 +17,10 @@
 /**
  * This page lets admin convert imagetarget questions to the ddmarker question type.
  *
- * @package    qtype
- * @subpackage ddmarker
- * @copyright  2012 The Open University
- * @author     Jamie Pratt <me@jamiep.org>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   qtype_ddmarker
+ * @copyright 2012 The Open University
+ * @author    Jamie Pratt <me@jamiep.org>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
@@ -30,6 +29,13 @@ require_once($CFG->libdir . '/adminlib.php');
 require_once(dirname(__FILE__).'/questionlists.php');
 require_once(dirname(__FILE__).'/lib.php');
 
+
+/**
+ * Class representing a list of questions.
+ *
+ * @copyright 2012 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class qtype_ddmarker_question_converter_list extends qtype_ddmarker_question_list {
     protected function new_list_item($stringidentifier, $link, $record) {
         return new qtype_ddmarker_question_converter_list_item($stringidentifier, $link, $record, $this, $this->categorylist);
@@ -49,22 +55,32 @@ class qtype_ddmarker_question_converter_list extends qtype_ddmarker_question_lis
         }
     }
 }
+
+
+/**
+ * Class representing an item in the list of questions.
+ *
+ * @copyright 2012 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class qtype_ddmarker_question_converter_list_item extends qtype_ddmarker_question_list_item {
     public $imagetargetrecord = null;
     public $answers = array();
     public function process($renderer) {
         qtype_ddmarker_convert_image_target_question($this->record, $this->imagetargetrecord->qimage, $this->answers);
-        parent::process($renderer);//outputs progress message
+        parent::process($renderer); // Outputs progress message.
     }
 }
+
 
 $categoryid = optional_param('categoryid', 0, PARAM_INT);
 $qcontextid = optional_param('contextid', 0, PARAM_INT);
 $questionid = optional_param('questionid', 0, PARAM_INT);
 $confirm = optional_param('confirm', 0, PARAM_INT);
+
 // Check the user is logged in.
 require_login();
-$context = get_context_instance(CONTEXT_SYSTEM);
+$context = context_system::instance();
 require_capability('moodle/question:config', $context);
 
 admin_externalpage_setup('qtypeddmarkerfromimagetarget');
@@ -80,18 +96,18 @@ $from = 'FROM {question_categories} cat, {question} q';
 $where = ' WHERE q.qtype = \'imagetarget\' AND q.category =  cat.id ';
 
 if ($qcontextid) {
-    $qcontext = get_context_instance_by_id($qcontextid, MUST_EXIST);
+    $qcontext = context::instance_by_id($qcontextid);
     $from  .= ', {context} context';
     $where .= 'AND cat.contextid = context.id AND (context.path LIKE :path OR context.id = :id) ';
     $params['path'] = $qcontext->path.'/%';
     $params['id'] = $qcontext->id;
 } else if ($categoryid) {
-    //fetch all questions from this cats context
+    // Fetch all questions from this cats context.
     $from  .= ', {question_categories} cat2';
     $where .= 'AND cat.contextid = cat2.contextid AND cat2.id = :categoryid ';
     $params['categoryid'] = $categoryid;
 } else if ($questionid) {
-    //fetch all questions from this cats context
+    // Fetch all questions from this cats context.
     $where .= 'AND q.id = :questionid ';
     $params['questionid'] = $questionid;
 }

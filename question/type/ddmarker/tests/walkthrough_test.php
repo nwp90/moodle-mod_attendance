@@ -17,10 +17,10 @@
 /**
  * Unit tests for the drag-and-drop markers question type.
  *
- * @package    qtype_ddmarker
- * @copyright  2012 The Open University
- * @author     Jamie Pratt <me@jamiep.org>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   qtype_ddmarker
+ * @copyright 2012 The Open University
+ * @author    Jamie Pratt <me@jamiep.org>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
@@ -34,9 +34,9 @@ require_once($CFG->dirroot . '/question/type/ddmarker/tests/helper.php');
 /**
  * Unit tests for the drag-and-drop markers question type.
  *
- * @copyright  2012 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @group      qtype_ddmarker
+ * @copyright 2012 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @group qtype_ddmarker
  */
 class qtype_ddmarker_walkthrough_test extends qbehaviour_walkthrough_test_base {
 
@@ -124,7 +124,7 @@ class qtype_ddmarker_walkthrough_test extends qbehaviour_walkthrough_test_base {
                 $this->get_contains_hidden_expectation(3, '150,250'),
                 $this->get_contains_try_again_button_expectation(true),
                 new question_pattern_expectation('/' .
-                        preg_quote(get_string('notcomplete', 'qbehaviour_interactive')) . '/'),
+                        preg_quote(get_string('notcomplete', 'qbehaviour_interactive'), '/') . '/'),
                 $this->get_contains_hint_expectation('This is the first hint'));
 
         // Do try again.
@@ -396,7 +396,7 @@ class qtype_ddmarker_walkthrough_test extends qbehaviour_walkthrough_test_base {
                 $this->get_contains_try_again_button_expectation(true),
                 $this->get_does_not_contain_correctness_expectation(),
                 new question_pattern_expectation('/' .
-                        preg_quote(get_string('notcomplete', 'qbehaviour_interactive')) . '/'),
+                        preg_quote(get_string('notcomplete', 'qbehaviour_interactive'), '/') . '/'),
                 $this->get_contains_hint_expectation('This is the first hint'),
                 $this->get_contains_num_parts_correct(2),
                 $this->get_contains_standard_partiallycorrect_combined_feedback_expectation(),
@@ -447,7 +447,7 @@ class qtype_ddmarker_walkthrough_test extends qbehaviour_walkthrough_test_base {
                 $this->get_contains_try_again_button_expectation(true),
                 $this->get_does_not_contain_correctness_expectation(),
                 new question_pattern_expectation('/' .
-                        preg_quote(get_string('notcomplete', 'qbehaviour_interactive')) . '/'),
+                        preg_quote(get_string('notcomplete', 'qbehaviour_interactive'), '/') . '/'),
                 $this->get_contains_hint_expectation('This is the second hint'),
                 $this->get_contains_num_parts_correct(2),
                 $this->get_contains_standard_partiallycorrect_combined_feedback_expectation(),

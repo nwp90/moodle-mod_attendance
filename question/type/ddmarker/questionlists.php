@@ -52,8 +52,8 @@ abstract class qtype_ddmarker_list_item implements renderable {
 
     public function add_child($child) {
         $this->children[] = $child;
-        //array_unique relies on __toString() returning a unique string to determine if objects in array
-        //are the same or not
+        // Class array_unique relies on __toString() returning a unique string
+        // to determine if objects in array are the same or not.
         $this->children = array_unique($this->children);
     }
 
@@ -216,18 +216,18 @@ class qtype_ddmarker_context_list extends qtype_ddmarker_list {
         $this->records = array();
         foreach ($contextids as $contextid) {
             if (!isset($this->records[$contextid])) {
-                $this->records[$contextid] = get_context_instance_by_id($contextid, MUST_EXIST);
+                $this->records[$contextid] = context::instance_by_id($contextid);
             }
             $parents = get_parent_contexts($this->records[$contextid]);
             foreach ($parents as $parentcontextid) {
                 if (!isset($this->records[$parentcontextid])) {
-                    $this->records[$parentcontextid] =
-                                        get_context_instance_by_id($parentcontextid, MUST_EXIST);
+                    $this->records[$parentcontextid] = context::instance_by_id($parentcontextid);
                 }
             }
         }
         $this->make_list_item_instances_from_records($stringidentifier, $link);
     }
+
     public function render($roottorender = null) {
         if ($roottorender === null) {
             $roottorender = $this->root_node();
@@ -235,11 +235,11 @@ class qtype_ddmarker_context_list extends qtype_ddmarker_list {
         $rootitem = html_writer::tag('li', $roottorender->render());
         return html_writer::tag('ul', $rootitem);
     }
+
     public function root_node () {
-        return $this->get_instance(get_context_instance(CONTEXT_SYSTEM)->id);
+        return $this->get_instance(context_system::instance()->id);
     }
 }
-
 
 
 class qtype_ddmarker_category_list extends qtype_ddmarker_list {
@@ -250,7 +250,8 @@ class qtype_ddmarker_category_list extends qtype_ddmarker_list {
     public function __construct($stringidentifier, $link, $contextids, $contextlist) {
         global $DB;
         $this->contextlist = $contextlist;
-        //probably most efficient way to reconstruct question category tree is to load all q cats in relevant contexts
+        // Probably most efficient way to reconstruct question category tree is
+        // to load all q cats in relevant contexts.
         list($sql, $params) = $DB->get_in_or_equal($contextids);
         $this->records = $DB->get_records_select('question_categories', "contextid ".$sql, $params);
         $this->make_list_item_instances_from_records($stringidentifier, $link);

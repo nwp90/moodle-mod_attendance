@@ -15,20 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    qtype
- * @subpackage ddmarker
- * @copyright  2012 The Open University
- * @author     Jamie Pratt <me@jamiep.org>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   qtype_ddmarker
+ * @copyright 2012 The Open University
+ * @author    Jamie Pratt <me@jamiep.org>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
 
 
 /**
- * Provides the information to backup ddmarker questions
+ * Provides the information to backup ddmarker questions.
  *
- * @copyright  2011 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright 2011 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class backup_qtype_ddmarker_plugin extends backup_qtype_plugin {
 
@@ -58,7 +57,7 @@ class backup_qtype_ddmarker_plugin extends backup_qtype_plugin {
         $drags = new backup_nested_element('drags');
 
         $drag = new backup_nested_element('drag', array('id'),
-                                                array('no', 'infinite', 'label'));
+                                                array('no', 'infinite', 'label', 'noofdrags'));
         $drops = new backup_nested_element('drops');
 
         $drop = new backup_nested_element('drop', array('id'),
