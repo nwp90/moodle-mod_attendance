@@ -17,10 +17,9 @@
 /**
  * Page for testing that Moodle can connect to a particular Opaque engine.
  *
- * @package    qtype
- * @subpackage opaque
- * @copyright  2006 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   qtype_opaque
+ * @copyright 2006 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
@@ -32,7 +31,7 @@ $engineid = required_param('engineid', PARAM_INT);
 
 // Check the user is logged in.
 require_login();
-$context = get_context_instance(CONTEXT_SYSTEM);
+$context = context_system::instance();
 require_capability('moodle/question:config', $context);
 
 admin_externalpage_setup('qtypesettingopaque', '', null,

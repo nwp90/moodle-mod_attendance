@@ -17,10 +17,9 @@
 /**
  * Defines the qbehaviour_opaque_state class.
  *
- * @package    qbehaviour
- * @subpackage opaque
- * @copyright  2006 The Open University, 2011 Antti Andreimann
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   qbehaviour_opaque
+ * @copyright 2006 The Open University, 2011 Antti Andreimann
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
@@ -32,8 +31,8 @@ require_once($CFG->dirroot . '/question/type/opaque/enginemanager.php');
 /**
  * Stores active OPAQUE question session and caches associated results
  *
- * @copyright  2011 Antti Andreimann based on code from The Open University.
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright 2011 Antti Andreimann based on code from The Open University.
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qbehaviour_opaque_state {
 
@@ -178,9 +177,11 @@ class qbehaviour_opaque_state {
             $this->start_question_session($firststep, $options);
         }
 
-        // Now play back the user input
+        // Now play back the user input.
         while ($this->state->sequencenumber < $targetseq) {
-            set_time_limit($this->state->engine->timeout + 30); // Prevent PHP time-outs.
+            if (!CLI_SCRIPT) {
+                set_time_limit($this->state->engine->timeout + 30); // Prevent PHP time-outs.
+            }
             // For slower engines and longer sequences, it is concievable that we
             // could hit the browser connection timeout. However, it is not acceptable
             // to do any output here, so there is noting we can do about that.
@@ -412,7 +413,7 @@ class qbehaviour_opaque_state {
             $this->state->questionsessionid = $response->questionSession;
         }
 
-        // Process the CSS
+        // Process the CSS.
         if (!empty($response->CSS)) {
             $this->state->cssfilename = $resourcecache->stylesheet_filename(
                     $this->state->questionsessionid);
@@ -430,7 +431,7 @@ class qbehaviour_opaque_state {
 
         // Save the progress info.
         if (isset($response->progressInfo)) {
-            $this->state->progressinfo = $response->progressInfo;
+            $this->state->progressinfo = str_replace(array_keys($replaces), $replaces, $response->progressInfo);
         }
 
         return true;
@@ -453,7 +454,8 @@ class qbehaviour_opaque_state {
             '%%%%'          => '%%'
         );
 
-        $strings = array('lTRYAGAIN', 'lGIVEUP', 'lNEXTQUESTION', 'lENTERANSWER', 'lCLEAR');
+        $strings = array('lTRYAGAIN', 'lGIVEUP', 'lNEXTQUESTION', 'lENTERANSWER',
+                'lCLEAR', 'lTRY', 'lTRIES');
         foreach ($strings as $string) {
             $this->replaces["%%$string%%"] = get_string($string, 'qbehaviour_opaque');
         }

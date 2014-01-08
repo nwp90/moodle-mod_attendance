@@ -17,10 +17,9 @@
 /**
  * This file contains tests for the Opaque behaviour.
  *
- * @package    qbehaviour
- * @subpackage opaque
- * @copyright  2010 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   qbehaviour_opaque
+ * @copyright 2010 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
@@ -35,8 +34,9 @@ require_once($CFG->dirroot . '/question/behaviour/opaque/behaviour.php');
 /**
  * Unit tests for the Opaque behaviour.
  *
- * @copyright  2010 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright 2010 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @group qbehaviour_opaque
  */
 class qbehaviour_opaque_test extends qbehaviour_walkthrough_test_base {
 
@@ -71,7 +71,7 @@ class qbehaviour_opaque_test extends qbehaviour_walkthrough_test_base {
                 new question_pattern_expectation('/Below is a plan of a proposed garden/'),
                 new question_pattern_expectation('/incorrect/'),
                 new question_pattern_expectation('/' .
-                        preg_quote(get_string('notcomplete', 'qbehaviour_opaque')) . '/'),
+                        preg_quote(get_string('notcomplete', 'qbehaviour_opaque'), '/') . '/'),
                 $this->get_contains_button_expectation(
                         $qa->get_qt_field_name('omact_ok'), 'Try again'));
 
@@ -95,7 +95,7 @@ class qbehaviour_opaque_test extends qbehaviour_walkthrough_test_base {
                 new question_pattern_expectation('/Below is a plan of a proposed garden/'),
                 new question_pattern_expectation('/still incorrect/'),
                 new question_pattern_expectation('/' .
-                        preg_quote(get_string('notcomplete', 'qbehaviour_opaque')) . '/'));
+                        preg_quote(get_string('notcomplete', 'qbehaviour_opaque'), '/') . '/'));
 
         // Try again.
         $this->process_submission(array('omact_ok' => 'Try again'));
@@ -227,6 +227,6 @@ class qbehaviour_opaque_test extends qbehaviour_walkthrough_test_base {
         $this->check_current_mark(null);
         $this->check_current_output(
                 new question_pattern_expectation('/' .
-                        preg_quote(get_string('notcompletedmessage', 'qbehaviour_opaque')) . '/'));
+                        preg_quote(get_string('notcompletedmessage', 'qbehaviour_opaque'), '/') . '/'));
     }
 }
