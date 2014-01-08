@@ -17,10 +17,9 @@
 /**
  * Opaque question definition class.
  *
- * @package    qtype
- * @subpackage opaque
- * @copyright  2009 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   qtype_opaque
+ * @copyright 2009 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
@@ -30,8 +29,8 @@ defined('MOODLE_INTERNAL') || die();
 /**
  * Represents an Opaque question.
  *
- * @copyright  2009 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright 2009 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_opaque_question extends question_definition {
     /** @var integer the ID of the question engine that serves this question. */
@@ -42,8 +41,7 @@ class qtype_opaque_question extends question_definition {
     public $remoteversion;
 
     public function make_behaviour(question_attempt $qa, $preferredbehaviour) {
-        question_engine::load_behaviour_class('opaque');
-        return new qbehaviour_opaque($qa, $preferredbehaviour);
+        return question_engine::make_behaviour('opaque', $qa, $preferredbehaviour);
     }
 
     public function get_expected_data() {

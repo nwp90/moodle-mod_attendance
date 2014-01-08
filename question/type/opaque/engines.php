@@ -17,10 +17,9 @@
 /**
  * This page lets admins manage the list of known remote Opaque engines.
  *
- * @package    qtype
- * @subpackage opaque
- * @copyright  2006 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   qtype_opaque
+ * @copyright 2006 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
@@ -30,7 +29,7 @@ require_once($CFG->dirroot . '/question/type/opaque/enginemanager.php');
 
 // Check the user is logged in.
 require_login();
-$context = get_context_instance(CONTEXT_SYSTEM);
+$context = context_system::instance();
 require_capability('moodle/question:config', $context);
 
 admin_externalpage_setup('qtypesettingopaque');

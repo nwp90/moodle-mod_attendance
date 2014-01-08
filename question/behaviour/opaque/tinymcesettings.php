@@ -17,10 +17,9 @@
 /**
  * Hack to display TinyMCE the way OpenMark wants.
  *
- * @package    qbehaviour
- * @subpackage opaque
- * @copyright  2012 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   qbehaviour_opaque
+ * @copyright 2012 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
@@ -31,10 +30,11 @@ require(dirname(__FILE__) . '/../../../config.php');
 
 $height = min_optional_param('h', 100, 'INT');
 $width = min_optional_param('w', 100, 'INT');
-$type = min_optional_param('t', 'sup,sub', 'RAW');
+$type = min_optional_param('t', 'sub,sup', 'RAW');
 $elements = min_optional_param('e', 60, 'RAW');
 $isenabled = min_optional_param('ro', 60, 'RAW');
 $editorselector = min_optional_param('es', 60, 'SAFEDIR');
+$zoom = min_optional_param('z', '', 'INT');
 
 if ($isenabled === 'true') {
     $readonly = 'readonly: false';
@@ -53,11 +53,16 @@ switch ($type) {
         $validelements = '-sub';
         break;
 
-    case 'sup,sub':
+    case 'sub,sup':
         $validelements = '-sup,-sub';
+        break;
 
     default:
         throw new coding_exception('Unknow editor type ' . $type);
+}
+
+if (!$zoom) {
+    $zoom = '';
 }
 
 ?>
@@ -66,7 +71,8 @@ tinymce.PluginManager.load('supsub', '<?php echo $CFG->wwwroot; ?>/lib/editor/su
 tinyMCE.init({
     // General options
     apply_source_formatting: true,
-    content_css: "<?php echo $CFG->wwwroot; ?>/lib/editor/supsub/extra.css,<?php echo $CFG->wwwroot; ?>/question/behaviour/opaque/tinymce.css",
+    content_css: "<?php echo $CFG->wwwroot; ?>/lib/editor/supsub/extra.css,<?php
+            echo $CFG->wwwroot; ?>/question/behaviour/opaque/tinymce<?php echo $zoom; ?>.css",
     directionality: "ltr",
     document_base_url: "<?php echo $CFG->wwwroot . '/'; ?>",
     editor_selector: "<?php echo $editorselector; ?>",
@@ -76,6 +82,7 @@ tinyMCE.init({
     force_br_newlines: true,
     force_p_newlines: false,
     height: <?php echo $height; ?>,
+    min_height: 10,
     language: "en",
     mode: "textareas",
     nowrap: true,

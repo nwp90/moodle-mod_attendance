@@ -18,10 +18,9 @@
  * This behaviour that is used when the actual qim was not
  * available.
  *
- * @package    qbehaviour
- * @subpackage opaque
- * @copyright  2010 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   qbehaviour_opaque
+ * @copyright 2010 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
@@ -38,8 +37,8 @@ require_once($CFG->dirroot . '/question/behaviour/opaque/opaquestate.php');
 /**
  * This behaviour is specifically for use with the Opaque question type.
  *
- * @copyright  2010 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright 2010 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qbehaviour_opaque extends question_behaviour {
     /** @var string */
@@ -52,8 +51,8 @@ class qbehaviour_opaque extends question_behaviour {
         $this->preferredbehaviour = $preferredbehaviour;
     }
 
-    public function required_question_definition_type() {
-        return 'qtype_opaque_question';
+    public function is_compatible_question(question_definition $question) {
+        return $question instanceof qtype_opaque_question;
     }
 
     public function get_state_string($showcorrectness) {
@@ -73,6 +72,8 @@ class qbehaviour_opaque extends question_behaviour {
 
     public function init_first_step(question_attempt_step $step, $variant) {
         global $USER;
+
+        parent::init_first_step($step, $variant);
 
         // Set up the random seed to be the current time in milliseconds.
         list($micros, $sec) = explode(' ', microtime());
@@ -103,13 +104,16 @@ class qbehaviour_opaque extends question_behaviour {
 
     protected function is_same_response(question_attempt_step $pendingstep) {
         $newdata = $pendingstep->get_submitted_data();
+        $newdata = qbehaviour_opaque_fix_up_submitted_data($newdata, $pendingstep);
 
         // If an omact_ button has been clicked, never treat this as a duplicate submission.
         if (qbehaviour_opaque_response_contains_om_action($newdata)) {
             return false;
         }
 
-        $olddata = $this->qa->get_last_step()->get_submitted_data();
+        $laststep = $this->qa->get_last_step();
+        $olddata = $laststep->get_submitted_data();
+        $olddata = qbehaviour_opaque_fix_up_submitted_data($olddata, $laststep);
         return question_utils::arrays_have_same_keys_and_values($newdata, $olddata);
     }
 
