@@ -15,10 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Admin settings for the Opaque question type.
+ * Admin settings for the pmatch question type.
  *
- * @package    qtype
- * @subpackage opaque
+ * @package   qtype_pmatch
  * @copyright  2011 The Open University
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -26,7 +25,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$settings = new admin_externalpage('qtypepmatchenvironmentcheck',
-        get_string('pluginname', 'qtype_pmatch'),
-        new moodle_url('/question/type/pmatch/environmentcheck.php'),
-        'moodle/question:config');
+require_once($CFG->dirroot . '/question/type/pmatch/spellinglib.php');
+
+$settings->add(new qtype_pmatch_admin_setting_spell_checker('qtype_pmatch/spellchecker',
+        get_string('spellcheckertype', 'qtype_pmatch'),
+        get_string('spellcheckertype_desc', 'qtype_pmatch'), 'null', null));
+
+$settings->add(new qtype_pmatch_admin_setting_environment_check('qtype_pmatch_environment_check',
+        get_string('environmentcheck', 'qtype_pmatch'), null));

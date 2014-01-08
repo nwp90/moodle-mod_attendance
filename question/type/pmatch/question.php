@@ -17,9 +17,9 @@
 /**
  * Pattern-match question definition class.
  *
- * @package    qtype_pmatch
- * @copyright  2011 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   qtype_pmatch
+ * @copyright 2011 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
@@ -30,26 +30,29 @@ require_once($CFG->dirroot.'/question/type/pmatch/pmatchlib.php');
 /**
  * Represents a pattern-match  question.
  *
- * @copyright  2011 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright 2011 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_pmatch_question extends question_graded_by_strategy
         implements question_response_answer_comparer {
+
     /** @var boolean whether to allow students to use subscript. */
     public $allowsubscript;
+
     /** @var boolean whether to allow students to use super script. */
     public $allowsuperscript;
+
     /** @var boolean whether to warn student if their response is longer than 20 words. */
     public $forcelength;
+
     /** @var boolean whether to spell check students response. */
     public $applydictionarycheck;
+
     /** @var pmatch_options options for pmatch expression matching. */
     public $pmatchoptions;
+
     /** @var array of question_answer. */
     public $answers = array();
-
-
-
 
     public function __construct() {
         parent::__construct(new question_first_matching_answer_grading_strategy($this));
@@ -68,10 +71,7 @@ class qtype_pmatch_question extends question_graded_by_strategy
     }
 
     public function is_gradable_response(array $response) {
-        if (!array_key_exists('answer', $response) ||
-                                ((!$response['answer']) && $response['answer'] !== '0')) {
-            $this->responsevalidationerrors =
-                                    array(get_string('pleaseenterananswer', 'qtype_pmatch'));
+        if (!array_key_exists('answer', $response) || ((!$response['answer']) && $response['answer'] !== '0')) {
             return false;
         } else {
             return true;
@@ -80,36 +80,45 @@ class qtype_pmatch_question extends question_graded_by_strategy
 
     public function is_complete_response(array $response) {
         if ($this->is_gradable_response($response)) {
-            $this->validate($response);
+            return (count($this->validate($response)) === 0);
+        } else {
+            return false;
         }
-        return (!count($this->responsevalidationerrors) > 0);
     }
 
-    private $responsevalidationerrors = null;
-
     protected function validate(array $response) {
-        $this->responsevalidationerrors = array();
+        $responsevalidationerrors = array();
+
+        if (!array_key_exists('answer', $response) || ((!$response['answer']) && $response['answer'] !== '0')) {
+            return array(get_string('pleaseenterananswer', 'qtype_pmatch'));
+        }
 
         $parsestring = new pmatch_parsed_string($response['answer'], $this->pmatchoptions);
         if (!$parsestring->is_parseable()) {
             $a = $parsestring->unparseable();
-            $this->responsevalidationerrors[] = get_string('unparseable', 'qtype_pmatch', $a);
+            $responsevalidationerrors[] = get_string('unparseable', 'qtype_pmatch', $a);
         }
         if ($this->applydictionarycheck && !$parsestring->is_spelt_correctly()) {
             $misspelledwords = $parsestring->get_spelling_errors();
             $a = join(' ', $misspelledwords);
-            $this->responsevalidationerrors[] = get_string('spellingmistakes', 'qtype_pmatch', $a);
+            $responsevalidationerrors[] = get_string('spellingmistakes', 'qtype_pmatch', $a);
         }
         if ($this->forcelength) {
             if ($parsestring->get_word_count() > 20) {
-                $this->responsevalidationerrors[] = get_string('toomanywords', 'qtype_pmatch');
+                $responsevalidationerrors[] = get_string('toomanywords', 'qtype_pmatch');
             }
         }
+        return $responsevalidationerrors;
     }
 
     public function get_validation_error(array $response) {
-        $this->validate($response);
-        return join('<br />', $this->responsevalidationerrors);
+        $errors = $this->validate($response);
+        if (count($errors) === 1) {
+            return array_pop($errors);
+        } else {
+            $errorslist = html_writer::alist($errors);
+            return get_string('errors', 'qtype_pmatch', $errorslist);
+        }
     }
 
     public function is_same_response(array $prevresponse, array $newresponse) {
@@ -140,7 +149,7 @@ class qtype_pmatch_question extends question_graded_by_strategy
         if ($component == 'question' && $filearea == 'answerfeedback') {
             $currentanswer = $qa->get_last_qt_var('answer');
             $answer = $qa->get_question()->get_matching_answer(array('answer' => $currentanswer));
-            $answerid = reset($args); // itemid is answer id.
+            $answerid = reset($args); // Itemid is answer id.
             return $options->feedback && $answerid == $answer->id;
 
         } else if ($component == 'question' && $filearea == 'hint') {
@@ -153,7 +162,7 @@ class qtype_pmatch_question extends question_graded_by_strategy
     }
 
     public function start_attempt(question_attempt_step $step, $variant) {
-        $this->pmatchoptions->lang = current_language();
+        $this->pmatchoptions->lang = get_string('iso6391', 'langconfig');
         $step->set_qt_var('_responselang', $this->pmatchoptions->lang);
     }
 
