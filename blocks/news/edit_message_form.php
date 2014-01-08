@@ -76,6 +76,7 @@ class block_news_edit_message_form extends moodleform {
 
         $mform->addElement('text', 'title', get_string('msgedittitle', 'block_news'),
             array('size'=>'40'));
+        $mform->setType('title', PARAM_TEXT);
         $mform->addRule('title', null, 'required', null, 'client');
         $mform->addRule('title', null, 'maxlength', 80, 'server');
 
@@ -136,7 +137,7 @@ class block_news_edit_message_form extends moodleform {
 
         $mform->addElement('selectyesno', 'hideauthor',
             get_string('msgedithideauthor', 'block_news'));
-        $mform->setDefault('hideauthor', 0);
+        $mform->setDefault('hideauthor', (int) get_config('block_news', 'block_news_hideauthor'));
 
         $mform->addElement('static', 'lastupdated',
                     get_string('msgeditlastupdated', 'block_news'));

@@ -18,12 +18,12 @@
  * Version details.
  *
  * @package block_news
- * @copyright 2012 The Open University
- * @author Jon Sharp <jonathans@catalyst-eu.net>
- * @author OU developers
+ * @copyright 2013 The Open University
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$plugin->version = 2012121700;
+defined('MOODLE_INTERNAL') || die();
+
+$plugin->version = 2013040800;
 $plugin->requires = 2011033003.00;
 $plugin->cron = 60;
