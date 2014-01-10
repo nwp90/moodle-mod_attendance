@@ -15,23 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for the Opaque question behaviour.
+ * Question behaviour type specifically for use with the Opaque question type.
  *
  * @package   qbehaviour_opaque
- * @copyright 2006 The Open University
+ * @copyright 2014 The Open University
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 
 defined('MOODLE_INTERNAL') || die();
 
 
-$plugin->version   = 2014010801;
-$plugin->requires  = 2013111800;
-$plugin->cron      = 0;
-$plugin->component = 'qbehaviour_opaque';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '2.4 For Moodle 2.6+';
-
-$plugin->dependencies = array(
-    'qtype_opaque' => 2014010801
-);
+/**
+ * Question behaviour type information specifically for use with the Opaque question type.
+ *
+ * @copyright 2014 The Open University
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class qbehaviour_opaque_type extends question_behaviour_type {
+}
