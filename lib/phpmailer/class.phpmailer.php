@@ -983,7 +983,8 @@ class PHPMailer
             if (defined('PCRE_VERSION')) {
                 //This pattern can get stuck in a recursive loop in PCRE <= 8.0.2
                 if (version_compare(PCRE_VERSION, '8.0.3') >= 0) {
-                    $patternselect = 'pcre8';
+                    // pcre8 regex appears to be broken
+                    $patternselect = 'pcre';
                 } else {
                     $patternselect = 'pcre';
                 }
