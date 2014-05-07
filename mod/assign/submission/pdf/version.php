@@ -22,8 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$plugin->version   = 2013103100;
-$plugin->release   = "2.5+ (Build 2013103100)";
+$plugin->version   = 2014022700;
+$plugin->release   = "2.5+ (Build 2014022700)";
 $plugin->requires  = 2013051400;
 $plugin->component = 'assignsubmission_pdf';
 $plugin->maturity  = MATURITY_STABLE;
