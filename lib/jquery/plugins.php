@@ -40,4 +40,5 @@ $plugins = array(
     'ui'      => array('files' => array('ui-1.12.1/jquery-ui.min.js')),
     'ui-css'  => array('files' => array('ui-1.12.1/theme/smoothness/jquery-ui.min.css')),
     'expander'=> array('files' => array('expander-1.4.7/jquery.expander.min.js')),
+    'rwdimagemaps' => array('files' => array('jquery.rwdImageMaps-20130912.min.js'))
 );
