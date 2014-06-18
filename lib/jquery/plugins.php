@@ -43,5 +43,4 @@ $plugins = array(
     'ui-css'  => array('files' => array('ui-1.11.4/theme/smoothness/jquery-ui.min.css')),
     'expander'=> array('files' => array('expander-1.4.7/jquery.expander.min.js')),
     'rwdimagemaps' => array('files' => array('jquery.rwdImageMaps-20130912.min.js')),
-    'bootstrap-js' => array('files' => array('bootstrap-2.3.2.min.js')),
 );
