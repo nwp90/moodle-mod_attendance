@@ -36,7 +36,7 @@ $THEME->name = 'realbootstrapbase';
 $THEME->parents = array();
 $THEME->sheets = array('moodle');
 $THEME->supportscssoptimisation = false;
-
+$THEME->enable_dock = false;
 $THEME->editor_sheets = array('editor');
 
 $THEME->rendererfactory = 'theme_overridden_renderer_factory';
