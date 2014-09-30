@@ -3,7 +3,7 @@
   "builds": {
     "moodle-format_grid-gridkeys": {
         "prependfiles": [
-            "gallery-event-nav-keys.js" 
+            "event-nav-keys.js" 
         ],
         "jsfiles": [
             "gridkeys.js"

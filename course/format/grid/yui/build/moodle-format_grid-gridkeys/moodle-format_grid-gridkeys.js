@@ -1,4 +1,4 @@
-YUI.add('gallery-event-nav-keys', function(Y) {
+YUI.add('event-nav-keys', function(Y) {
 
 var keys = {
         enter    : 13,
@@ -42,7 +42,7 @@ Y.Object.each(keys, function (keyCode, name) {
 });
 
 
-}, 'gallery-2011.02.02-21-07' ,{requires:['event-synthetic']});
+}, '2011.02.02-21-07' ,{requires:['event-synthetic']});
 YUI.add('moodle-format_grid-gridkeys', function (Y, NAME) {
 
 // This file is part of Moodle - http://moodle.org/
@@ -112,4 +112,4 @@ M.format_grid.gridkeys = {
     }
 };
 
-}, '@VERSION@', {"requires": ["gallery-event-nav-keys"]});
+}, '@VERSION@', {"requires": ["event-nav-keys"]});

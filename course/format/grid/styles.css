@@ -53,7 +53,7 @@ body.jsenabled li.grid_section.hide_section {
     display: none;
 }
 
-div#gridmiddle-column ul {
+div#gridmiddle-column > ul {
     list-style-type: none;
 }
 
@@ -88,8 +88,8 @@ div#gridmiddle-column ul {
 /* @group Topic Icons */
 #gridiconcontainer {
     width: 100%;
-    margin: 20px auto;
-    padding: 10px;
+    margin: 0 auto;
+    padding: 0px;
     text-align: center;
     height: auto;
 }
@@ -101,15 +101,17 @@ div#gridmiddle-column ul {
 #gridiconcontainer ul.gridicons li {
     height: auto;
     padding: 10px;
-    margin: 5px;
     text-align: left;
     display: inline-table;
 }
+.dir-rtl #gridiconcontainer ul.gridicons li {
+   text-align: right;
+}
 
 .course-content ul.gridicons li.currentselected {
-    filter:alpha(opacity=70); /* IE */
-    -moz-opacity:0.7; /* Mozilla */
-    opacity: 0.7; /* CSS3 */
+    filter:alpha(opacity=80); /* IE */
+    -moz-opacity:0.8; /* Mozilla */
+    opacity: 0.8; /* CSS3 */
 }
 
 .course-content ul.gridicons img.new_activity {
@@ -120,12 +122,10 @@ div#gridmiddle-column ul {
     cursor: pointer;
 }
 .course-content ul.gridicons li p.icon_content {
-    font-size: 14px;
     font-weight: bold;
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
-    color: black;
     height: 20px;
     text-align: center;
 }
@@ -134,6 +134,10 @@ div#gridmiddle-column ul {
     border-style: solid;
     text-align: center;
     vertical-align: middle;
+    /* Override Bootstrap V3 box sizing of .box-sizing(border-box); in scaffolding.less. */
+    -webkit-box-sizing: content-box;
+       -moz-box-sizing: content-box;
+            box-sizing: content-box;
 }
 
 .course-content ul.gridicons li img {
@@ -157,7 +161,7 @@ div#gridshadebox_overlay {
     filter: alpha(opacity=70);
     /* CSS3 standard */
     opacity: 0.7;
-    z-index: 100000;
+    z-index: 1;
     cursor: pointer;
 }
 #gridshadebox_content {
@@ -174,16 +178,22 @@ body.jsenabled #gridshadebox_content.hide_content {
     padding-bottom: 4px;
     padding-top: 2px;
 }
-#gridshadebox_content ul li {
+#gridshadebox_content ul li.grid_section {
     list-style: none;
 }
-#gridshadebox_content ul li ul li {
-    list-style: circle;
+#gridshadebox_content ul li ul li, #gridshadebox_content ul li ol li {
     border-bottom: none;
     padding-bottom: 4px;
     padding-top: 2px;
 }
 
+#gridshadebox_content ul li ul li {
+    list-style: disc outside none;
+}
+#gridshadebox_content ul li ol li {
+    list-style: decimal outside none;
+} 
+ 
 #gridshadebox_close {
     position: absolute;
     top: -10px;

@@ -123,9 +123,9 @@ All 'Grid format' does is integrate with the course page and control it's layout
 with the format is in fact to do with a theme or core component.  Please be confident that it is an issue with 'Grid format'
 but if in doubt, ask.
 
-We operate a policy that we will fix all genuine issues for free (this only applies to the code as supplied from the sources listed
+I operate a policy that I will fix all genuine issues for free (this only applies to the code as supplied from the sources listed
 in 'Free Software' above.  Any changes / improvements you make are not covered and invalidate this policy for all of the code).
-Improvements are at our discretion.  We are happy to make bespoke customisations / improvements for a negotiated fee.  We will
+Improvements are at our discretion.  I am happy to make bespoke customisations / improvements for a negotiated fee.  I will
 endeavour to respond to all requests for support as quickly as possible, if you require a faster service then offering payment for
 the service will expedite the response.
 
@@ -233,8 +233,7 @@ Roadmap
 3. CONTRIB-3240 - Gridview course format more accessible.
 4. Use of crowd funding facility to support development.
 5. Continued maintenance of issues: https://tracker.moodle.org/browse/CONTRIB/component/11231.
-6. Add in grid format specific capabilities to change things.
-7. Ongoing structured walk through and refactoring.
+6. Ongoing structured walk through and refactoring.
 
 Known Issues
 =============
@@ -242,6 +241,40 @@ Known Issues
 
 History
 =============
+18th August 2014 Version 2.6.1.9
+  1.  Fixed issue whereby the grid shade box is underneath certain theme components:
+      https://moodle.org/mod/forum/discuss.php?d=266192#p1152232.
+
+9th August 2014 Version 2.6.1.8
+  1.  Fixed CONTRIB-5191.  This is a workaround that depends on MDL-43525 being implemented before it is reversed.
+
+12th June 2014 Version 2.6.1.7
+Change by G J Barnard
+  1.  Fixed CONTRIB-5106 - thanks to Hanna Edelman for this.
+
+23rd April 2014 Version 2.6.1.6
+Change by G J Barnard
+  1.  Fixed CONTRIB-5001 - Cannot use the same image in the section summary as well as the grid.
+  2.  Note: Julian has departed from Moodle work so I have taken over full responsibility for the format.
+
+28th March 2014 Version 2.6.1.5
+Change by G J Barnard
+  1.  Fix to RTL CSS thanks to Nadav Kavalerchik - https://github.com/gjb2048/moodle-courseformat_grid/pull/3 being:
+      Right align "New activity" notification image in RTL mode.
+  2.  Fixed missing strings in 'en' language file for 'One section per page' mode.
+  3.  Fixed number format on ordered lists as reported on https://moodle.org/mod/forum/discuss.php?d=252497.
+  4.  Changed current selected image container to #ffc540 from #00cc00.  As the latter was too 'in your face'.
+  5.  Added a new setting so that you can choose if you want to display the "New activity" notification image.  The default is yes.
+  6.  Removed colour and font size attribute of icon text from styles.css.
+  7.  Removed redundant icons.
+  8.  Fixed box-sizing method for Bootstrap V3 in styles.css.
+  9.  Slightly shrunk grid icon outside to make better use of available space.
+ 10.  Changed current section colour in the grid to use a box-shadow instead of a background to avoid confusion with
+      the current selected section.  This is a compromised as the latter is there for accessibility reasons and hence
+      rationally should stand out more.  This change will not be back-ported as it's not IE8 compatible,
+      http://caniuse.com/#search=box-shadow and hence requires a version of Moodle that does not mandate it.
+ 11.  Fixed CONTRIB-4861 - Glossary pop-ups do not display correctly.
+
 18th December 2013 Version 2.6.1.4
 Change by G J Barnard
   1.  Fixed path and message confusion issue with the M1.9 upgrade script.
@@ -493,7 +526,6 @@ Change by G J Barnard
 Change by G J Barnard
   1. First alpha release for Moodle 2.4
 
-Authors
--------
-J Ridden - Moodle profile: https://moodle.org/user/profile.php?id=39680 - Web: http://www.moodleman.net
+Author
+------
 G J Barnard - Moodle profile: moodle.org/user/profile.php?id=442195 - Web profile: about.me/gjbarnard
