@@ -59,6 +59,7 @@ $string['reset'] = 'Restore System Defaults';
 
 $string['no_type'] = '{$a} is not in the acceptable type viewer. Please use the applciation correctly.';
 $string['no_email'] = 'Could not email {$a->firstname} {$a->lastname}.';
+$string['no_email_address'] = 'Could not email {$a}';
 $string['no_log'] = 'You have no email history yet.';
 $string['no_drafts'] = 'You have no email drafts.';
 $string['no_subject'] = 'You must have a subject';
@@ -122,3 +123,14 @@ received it by mistake. Simply discard this message.
 
 Thank you.
 ';
+
+
+// Strings for Error Reporting
+
+$string['sent_success'] = 'all messages sent successfully';
+$string['message_failure'] = 'some users did not get message';
+$string['send_again'] = 'send again';
+$string['status'] = 'status';
+$string['failed_to_send_to'] = 'failed to send to';
+$string['users'] = 'users';
+$string['user'] = 'user';
