@@ -16,7 +16,7 @@ $mode = optional_param('mode', 'show', PARAM_ALPHAEXT);
 
 require_login();
 
-if (!$context = get_context_instance(CONTEXT_SYSTEM)) {
+if (!$context = context_system::instance()) {
     print_error('wrongcontext', 'error');
 }
 
@@ -40,7 +40,7 @@ $url = new moodle_url('/blocks/admin_presets/index.php');
 $url->param('action', $action);
 $url->param('mode', $mode);
 $PAGE->set_url($url);
-
+$PAGE->set_pagelayout('admin');
 $PAGE->set_context($context);
 
 
