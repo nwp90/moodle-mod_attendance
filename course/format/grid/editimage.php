@@ -78,7 +78,7 @@ if ($mform->is_cancelled()) {
     // Someone has hit the 'cancel' button.
     redirect(new moodle_url($CFG->wwwroot . '/course/view.php?id=' . $course->id));
 } else if ($formdata = $mform->get_data()) { // Form has been submitted.
-    if ($formdata->deleteimage === 1) {
+    if ($formdata->deleteimage == 1) {
         // Delete the old images....
         $courseformat = course_get_format($course);
         $courseformat->delete_image($sectionid, $context->id);

@@ -122,4 +122,15 @@ if ($ADMIN->fulltree) {
     $default = format_grid::get_default_current_selected_image_container_colour();
     $setting = new admin_setting_configcolourpicker($name, $title, $description, $default);
     $settings->add($setting);
+
+    /* Show new activity notification image - 1 = no, 2 = yes. */
+    $name = 'format_grid/defaultnewactivity';
+    $title = get_string('defaultnewactivity', 'format_grid');
+    $description = get_string('defaultnewactivity_desc', 'format_grid');
+    $default = 2;
+    $choices = array(
+        1 => new lang_string('no'),   // No.
+        2 => new lang_string('yes')   // Yes.
+    );
+    $settings->add(new admin_setting_configselect($name, $title, $description, $default, $choices));
 }
