@@ -35,11 +35,15 @@ $string['hidden_topic'] = 'This section has been hidden';
 $string['hide_summary'] = 'move section into grid';
 $string['hide_summary_alt'] = 'Move this section into the grid';
 $string['namegrid'] = 'Grid view';
-$string['pluginname'] = 'Grid format';
 $string['title'] = 'Section title';
 $string['topic'] = 'Section';
 $string['topic0'] = 'General';
 $string['topicoutline'] = 'Section';  // No longer used kept for legacy versions.
+
+// Moodle 2.0 Enhancement - Moodle Tracker MDL-15252, MDL-21693 & MDL-22056 - http://docs.moodle.org/en/Development:Languages.
+$string['sectionname'] = 'Section';
+$string['pluginname'] = 'Grid format';
+$string['section0name'] = 'General';
 
 // WAI-ARIA - http://www.w3.org/TR/wai-aria/roles.
 $string['gridimagecontainer'] = 'Grid images';
@@ -101,6 +105,9 @@ $string['defaultcurrentselectedimagecontainercolour_desc'] = 'The default curren
 $string['defaultcoursedisplay'] = 'Course display default';
 $string['defaultcoursedisplay_desc'] = "Either show all the sections on a single page or section zero and the chosen section on page.";
 
+$string['defaultnewactivity'] = 'Show new activity notification image default';
+$string['defaultnewactivity_desc'] = "Show the new activity notification image when a new activity or resource are added to a section default.";
+
 $string['setimagecontainerwidth'] = 'Set the image container width';
 $string['setimagecontainerwidth_help'] = 'Set the image container width to one of: 128, 192, 210, 256, 320, 384, 448, 512, 576, 640, 704 or 768';
 $string['setimagecontainerratio'] = 'Set the image container ratio relative to the width';
@@ -120,6 +127,9 @@ $string['setcurrentselectedsectioncolour_help'] = 'Set the current selected sect
 $string['setcurrentselectedimagecontainercolour'] = 'Set the current selected image container colour';
 $string['setcurrentselectedimagecontainercolour_help'] = 'Set the current selected image container colour in hexidecimal RGB.';
 
+$string['setnewactivity'] = 'Show new activity notification image';
+$string['setnewactivity_help'] = "Show the new activity notification image when a new activity or resource are added to a section.";
+
 $string['colourrule'] = "Please enter a valid RGB colour, six hexadecimal digits.";
 
 // Reset.
@@ -137,6 +147,10 @@ $string['resetimagecontainerstyle'] = 'Image container style';
 $string['resetimagecontainerstyle_help'] = 'Resets the image container style to the default value so it will be the same as a course the first time it is in the Grid format.';
 $string['resetallimagecontainerstyle'] = 'Image container styles';
 $string['resetallimagecontainerstyle_help'] = 'Resets the image container styles to the default value for all courses so it will be the same as a course the first time it is in the Grid format.';
+$string['resetnewactivity'] = 'New activity';
+$string['resetnewactivity_help'] = 'Resets the new activity notification image to the default value so it will be the same as a course the first time it is in the Grid format.';
+$string['resetallnewactivity'] = 'New activities';
+$string['resetallnewactivity_help'] = 'Resets the new activity notification images to the default value for all courses so it will be the same as a course the first time it is in the Grid format.';
 
 // Capabilities.
 $string['grid:changeimagecontainersize'] = 'Change or reset the image container size';

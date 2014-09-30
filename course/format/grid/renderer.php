@@ -32,6 +32,7 @@ class format_grid_renderer extends format_section_renderer_base {
 
     private $topic0_at_top; // Boolean to state if section zero is at the top (true) or in the grid (false).
     private $courseformat; // Our course format object as defined in lib.php.
+    private $settings; // Settings array.
     private $shadeboxshownarray = array(); // Value of 1 = not shown, value of 2 = shown - to reduce ambiguity in JS.
 
     /**
@@ -42,6 +43,8 @@ class format_grid_renderer extends format_section_renderer_base {
      */
     public function __construct(moodle_page $page, $target) {
         parent::__construct($page, $target);
+        $this->courseformat = course_get_format($page->course);
+        $this->settings = $this->courseformat->get_settings();
 
         /* Since format_grid_renderer::section_edit_controls() only displays the 'Set current section' control when editing
            mode is on we need to be sure that the link 'Turn editing mode on' is available for a user who does not have any
@@ -84,8 +87,6 @@ class format_grid_renderer extends format_section_renderer_base {
      */
     public function print_multiple_section_page($course, $sections, $mods, $modnames, $modnamesused) {
         global $PAGE;
-
-        $this->courseformat = course_get_format($course);
 
         $summarystatus = $this->courseformat->get_summary_visibility($course->id);
         $context = context_course::instance($course->id);
@@ -173,7 +174,7 @@ class format_grid_renderer extends format_section_renderer_base {
             $course->numsections,
             json_encode($this->shadeboxshownarray)));
         // Initialise the key control functionality...
-        $PAGE->requires->yui_module('moodle-format_grid-gridkeys', 'M.format_grid.gridkeys.init', null, null, true);
+        $PAGE->requires->yui_module('moodle-format_grid-gridkeys', 'M.format_grid.gridkeys.init', null, '2011.02.02-21-07', true);
     }
 
     /**
@@ -307,19 +308,21 @@ class format_grid_renderer extends format_section_renderer_base {
             $urlpicedit) {
         global $USER, $CFG;
 
-        $currentlanguage = current_language();
-        if (!file_exists("$CFG->dirroot/course/format/grid/pix/new_activity_" . $currentlanguage . ".png")) {
-            $currentlanguage = 'en';
+        if ($this->settings['newactivity'] == 2) {
+            $currentlanguage = current_language();
+            if (!file_exists("$CFG->dirroot/course/format/grid/pix/new_activity_" . $currentlanguage . ".png")) {
+                $currentlanguage = 'en';
+            }
+            $url_pic_new_activity = $this->output->pix_url('new_activity_' . $currentlanguage, 'format_grid');
+
+            // Get all the section information about which items should be marked with the NEW picture.
+            $sectionupdated = $this->new_activity($course);
         }
-        $url_pic_new_activity = $this->output->pix_url('new_activity_' . $currentlanguage, 'format_grid');
 
         if ($editing) {
             $streditimage = get_string('editimage', 'format_grid');
             $streditimagealt = get_string('editimage_alt', 'format_grid');
         }
-
-        // Get all the section information about which items should be marked with the NEW picture.
-        $sectionupdated = $this->new_activity($course);
 
         // Get the section images for the course.
         $sectionimages = $this->courseformat->get_images($course->id);
@@ -351,7 +354,7 @@ class format_grid_renderer extends format_section_renderer_base {
                     'aria-label' => $sectionname
                 );
                 if ($this->courseformat->is_section_current($section)) {
-                    $liattributes['class'] = 'current';
+                    $liattributes['class'] = 'currenticon';
                 }
                 echo html_writer::start_tag('li', $liattributes);
 
@@ -369,7 +372,7 @@ class format_grid_renderer extends format_section_renderer_base {
                     // Set up the displayed image:...
                     $sectionimage->newimage = $sectionimage->image;
                     $sectionimage = $this->courseformat->setup_displayed_image($sectionimage, $contextid,
-                            $this->courseformat->get_settings());
+                        $this->settings);
                     if (format_grid::is_developer_debug()) {
                         error_log('make_block_icon_topics: Updated displayed image for section ' . $thissection->id . ' to ' .
                                 $sectionimage->newimage . ' and index ' . $sectionimage->displayedimageindex);
@@ -386,7 +389,7 @@ class format_grid_renderer extends format_section_renderer_base {
 
                     echo html_writer::tag('p', $sectionname, array('class' => 'icon_content'));
 
-                    if (isset($sectionupdated[$thissection->id])) {
+                    if (($this->settings['newactivity'] == 2) && (isset($sectionupdated[$thissection->id]))) {
                         // The section has been updated since the user last visited this course, add NEW label.
                         echo html_writer::empty_tag('img', array(
                             'class' => 'new_activity',
@@ -452,7 +455,7 @@ class format_grid_renderer extends format_section_renderer_base {
                 } else {
                     $title = html_writer::tag('p', $sectionname, array('class' => 'icon_content'));
 
-                    if (isset($sectionupdated[$thissection->id])) {
+                    if (($this->settings['newactivity'] == 2) && (isset($sectionupdated[$thissection->id]))) {
                         $title .= html_writer::empty_tag('img', array(
                                     'class' => 'new_activity',
                                     'src' => $url_pic_new_activity,

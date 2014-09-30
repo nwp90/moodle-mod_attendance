@@ -109,8 +109,8 @@ $imageproperties = $courseformat->calculate_image_container_properties(
         box-shadow: 0px 0px 0px <?php echo $gfsettings['borderwidth']; ?>px rgba(<?php echo $red . ',' . $green . ',' . $blue ?>,0.3);
     }
 
-    .course-content ul.gridicons li.current {
-        background-color: <?php
+    .course-content ul.gridicons li.currenticon .image_holder {
+        box-shadow: 0px 0px 2px 4px <?php
         if ($gfsettings['currentselectedsectioncolour'][0] != '#') {
             echo '#';
         }
@@ -119,7 +119,7 @@ $imageproperties = $courseformat->calculate_image_container_properties(
     }
 
     .course-content ul.gridicons li.currentselected {
-        background: <?php
+        background-color: <?php
         if ($gfsettings['currentselectedimagecontainercolour'][0] != '#') {
             echo '#';
         }

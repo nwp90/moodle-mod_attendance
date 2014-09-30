@@ -149,7 +149,7 @@ class format_grid extends format_base {
      * @return string Default current selected section colour.
      */
     public static function get_default_current_selected_section_colour() {
-        return '#d9edf7';
+        return '#8E66FF';
     }
 
     /**
@@ -157,7 +157,7 @@ class format_grid extends format_base {
      * @return string Default current selected image container colour.
      */
     public static function get_default_current_selected_image_container_colour() {
-        return '#00CC00';
+        return '#ffc540';
     }
 
     /**
@@ -338,51 +338,55 @@ class format_grid extends format_base {
             $courseformatoptions = array(
                 'numsections' => array(
                     'default' => $courseconfig->numsections,
-                    'type' => PARAM_INT,
+                    'type' => PARAM_INT
                 ),
                 'hiddensections' => array(
                     'default' => $courseconfig->hiddensections,
-                    'type' => PARAM_INT,
+                    'type' => PARAM_INT
                 ),
                 'coursedisplay' => array(
                     'default' => $courseconfig->coursedisplay,
-                    'type' => PARAM_INT,
+                    'type' => PARAM_INT
                 ),
                 'imagecontainerwidth' => array(
                     'default' => get_config('format_grid', 'defaultimagecontainerwidth'),
-                    'type' => PARAM_INT,
+                    'type' => PARAM_INT
                 ),
                 'imagecontainerratio' => array(
                     'default' => get_config('format_grid', 'defaultimagecontainerratio'),
-                    'type' => PARAM_ALPHANUM,
+                    'type' => PARAM_ALPHANUM
                 ),
                 'imageresizemethod' => array(
                     'default' => get_config('format_grid', 'defaultimageresizemethod'),
-                    'type' => PARAM_INT,
+                    'type' => PARAM_INT
                 ),
                 'bordercolour' => array(
                     'default' => $defaultbordercolour,
-                    'type' => PARAM_ALPHANUM,
+                    'type' => PARAM_ALPHANUM
                 ),
                 'borderwidth' => array(
                     'default' => get_config('format_grid', 'defaultborderwidth'),
-                    'type' => PARAM_INT,
+                    'type' => PARAM_INT
                 ),
                 'borderradius' => array(
                     'default' => get_config('format_grid', 'defaultborderradius'),
-                    'type' => PARAM_INT,
+                    'type' => PARAM_INT
                 ),
                 'imagecontainerbackgroundcolour' => array(
                     'default' => $defaultimagecontainerbackgroundcolour,
-                    'type' => PARAM_ALPHANUM,
+                    'type' => PARAM_ALPHANUM
                 ),
                 'currentselectedsectioncolour' => array(
                     'default' => $defaultcurrentselectedsectioncolour,
-                    'type' => PARAM_ALPHANUM,
+                    'type' => PARAM_ALPHANUM
                 ),
                 'currentselectedimagecontainercolour' => array(
                     'default' => $defaultcurrentselectedimagecontainercolour,
-                    'type' => PARAM_ALPHANUM,
+                    'type' => PARAM_ALPHANUM
+                ),
+                'newactivity' => array(
+                    'default' => get_config('format_grid', 'defaultnewactivity'),
+                    'type' => PARAM_INT
                 )
             );
         }
@@ -557,6 +561,18 @@ class format_grid extends format_base {
                 $courseformatoptionsedit['currentselectedimagecontainercolour'] =
                         array('label' => $defaultcurrentselectedimagecontainercolour, 'element_type' => 'hidden');
             }
+            $courseformatoptionsedit['newactivity'] = array(
+                'label' => new lang_string('setnewactivity', 'format_grid'),
+                'element_type' => 'select',
+                'element_attributes' => array(
+                    array(
+                        1 => new lang_string('no'),   // No.
+                        2 => new lang_string('yes')   // Yes.
+                    )
+                ),
+                'help' => 'setnewactivity',
+                'help_component' => 'format_grid'
+            );
             $courseformatoptions = array_merge_recursive($courseformatoptions, $courseformatoptionsedit);
         }
         return $courseformatoptions;
@@ -603,11 +619,12 @@ class format_grid extends format_base {
             $changeimagecontainerstyle = has_capability('format/grid:changeimagecontainerstyle', $coursecontext);
             $resetall = is_siteadmin($USER); // Site admins only.
 
-            if ((($changeimagecontainersize) || ($changeimageresizemethod) || ($changeimagecontainerstyle)) || ($resetall)) {
-                $elements[] = $mform->addElement('header', 'gfreset', get_string('gfreset', 'format_grid'));
-                $mform->addHelpButton('gfreset', 'gfreset', 'format_grid', '', true);
+            $elements[] = $mform->addElement('header', 'gfreset', get_string('gfreset', 'format_grid'));
+            $mform->addHelpButton('gfreset', 'gfreset', 'format_grid', '', true);
 
-                $resetelements = array();
+            $resetelements = array();
+
+            if ((($changeimagecontainersize) || ($changeimageresizemethod) || ($changeimagecontainerstyle))) {
 
                 if ($changeimagecontainersize) {
                     $checkboxname = get_string('resetimagecontainersize', 'format_grid') .
@@ -626,30 +643,36 @@ class format_grid extends format_base {
                             $OUTPUT->help_icon('resetimagecontainerstyle', 'format_grid');
                     $resetelements[] = & $mform->createElement('checkbox', 'resetimagecontainerstyle', '', $checkboxname);
                 }
+            }
 
-                if (($changeimagecontainersize) || ($changeimageresizemethod) || ($changeimagecontainerstyle)) {
-                    $elements[] = $mform->addGroup($resetelements, 'resetgroup', get_string('resetgrp', 'format_grid'), null,
-                            false);
-                }
+            $checkboxname = get_string('resetnewactivity', 'format_grid') .
+                $OUTPUT->help_icon('resetnewactivity', 'format_grid');
+            $resetelements[] = & $mform->createElement('checkbox', 'resetnewactivity', '', $checkboxname);
 
-                if ($resetall) {
-                    $resetallelements = array();
+            $elements[] = $mform->addGroup($resetelements, 'resetgroup', get_string('resetgrp', 'format_grid'), null,
+                false);
 
-                    $checkboxname = get_string('resetallimagecontainersize', 'format_grid') .
-                            $OUTPUT->help_icon('resetallimagecontainersize', 'format_grid');
-                    $resetallelements[] = & $mform->createElement('checkbox', 'resetallimagecontainersize', '', $checkboxname);
+            if ($resetall) {
+                $resetallelements = array();
 
-                    $checkboxname = get_string('resetallimageresizemethod', 'format_grid') .
-                            $OUTPUT->help_icon('resetallimageresizemethod', 'format_grid');
-                    $resetallelements[] = & $mform->createElement('checkbox', 'resetallimageresizemethod', '', $checkboxname);
+                $checkboxname = get_string('resetallimagecontainersize', 'format_grid') .
+                    $OUTPUT->help_icon('resetallimagecontainersize', 'format_grid');
+                $resetallelements[] = & $mform->createElement('checkbox', 'resetallimagecontainersize', '', $checkboxname);
 
-                    $checkboxname = get_string('resetallimagecontainerstyle', 'format_grid') .
-                            $OUTPUT->help_icon('resetallimagecontainerstyle', 'format_grid');
-                    $resetallelements[] = & $mform->createElement('checkbox', 'resetallimagecontainerstyle', '', $checkboxname);
+                $checkboxname = get_string('resetallimageresizemethod', 'format_grid') .
+                    $OUTPUT->help_icon('resetallimageresizemethod', 'format_grid');
+                $resetallelements[] = & $mform->createElement('checkbox', 'resetallimageresizemethod', '', $checkboxname);
 
-                    $elements[] = $mform->addGroup($resetallelements, 'resetallgroup', get_string('resetallgrp', 'format_grid'),
-                            null, false);
-                }
+                $checkboxname = get_string('resetallimagecontainerstyle', 'format_grid') .
+                    $OUTPUT->help_icon('resetallimagecontainerstyle', 'format_grid');
+                $resetallelements[] = & $mform->createElement('checkbox', 'resetallimagecontainerstyle', '', $checkboxname);
+
+                $checkboxname = get_string('resetallnewactivity', 'format_grid') .
+                    $OUTPUT->help_icon('resetallnewactivity', 'format_grid');
+                $resetallelements[] = & $mform->createElement('checkbox', 'resetallnewactivity', '', $checkboxname);
+
+                $elements[] = $mform->addGroup($resetallelements, 'resetallgroup', get_string('resetallgrp', 'format_grid'),
+                    null, false);
             }
         }
 
@@ -738,9 +761,11 @@ class format_grid extends format_base {
         $resetimagecontainersize = false;
         $resetimageresizemethod = false;
         $resetimagecontainerstyle = false;
+        $resetnewactivity = false;
         $resetallimagecontainersize = false;
         $resetallimageresizemethod = false;
         $resetallimagecontainerstyle = false;
+        $resetallnewactivity = false;
         if (isset($data->resetimagecontainersize) == true) {
             $resetimagecontainersize = true;
             unset($data->resetimagecontainersize);
@@ -753,6 +778,10 @@ class format_grid extends format_base {
             $resetimagecontainerstyle = true;
             unset($data->resetimagecontainerstyle);
         }
+        if (isset($data->resetnewactivity) == true) {
+            $resetnewactivity = true;
+            unset($data->resetnewactivity);
+        }
         if (isset($data->resetallimagecontainersize) == true) {
             $resetallimagecontainersize = true;
             unset($data->resetallimagecontainersize);
@@ -764,6 +793,10 @@ class format_grid extends format_base {
         if (isset($data->resetallimagecontainerstyle) == true) {
             $resetallimagecontainerstyle = true;
             unset($data->resetallimagecontainerstyle);
+        }
+        if (isset($data->resetallnewactivity) == true) {
+            $resetallnewactivity = true;
+            unset($data->resetallnewactivity);
         }
 
         $settings = $this->get_settings();
@@ -824,11 +857,11 @@ class format_grid extends format_base {
         }
 
         // Now we can do the reset.
-        if (($resetallimagecontainersize) || ($resetallimageresizemethod) || ($resetallimagecontainerstyle)) {
-            $this->reset_grid_setting(0, $resetallimagecontainersize, $resetallimageresizemethod, $resetallimagecontainerstyle);
+        if (($resetallimagecontainersize) || ($resetallimageresizemethod) || ($resetallimagecontainerstyle) || ($resetallnewactivity)) {
+            $this->reset_grid_setting(0, $resetallimagecontainersize, $resetallimageresizemethod, $resetallimagecontainerstyle, $resetallnewactivity);
             $changes = true;
-        } else if (($resetimagecontainersize) || ($resetimageresizemethod) || ($resetimagecontainerstyle)) {
-            $this->reset_grid_setting($this->courseid, $resetimagecontainersize, $resetimageresizemethod, $resetimagecontainerstyle);
+        } else if (($resetimagecontainersize) || ($resetimageresizemethod) || ($resetimagecontainerstyle) || ($resetnewactivity)) {
+            $this->reset_grid_setting($this->courseid, $resetimagecontainersize, $resetimageresizemethod, $resetimagecontainerstyle, $resetnewactivity);
             $changes = true;
         }
 
@@ -861,8 +894,9 @@ class format_grid extends format_base {
      * @param int $imagecontainersizereset If true, reset the layout to the default in the settings for the format.
      * @param int $imageresizemethodreset If true, reset the image resize method to the default in the settings for the format.
      * @param int $imagecontainerstylereset If true, reset the colour to the default in the settings for the format.
+     * @param int $newactivity If true, reset the new activity to the default in the settings for the format.
      */
-    public function reset_grid_setting($courseid, $imagecontainersizereset, $imageresizemethodreset, $imagecontainerstylereset) {
+    public function reset_grid_setting($courseid, $imagecontainersizereset, $imageresizemethodreset, $imagecontainerstylereset, $newactivityreset) {
         global $DB, $USER;
 
         $coursecontext = context_course::instance($this->courseid);
@@ -881,6 +915,7 @@ class format_grid extends format_base {
         $updateimagecontainersize = false;
         $updateimageresizemethod = false;
         $updateimagecontainerstyle = false;
+        $updatenewactivity = false;
         if ($imagecontainersizereset && has_capability('format/grid:changeimagecontainersize', $coursecontext) && $resetallifall) {
             $updatedata['imagecontainerwidth'] = get_config('format_grid', 'defaultimagecontainerwidth');
             $updatedata['imagecontainerratio'] = get_config('format_grid', 'defaultimagecontainerratio');
@@ -900,9 +935,13 @@ class format_grid extends format_base {
                     'defaultcurrentselectedimagecontainercolour');
             $updateimagecontainerstyle = true;
         }
+        if ($newactivityreset && $resetallifall) {
+            $updatedata['newactivity'] = get_config('format_grid', 'defaultnewactivity');
+            $updatenewactivity = true;
+        }
 
         foreach ($records as $record) {
-            if (($updateimagecontainersize) || ($updateimageresizemethod) || ($updateimagecontainerstyle)) {
+            if (($updateimagecontainersize) || ($updateimageresizemethod) || ($updateimagecontainerstyle) || ($updatenewactivity)) {
                 $ourcourseid = $this->courseid;
                 $this->courseid = $record->id;
                 if (($updateimagecontainersize) || ($updateimageresizemethod)) {
@@ -950,37 +989,6 @@ class format_grid extends format_base {
                 $this->courseid = $ourcourseid;
             }
         }
-    }
-
-    /**
-     * Restores the course settings when restoring a pre CONTRIB-4099 course and sets the settings when upgrading
-     * from a previous version.
-     */
-    public function restore_grid_setting($courseid, $imagecontainerwidth, $imagecontainerratio, $imageresizemethod, $bordercolour,
-            $borderwidth, $borderradius, $imagecontainerbackgroundcolour, $currentselectedsectioncolour,
-            $currentselectedimagecontainercolour) {
-        $currentcourseid = $this->courseid;  // Save for later - stack data model.
-        $this->courseid = $courseid;
-        // Create data array.
-        $data = array(
-            'imagecontainerwidth' => $imagecontainerwidth,
-            'imagecontainerratio' => $imagecontainerratio,
-            'imageresizemethod' => $imageresizemethod,
-            'bordercolour' => $bordercolour,
-            'borderwidth' => $borderwidth,
-            'borderradius' => $borderradius,
-            'imagecontainerbackgroundcolour' => $imagecontainerbackgroundcolour,
-            'currentselectedsectioncolour' => $currentselectedsectioncolour,
-            'currentselectedimagecontainercolour' => $currentselectedimagecontainercolour
-        );
-
-        if (self::is_developer_debug()) {
-            error_log('restore_grid_setting - called data: ' . print_r($data, true));
-        }
-
-        $this->update_course_format_options($data);
-
-        $this->courseid = $currentcourseid;
     }
 
     // Grid specific methods...
@@ -1191,7 +1199,8 @@ class format_grid extends format_base {
             'filearea' => 'section',
             'itemid' => $sectionid,
             'filepath' => '/',
-            'filename' => $filename,
+            // CONTRIB-5001 - Avoid clashes with the same image in the section summary by using a different name.
+            'filename' => 'goi_'.$filename, // goi = tla = grid original image.
             'timecreated' => $created,
             'timemodified' => $created);
 
@@ -1260,7 +1269,7 @@ class format_grid extends format_base {
     }
 
     /**
-     * Setup the displayed image.
+     * Set up the displayed image.
      * @param array $sectionimage Section information from its row in the 'format_grid_icon' table.
      * @param array $contextid The context id to which the image relates.
      * @param array $settings The course settings to apply.
@@ -1363,6 +1372,8 @@ class format_grid extends format_base {
         } catch (Exception $e) {
             print('Grid Format Setup Displayed Image Exception:...');
             debugging($e->getMessage());
+            debugging(print_r($contextid, true));
+            debugging(print_r($sectionimage, true));
             debugging(print_r($e, true));
         }
 
