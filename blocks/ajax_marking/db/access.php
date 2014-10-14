@@ -14,19 +14,28 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-
 /**
- * Keeps track of the version number
  *
  * @package    block
  * @subpackage ajax_marking
- * @copyright  2010 Matt Gibson
+ * @copyright  2013 Matt Gibson
  * @author     Matt Gibson {@link http://moodle.org/user/view.php?id=81450}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$plugin->version = 2013070801;
-$plugin->maturity = MATURITY_BETA;
-$plugin->requires = 2012120300; // 2.4.
-$plugin->component = 'block_ajax_marking';
-$plugin->release = '2.4.2';
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+
+$capabilities = array(
+    'block/ajax_marking:addinstance' => array(
+        'riskbitmask' => RISK_PERSONAL | RISK_CONFIG,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => array(
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
+        )
+    ),
+
+);
