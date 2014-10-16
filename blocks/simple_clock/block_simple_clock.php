@@ -181,7 +181,7 @@ class block_simple_clock extends block_base {
             $row[] = HTML_WRITER::empty_tag('input', $attributes);
             $table->data[] = $row;
         }
-        $this->content->text .= HTML_WRITER::table($table);
+        $this->content->text = HTML_WRITER::table($table);
 
         // Set up JavaScript coded needed to keep the clock going.
         $noscriptstring = get_string('javascript_disabled', 'block_simple_clock');
