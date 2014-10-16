@@ -286,7 +286,14 @@ class store implements \tool_log\log\store, \core\log\sql_reader {
         // If the 100 field size is changed, also need to alter print_log in course/lib.php.
         if (!empty($url) && \core_text::strlen($url) > 100) {
             $url = \core_text::substr($url, 0, 97) . '...';
-            debugging('Warning: logged very long URL', DEBUG_DEVELOPER);
+            // change warning; 100 is a stupidly short length of URL to worry about.
+            // e.g. https://medschool.otago.ac.nz/pluginfile.php/38942/mod_pcast/episode/145/<filename>
+            // only leaves about 25 chars for podcast filename.
+            // I would change the field length in DB but that would be asking for maintenance headache.
+            // nwp 20141017
+            if (core_text::strlen($url) > 150) {
+                debugging('Warning: logged very long URL',DEBUG_DEVELOPER);
+            }
         }
 
         if (defined('MDL_PERFDB')) {
