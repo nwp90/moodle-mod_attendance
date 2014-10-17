@@ -17,10 +17,8 @@
 /**
  * News block System/Config class
  *
- * @package    blocks
- * @subpackage news
- * @copyright 2011 The Open University
- * @author Jon Sharp <jonathans@catalyst-eu.net>
+ * @package block_news
+ * @copyright 2014 The Open University
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 if (!defined('MOODLE_INTERNAL')) {
@@ -43,11 +41,12 @@ class block_news_system {
     // DAYSECS, used below, is defined in lib/moodlelib.php
     const MAXSTDMSGS = 20; // maximum std feed messages to show (see generate_block_feed()
 
-    const MSGSQLHDR =
-        'SELECT {block_news_messages}.*,
-         {user}.firstname AS u_firstname,{user}.lastname AS u_lastname,{user}.id AS u_id
-         FROM {block_news_messages}
-         LEFT JOIN {user} ON {block_news_messages}.userid = {user}.id ';
+    public static function get_message_sql_start() {
+        return "SELECT {block_news_messages}.*, u.id AS u_id, " .
+            get_all_user_name_fields(true, 'u', null, 'u_') .
+            " FROM {block_news_messages}
+             LEFT JOIN {user} u ON {block_news_messages}.userid = u.id ";
+    }
 
     protected $id;
     protected $blockinstanceid;
@@ -173,7 +172,7 @@ class block_news_system {
             return $SESSION->block_news_user_groupings[$COURSE->id];
         }
 
-        $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
+        $context = context_course::instance($COURSE->id);
         if (has_capability('moodle/site:accessallgroups', $context)) {
             //if the user has the allgroups capability they can see everything.
             $g = groups_get_all_groupings($COURSE->id);
@@ -230,7 +229,7 @@ class block_news_system {
             return $output;
         }
 
-        $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
+        $context = context_course::instance($COURSE->id);
         if (has_capability('moodle/site:accessallgroups', $context)) {
             return $output;
         }
@@ -322,7 +321,7 @@ class block_news_system {
         $bnms = array();
 
         $groupings = $this->get_grouping_sql();
-        $sql = self::MSGSQLHDR .
+        $sql = self::get_message_sql_start() .
                 'WHERE blockinstanceid=?
                  AND messagevisible=1
                  AND messagedate <= ?'
@@ -354,7 +353,7 @@ class block_news_system {
 
         $groupings = $this->get_grouping_sql();
         if ($viewhidden) { // see all dates, all visibilty
-            $sql =  self::MSGSQLHDR .
+            $sql = self::get_message_sql_start() .
                     'WHERE blockinstanceid = ?'
                     .$groupings['sql'].
                     'ORDER BY messagedate DESC';
@@ -362,7 +361,7 @@ class block_news_system {
             $params = array_merge($params, $groupings['params']);
             $mrecs = $DB->get_records_sql($sql, $params);
         } else {  // see past/present only and visible
-            $sql =  self::MSGSQLHDR .
+            $sql =  self::get_message_sql_start() .
                     'WHERE blockinstanceid = ?
                      AND messagevisible = 1
                      AND messagedate <= ?'
@@ -394,7 +393,7 @@ class block_news_system {
 
         $groupings = $this->get_grouping_sql();
         if ($viewhidden) {  // see any date, any visibilty
-            $sql = self::MSGSQLHDR .
+            $sql = self::get_message_sql_start() .
                   'WHERE blockinstanceid = ?
                    AND {block_news_messages}.id = ?'
                   .$groupings['sql'];
@@ -403,7 +402,7 @@ class block_news_system {
             $params = array_merge($params, $groupings['params']);
             $mrec = $DB->get_record_sql($sql, $params);
         } else {  // see past & present only and visible
-            $sql = self::MSGSQLHDR .
+            $sql = self::get_message_sql_start() .
                   'WHERE blockinstanceid = ?
                    AND {block_news_messages}.id = ?
                    AND messagevisible = 1
@@ -926,7 +925,7 @@ class block_news_system {
         $it->author = $author;
 
         // convert any @@PLUGINFILE@@ links to real URLs
-        $context = get_context_instance(CONTEXT_BLOCK, $bnm->get_blockinstanceid());
+        $context = context_block::instance($bnm->get_blockinstanceid());
         $it->content = file_rewrite_pluginfile_urls($bnm->get_message(), 'pluginfile.php',
                              $context->id, 'block_news', 'message', $bnm->get_id(), null);
 

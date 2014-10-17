@@ -15,12 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * News Block Message class
+ * News block message.
  *
- * @package    blocks
- * @subpackage news
- * @copyright 2011 The Open University
- * @author Jon Sharp <jonathans@catalyst-eu.net>
+ * @package block_news
+ * @copyright 2014 The Open University
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -53,10 +51,8 @@ class block_news_message {
     protected $timemodified;
     protected $userid;
     protected $groupingid;
-    // properties filled in from user object in constructor for efficiency
-    protected $u_id;
-    protected $u_firstname;
-    protected $u_lastname;
+
+    protected $user;
 
     /**
      * Constructor
@@ -66,9 +62,13 @@ class block_news_message {
      */
     public function __construct($mrec) {
         // assign the properties
+        $this->user = new stdClass;
         foreach ((array)$mrec as $field => $value) {
             if (property_exists($this, $field)) {
                 $this->{$field} = $value;
+            } else if (strpos($field, 'u_') === 0) {
+                $subfield = substr($field, 2);
+                $this->user->{$subfield} = $value;
             }
         }
     }
@@ -185,16 +185,11 @@ class block_news_message {
      * @return StdClass Author user details
      */
     public function get_user() {
-        if ($this->u_id == null) {
+        if (empty($this->user->id)) {
             return null;
         } else {
-            $user= new StdClass();
-            $user->id=$this->u_id;
-            $user->firstname=$this->u_firstname;
-            $user->lastname=$this->u_lastname;
+            return clone($this->user);
         }
-
-        return $user;
     }
 
     /**
@@ -271,7 +266,7 @@ class block_news_message {
         $id = $DB->insert_record('block_news_messages', $data, true);
 
         // save files
-        $context = get_context_instance(CONTEXT_BLOCK, $data->blockinstanceid);
+        $context = context_block::instance($data->blockinstanceid);
         if ($data->attachments) {
             file_save_draft_area_files($data->attachments, $context->id,
                 'block_news', 'attachment', $id, array('subdirs' => 0));
@@ -286,7 +281,8 @@ class block_news_message {
             $DB->set_field('block_news_messages', 'message', $rw_message_text, array('id' => $id));
         }
 
-        add_to_log($COURSE->id, 'block_news', 'insert message', '', '', 0, $USER->id);
+        add_to_log($COURSE->id, 'block_news', 'insert message', '',
+                $data->blockinstanceid . ' ' . $id, 0, $USER->id);
 
         return $id;
     }
@@ -303,7 +299,7 @@ class block_news_message {
         $DB->update_record('block_news_messages', $data);
 
         // save files.
-        $context = get_context_instance(CONTEXT_BLOCK, $data->blockinstanceid);
+        $context = context_block::instance($data->blockinstanceid);
         if ($data->attachments) {
             file_save_draft_area_files($data->attachments, $context->id, 'block_news',
              'attachment', $data->id, array('subdirs' => 0));
@@ -312,7 +308,8 @@ class block_news_message {
              'block_news', 'message', $data->id, array('subdirs' => 0), $data->message['text']);
         $DB->set_field('block_news_messages', 'message', $data->message, array('id' => $data->id));
 
-        add_to_log($COURSE->id, 'block_news', 'update message', '', '', 0, $USER->id);
+        add_to_log($COURSE->id, 'block_news', 'update message', '',
+                $data->blockinstanceid . ' ' . $data->id, 0, $USER->id);
 
         return true;
     }
@@ -322,13 +319,14 @@ class block_news_message {
      */
     public function delete() {
         global $DB, $USER, $COURSE;
-        $context = get_context_instance(CONTEXT_BLOCK, $this->blockinstanceid);
+        $context = context_block::instance($this->blockinstanceid);
         $DB->delete_records('block_news_messages', array('id' => $this->id));
 
         // delete files
         $fs = get_file_storage();
         $fs->delete_area_files($context->id, 'block_news');
 
-        add_to_log($COURSE->id, 'block_news', 'delete message', '', '', 0, $USER->id);
+        add_to_log($COURSE->id, 'block_news', 'delete message', '',
+                $this->blockinstanceid . ' ' . $this->id, 0, $USER->id);
     }
 }
