@@ -21,24 +21,24 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'Bootstrap Base';
+$string['pluginname'] = 'RealBootstrap Base';
 $string['region-side-post'] = 'Right';
 $string['region-side-pre'] = 'Left';
 
 $string['choosereadme'] = '
-<div class="clearfix"><div class="theme_screenshot"><h2>Bootstrap Base</h2>
+<div class="clearfix"><div class="theme_screenshot"><h2>RealBootstrap Base</h2>
 <img class=img-polaroid src="bootstrap/pix/screenshot.jpg" />
 <h3>Theme Credits</h3>
 <p>
 <h3>Moodle twitter Bootstrap theme</h3>
 <p>
-This theme is based on the Bootstrap CSS framework, version 2.3
+This theme is based on the Bootstrap CSS framework, version 2.3, and uses "real" Bootstrap rather than the YUI compatibility version.
 </p>
 <p>
 <a href="http://getbootstrap.com">http://getbootstrap.com</a>
 </p>
 <p>
-This is a GPL theme that is available on GitHub:
+This is based on a GPL theme that is available on GitHub:
 </p>
 <p>
 <a href=https://github.com/bmbrands/theme_bootstrap">https://github.com/bmbrands/theme_bootstrap</a>
@@ -63,7 +63,7 @@ on the Moodle tracker</p>
 
 <h3>More information</h3>
 <ul>
-<li><a href="https://github.com/bmbrands/theme_bootstrap/wiki">Wiki page for this theme</a>
+<li><a href="https://github.com/bmbrands/theme_bootstrap/wiki">Wiki page for the theme this is based on</a>
 <li><a href="http://docs.moodle.org/23/en/bootstrap-Theme">Bootstrap on Moodle docs</a></li>
 <li><a href="http://theming.sonsbeekmedia.nl/">Theme testing playground </a></li>
 </ul>';
