@@ -18,7 +18,7 @@
  * Renderer code for messages in full and short (block) layouts.
  *
  * @package block_news
- * @copyright 2013 The Open University
+ * @copyright 2014 The Open University
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -110,7 +110,7 @@ class block_news_message_full implements renderable {
         // if a feed message (newsfeedid != 0) dont show edit etc icons
         if ($bnm->get_newsfeedid() == 0) {
             // context for access checks
-            $blockcontext = get_context_instance(CONTEXT_BLOCK, $bnm->get_blockinstanceid());
+            $blockcontext = context_block::instance($bnm->get_blockinstanceid());
             if (has_capability('block/news:hide', $blockcontext)) {
                 $this->hideicon = new pix_icon('t/' . $this->showhideact, $this->showhideact);
                     // eg 't/hide', 'hide'
@@ -182,7 +182,6 @@ class block_news_message_short implements renderable {
                                                 get_string('dateformat', 'block_news'));
         $this->messagevisible = $bnm->get_messagevisible();
         $this->messageformat = $bnm->get_messageformat();
-        $this->accesshide = get_string('rendermsgaccesshide', 'block_news', $this->title);
 
         $usr = $bnm->get_user();
         if ($bnm->get_hideauthor() || $usr == null) {
@@ -224,7 +223,7 @@ class block_news_renderer extends plugin_renderer_base {
         global $CFG;
 
         require_once($CFG->libdir . '/filelib.php');
-        $blockcontext = get_context_instance(CONTEXT_BLOCK, $nmsg->blockinstanceid);
+        $blockcontext = context_block::instance($nmsg->blockinstanceid);
         $nmsg->message = file_rewrite_pluginfile_urls($nmsg->message, 'pluginfile.php',
             $blockcontext->id, 'block_news', 'message', $nmsg->id);
 
@@ -321,7 +320,7 @@ class block_news_renderer extends plugin_renderer_base {
      * @return string HTML code for displaying the news heading.
      */
     protected function render_block_news_message_heading($date, $title) {
-        return $this->output->heading($date . $title, 3);
+        return $this->output->heading($date . ' ' . $title, 3);
     }
 
     /**
@@ -360,7 +359,7 @@ class block_news_renderer extends plugin_renderer_base {
 
         // (View)
         $out .= $this->output->container_start('link');
-        $accesshidetxt = html_writer::tag('span', $nmsg->accesshide, array('class' => 'accesshide'));
+        $accesshidetxt = html_writer::tag('span', ' ' . $nmsg->title, array('class' => 'accesshide'));
         $out .= $this->render_block_news_message_link($nmsg->viewlink, $accesshidetxt);
         $out .= $this->output->container_end();
         $out .= $this->output->container_end();

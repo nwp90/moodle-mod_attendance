@@ -59,7 +59,7 @@ function block_news_pluginfile($course, $birecord_or_cm, $context, $filearea, $a
         send_file_not_found();
     }
 
-    if ($parentcontext = get_context_instance_by_id($birecord_or_cm->parentcontextid)) {
+    if ($parentcontext = context::instance_by_id($birecord_or_cm->parentcontextid)) {
         if ($parentcontext->contextlevel == CONTEXT_USER) {
             // force download on all personal pages including /my/
             //because we do not have reliable way to find out from where this is used
@@ -70,7 +70,7 @@ function block_news_pluginfile($course, $birecord_or_cm, $context, $filearea, $a
         $forcedownload = true;
     }
 
-    session_get_instance()->write_close();
+    \core\session\manager::write_close();
     send_stored_file($file, 60*60, 0, $forcedownload);
 }
 
@@ -89,7 +89,7 @@ function block_news_init_page($blockinstanceid, $title) {
     }
     $PAGE->set_pagelayout('incourse');
     // coursecontext set_context should have been set to block context, but this causes problems
-    $coursecontext = get_context_instance(CONTEXT_COURSE, $csemod->course->id);
+    $coursecontext = context_course::instance($csemod->course->id);
     $PAGE->set_context($coursecontext);
     require_course_login($csemod->course);
 
@@ -115,7 +115,7 @@ function block_news_get_course_mod_info($blockinstanceid) {
     $csemod = new StdClass();
 
     // context instance
-    $cibi = get_context_instance(CONTEXT_BLOCK, $blockinstanceid);
+    $cibi = context_block::instance($blockinstanceid);
     if (!$cibi) {
         return null;
     }
@@ -208,4 +208,75 @@ function block_news_get_new_time($oldtime, $offset) {
     } else {
         return $b;
     }
+}
+
+/**
+ * Obtain the top news block given the course short name.
+ *
+ * @param integer $courseid
+ * @param string $shortname Course shortname.
+ * @return integer News block instance id, or zero if no news blocks found.
+ */
+function block_news_get_top_news_block($courseid) {
+    global $DB;
+
+    $context = context_course::instance($courseid);
+
+    // Get a list of news blocks sorted by weight, i.e. which one is at the top.
+    $sql = "SELECT bp.blockinstanceid
+              FROM {block_positions} bp
+              JOIN {block_instances} bi ON bi.id = bp.blockinstanceid
+             WHERE bi.parentcontextid = :parentcontextid AND bi.blockname = 'news'
+          ORDER BY bp.weight ASC";
+    $params = array('parentcontextid' => $context->id);
+    $newsblocks = $DB->get_records_sql($sql, $params, 0, 1);
+
+    if (empty($newsblocks)) {
+        return 0;
+    }
+
+    return key($newsblocks);
+}
+
+/**
+ * Get a list of the groupsings that apply in the current context for use when working
+ * out which messages to display.  This will be because the user is a member of particular
+ * groupings and groupings support is enabled or some groupings have been specified in a
+ * querystring and specified using set_user_groupingids().
+ * @return string - Comma delimited string of groupingids, empty if none.
+ */
+function block_news_get_groupingids($courseid, $userid) {
+    global $DB;
+
+    $context = context_course::instance($courseid);
+    if (has_capability('moodle/site:accessallgroups', $context, $userid)) {
+        // If the user has the allgroups capability they can see everything.
+        $allgroupings = groups_get_all_groupings($courseid);
+        $groupings = array();
+        foreach ($allgroupings as $grouping) {
+            $groupings[] = $grouping->id;
+        }
+
+        return $groupings;
+    }
+
+    $sql = 'SELECT DISTINCT({groupings}.id)
+              FROM {user}
+              JOIN {groups_members} ON {user}.id = {groups_members}.userid
+              JOIN {groupings_groups} ON {groups_members}.groupid = {groupings_groups}.groupid
+              JOIN {groupings} ON {groupings_groups}.groupingid = {groupings}.id
+             WHERE {user}.id = ? AND {groupings}.courseid = ?
+          ORDER BY {groupings}.id ASC';
+    $results = $DB->get_records_sql($sql, array($userid, $courseid));
+
+    $groupings = '';
+    foreach ($results as $result) {
+        // Add a comma delimiter if $groupings already has a value.
+        if ($groupings !== '') {
+            $groupings .= ',';
+        }
+        $groupings .= $result->id;
+    }
+
+    return $groupings;
 }
