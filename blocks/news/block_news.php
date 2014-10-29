@@ -85,7 +85,7 @@ class block_news extends block_base {
         $msgs=$this->bns->get_messages_limited($nummsgs);
 
         $sumlen=$this->bns->get_summarylength();
-	$this->content->text = ""
+	$this->content->text = "";
         if ($msgs) {
             $c=1;
             $this->content->text .= $output->open_news_block_custom_wrapper();
