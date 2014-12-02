@@ -1,0 +1,180 @@
+#!/bin/bash
+# postinst script for moodle-site-otagounifom moodle (dh-make-moodle)
+#
+# see: dh_installdeb(1)
+
+set -e
+
+# summary of how this script can be called:
+#        * <postinst> `configure' <most-recently-configured-version>
+#        * <old-postinst> `abort-upgrade' <new version>
+#        * <conflictor's-postinst> `abort-remove' `in-favour' <package>
+#          <new-version>
+#        * <postinst> `abort-remove'
+#        * <deconfigured's-postinst> `abort-deconfigure' `in-favour'
+#          <failed-install-package> <version> `removing'
+#          <conflicting-package> <version>
+# for details, see http://www.debian.org/doc/debian-policy/ or
+# the debian-policy package
+
+#DEBHELPER#
+
+. /usr/share/debconf/confmodule
+. /usr/share/moodle-base/confmodule
+
+TMP_M4_FILE=/etc/moodle-site/otagounifom/postinst.m4.tmp
+APACHE_CONF_FILE_TEMPLATE=/etc/moodle-site/otagounifom/moodle-site-otagounifom.conf.tmp
+APACHE_CONF_FILE=/etc/apache2/sites-available/moodle-site-otagounifom.conf
+APACHE_DAV_CONF_FILE=/etc/apache2/sites-available/moodle-site-otagounifom.dav.conf
+CONFIG_PHP=/srv/moodle/otagounifom/moodle/config-debconf.php
+
+case "$1" in
+    configure)
+        cp /srv/moodle/otagounifom/moodle/config-dist.php ${CONFIG_PHP}
+        db_get moodle-site-otagounifom/usessl
+        if [ "${RET}" = "true" ]; then
+            URLSTART='https'
+        else
+            URLSTART='http'
+        fi
+
+        # Add config entries to $CONFIG_PHP based on answers to debconf questions
+        # DB name, db username, ...
+        set_config dbtype pgsql ${CONFIG_PHP}
+
+        db_get moodle-site-otagounifom/db_host
+        set_config dbhost "${RET}" ${CONFIG_PHP}
+
+        db_get moodle-site-otagounifom/db_port
+        set_config dbport "${RET}" ${CONFIG_PHP}
+
+        db_get moodle-site-otagounifom/db_database
+        set_config dbname "${RET}" ${CONFIG_PHP}
+
+        db_get moodle-site-otagounifom/db_user
+        set_config dbuser "${RET}" ${CONFIG_PHP}
+
+        db_get moodle-site-otagounifom/db_pass
+        set_config dbpass "${RET}" ${CONFIG_PHP}
+
+        db_get moodle-site-otagounifom/salt
+        if [ "${RET}" = '' ]; then
+            SALT=`pwgen 8 1`
+            db_set moodle-site-otagounifom/salt $SALT
+        else
+            SALT=${RET}
+        fi
+        set_config passwordsaltmain "$SALT" ${CONFIG_PHP}
+
+        db_get moodle-site-otagounifom/servername
+        set_config wwwroot "${URLSTART}://${RET}" ${CONFIG_PHP}
+
+        set_config dirroot "/srv/moodle/otagounifom/moodle" ${CONFIG_PHP}
+
+        mkdir -p /var/lib/sitedata/moodle-site-otagounifom
+        chown www-data:www-data /var/lib/sitedata/moodle-site-otagounifom
+
+        mkdir -p /var/log/sitelogs/moodle-site-otagounifom
+        chown www-data:www-data /var/log/sitelogs/moodle-site-otagounifom
+
+        set_config dataroot /var/lib/sitedata/moodle-site-otagounifom ${CONFIG_PHP}
+
+        # Configure apache2
+        echo "changecom" > $TMP_M4_FILE
+        db_get moodle-site-otagounifom/servername
+        echo "define(__SERVERNAME__,${RET})dnl" >> $TMP_M4_FILE
+        db_get moodle-site-otagounifom/enabledav
+        if [ "${RET}" = "true" ]; then
+            DAV="1"
+            echo "define(__INCLUDEDAVSUPPORT__,Include $APACHE_DAV_CONF_FILE)dnl" >> $TMP_M4_FILE
+            m4 $TMP_M4_FILE /etc/moodle-site/otagounifom/apache.dav.conf.template > $APACHE_DAV_CONF_FILE
+            touch /var/lock/apache2/otagounifom.dav.lock
+            chown www-data:www-data /var/lock/apache2/otagounifom.dav.lock
+            if [ ! -f /etc/moodle-site/otagounifom/coursedata.htaccess ]; then
+                echo '--------------------------------------------------------------------------------'
+                echo 'To enable WebDAV access to course data you need to create an htaccess file ...'
+                echo '$ htpasswd -c /etc/moodle-site/otagounifom/coursedata.htaccess <username>'
+                echo '--------------------------------------------------------------------------------'
+            fi
+        else
+            echo "define(__INCLUDEDAVSUPPORT__,)dnl" >> $TMP_M4_FILE
+        fi
+
+        # get values to be templated into place:
+        db_get moodle-site-otagounifom/serverip
+        echo "define(__SERVERIP__,${RET})dnl" >> $TMP_M4_FILE
+        db_get moodle-site-otagounifom/serverport
+        echo "define(__SERVERPORT__,${RET})dnl" >> $TMP_M4_FILE
+
+        #Start setting up site apache conf:
+        echo '' > $APACHE_CONF_FILE_TEMPLATE
+        echo '# Built with dh-make-moodle version 0.23' >> $APACHE_CONF_FILE_TEMPLATE
+        echo '<VirtualHost __SERVERIP__:__SERVERPORT__>' >> $APACHE_CONF_FILE_TEMPLATE
+        echo '    ServerName __SERVERNAME__' >> $APACHE_CONF_FILE_TEMPLATE
+        db_get moodle-site-otagounifom/serveralias
+        if [ -n "${RET}" ]; then
+            echo ${RET} | perl -pe 's/([^\s,]+)\s*,?\s*/    ServerAlias $1\n/g' >> $APACHE_CONF_FILE_TEMPLATE
+        fi
+        echo '' >> $APACHE_CONF_FILE_TEMPLATE
+        db_get moodle-site-otagounifom/usessl
+        if [ "${RET}" = "true" ]; then
+            echo '    SSLEngine on' >> $APACHE_CONF_FILE_TEMPLATE
+            echo '    SSLCertificateFile    /etc/apache2/ssl/moodle-site-otagounifom.crt' >> $APACHE_CONF_FILE_TEMPLATE
+            echo '    SSLCertificateKeyFile /etc/apache2/ssl/moodle-site-otagounifom.key' >> $APACHE_CONF_FILE_TEMPLATE
+            echo '' >> $APACHE_CONF_FILE_TEMPLATE
+        fi
+        echo '    DocumentRoot /srv/moodle/otagounifom/moodle' >> $APACHE_CONF_FILE_TEMPLATE
+        echo '    CustomLog /var/log/sitelogs/moodle-site-otagounifom/access.log combined' >> $APACHE_CONF_FILE_TEMPLATE
+        echo '    ErrorLog  /var/log/sitelogs/moodle-site-otagounifom/error.log'  >> $APACHE_CONF_FILE_TEMPLATE
+        echo '' >> $APACHE_CONF_FILE_TEMPLATE
+        echo '    <Directory /srv/moodle/otagounifom/moodle>' >> $APACHE_CONF_FILE_TEMPLATE
+        echo '        Options -Indexes' >> $APACHE_CONF_FILE_TEMPLATE
+        echo '        AllowOverride All' >> $APACHE_CONF_FILE_TEMPLATE
+        echo '    </Directory>' >> $APACHE_CONF_FILE_TEMPLATE
+        echo '    __INCLUDEDAVSUPPORT__' >> $APACHE_CONF_FILE_TEMPLATE
+        echo '</VirtualHost>' >> $APACHE_CONF_FILE_TEMPLATE
+
+        m4 $TMP_M4_FILE $APACHE_CONF_FILE_TEMPLATE > $APACHE_CONF_FILE \
+            && rm $APACHE_CONF_FILE_TEMPLATE
+# No, I don't want anything messing with my live apache config, thanks.
+# Generating an example config is great but enabling it isn't. Especially
+# because it will break apache and therefore cause this package install
+# to fail (when the apache restart fails).
+#        ln -f -s $APACHE_CONF_FILE /etc/apache2/sites-enabled/100-moodle-site-otagounifom.conf
+
+        rm -f $TMP_M4_FILE
+
+        db_get moodle-site-otagounifom/serverredirects
+        if [ -n "${RET}" ]; then
+            echo '<VirtualHost *:80>' >> $APACHE_CONF_FILE
+            echo ${RET} | perl -ne '@s = split /\s*,\s*/; print "    ServerName ", shift @s, "\n" if @s; print map { "    ServerAlias $_\n" } @s;' >> $APACHE_CONF_FILE
+            db_get moodle-site-otagounifom/servername
+            echo "    Redirect Permanent / ${URLSTART}://${RET}/" >> $APACHE_CONF_FILE
+            echo '</VirtualHost>' >> $APACHE_CONF_FILE
+        fi
+
+# Again, thanks but no thanks.
+#        if [ "x$DAV" != "x" ]; then
+#            a2enmod dav
+#            a2enmod dav_fs
+#            a2enmod dav_lock
+#        fi
+#        restart_apache2;
+
+        db_get moodle-site-otagounifom/servername
+        echo ""
+        echo "The otagounifom moodle is installed and configured for ${URLSTART}://${RET}"
+        echo ""
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+db_stop
+exit 0

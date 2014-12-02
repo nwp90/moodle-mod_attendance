@@ -1,0 +1,16 @@
+    Alias /coursedata /var/lib/moodledata/otagounifom
+
+    DAVLockDB /var/lock/apache2/otagounifom.dav.lock
+
+    <Directory /var/lib/moodledata/otagounifom>
+        Options Indexes
+        AllowOverride None
+        Order allow,deny
+        Allow from all
+
+        Dav On
+        AuthType Basic
+        AuthName "otagounifom moodle data"
+        AuthUserFile "/etc/moodle-site/otagounifom/coursedata.htaccess"
+        Require valid-user
+    </Directory>
