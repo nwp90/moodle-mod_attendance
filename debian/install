@@ -1,4 +1,5 @@
 admin                          /srv/moodle/otagounifom/moodle/
+availability		       /srv/moodle/otagounifom/moodle/
 auth                           /srv/moodle/otagounifom/moodle/
 backup                         /srv/moodle/otagounifom/moodle/
 badges                         /srv/moodle/otagounifom/moodle/
@@ -18,6 +19,7 @@ course                         /srv/moodle/otagounifom/moodle/
 draftfile.php                  /srv/moodle/otagounifom/moodle/
 enrol                          /srv/moodle/otagounifom/moodle/
 error                          /srv/moodle/otagounifom/moodle/
+favicon.ico		       /srv/moodle/otagounifom/moodle/
 file.php                       /srv/moodle/otagounifom/moodle/
 files                          /srv/moodle/otagounifom/moodle/
 filter                         /srv/moodle/otagounifom/moodle/
@@ -50,11 +52,13 @@ rating                         /srv/moodle/otagounifom/moodle/
 README.txt                     /srv/moodle/otagounifom/moodle/
 report                         /srv/moodle/otagounifom/moodle/
 repository                     /srv/moodle/otagounifom/moodle/
+robots.txt		       /srv/moodle/otagounifom/moodle/
 rss                            /srv/moodle/otagounifom/moodle/
 tag                            /srv/moodle/otagounifom/moodle/
 tags.txt                       /srv/moodle/otagounifom/moodle/
 theme                          /srv/moodle/otagounifom/moodle/
 TRADEMARK.txt                  /srv/moodle/otagounifom/moodle/
+up2date.php		       /srv/moodle/otagounifom/moodle/
 userpix                        /srv/moodle/otagounifom/moodle/
 user                           /srv/moodle/otagounifom/moodle/
 version.php                    /srv/moodle/otagounifom/moodle/

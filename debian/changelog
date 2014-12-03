@@ -1,3 +1,9 @@
+moodle-site-otagounifom (2.8.0.20141110+0facmed0-2) wheezy; urgency=low
+
+  * Fix debian/install -- add availability, favicon.ico, robots.txt, up2date.php
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 03 Dec 2014 15:39:42 +1300
+
 moodle-site-otagounifom (2.8.0.20141110+0facmed0-1) wheezy; urgency=low
 
   * Initial Debian package of 2.8.
