@@ -16,7 +16,7 @@
 /**
  * Strings for component 'theme_bootstrap', language 'en', branch 'MOODLE_23_STABLE'
  *
- * @package   Bootstrap theme
+ * @package   theme_realbootstrapbase
  * @copyright 2012 Bas Brands, www.basbrands.nl
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

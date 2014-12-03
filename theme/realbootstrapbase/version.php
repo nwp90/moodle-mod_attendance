@@ -19,12 +19,14 @@
  *
  * @package    theme_realbootstrapbase
  * @copyright  2013 Bas Brands, www.basbrands.nl
- * @authors    Bas Brands, David Scotson
+ * @author     Bas Brands
+ * @author     David Scotson
+ * @author     Nick Phillips
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version   = 2013110500;
-$plugin->requires  = 2013110500;
+$plugin->version   = 2014111000;
+$plugin->requires  = 2014110400;
 $plugin->component = 'theme_realbootstrapbase';
