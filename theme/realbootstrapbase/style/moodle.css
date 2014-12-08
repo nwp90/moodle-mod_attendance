@@ -3295,20 +3295,6 @@ img.iconsmall {
   padding-top: 0;
   padding-bottom: 0;
 }
-#page-admin-roles-assign div.box.generalbox {
-  padding: 8px 35px 8px 14px;
-  margin-bottom: 20px;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
-  background-color: #fcf8e3;
-  border: 1px solid #fbeed5;
-  -webkit-border-radius: 4px;
-  -moz-border-radius: 4px;
-  border-radius: 4px;
-  color: #c09853;
-  background-color: #f2dede;
-  border-color: #eed3d7;
-  color: #b94a48;
-}
 .maintenancewarning {
   padding: 3px 1em;
   text-align: center;
@@ -7449,7 +7435,7 @@ sup {
 sub {
   bottom: -0.25em;
 }
-img {
+.img-responsive {
   /* Responsive images (ensure images don't scale beyond their parents) */
 
   max-width: 100%;
@@ -7461,9 +7447,11 @@ img {
   height: auto;
   /* Part 2: Scale the height according to the width, otherwise you get stretching */
 
+  -ms-interpolation-mode: bicubic;
+}
+img {
   vertical-align: middle;
   border: 0;
-  -ms-interpolation-mode: bicubic;
 }
 #map_canvas img,
 .google-maps img {
