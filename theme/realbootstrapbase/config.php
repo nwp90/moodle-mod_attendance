@@ -34,9 +34,12 @@ $THEME->doctype = 'html5';
 $THEME->yuicssmodules = array();
 $THEME->name = 'realbootstrapbase';
 $THEME->parents = array();
-$THEME->sheets = array('moodle', 'bootstrap-responsive');
+// bootstrap-responsive should not be required; moodle.css should end up with all needed bootstrap css
+// included
+//$THEME->sheets = array('moodle', 'bootstrap-responsive');
+$THEME->sheets = array('moodle');
 $THEME->supportscssoptimisation = false;
-$THEME->enable_dock = false;
+$THEME->enable_dock = true;
 $THEME->editor_sheets = array('editor');
 
 $THEME->rendererfactory = 'theme_overridden_renderer_factory';
