@@ -4,11 +4,11 @@ A topics based format that uses a grid of user selectable images to pop up a lig
 
 Required version of Moodle
 ==========================
-This version works with Moodle version 2013111800.00 release 2.6 (Build: 20131118) and above within the 2.6 branch until the
+This version works with Moodle version 2014111000.00 release 2.8 (Build: 20141110) and above within the 2.8 branch until the
 next release.
 
 Please ensure that your hardware and software complies with 'Requirements' in 'Installing Moodle' on
-'docs.moodle.org/26/en/Installing_Moodle' / 'docs.moodle.org/dev/Moodle_2.6_release_notes'.
+'docs.moodle.org/27/en/Installing_Moodle' / 'docs.moodle.org/dev/Moodle_2.8_release_notes'.
 
 Free Software
 =============
@@ -27,6 +27,16 @@ If you reuse any of the code then I kindly ask that you make reference to the fo
 If you make improvements or bug fixes then I would appreciate if you would send them back to me by forking from
 https://github.com/gjb2048/moodle-courseformat_grid and doing a 'Pull Request' so that the rest of the
 Moodle community benefits.
+
+Supporting Grid development
+===========================
+If you find Grid useful and beneficial, please consider donating by:
+
+PayPal - Please contact me via my 'Moodle profile' (above) for details as I am an individual and therefore am unable to have 'donation' / 'buy me now' buttons under their terms.
+
+Flattr - https://flattr.com/profile/gjb2048
+
+I develop and maintain for free and any donations to assist me in this endeavour are appreciated.
 
 Installation
 ============
@@ -195,12 +205,7 @@ File information
 
 Languages
 ---------
-The grid/lang folder contains the language files for the format, such as:
-
-* grid/lang/en/format_grid.php
-* grid/lang/ru/format_grid.php
-* grid/lang/es/format_grid.php
-* grid/lang/fr/format_grid.php
+The grid/lang folder contains the language files for the format.
 
 Note that existing formats store their language strings in the main
 moodle.php, which you can also do, but this separate file is recommended
@@ -241,16 +246,34 @@ Known Issues
 
 History
 =============
-18th August 2014 Version 2.6.1.9
+16th November 2014 Version 2.8.1 - Stable version for Moodle 2.8.
+  1.  Always show shadebox arrows on Tablets and Mobiles with the latter being half size.
+
+10th November 2014 Version 2.8.0.1 - Release Candidate
+  1.  Release candidate for Moodle 2.8 - NOT for production servers.
+
+5th November 2014 Version 2.7.1.4
+  1.  Fixed CONTRIB-5256.  Thanks to Marius Jugariu for reporting the problem.
+  2.  Made the arrows easier to find by placing them always 75px from the top.
+  3.  Added German 'New activity' image.  Thanks to Guido Hornig.
+  4.  Fixed section 0 editing drop down in Bootstrap v3 themes: https://github.com/gjb2048/moodle-format_grid/issues/9.
+
+18th August 2014 Version 2.7.1.3
   1.  Fixed issue whereby the grid shade box is underneath certain theme components:
       https://moodle.org/mod/forum/discuss.php?d=266192#p1152232.
 
-9th August 2014 Version 2.6.1.8
+9th August 2014 Version 2.7.1.2
   1.  Fixed CONTRIB-5191.  This is a workaround that depends on MDL-43525 being implemented before it is reversed.
 
-12th June 2014 Version 2.6.1.7
-Change by G J Barnard
-  1.  Fixed CONTRIB-5106 - thanks to Hanna Edelman for this.
+12th June 2014 - Version 2.7.1.1
+  1.  Slight change to CSS for Bootstrap V3.
+  2.  Fixed CONTRIB-5106 - thanks to Hanna Edelman for this.
+
+20th May 2014 Version 2.7.1 - Stable.
+  1.  Stable release for M2.7.
+
+27th April 2014 Version 2.7.0.1 - BETA
+  1.  First beta version for Moodle 2.7beta.
 
 23rd April 2014 Version 2.6.1.6
 Change by G J Barnard

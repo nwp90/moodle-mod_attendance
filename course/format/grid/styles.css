@@ -50,11 +50,12 @@
 
 /* Change of logic such that topics are hidden by default and then shown to prevent 'flash' whilst JavaScript kicks in. */
 body.jsenabled li.grid_section.hide_section {
-    display: none;
+    display: none !important; /* Important to override bootstrap/moodle/undo.less. */
 }
 
 div#gridmiddle-column > ul {
     list-style-type: none;
+    overflow: visible;
 }
 
 .course-content ul.gtopics {
@@ -204,6 +205,9 @@ body.jsenabled #gridshadebox_content.hide_content {
 .gridshadebox_arrow {
     position: absolute;
     cursor: pointer;
+    height: 55px;
+    width: 55px;
+    top: 75px;
     opacity: 0;
     transition: opacity .25s ease-in-out;
     -moz-transition: opacity .25s ease-in-out;
@@ -212,13 +216,29 @@ body.jsenabled #gridshadebox_content.hide_content {
 .gridshadebox_arrow:hover {
     opacity: 0.8;
 }
-#gridshadebox_left {
-    top: 92px;  /* Done here so that JS can change it. */
-    left: -24px;
+.gridshadebox_left {
+    left: -28px;
 }
-#gridshadebox_right {
-    top: 92px;  /* Done here so that JS can change it. */
-    right: -24px;
+.gridshadebox_right {
+    right: -28px;
+}
+
+.gridshadebox_arrow.gridshadebox_arrow_mobile {
+    opacity: 1;
+    height: 27px;
+    width: 27px;
+}
+
+.gridshadebox_arrow.gridshadebox_arrow_mobile.gridshadebox_left {
+    left: -14px;
+}
+
+.gridshadebox_arrow.gridshadebox_arrow_mobile.gridshadebox_right {
+    right: -14px;
+}
+
+.gridshadebox_arrow.gridshadebox_arrow_tablet {
+    opacity: 1;
 }
 
 #gridshadebox_content ul.gtopics {
