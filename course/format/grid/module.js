@@ -165,7 +165,7 @@ M.format_grid.icon_toggle = function(e) {
             //console.log("Shadebox was closed");
             this.icon_change_shown();
             this.shadebox.toggle_shadebox();
-            this.update_arrows();
+            //this.update_arrows();
         }
     } //else {
         //console.log("Grid format:icon_toggle() - no selected section to show.");
@@ -205,7 +205,7 @@ M.format_grid.change_selected_section = function(increase_section) {
         //console.log("Selected section no is now: " + this.selected_section_no);
         if (M.format_grid.shadebox.shadebox_open == true) {
             this.icon_change_shown();
-            this.update_arrows();
+            //this.update_arrows();
         }
     } //else {
         //console.log("Grid format:change_selected_section() - no selected section to show.");

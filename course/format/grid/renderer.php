@@ -34,6 +34,7 @@ class format_grid_renderer extends format_section_renderer_base {
     private $courseformat; // Our course format object as defined in lib.php.
     private $settings; // Settings array.
     private $shadeboxshownarray = array(); // Value of 1 = not shown, value of 2 = shown - to reduce ambiguity in JS.
+    private $portable = 0; // 1 = mobile, 2 = tablet.
 
     /**
      * Constructor method, calls the parent constructor - MDL-21097
@@ -132,12 +133,23 @@ class format_grid_renderer extends format_section_renderer_base {
             'src' => $this->output->pix_url('close', 'format_grid'),
             'role' => 'link',
             'aria-label' => get_string('closeshadebox', 'format_grid')));
-        echo html_writer::tag('img', '', array('id' => 'gridshadebox_left', 'class' => 'gridshadebox_arrow',
+        $arrowextra = '';
+        switch ($this->portable) {
+            case 1: // Mobile.
+                $arrowextra = ' gridshadebox_arrow_mobile';
+            break;
+            case 2: // Tablet.
+                $arrowextra = ' gridshadebox_arrow_tablet';
+            break;
+            default:
+            break;
+        }
+        echo html_writer::tag('img', '', array('id' => 'gridshadebox_left', 'class' => 'gridshadebox_arrow gridshadebox_left'.$arrowextra,
             'style' => 'display:none;',
             'src' => $this->output->pix_url('arrow_l', 'format_grid'),
             'role' => 'link',
             'aria-label' => get_string('previoussection', 'format_grid')));
-        echo html_writer::tag('img', '', array('id' => 'gridshadebox_right', 'class' => 'gridshadebox_arrow',
+        echo html_writer::tag('img', '', array('id' => 'gridshadebox_right', 'class' => 'gridshadebox_arrow gridshadebox_right'.$arrowextra,
             'style' => 'display:none;',
             'src' => $this->output->pix_url('arrow_r', 'format_grid'),
             'role' => 'link',
@@ -174,7 +186,7 @@ class format_grid_renderer extends format_section_renderer_base {
             $course->numsections,
             json_encode($this->shadeboxshownarray)));
         // Initialise the key control functionality...
-        $PAGE->requires->yui_module('moodle-format_grid-gridkeys', 'M.format_grid.gridkeys.init', null, '2011.02.02-21-07', true);
+        $PAGE->requires->yui_module('moodle-format_grid-gridkeys', 'M.format_grid.gridkeys.init', null, null, true);
     }
 
     /**
@@ -264,13 +276,12 @@ class format_grid_renderer extends format_section_renderer_base {
         echo $this->format_summary_text($thissection);
 
         if ($editing) {
-            $link = html_writer::link(
+            echo html_writer::link(
                             new moodle_url('editsection.php', array('id' => $thissection->id)),
                                 html_writer::empty_tag('img', array('src' => $urlpicedit,
                                                                      'alt' => $streditsummary,
                                                                      'class' => 'iconsmall edit')),
                                                         array('title' => $streditsummary));
-            echo $this->topic0_at_top ? html_writer::tag('p', $link) : $link;
         }
         echo html_writer::end_tag('div');
 
@@ -758,5 +769,9 @@ class format_grid_renderer extends format_section_renderer_base {
         }
 
         return $sectionsedited;
+    }
+
+    public function set_portable($portable) {
+        $this->portable = $portable;
     }
 }
