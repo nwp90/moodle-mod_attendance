@@ -63,9 +63,19 @@ course_create_sections_if_missing($course, range(0, $course->numsections));
 
 $renderer = $PAGE->get_renderer('format_grid');
 
+$devicetype = core_useragent::get_device_type(); // In /lib/classes/useragent.php.
+if ($devicetype == "mobile") {
+    $portable = 1;
+} else if ($devicetype == "tablet") {
+    $portable = 2;
+} else {
+    $portable = 0;
+}
+$renderer->set_portable($portable);
+
 $gfsettings = $courseformat->get_settings();
 $imageproperties = $courseformat->calculate_image_container_properties(
-    $gfsettings['imagecontainerwidth'], $gfsettings['imagecontainerratio'], $gfsettings['borderwidth']);
+$gfsettings['imagecontainerwidth'], $gfsettings['imagecontainerratio'], $gfsettings['borderwidth']);
 ?>
 <style type="text/css" media="screen">
     /* <![CDATA[ */
