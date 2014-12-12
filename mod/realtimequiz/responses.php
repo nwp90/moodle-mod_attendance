@@ -86,7 +86,21 @@ if ($questionid != 0) {
     }
 }
 
-add_to_log($course->id, "realtimequiz", "seeresponses", "responses.php?id=$cm->id", "$realtimequiz->id");
+// Log that the responses were viewed.
+if ($CFG->version > 2014051200) { // Moodle 2.7+
+    $params = array(
+        'context' => $context,
+        'other' => array(
+            'quizid' => $realtimequiz->id
+        )
+    );
+    $event = \mod_realtimequiz\event\responses_viewed::create($params);
+    $event->add_record_snapshot('course', $course);
+    $event->add_record_snapshot('realtimequiz', $realtimequiz);
+    $event->trigger();
+} else {
+    add_to_log($course->id, "realtimequiz", "seeresponses", "responses.php?id=$cm->id", "$realtimequiz->id");
+}
 
 /// Print the page header
 
@@ -163,7 +177,12 @@ if ($questionid == 0) { // Show all of the questions
 
     if ($showusers) {
         $linkurl->param('showusers', 1);
-        $sql = 'SELECT DISTINCT u.id, u.firstname, u.lastname
+        if ($CFG->version < 2013111800) {
+            $usernames = 'u.firstname, u.lastname';
+        } else {
+            $usernames = get_all_user_name_fields(true, 'u');
+        }
+        $sql = 'SELECT DISTINCT u.id, '.$usernames.'
                   FROM {user} u
                   JOIN {realtimequiz_submitted} s ON s.userid = u.id
                   JOIN {realtimequiz_question} q ON s.questionid = q.id
