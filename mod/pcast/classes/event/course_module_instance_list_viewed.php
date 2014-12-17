@@ -14,24 +14,26 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-
 /**
- * Defines the version of pcast
+ * The mod_pcast instance list viewed event.
  *
- * This code fragment is called by moodle_needs_upgrading() and
- * /admin/index.php
- *
- * @package   mod_pcast
- * @copyright 2010 Stephen Bourget
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_pcast
+ * @copyright  2014 Stephen Bourget
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace mod_pcast\event;
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 2014061600;    // If version == 0 then module will not be installed
-$plugin->requires = 2014051200;    // Requires this Moodle version
-$plugin->cron     = 0;             // Period for cron to check this module (secs)
-$plugin->component = 'mod_pcast';  // Full name of the plugin (used for diagnostics)
+/**
+ * The mod_pcast instance list viewed event class.
+ *
+ * @package    mod_pcast
+ * @since      Moodle 2.7
+ * @copyright  2014 Stephen Bourget
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class course_module_instance_list_viewed extends \core\event\course_module_instance_list_viewed {
+    // No code required here as the parent class handles it all.
+}
 
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = "2.7 (2014061600)";  // User-friendly version number

@@ -211,6 +211,7 @@ function pcast_print_categories_menu($cm, $pcast, $hook=PCAST_SHOW_ALL_CATEGORIE
         echo get_string("allcategories", "pcast");
     } else {
         // Lookup the category name by 4 digit ID
+        $category = new stdClass();
         $category->category = $hook;
         $category = pcast_get_itunes_categories($category, $pcast);
 
@@ -491,7 +492,7 @@ function pcast_print_sorting_links($cm, $mode, $sortkey = '', $sortorder = '', $
 
 /**
  * Function to display Pcast episodes
- * @global stdClass $CFG
+ * @global stdClass $OUTPUT
  * @global stdClass $DB
  * @global stdClass $USER
  * @param object $pcast
@@ -500,11 +501,12 @@ function pcast_print_sorting_links($cm, $mode, $sortkey = '', $sortorder = '', $
  * @param string $hook
  * @param string $sortkey
  * @param string $sortorder
+ * @param int $page
  * @return boolean
  */
 
-function pcast_display_standard_episodes($pcast, $cm, $groupmode = 0, $hook='', $sortkey='', $sortorder='asc') {
-    global $CFG, $DB, $USER;
+function pcast_display_standard_episodes($pcast, $cm, $groupmode = 0, $hook='', $sortkey='', $sortorder='asc', $page = 0) {
+    global $DB, $USER, $OUTPUT;
 
     $context = context_module::instance($cm->id);
 
@@ -548,18 +550,38 @@ function pcast_display_standard_episodes($pcast, $cm, $groupmode = 0, $hook='', 
         $episodes = $DB->get_records_sql($sql,array($pcast->id, '1', $USER->id, $hook.'%'));
     }
 
-    //Get Group members
+    // Get Episode count.
+    $count =0;
+    
+    // Calculate starting episode.
+    $start = $page * $pcast->episodesperpage;
+    $end = ($page + 1) * $pcast->episodesperpage;
+    // Get Group members.
     $members = get_enrolled_users($context, 'mod/pcast:write', $currentgroup, 'u.id', 'u.id ASC');
     foreach ($episodes as $episode) {
         if (isset($members[$episode->userid]->id) and ($members[$episode->userid]->id == $episode->userid)) {
             //Display this episode (User is in the group)
-            pcast_display_episode_brief($episode, $cm);
+            if(($count >= $start) and ($count < $end)) {
+                pcast_display_episode_brief($episode, $cm);
+            }
+            $count++;
         } else if ($currentgroup == 0) {
-            //Display this episode (NO GROUPS USED)
-            pcast_display_episode_brief($episode, $cm);
+            //Display this episode (NO GROUPS USED or user is the author)
+            if(($count >= $start) and ($count < $end)) {
+                pcast_display_episode_brief($episode, $cm);
+            }
+            $count++;
         }
     }
 
+    if($count > $pcast->episodesperpage) {
+        // Print a paging bar here
+        $url = new moodle_url('/mod/pcast/view.php', 
+                array('id'=>$cm->id, 'mode'=>PCAST_STANDARD_VIEW, 'hook'=>$hook, 'sortkey'=>$sortkey, 'sortorder'=>$sortorder));
+        echo html_writer::start_tag('div', array('class'=>'pcast-paging'));
+        echo $OUTPUT->paging_bar($count, $page, $pcast->episodesperpage, $url);
+        echo html_writer::end_tag('div');
+    }
     return true;
 }
 
@@ -607,16 +629,17 @@ function pcast_group_allowed_viewing($episode, $cm, $groupmode) {
 
 /**
  * Function to display episodes by category
- * @global stdClass $CFG
+ * @global stdClass $OUTPUT
  * @global stdClass $DB
  * @global stdClass $USER
  * @param object $pcast
  * @param object $cm
  * @param int $groupmode
  * @param string $hook
+ * @param int $page
  */
-function pcast_display_category_episodes($pcast, $cm, $groupmode = 0, $hook=PCAST_SHOW_ALL_CATEGORIES) {
-    global $CFG, $DB, $USER;
+function pcast_display_category_episodes($pcast, $cm, $groupmode = 0, $hook=PCAST_SHOW_ALL_CATEGORIES, $page = 0) {
+    global $DB, $USER, $OUTPUT;
 
     $context = context_module::instance($cm->id);
 
@@ -642,6 +665,7 @@ function pcast_display_category_episodes($pcast, $cm, $groupmode = 0, $hook=PCAS
         $episodes = $DB->get_records_sql($sql,array($pcast->id, '1', $USER->id,'0'));
 
     } else {
+        $category = new stdClass();
         $category->category = $hook;
         $category = pcast_get_itunes_categories($category, $pcast);
         if($category->nestedcategory == 0) {
@@ -660,22 +684,44 @@ function pcast_display_category_episodes($pcast, $cm, $groupmode = 0, $hook=PCAS
 
     }
 
-    //Get Group members
+    // Get Episode count.
+    $count =0;
+
+    // Calculate starting episode.
+    $start = $page * $pcast->episodesperpage;
+    $end = ($page + 1) * $pcast->episodesperpage;
+
+    // Get Group members.
     $members = get_enrolled_users($context, 'mod/pcast:write', $currentgroup, 'u.id', 'u.id ASC');
     foreach ($episodes as $episode) {
         if (isset($members[$episode->userid]->id) and ($members[$episode->userid]->id == $episode->userid)) {
             //Display this episode (User is in the group)
-            pcast_display_episode_brief($episode, $cm);
+            if(($count >= $start) and ($count < $end)) {
+                pcast_display_episode_brief($episode, $cm);
+            }
+            $count++;
         } else if ($currentgroup == 0) {
-            //Display this episode (NO GROUPS USED)
-            pcast_display_episode_brief($episode, $cm);
+            //Display this episode (NO GROUPS USED or user is the author)
+            if(($count >= $start) and ($count < $end)) {
+                pcast_display_episode_brief($episode, $cm);
+            }
+            $count++;
         }
+    }
+
+    if($count > $pcast->episodesperpage) {
+        // Print a paging bar here
+        $url = new moodle_url('/mod/pcast/view.php', 
+                array('id'=>$cm->id, 'mode'=>PCAST_CATEGORY_VIEW, 'hook'=>$hook));
+        echo html_writer::start_tag('div', array('class'=>'pcast-paging'));
+        echo $OUTPUT->paging_bar($count, $page, $pcast->episodesperpage, $url);
+        echo html_writer::end_tag('div');
     }
 }
 
 /**
  * Display all episodes that sorted by date
- * @global stdClass $CFG
+ * @global stdClass $OUTPUT
  * @global stdClass $DB
  * @global stdClass $USER
  * @param object $pcast
@@ -684,9 +730,10 @@ function pcast_display_category_episodes($pcast, $cm, $groupmode = 0, $hook=PCAS
  * @param string $hook
  * @param string $sortkey
  * @param string $sortorder
+ * @param int $page
  */
-function pcast_display_date_episodes($pcast, $cm, $groupmode = 0, $hook='', $sortkey=PCAST_DATE_CREATED, $sortorder='desc') {
-    global $CFG, $DB, $USER;
+function pcast_display_date_episodes($pcast, $cm, $groupmode = 0, $hook='', $sortkey=PCAST_DATE_CREATED, $sortorder='desc', $page=0) {
+    global $DB, $USER, $OUTPUT;
 
     $context = context_module::instance($cm->id);
 
@@ -725,22 +772,44 @@ function pcast_display_date_episodes($pcast, $cm, $groupmode = 0, $hook='', $sor
 
     $episodes = $DB->get_records_sql($sql,array($pcast->id, '1', $USER->id));
 
+    // Get Episode count.
+    $count =0;
+    
+    // Calculate starting episode.
+    $start = $page * $pcast->episodesperpage;
+    $end = ($page + 1) * $pcast->episodesperpage;
+
     //Get Group members
     $members = get_enrolled_users($context, 'mod/pcast:write', $currentgroup, 'u.id', 'u.id ASC');
     foreach ($episodes as $episode) {
-        if(isset($members[$episode->userid]->id) and ($members[$episode->userid]->id == $episode->userid)){
+        if (isset($members[$episode->userid]->id) and ($members[$episode->userid]->id == $episode->userid)) {
             //Display this episode (User is in the group)
-            pcast_display_episode_brief($episode, $cm);
+            if(($count >= $start) and ($count < $end)) {
+                pcast_display_episode_brief($episode, $cm);
+            }
+            $count++;
         } else if ($currentgroup == 0) {
-            //Display this episode (NO GROUPS USED)
-            pcast_display_episode_brief($episode, $cm);
+            //Display this episode (NO GROUPS USED or user is the author)
+            if(($count >= $start) and ($count < $end)) {
+                pcast_display_episode_brief($episode, $cm);
+            }
+            $count++;
         }
+    }
+
+    if($count > $pcast->episodesperpage) {
+        // Print a paging bar here.
+        $url = new moodle_url('/mod/pcast/view.php', 
+                array('id'=>$cm->id, 'mode'=>PCAST_DATE_VIEW, 'hook'=>$hook, 'sortkey'=>$sortkey, 'sortorder'=>$sortorder));
+        echo html_writer::start_tag('div', array('class'=>'pcast-paging'));
+        echo $OUTPUT->paging_bar($count, $page, $pcast->episodesperpage, $url);
+        echo html_writer::end_tag('div');
     }
 }
 
 /**
  * Display all episodes that sorted by author
- * @global stdClass $CFG
+ * @global stdClass $OUTPUT
  * @global stdClass $DB
  * @global stdClass $USER
  * @param object $pcast
@@ -749,9 +818,10 @@ function pcast_display_date_episodes($pcast, $cm, $groupmode = 0, $hook='', $sor
  * @param string $hook
  * @param string $sortkey
  * @param string $sortorder
+ * @param int $page
  */
-function pcast_display_author_episodes($pcast, $cm, $groupmode = 0, $hook='', $sortkey='', $sortorder='asc') {
-    global $CFG, $DB, $USER;
+function pcast_display_author_episodes($pcast, $cm, $groupmode = 0, $hook='', $sortkey='', $sortorder='asc', $page = 0) {
+    global $DB, $USER, $OUTPUT;
 
     $context = context_module::instance($cm->id);
 
@@ -814,22 +884,44 @@ function pcast_display_author_episodes($pcast, $cm, $groupmode = 0, $hook='', $s
             break;
     }
 
-    //Get Group members
+    // Get Episode count.
+    $count =0;
+
+    // Calculate starting episode.
+    $start = $page * $pcast->episodesperpage;
+    $end = ($page + 1) * $pcast->episodesperpage;
+
+    // Get Group members.
     $members = get_enrolled_users($context, 'mod/pcast:write', $currentgroup, 'u.id', 'u.id ASC');
     foreach ($episodes as $episode) {
-        if (isset($members[$episode->userid]->id) and ($members[$episode->userid]->id == $episode->userid)){
+        if (isset($members[$episode->userid]->id) and ($members[$episode->userid]->id == $episode->userid)) {
             //Display this episode (User is in the group)
-            pcast_display_episode_brief($episode, $cm);
+            if(($count >= $start) and ($count < $end)) {
+                pcast_display_episode_brief($episode, $cm);
+            }
+            $count++;
         } else if ($currentgroup == 0) {
-            //Display this episode (NO GROUPS USED)
-            pcast_display_episode_brief($episode, $cm);
+            //Display this episode (NO GROUPS USED or user is the author)
+            if(($count >= $start) and ($count < $end)) {
+                pcast_display_episode_brief($episode, $cm);
+            }
+            $count++;
         }
+    }
+
+    if($count > $pcast->episodesperpage) {
+        // Print a paging bar here
+        $url = new moodle_url('/mod/pcast/view.php', 
+                array('id'=>$cm->id, 'mode'=>PCAST_AUTHOR_VIEW, 'hook'=>$hook, 'sortkey'=>$sortkey, 'sortorder'=>$sortorder));
+        echo html_writer::start_tag('div', array('class'=>'pcast-paging'));
+        echo $OUTPUT->paging_bar($count, $page, $pcast->episodesperpage, $url);
+        echo html_writer::end_tag('div');
     }
 }
 
 /**
  * Display all episodes that have not yet been approved
- * @global stdClass $CFG
+ * @global stdClass $OUTPUT
  * @global stdClass $DB
  * @global stdClass $USER
  * @param object $pcast
@@ -838,9 +930,10 @@ function pcast_display_author_episodes($pcast, $cm, $groupmode = 0, $hook='', $s
  * @param string $hook
  * @param string $sortkey
  * @param string $sortorder
+ * @param int $page
  */
-function pcast_display_approval_episodes($pcast, $cm, $groupmode = 0, $hook='', $sortkey='', $sortorder='asc') {
-    global $CFG, $DB, $USER;
+function pcast_display_approval_episodes($pcast, $cm, $groupmode = 0, $hook='', $sortkey='', $sortorder='asc', $page = 0) {
+    global $DB, $USER, $OUTPUT;
 
     $context = context_module::instance($cm->id);
 
@@ -886,17 +979,38 @@ function pcast_display_approval_episodes($pcast, $cm, $groupmode = 0, $hook='', 
         $episodes = $DB->get_records_sql($sql,array($pcast->id, '0', $hook.'%'));
     }
 
+    // Get Episode count.
+    $count =0;
 
-    //Get Group members
+    // Calculate starting episode.
+    $start = $page * $pcast->episodesperpage;
+    $end = ($page + 1) * $pcast->episodesperpage;
+    // Get Group members.
+
     $members = get_enrolled_users($context, 'mod/pcast:write', $currentgroup, 'u.id', 'u.id ASC');
     foreach ($episodes as $episode) {
         if (isset($members[$episode->userid]->id) and ($members[$episode->userid]->id == $episode->userid)) {
             //Display this episode (User is in the group)
-            pcast_display_episode_brief($episode, $cm);
+            if(($count >= $start) and ($count < $end)) {
+                pcast_display_episode_brief($episode, $cm);
+            }
+            $count++;
         } else if ($currentgroup == 0) {
-            //Display this episode (NO GROUPS USED)
-            pcast_display_episode_brief($episode, $cm);
+            //Display this episode (NO GROUPS USED or user is the author)
+            if(($count >= $start) and ($count < $end)) {
+                pcast_display_episode_brief($episode, $cm);
+            }
+            $count++;
         }
+    }
+
+    if($count > $pcast->episodesperpage) {
+        // Print a paging bar here
+        $url = new moodle_url('/mod/pcast/view.php', 
+                array('id'=>$cm->id, 'mode'=>PCAST_APPROVAL_VIEW, 'hook'=>$hook, 'sortkey'=>$sortkey, 'sortorder'=>$sortorder));
+        echo html_writer::start_tag('div', array('class'=>'pcast-paging'));
+        echo $OUTPUT->paging_bar($count, $page, $pcast->episodesperpage, $url);
+        echo html_writer::end_tag('div');
     }
 
 }
@@ -1044,18 +1158,23 @@ function pcast_display_episode_brief($episode, $cm, $hook ='ALL'){
         $url = new moodle_url('/mod/pcast/showepisode.php', array('eid'=>$episode->id));
         $link .= html_writer::tag('a', get_string('view'), array('href'=>$url));
 
-
-    // Approve Link
-    if ((has_capability('mod/pcast:approve', $context)) and ($episode->requireapproval) and (!$episode->approved)) {
-        $link .= ' | '."\n";
-        $url = new moodle_url('/mod/pcast/approveepisode.php', array('eid'=>$episode->id, 'mode'=>PCAST_APPROVAL_VIEW, 'hook'=>$hook, 'sesskey'=>sesskey()));
-        $link .= html_writer::tag('a', get_string('approve'), array('href'=>$url));
+    // Approve / Disapprove Link
+    if ((has_capability('mod/pcast:approve', $context)) and ($episode->requireapproval)) {
+        if(!$episode->approved) {
+            // Approve link
+            $link .= ' | '."\n";
+            $url = new moodle_url('/mod/pcast/approveepisode.php', array('eid'=>$episode->id, 'mode'=>PCAST_APPROVAL_VIEW, 'sesskey'=>sesskey()));
+            $link .= html_writer::tag('a', get_string('approve'), array('href'=>$url));
+        } else {
+            //Disapprove link
+            $link .= ' | '."\n";
+            $url = new moodle_url('/mod/pcast/approveepisode.php', array('eid'=>$episode->id, 'newstate'=>PCAST_EPISODE_DISAPPROVE, 'sesskey'=>sesskey()));
+            $link .= html_writer::tag('a', get_string('disapprove','pcast'), array('href'=>$url));
+        }
     }
 
     // Construct links
     $table->data[] = array ('',$link);
-
-
 
     echo $html;
     echo html_writer::table($table);
@@ -1191,12 +1310,17 @@ function pcast_display_episode_full($episode, $cm, $course){
 
     }
 
-
-    // Approve Link
-    if ((has_capability('mod/pcast:approve', $context)) and ($episode->requireapproval) and (!$episode->approved)) {
-
-        $url = new moodle_url('/mod/pcast/approveepisode.php', array('eid'=>$episode->id, 'mode'=>PCAST_APPROVAL_VIEW, 'sesskey'=>sesskey()));
-        $approve .= html_writer::tag('a', get_string('approve'), array('href'=>$url));
+    // Approve / Disapprove Link
+    if ((has_capability('mod/pcast:approve', $context)) and ($episode->requireapproval)) {
+        if(!$episode->approved) {
+            // Approve link
+            $url = new moodle_url('/mod/pcast/approveepisode.php', array('eid'=>$episode->id, 'mode'=>PCAST_APPROVAL_VIEW, 'sesskey'=>sesskey()));
+            $approve .= html_writer::tag('a', get_string('approve'), array('href'=>$url));
+        } else {
+            //Disapprove link
+            $url = new moodle_url('/mod/pcast/approveepisode.php', array('eid'=>$episode->id, 'newstate'=>PCAST_EPISODE_DISAPPROVE, 'sesskey'=>sesskey()));
+            $approve .= html_writer::tag('a', get_string('disapprove','pcast'), array('href'=>$url));
+        }
     }
 
     // Construct links
@@ -1217,15 +1341,15 @@ function pcast_display_episode_full($episode, $cm, $course){
  * Displays all views for a single episode
  * @global stdClass $DB
  * @param object $episode
+ * @param object $cm
  */
-function pcast_display_episode_views($episode){
+function pcast_display_episode_views($episode, $cm){
 
     global $DB;
 
     if (!$views = $DB->get_records("pcast_views", array( "episodeid" => $episode->id))) {
         echo get_string('noviews','pcast',get_string('modulename','pcast'));
     } else {
-        $timenow = time();
         $strviews  = get_string("views","pcast");
         $struser = get_string("user","pcast");
         $strdate = get_string("date");
@@ -1244,6 +1368,16 @@ function pcast_display_episode_views($episode){
         echo html_writer::empty_tag('br');
         echo html_writer::table($table);
     }
+
+    // Trigger view list has been viewed event.
+    $params = array(
+            'context' => context_module::instance($cm->id),
+            'objectid' => $episode->id
+            );
+
+    $event = \mod_pcast\event\episode_views_viewed::create($params);
+    $event->add_record_snapshot('pcast_episodes', $episode);
+    $event->trigger();
 }
 
 /**
@@ -1262,7 +1396,6 @@ function pcast_display_episode_comments($episode, $cm, $course) {
         if ($episode->userscancomment) {
             //Get episode comments and display the comment box
             $context = context_module::instance($cm->id);
-            $output = true;
 
             // Generate comment box using API
             if (!empty($CFG->usecomments)) {
@@ -1279,6 +1412,15 @@ function pcast_display_episode_comments($episode, $cm, $course) {
                 $html = html_writer::tag('div',$comment->output(true), array('class'=> 'pcast-comments'));
 
             }
+            // Trigger comment viewed event.
+            $params = array(
+                    'context' => $context,
+                    'objectid' => $episode->id
+                    );
+ 
+            $event = \mod_pcast\event\comments_viewed::create($params);
+            $event->add_record_snapshot('pcast_episodes', $episode);
+            $event->trigger();
         }
     } else {
         $html = html_writer::tag('div',get_string("nocommentuntilapproved","pcast"), array('class'=> 'pcast-episode-notice'));
@@ -1335,6 +1477,18 @@ function pcast_display_episode_ratings($episode, $cm, $course) {
                 echo html_writer::tag('div', $OUTPUT->render($thisepisode->rating), array('class' => 'pcast-episode-rating'));
             }
         }
+        
+        // Trigger ratings viewed event.
+        $params = array(
+                'context' => $context,
+                'objectid' => $episode->id
+                );
+
+        $event = \mod_pcast\event\ratings_viewed::create($params);
+        $event->add_record_snapshot('pcast_episodes', $episode);
+        $event->trigger();
+        
+        
     } else {
         echo html_writer::tag('div',get_string("noratinguntilapproved","pcast"), array('class'=> 'pcast-episode-notice'));
     }

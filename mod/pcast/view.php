@@ -54,8 +54,17 @@ require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/pcast:view', $context);
 
+// Trigger module viewed event.
+$event = \mod_pcast\event\course_module_viewed::create(array(
+    'objectid' => $pcast->id,
+    'context' => $context,
+    'other' => array('mode' => $mode)
+));
 
-add_to_log($course->id, 'pcast', 'view', "view.php?id=$cm->id", $pcast->name, $cm->id);
+$event->add_record_snapshot('course', $course);
+$event->add_record_snapshot('course_modules', $cm);
+$event->add_record_snapshot('pcast', $pcast);
+$event->trigger();
 
 
 /// Mark as viewed
@@ -65,7 +74,7 @@ $completion->set_module_viewed($cm);
 /// Print the page header
 
 $PAGE->set_url('/mod/pcast/view.php', array('id' => $cm->id, 'mode'=>$mode));
-$PAGE->set_title(format_string($pcast->name),true, array('context' =>$context));
+$PAGE->set_title($pcast->name);
 $PAGE->set_heading($course->fullname);
 $PAGE->set_context($context);
 
@@ -213,36 +222,36 @@ echo html_writer::start_tag('div', array('class'=>'generalboxcontent')). "\n";
 switch($mode) {
     case PCAST_STANDARD_VIEW:
 
-        pcast_display_standard_episodes($pcast, $cm, $groupmode, $hook, $sortkey, $sortorder);
+        pcast_display_standard_episodes($pcast, $cm, $groupmode, $hook, $sortkey, $sortorder, $page);
         break;
 
     case PCAST_CATEGORY_VIEW:
 
-        pcast_display_category_episodes($pcast, $cm, $groupmode, $hook);
+        pcast_display_category_episodes($pcast, $cm, $groupmode, $hook, $page);
         break;
 
     case PCAST_DATE_VIEW:
 
-        pcast_display_date_episodes($pcast, $cm, $groupmode, $hook, $sortkey, $sortorder);
+        pcast_display_date_episodes($pcast, $cm, $groupmode, $hook, $sortkey, $sortorder, $page);
         break;
 
     case PCAST_AUTHOR_VIEW:
 
-        pcast_display_author_episodes($pcast, $cm, $groupmode, $hook, $sortkey, $sortorder);
+        pcast_display_author_episodes($pcast, $cm, $groupmode, $hook, $sortkey, $sortorder, $page);
         break;
 
     case PCAST_APPROVAL_VIEW:
-        pcast_display_approval_episodes($pcast, $cm, $groupmode, $hook, $sortkey, $sortorder);
+        pcast_display_approval_episodes($pcast, $cm, $groupmode, $hook, $sortkey, $sortorder, $page);
 
         break;
 
     case PCAST_ADDENTRY_VIEW:
-        pcast_display_standard_episodes($pcast, $cm, $groupmode, $hook, $sortkey, $sortorder);
+        pcast_display_standard_episodes($pcast, $cm, $groupmode, $hook, $sortkey, $sortorder, $page);
         break;
 
     default:
 
-        pcast_display_standard_episodes($pcast, $cm, $groupmode, $hook, $sortkey, $sortorder);
+        pcast_display_standard_episodes($pcast, $cm, $groupmode, $hook, $sortkey, $sortorder, $page);
         break;
 }
 

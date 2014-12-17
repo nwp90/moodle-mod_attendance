@@ -27,7 +27,7 @@ require_once(dirname(__FILE__).'/lib.php');
 require_once(dirname(__FILE__).'/locallib.php');
 
 $eid = required_param('eid', PARAM_INT);    // Episode ID.
-
+$newstate = optional_param('newstate', PCAST_EPISODE_APPROVE, PARAM_BOOL);
 $mode = optional_param('mode', PCAST_APPROVAL_VIEW, PARAM_ALPHANUM);
 $hook = optional_param('hook', 'ALL', PARAM_CLEAN);
 
@@ -42,18 +42,30 @@ require_login($course, false, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/pcast:approve', $context);
 
-$url = new moodle_url('/mod/pcast/approveepisode.php', array('eid'=>$eid, 'mode'=>$mode, 'hook'=>$hook));
+$url = new moodle_url('/mod/pcast/approveepisode.php', array('eid'=>$eid, 'mode'=>$mode, 'hook'=>$hook, 'newstate' => $newstate));
 
 $PAGE->set_url($url);
 $PAGE->set_context($context);
 
-if (!$episode->approved and confirm_sesskey()) {
-    $newepisode = new object();
+if ($newstate != $episode->approved and confirm_sesskey()) {
+    $newepisode = new stdClass();
     $newepisode->id           = $episode->id;
-    $newepisode->approved     = 1;
+    $newepisode->approved     = $newstate;
     $newepisode->timemodified = time();
     $DB->update_record("pcast_episodes", $newepisode);
-    add_to_log($course->id, "pcast", "approve episode", "showepisode.php?eid=$eid", "$eid", $cm->id);
+    
+    // Trigger event about entry approval/disapproval.
+    $params = array(
+        'context' => $context,
+        'objectid' => $episode->id
+    );
+    if ($newstate) {
+        $event = \mod_pcast\event\episode_approved::create($params);
+    } else  {
+        $event = \mod_pcast\event\episode_disapproved::create($params);
+    }
+    $event->add_record_snapshot('pcast_episodes', $episode);
+    $event->trigger();
 }
 
 redirect("view.php?id=$cm->id&amp;mode=$mode&amp;hook=$hook");
