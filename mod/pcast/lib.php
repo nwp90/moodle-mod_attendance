@@ -51,6 +51,8 @@ define("PCAST_AUTHOR_FNAME", 201);
 define("PCAST_EPISODE_VIEW", 300);
 define("PCAST_EPISODE_COMMENT_AND_RATE", 301);
 define("PCAST_EPISODE_VIEWS", 302);
+define("PCAST_EPISODE_APPROVE", 1);
+define("PCAST_EPISODE_DISAPPROVE", 0);
 
 /**
  * If you for some reason need to use global variables instead of constants, do not forget to make them
@@ -357,10 +359,12 @@ function pcast_print_recent_activity($course, $viewfullnames, $timestart) {
         return false;
     }
 
-    $plist = implode(',', $ids); // there should not be hundreds of glossaries in one course, right?
-
+    $plist = implode(',', $ids); // there should not be hundreds of podcasts in one course, right?
+    
+    $allnamefields = get_all_user_name_fields(true,'u');
+    
     if (!$episodes = $DB->get_records_sql("SELECT e.id, e.name, e.approved, e.timemodified, e.pcastid,
-                                                 e.userid, u.firstname, u.lastname, u.email, u.picture
+                                                 e.userid, $allnamefields
                                             FROM {pcast_episodes} e
                                             JOIN {user} u ON u.id = e.userid
                                            WHERE e.pcastid IN ($plist) AND e.timemodified > ?
@@ -752,7 +756,7 @@ function pcast_pluginfile($course, $cm, $context, $filearea, $args, $forcedownlo
         $pcast->URL = $CFG->wwwroot . '/pluginfile.php' . $fullpath;
         $pcast->filename = implode('/', $args);
         if (!empty($USER->id)) {
-            pcast_add_view_instance($pcast, $USER->id);
+            pcast_add_view_instance($pcast, $episode, $USER->id, $context);
         }
 
         // finally send the file
@@ -786,7 +790,7 @@ function pcast_pluginfile($course, $cm, $context, $filearea, $args, $forcedownlo
  * @param string $userid
  * @return bool false if error else true
  */
-function pcast_add_view_instance($pcast, $userid) {
+function pcast_add_view_instance($pcast, $episode, $userid, $context) {
     global $DB;
 
     //lookup the user add add to the view count
@@ -810,8 +814,14 @@ function pcast_add_view_instance($pcast, $userid) {
             print_error('databaseerror', 'pcast');
         }
     }
+    
+        $event = \mod_pcast\event\episode_viewed::create(array(
+            'objectid' => $view->episodeid,
+            'context' => $context
+        ));
 
-    add_to_log($pcast->course, "pcast", "view", $pcast->URL, $pcast->filename, 0, $userid);
+        $event->add_record_snapshot('pcast_episodes', $episode);
+        $event->trigger();
 
     return $result;
 }
