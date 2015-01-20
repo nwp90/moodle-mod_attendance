@@ -272,6 +272,10 @@ class qtype_freehanddrawing_renderer extends qtype_renderer {
     public function formulation_and_controls(question_attempt $qa, question_display_options $options) {
     	
     	global $CFG;
+    	
+    	
+    	// A unique instance id for this particular canvas presentation. Will help refer back to it afterwards.
+    	$canvasInstanceID = uniqid(); 
 
 		$question = $qa->get_question();
 		
@@ -287,23 +291,23 @@ class qtype_freehanddrawing_renderer extends qtype_renderer {
 
         qtype_freehanddrawing_renderer::requireTranslationsIntoJS();
         
-		$canvas = "<div class=\"qtype_freehanddrawing_id_" . $question->id . "\">";
+		$canvas = "<div class=\"qtype_freehanddrawing_id_" . $question->id ."\" data-canvas-instance-id=\"$canvasInstanceID\">";
 		
 		if ($options->readonly) {
 			$readonlyCanvas = ' readonly-canvas';
 			$correctAnswer = reset($question->answers)->answer;
 			list($blendedImgDataURL, $matchPercentage) = self::compare_drawings($correctAnswer, $currentAnswer, true);
 			if ($options->correctness === 0) {
-				$this->page->requires->yui_module('moodle-qtype_freehanddrawing-form', 'Y.Moodle.qtype_freehanddrawing.form.init', array($question->id, $question->radius, $currentAnswer));
+				$this->page->requires->yui_module('moodle-qtype_freehanddrawing-form', 'Y.Moodle.qtype_freehanddrawing.form.init', array($question->id, $question->radius, $currentAnswer, $canvasInstanceID));
 			} else {
-				$this->page->requires->yui_module('moodle-qtype_freehanddrawing-form', 'Y.Moodle.qtype_freehanddrawing.form.init', array($question->id, $question->radius, $blendedImgDataURL));
+				$this->page->requires->yui_module('moodle-qtype_freehanddrawing-form', 'Y.Moodle.qtype_freehanddrawing.form.init', array($question->id, $question->radius, $blendedImgDataURL, $canvasInstanceID));
 			}
 			$fraction = ($matchPercentage /  ($question->threshold));
 			$feedbackimg = $this->feedback_image($fraction);
 			$canvas .= "<h1>".sprintf('%0.2f', $matchPercentage)."% ".get_string("out_of_necessary", "qtype_freehanddrawing")." ".sprintf('%0.2f', $question->threshold )."%.</h1><hr>" . $feedbackimg . "<hr>";
 		} else {
 			$readonlyCanvas = '';
-			$this->page->requires->yui_module('moodle-qtype_freehanddrawing-form', 'Y.Moodle.qtype_freehanddrawing.form.init', array($question->id, $question->radius));
+			$this->page->requires->yui_module('moodle-qtype_freehanddrawing-form', 'Y.Moodle.qtype_freehanddrawing.form.init', array($question->id, $question->radius, 'undefined', $canvasInstanceID));
 			$canvas .= '<img ALT="'.get_string("erase_canvas", "qtype_freehanddrawing").'" SRC="'.$CFG->wwwroot . '/question/type/freehanddrawing/pix/Empty-frame.png" CLASS="qtype_freehanddrawing_eraser">';
             $canvas .= '<img ALT="'.get_string("eraser_tool", "qtype_freehanddrawing").'" SRC="'.$CFG->wwwroot . '/question/type/freehanddrawing/pix/Eraser-icon.png" CLASS="qtype_freehanddrawing_eraser_tool">';
 			$canvas .= "<textarea class=\"qtype_freehanddrawing_textarea\" name=\"$inputname\" id=\"qtype_freehanddrawing_textarea_id_".$question->id."\" rows=20 cols=50>$currentAnswer</textarea>";
