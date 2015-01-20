@@ -44,10 +44,14 @@ if (!isset($USER->ajax_updatable_user_prefs[$name])) {
 }
 
 // Get and set the value.
-$value = required_topcoll_param('value', $USER->ajax_updatable_user_prefs[$name]);
+$value = required_topcoll_param('value');
 // Update
-if (!set_user_preference($name, $value)) {
-    print_error('errorsettinguserpref');
+if ($value) {
+    if (!set_user_preference($name, $value)) {
+        print_error('errorsettinguserpref');
+    }
+    echo 'OK';
+} else {
+    header('HTTP/1.1 406 Not Acceptable');
+    echo 'Not Acceptable';
 }
-
-echo 'OK';

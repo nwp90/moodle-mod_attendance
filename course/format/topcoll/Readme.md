@@ -6,26 +6,30 @@ If you find an issue with the format, please see the 'Reporting Issues' section 
 
 Required version of Moodle
 ==========================
-This version works with Moodle version 2013111800.00 release 2.6 (Build: 20131118) and above within the 2.6 branch until the
+This version works with Moodle version 2014111000.00 release 2.8 (Build: 20141110) and above within the 2.8 branch until the
 next release.
 
 Please ensure that your hardware and software complies with 'Requirements' in 'Installing Moodle' on
-'docs.moodle.org/26/en/Installing_Moodle'.
+'docs.moodle.org/28/en/Installing_Moodle'.
 
 Downloads and documentation
 ===========================
 The primary source for downloading this branch of the format is https://moodle.org/plugins/view.php?plugin=format_topcoll
-with 'Select Moodle version:' set at 'Moodle 2.6'.
+with 'Select Moodle version:' set at 'Moodle 2.8'.
 
-The secondary source is a tagged version with the v2.6 prefix on https://github.com/gjb2048/moodle-format_topcoll/tags
+The secondary source is a tagged version with the v2.8 prefix on https://github.com/gjb2048/moodle-format_topcoll/tags
 
-If you download from the development area - https://github.com/gjb2048/moodle-format_topcoll/tree/MOODLE_26 - consider that
+If you download from the development area - https://github.com/gjb2048/moodle-format_topcoll/tree/MOODLE_27 - consider that
 the code is unstable and not for use in production environments.  This is because I develop the next version in stages
 and use GitHub as a means of backup.  Therefore the code is not finished, subject to alteration and requires testing.
 
-Documented on http://docs.moodle.org/26/en/Collapsed_Topics_course_format
+Documented on http://docs.moodle.org/28/en/Collapsed_Topics_course_format
 
-Free Software
+Bespoke changes
+===============
+Would you like a bespoke Collapsed Topics? Contact me via www.gjbarnard.co.uk/contact/ for a competitive quote.
+
+Free software
 =============
 The Collapsed Topics format is 'free' software under the terms of the GNU GPLv3 License, please see 'COPYING.txt'.
 
@@ -42,26 +46,17 @@ Moodle community benefits.
 
 Supporting Collapsed Topics development
 =======================================
-If you find Collapsed Topics useful and beneficial, please consider donating to its development through the following
-PayPal link:
+If you find Collapsed Topics useful and beneficial, please consider donating by:
 
-[PayPal donate](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=6KEALTXATCXVE)
+PayPal - Please contact me via my 'Moodle profile' (above) for details as I am an individual and therefore am unable to have 'donation' / 'buy me now' buttons under their terms.
+
+Flattr - https://flattr.com/profile/gjb2048
 
 I develop and maintain for free and any donations to assist me in this endeavour are appreciated.
 
-Previous versions and required version of Moodle
-================================================
-If this version does not work with your version of Moodle because it requires a newer version of Moodle, then
-please download an older version from https://moodle.org/plugins/pluginversions.php?plugin=format_topcoll using
-this table as a guide:
-
-CT version - Moodle version
-V2.5.0.1     2.5beta+ version 2013041100.00 (Build: 20130411).
-V2.5.0.4     2.5beta+ version 2013050200.00 (Build: 20130502).
-
-New features for this Moodle 2.6 version
+New features for this Moodle 2.8 version
 ========================================
- 1. Same features as version 2.5.3.5 in Moodle 2.5.
+ 1. Same features as version 2.7.1.5 in Moodle 2.7.
 
 Installation
 ============
@@ -172,7 +167,7 @@ Course Backup and Restore Instructions
 ======================================
 1. Backup as you would any other course.  The layout configuration will be stored with the course settings.
 2. Restore as you would any other course.  If you are offered the option of 'Overwrite Course Configuration'
-   you must say 'Yes' to have thelayout configuration restored otherwise the restored course will retain the
+   you must say 'Yes' to have the layout configuration restored otherwise the restored course will retain the
    layout it previously had or the default in the 'config.php' file as mentioned in the 'Installation'
    instructions above depending on the situation.
 3. Note: I believe that if you restore a Collapsed Topic's course on an installation that does not have the
@@ -249,12 +244,51 @@ can be really useful in visualising the issue along with any files you consider 
 
 Version Information
 ===================
-20th September 2014 Version 2.6.1.7
+11th December 2014 Version 2.8.1.1
+  1.  New 'Show section summary when collapsed' feature gratefully funded by 'Te Rito Maioha Early Childhood New Zealand - https://ecnz.ac.nz'.
+  2.  Fix CONTRIB-5472.
+  3.  Integrated 'Use core required_param for toggle parameters.': https://github.com/gjb2048/moodle-format_topcoll/pull/12
+      "This work was made possible through funding from Te Rito Maioha Early Childhood New Zealand".
+      Improves on work instigated in CONTRIB-5211 and related to MDL-46754.
+  4.  Improved HTTP protocol handling in 'settopcollpref.php'.
+
+16th November 2014 Version 2.8.1
+  1.  Stable version for Moodle 2.8.
+
+10th November 2014 Version 2.8.0.1 - Release Candidate
+  1.  Release candidate for Moodle 2.8 - NOT for production servers.
+
+20th September 2014 Version 2.7.1.5
   1.  Fixed issue where a debug message was being written to the PHP error log.
   2.  When toggle persistence is off then the state of the toggles on page load will depend on the default user preference setting.
+  3.  Added the ability to set the size of the toggle icon site wide as: Small = 16px, Medium = 24px and Large = 32px.
+  4.  Added the ability to set each corner of the toggle border radius site wide between 0.0 and 4.0em in increments of 0.1.
 
-18th August 2014 Version 2.6.1.6
-  1.  Fixed CONTRIB-5211: Section 5 does not remain expanded when browsing away and back.
+19th August 2014 Version 2.7.1.4
+  1.  Fixed issue #11: Moodle notice - https://github.com/gjb2048/moodle-format_topcoll/issues/11.
+
+18th August 2014 Version 2.7.1.3
+  1.  Fixed a few typos.
+  2.  Fixed CONTRIB-5211: Section 5 does not remain expanded when browsing away and back.
+
+17th July 2014 Version 2.7.1.2
+  1.  Slight tweak to css to tidy things up when editing.
+  2.  Patch for IE8(!!!) kindly supplied by Mathew Gancarz - https://moodle.org/user/profile.php?id=1471695.  To fix an issue
+      where the activities / resources were still being displayed even after the toggle had closed.  If you are still on IE8,
+      then please see this: http://www.microsoft.com/en-gb/security/pc-security/updates.aspx?linkId=8591289.
+  3.  Fixed being able to manipulate sections via left and right content areas on tablets.  Thanks to Rick Jerz for reporting this
+      on https://moodle.org/mod/forum/discuss.php?d=263739.
+
+12th June 2014 Version 2.7.1.1
+  1.  Fixed toggle name word break: https://moodle.org/mod/forum/discuss.php?d=261388.
+  2.  Added toggle foreground colour hover.
+
+20th May 2014 Version 2.7.1 - Stable.
+  1.  Stable release for M2.7.
+  2.  Fixed CONTRIB-5073 - invisible section causes an error with "topcoll" format.
+
+22nd April 2014 Version 2.7.0.1 - BETA
+  1.  First beta version for Moodle 2.7beta.
 
 17th April 2014 Version 2.6.1.5
   1.  Fixed CONTRIB-4099 with the arrangement of the editing icon and associated functionality such that a better solution is
@@ -580,7 +614,7 @@ Change by G J Barnard
       Thanks to [Rick Jerz](https://moodle.org/user/profile.php?id=520965) for reporting this.
 
 18th October 2012 - Version 2.3.9.1
-  1. Fixed potenial issue when the course is first accessed and there is no user preference.
+  1. Fixed potential issue when the course is first accessed and there is no user preference.
   2. Identified that sometimes when restoring a course, it is accessed for the first time and a toggle is clicked a 'Error
      updating user preference 'topcoll_toggle_x'' (where 'x' is the course id as shown in the URL 'id=x') can occur.  I'm not
      completely sure why this is happening as the 'user_preference_allow_ajax_update' call in 'format.php' should establish that
@@ -1107,6 +1141,6 @@ Desired Enhancements
 
 Me
 ==
-G J Barnard MSc. BSc(Hons)(Sndw). MBCS. CEng. CITP. PGCE. - 20th September 2014.
+G J Barnard MSc. BSc(Hons)(Sndw). MBCS. CEng. CITP. PGCE.
 Moodle profile: http://moodle.org/user/profile.php?id=442195.
 Web profile   : http://about.me/gjbarnard

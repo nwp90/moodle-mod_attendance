@@ -20,7 +20,7 @@
  * A topic based format that solves the issue of the 'Scroll of Death' when a course has many topics. All topics
  * except zero have a toggle that displays that topic. One or more topics can be displayed at any given time.
  * Toggles are persistent on a per browser session per course basis but can be made to persist longer by a small
- * code change. Full installation instructions, code adaptions and credits are included in the 'Readme.txt' file.
+ * code change. Full installation instructions, code adaptions and credits are included in the 'Readme.md' file.
  *
  * @package    course/format
  * @subpackage topcoll
@@ -112,10 +112,10 @@ class format_topcoll extends format_base {
         // We can't add a node without any text.
         if ((string) $thesection->name !== '') {
             $o .= format_string($thesection->name, true, array('context' => $coursecontext));
-            if (($thesection->section != 0) && (($tcsettings['layoutstructure'] == 2) || 
+            if (($thesection->section != 0) && (($tcsettings['layoutstructure'] == 2) ||
                 ($tcsettings['layoutstructure'] == 3) || ($tcsettings['layoutstructure'] == 5))) {
                 $o .= ' ';
-                if ($additional == true) { // br tags break backups!
+                if ($additional == true) { // Break 'br' tags break backups!
                     $o .= html_writer::empty_tag('br');
                 }
                 $o .= $this->get_section_dates($section, $course, $tcsettings);
@@ -230,7 +230,6 @@ class format_topcoll extends format_base {
     public function supports_ajax() {
         $ajaxsupport = new stdClass();
         $ajaxsupport->capable = true;
-        $ajaxsupport->testedbrowsers = array('MSIE' => 8.0, 'Gecko' => 20061111, 'Opera' => 9.0, 'Safari' => 531, 'Chrome' => 6.0);
         return $ajaxsupport;
     }
 
@@ -297,6 +296,10 @@ class format_topcoll extends format_base {
             if ($defaulttgfgcolour[0] == '#') {
                 $defaulttgfgcolour = substr($defaulttgfgcolour, 1);
             }
+            $defaulttgfghvrcolour = get_config('format_topcoll', 'defaulttgfghvrcolour');
+            if ($defaulttgfghvrcolour[0] == '#') {
+                $defaulttgfghvrcolour = substr($defaulttgfghvrcolour, 1);
+            }
             $defaulttgbgcolour = get_config('format_topcoll', 'defaulttgbgcolour');
             if ($defaulttgbgcolour[0] == '#') {
                 $defaulttgbgcolour = substr($defaulttgbgcolour, 1);
@@ -305,6 +308,8 @@ class format_topcoll extends format_base {
             if ($defaulttgbghvrcolour[0] == '#') {
                 $defaulttgbghvrcolour = substr($defaulttgbghvrcolour, 1);
             }
+            $readme = new moodle_url('/course/format/topcoll/Readme.md');
+            $readme = html_writer::link($readme, 'Readme.md', array('target' => '_blank'));
             $courseconfig = get_config('moodlecourse');
             $courseformatoptions = array(
                 'numsections' => array(
@@ -359,6 +364,10 @@ class format_topcoll extends format_base {
                     'default' => $defaulttgfgcolour,
                     'type' => PARAM_ALPHANUM,
                 ),
+                'toggleforegroundhovercolour' => array(
+                    'default' => $defaulttgfghvrcolour,
+                    'type' => PARAM_ALPHANUM,
+                ),
                 'togglebackgroundcolour' => array(
                     'default' => $defaulttgbgcolour,
                     'type' => PARAM_ALPHANUM,
@@ -366,6 +375,14 @@ class format_topcoll extends format_base {
                 'togglebackgroundhovercolour' => array(
                     'default' => $defaulttgbghvrcolour,
                     'type' => PARAM_ALPHANUM,
+                ),
+                'showsectionsummary' => array(
+                    'default' => get_config('format_topcoll', 'defaultshowsectionsummary'),
+                    'type' => PARAM_INT,
+                ),
+                'readme' => array(
+                    'default' => get_string('readme_desc', 'format_topcoll', array('url' => $readme)),
+                    'type' => PARAM_ALPHA,
                 )
             );
         }
@@ -375,6 +392,10 @@ class format_topcoll extends format_base {
             $defaulttgfgcolour = get_config('format_topcoll', 'defaulttgfgcolour');
             if ($defaulttgfgcolour[0] == '#') {
                 $defaulttgfgcolour = substr($defaulttgfgcolour, 1);
+            }
+            $defaulttgfghvrcolour = get_config('format_topcoll', 'defaulttgfghvrcolour');
+            if ($defaulttgfghvrcolour[0] == '#') {
+                $defaulttgfghvrcolour = substr($defaulttgfghvrcolour, 1);
             }
             $defaulttgbgcolour = get_config('format_topcoll', 'defaulttgbgcolour');
             if ($defaulttgbgcolour[0] == '#') {
@@ -494,6 +515,16 @@ class format_topcoll extends format_base {
                               2 => new lang_string('right', 'format_topcoll'))  // Right.
                     )
                 );
+                $courseformatoptionsedit['showsectionsummary'] = array(
+                    'label' => new lang_string('setshowsectionsummary', 'format_topcoll'),
+                    'help' => 'setshowsectionsummary',
+                    'help_component' => 'format_topcoll',
+                    'element_type' => 'select',
+                    'element_attributes' => array(
+                        array(1 => new lang_string('no'),
+                              2 => new lang_string('yes'))
+                    )
+                );
             } else {
                 $courseformatoptionsedit['layoutelement'] =
                     array('label' => get_config('format_topcoll', 'defaultlayoutelement'), 'element_type' => 'hidden');
@@ -505,6 +536,8 @@ class format_topcoll extends format_base {
                     array('label' => get_config('format_topcoll', 'defaultlayoutcolumnorientation'), 'element_type' => 'hidden');
                 $courseformatoptionsedit['toggleiconposition'] =
                     array('label' => get_config('format_topcoll', 'defaulttoggleiconposition'), 'element_type' => 'hidden');
+                $courseformatoptionsedit['showsectionsummary'] =
+                    array('label' => get_config('format_topcoll', 'defaultshowsectionsummary'), 'element_type' => 'hidden');
             }
 
             if (has_capability('format/topcoll:changetogglealignment', $coursecontext)) {
@@ -532,18 +565,19 @@ class format_topcoll extends format_base {
                     'element_type' => 'select',
                     'element_attributes' => array(
                         array(
-                            'arrow' => new lang_string('arrow', 'format_topcoll'),     // Arrow icon set.
-                            'bulb' => new lang_string('bulb', 'format_topcoll'),       // Bulb icon set.
-                            'cloud' => new lang_string('cloud', 'format_topcoll'),     // Cloud icon set.
-                            'eye' => new lang_string('eye', 'format_topcoll'),         // Eye icon set.
-                            'led' => new lang_string('led', 'format_topcoll'),         // LED icon set.
-                            'point' => new lang_string('point', 'format_topcoll'),     // Point icon set.
-                            'power' => new lang_string('power', 'format_topcoll'),     // Power icon set.
-                            'radio' => new lang_string('radio', 'format_topcoll'),     // Radio icon set.
-                            'smiley' => new lang_string('smiley', 'format_topcoll'),   // Smiley icon set.
-                            'square' => new lang_string('square', 'format_topcoll'),   // Square icon set.
-                            'sunmoon' => new lang_string('sunmoon', 'format_topcoll'), // Sun / Moon icon set.
-                            'switch' => new lang_string('switch', 'format_topcoll'))   // Switch icon set.
+                            'arrow' => new lang_string('arrow', 'format_topcoll'),               // Arrow icon set.
+                            'bulb' => new lang_string('bulb', 'format_topcoll'),                 // Bulb icon set.
+                            'cloud' => new lang_string('cloud', 'format_topcoll'),               // Cloud icon set.
+                            'eye' => new lang_string('eye', 'format_topcoll'),                   // Eye icon set.
+                            'groundsignal' => new lang_string('groundsignal', 'format_topcoll'), // Ground signal set.
+                            'led' => new lang_string('led', 'format_topcoll'),                   // LED icon set.
+                            'point' => new lang_string('point', 'format_topcoll'),               // Point icon set.
+                            'power' => new lang_string('power', 'format_topcoll'),               // Power icon set.
+                            'radio' => new lang_string('radio', 'format_topcoll'),               // Radio icon set.
+                            'smiley' => new lang_string('smiley', 'format_topcoll'),             // Smiley icon set.
+                            'square' => new lang_string('square', 'format_topcoll'),             // Square icon set.
+                            'sunmoon' => new lang_string('sunmoon', 'format_topcoll'),           // Sun / Moon icon set.
+                            'switch' => new lang_string('switch', 'format_topcoll'))             // Switch icon set.
                     )
                 );
                 $courseformatoptionsedit['toggleallhover'] = array(
@@ -573,6 +607,15 @@ class format_topcoll extends format_base {
                         array('tabindex' => -1, 'value' => $defaulttgfgcolour)
                     )
                 );
+                $courseformatoptionsedit['toggleforegroundhovercolour'] = array(
+                    'label' => new lang_string('settoggleforegroundhovercolour', 'format_topcoll'),
+                    'help' => 'settoggleforegroundhovercolour',
+                    'help_component' => 'format_topcoll',
+                    'element_type' => 'tccolourpopup',
+                    'element_attributes' => array(
+                        array('tabindex' => -1, 'value' => $defaulttgfghvrcolour)
+                    )
+                );
                 $courseformatoptionsedit['togglebackgroundcolour'] = array(
                     'label' => new lang_string('settogglebackgroundcolour', 'format_topcoll'),
                     'help' => 'settogglebackgroundcolour',
@@ -594,11 +637,17 @@ class format_topcoll extends format_base {
             } else {
                 $courseformatoptionsedit['toggleforegroundcolour'] =
                     array('label' => $defaulttgfgcolour, 'element_type' => 'hidden');
+                $courseformatoptionsedit['toggleforegroundhovercolour'] =
+                    array('label' => $defaulttgfghvrcolour, 'element_type' => 'hidden');
                 $courseformatoptionsedit['togglebackgroundcolour'] =
                     array('label' => $defaulttgbgcolour, 'element_type' => 'hidden');
                 $courseformatoptionsedit['togglebackgroundhovercolour'] =
                     array('label' => $defaulttgbghvrcolour, 'element_type' => 'hidden');
             }
+            $courseformatoptionsedit['readme'] = array(
+                    'label' => get_string('readme_title', 'format_topcoll'),
+                    'element_type' => 'static'
+                );
             $courseformatoptions = array_merge_recursive($courseformatoptions, $courseformatoptionsedit);
         }
         return $courseformatoptions;
@@ -714,6 +763,9 @@ class format_topcoll extends format_base {
 
         if ($this->validate_colour($data['toggleforegroundcolour']) === false) {
             $retr['toggleforegroundcolour'] = get_string('colourrule', 'format_topcoll');
+        }
+        if ($this->validate_colour($data['toggleforegroundhovercolour']) === false) {
+            $retr['toggleforegroundhovercolour'] = get_string('colourrule', 'format_topcoll');
         }
         if ($this->validate_colour($data['togglebackgroundcolour']) === false) {
             $retr['togglebackgroundcolour'] = get_string('colourrule', 'format_topcoll');
@@ -975,6 +1027,7 @@ class format_topcoll extends format_base {
             $updatedata['layoutcolumns'] = get_config('format_topcoll', 'defaultlayoutcolumns');
             $updatedata['layoutcolumnorientation'] = get_config('format_topcoll', 'defaultlayoutcolumnorientation');
             $updatedata['toggleiconposition'] = get_config('format_topcoll', 'defaulttoggleiconposition');
+            $updatedata['showsectionsummary'] = get_config('format_topcoll', 'defaultshowsectionsummary');
             $updatelayout = true;
         }
         if ($togglealignment && has_capability('format/topcoll:changetogglealignment', $coursecontext) && $resetallifall) {
@@ -983,6 +1036,7 @@ class format_topcoll extends format_base {
         }
         if ($colour && has_capability('format/topcoll:changecolour', $coursecontext) && $resetallifall) {
             $updatedata['toggleforegroundcolour'] = get_config('format_topcoll', 'defaulttgfgcolour');
+            $updatedata['toggleforegroundhovercolour'] = get_config('format_topcoll', 'defaulttgfghvrcolour');
             $updatedata['togglebackgroundcolour'] = get_config('format_topcoll', 'defaulttgbgcolour');
             $updatedata['togglebackgroundhovercolour'] = get_config('format_topcoll', 'defaulttgbghvrcolour');
             $updatecolour = true;
@@ -1034,12 +1088,13 @@ class format_topcoll extends format_base {
         if (empty($lco)) {
             // Upgrading from M2.3 and the defaults in 'settings.php' have not been processed at this time.
             // Defaults taken from 'settings.php'.
-            $data['displayinstructions'] = 2;
-            $data['layoutcolumnorientation'] = 2;
-            $data['togglealignment'] = 2;
-            $data['toggleiconposition'] = 1;
-            $data['toggleiconset'] = 'arrow';
-            $data['toggleallhover'] = 2;
+            $data['displayinstructions'] = get_config('format_topcoll', 'defaultdisplayinstructions');
+            $data['layoutcolumnorientation'] = get_config('format_topcoll', 'defaultlayoutcolumnorientation');
+            $data['showsectionsummary'] = get_config('format_topcoll', 'defaultshowsectionsummary');
+            $data['togglealignment'] = get_config('format_topcoll', 'defaulttogglealignment');
+            $data['toggleallhover'] = get_config('format_topcoll', 'defaulttoggleallhover');
+            $data['toggleiconposition'] = get_config('format_topcoll', 'defaulttoggleiconposition');
+            $data['toggleiconset'] = get_config('format_topcoll', 'defaulttoggleiconset');
         }
         $this->update_course_format_options($data);
 

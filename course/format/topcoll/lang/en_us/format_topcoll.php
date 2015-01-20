@@ -20,7 +20,7 @@
  * A topic based format that solves the issue of the 'Scroll of Death' when a course has many topics. All topics
  * except zero have a toggle that displays that topic. One or more topics can be displayed at any given time.
  * Toggles are persistent on a per browser session per course basis but can be made to persist longer by a small
- * code change. Full installation instructions, code adaptions and credits are included in the 'Readme.txt' file.
+ * code change. Full installation instructions, code adaptions and credits are included in the 'Readme.md' file.
  *
  * @package    course/format
  * @subpackage topcoll
@@ -46,6 +46,7 @@ $string['resetallcolour'] = 'Colors';
 // Moodle Tracker CONTRIB-3529.
 $string['setcolour_help'] = 'Contains the settings to do with the color of the format within the course.';
 $string['settoggleforegroundcolour_help'] = 'Sets the color of the text on the toggle.';
+$string['settoggleforegroundhovercolour_help'] = 'Sets the color of the text on the toggle when the mouse moves over it.';
 $string['settogglebackgroundcolour_help'] = 'Sets the background color of the toggle.';
 $string['settogglebackgroundhovercolour_help'] = 'Sets the background color of the toggle when the mouse moves over it.';
 $string['resetcolour_help'] = 'Resets the colors to the default values so it will be the same as a course the first time it is in the Collapsed Topics format.';
@@ -55,13 +56,13 @@ $string['resetallcolour_help'] = 'Resets the colors to the default values for al
 $string['center'] = 'Center';
 
 // Site Administration -> Plugins -> Course formats -> Collapsed Topics or Manage course formats - Settings.
-$string['defaulttgfgcolour'] = 'Default toggle foreground color';
+$string['defaulttgfgcolour'] = 'Toggle foreground color';
 $string['defaulttgfgcolour_desc'] = "Toggle foreground color in hexidecimal RGB.";
 
-$string['defaulttgbgcolour'] = 'Default toggle background color';
+$string['defaulttgbgcolour'] = 'Toggle background color';
 $string['defaulttgbgcolour_desc'] = "Toggle background color in hexidecimal RGB.";
 
-$string['defaulttgbghvrcolour'] = 'Default toggle background hover color';
+$string['defaulttgbghvrcolour'] = 'Toggle background hover color';
 $string['defaulttgbghvrcolour_desc'] = "Toggle background hover color in hexidecimal RGB.";
 
 // Capabilities.

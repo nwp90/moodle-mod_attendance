@@ -72,7 +72,7 @@ course_create_sections_if_missing($course, range(0, $course->numsections));
 
 $renderer = $PAGE->get_renderer('format_topcoll');
 
-$devicetype = core_useragent::get_device_type(); // In moodlelib.php.
+$devicetype = core_useragent::get_device_type(); // In /lib/classes/useragent.php.
 if ($devicetype == "mobile") {
     $portable = 1;
 } else if ($devicetype == "tablet") {
@@ -88,7 +88,7 @@ if (!empty($displaysection)) {
     $defaulttogglepersistence = clean_param(get_config('format_topcoll', 'defaulttogglepersistence'), PARAM_INT);
 
     if ($defaulttogglepersistence == 1) {
-        user_preference_allow_ajax_update('topcoll_toggle_' . $course->id, PARAM_TOPCOLL);
+        user_preference_allow_ajax_update('topcoll_toggle_' . $course->id, PARAM_RAW);
         $userpreference = get_user_preferences('topcoll_toggle_' . $course->id);
     } else {
         $userpreference = null;
@@ -121,7 +121,7 @@ if (!empty($displaysection)) {
     }
 
     /* -- Toggle text -- */
-    .course-content ul.ctopics li.section .content .toggle a h3, .course-content ul.ctopics li.section .content.sectionhidden {
+    .course-content ul.ctopics li.section .content .toggle a, .course-content ul.ctopics li.section .content.sectionhidden {
         color: <?php
                 if ($tcsettings['toggleforegroundcolour'][0] != '#') {
                     echo '#';
@@ -156,8 +156,16 @@ if (!empty($displaysection)) {
     }
 
     /* -- What happens when a toggle is hovered over -- */
-    .course-content ul.ctopics li.section .content div.toggle:hover
-    {
+    .course-content ul.ctopics li.section .content .toggle a:hover, .course-content ul.ctopics li.section .content.sectionhidden .toggle a:hover {
+        color: <?php
+                 if ($tcsettings['toggleforegroundhovercolour'][0] != '#') {
+                     echo '#';
+                 }
+                 echo $tcsettings['toggleforegroundhovercolour'];
+               ?>;
+    }
+
+    .course-content ul.ctopics li.section .content div.toggle:hover {
         background-color: <?php
                             if ($tcsettings['togglebackgroundhovercolour'][0] != '#') {
                                 echo '#';
@@ -173,7 +181,7 @@ if (!empty($displaysection)) {
         margin: 0 <?php echo get_string('topcollsidewidth', 'format_topcoll'); ?>;
     }
 <?php
-    } else if ($portable == 0) { ?>
+    } else if ($PAGE->user_is_editing()) { ?>
     .course-content ul.ctopics li.section.main .content, .course-content ul.ctopics li.tcsection .content {
         margin: 0 40px;
     }
@@ -203,7 +211,26 @@ if (!empty($displaysection)) {
     }
 <?php
     }
+    // Site wide configuration Site Administration -> Plugins -> Course formats -> Collapsed Topics.
+    $tcborderradiustl = clean_param(get_config('format_topcoll', 'defaulttoggleborderradiustl'), PARAM_TEXT);
+    $tcborderradiustr = clean_param(get_config('format_topcoll', 'defaulttoggleborderradiustr'), PARAM_TEXT);
+    $tcborderradiusbr = clean_param(get_config('format_topcoll', 'defaulttoggleborderradiusbr'), PARAM_TEXT);
+    $tcborderradiusbl = clean_param(get_config('format_topcoll', 'defaulttoggleborderradiusbl'), PARAM_TEXT);
     ?>
+    .course-content ul.ctopics li.section .content .toggle, .course-content ul.ctopics li.section .content.sectionhidden {
+        -moz-border-top-left-radius: <?php echo $tcborderradiustl ?>em;
+        -webkit-border-top-left-radius: <?php echo $tcborderradiustl ?>em;
+        border-top-left-radius: <?php echo $tcborderradiustl ?>em;
+        -moz-border-top-right-radius: <?php echo $tcborderradiustr ?>em;
+        -webkit-border-top-right-radius: <?php echo $tcborderradiustr ?>em;
+        border-top-right-radius: <?php echo $tcborderradiustr ?>em;
+        -moz-border-bottom-right-radius: <?php echo $tcborderradiusbr ?>em;
+        -webkit-border-bottom-right-radius: <?php echo $tcborderradiusbr ?>em;
+        border-bottom-right-radius: <?php echo $tcborderradiusbr ?>em;
+        -moz-border-bottom-left-radius: <?php echo $tcborderradiusbl ?>em;
+        -webkit-border-bottom-left-radius: <?php echo $tcborderradiusbl ?>em;
+        border-bottom-left-radius: <?php echo $tcborderradiusbl ?>em;
+    }
     /* ]]> */
     </style>
     <?php

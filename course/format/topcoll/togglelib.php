@@ -65,7 +65,7 @@ class topcoll_togglelib {
     public function get_toggle_state($togglenum) {
         $togglecharpos = self::get_toggle_pos($togglenum);
         $toggleflag = self::get_toggle_flag($togglenum, $togglecharpos);
-        return ((self::decode_character_to_value($this->toggles[$togglecharpos-1]) & $toggleflag) == $toggleflag);
+        return ((self::decode_character_to_value($this->toggles[$togglecharpos - 1]) & $toggleflag) == $toggleflag);
     }
 
     /**
@@ -76,13 +76,13 @@ class topcoll_togglelib {
     public function set_toggle_state($togglenum, $state) {
         $togglecharpos = self::get_toggle_pos($togglenum);
         $toggleflag = self::get_toggle_flag($togglenum, $togglecharpos);
-        $value = self::decode_character_to_value($this->toggles[$togglecharpos-1]);
+        $value = self::decode_character_to_value($this->toggles[$togglecharpos - 1]);
         if ($state == true) {
             $value |= $toggleflag;
         } else {
             $value &= ~$toggleflag;
         }
-        $this->toggles[$togglecharpos-1] = self::encode_value_to_character($value);
+        $this->toggles[$togglecharpos - 1] = self::encode_value_to_character($value);
     }
 
     /**
@@ -142,7 +142,7 @@ class topcoll_togglelib {
      * returns int - Digit flag.
      */
     private static function get_toggle_flag($togglenum, $togglecharpos) {
-        $toggleflagpos = $togglenum - (($togglecharpos-1)*6);
+        $toggleflagpos = $togglenum - (($togglecharpos - 1) * 6);
         switch ($toggleflagpos) {
             case 1:
                 $flag = self::TOGGLE_1;
@@ -220,85 +220,48 @@ class topcoll_togglelib {
     }
 }
 
-// Toggle user preference code as PARAM_TEXT is unsuitable.  See: CONTRIB-5211 & MDL-46754.
-define('PARAM_TOPCOLL',  'topcoll');
-
 /**
- * Returns a particular value for the named variable, taken from
- * POST or GET.  If the parameter doesn't exist then an error is
- * thrown because we require this variable.
+ * Returns a required_param() toggle value for the named user preference.
  *
- * This function should be used to initialise all required values
- * in a script that are based on parameters.  Usually it will be
- * used like this:
- *    $id = required_param('value', PARAM_TOPCOLL);
- *
- * Please note the $type parameter is now required and the value can not be array.
- *
- * @param string $parname the name of the page parameter we want
- * @param string $type expected type of parameter
+ * @param string $parname the name of the user preference we want
  * @return mixed
  * @throws coding_exception
  */
-function required_topcoll_param($parname, $type) {
-    if (func_num_args() != 2 or empty($parname) or empty($type)) {
-        throw new coding_exception('required_topcoll_param() requires $parname and $type to be specified (parameter: '.$parname.')');
+function required_topcoll_param($parname) {
+    if (empty($parname)) {
+        throw new coding_exception('required_topcoll_param() requires $parname to be specified');
     }
-    // POST has precedence.
-    if (isset($_POST[$parname])) {
-        $param = $_POST[$parname];
-    } else if (isset($_GET[$parname])) {
-        $param = $_GET[$parname];
-    } else {
-        print_error('missingparam', '', '', $parname);
-    }
+    $param = required_param($parname, PARAM_RAW);
 
-    if (is_array($param)) {
-        debugging('Invalid array parameter detected in required_topcoll_param(): '.$parname);
-        // TODO: switch to fatal error in Moodle 2.3.
-        return required_param_array($parname, $type);
-    }
-
-    return clean_topcoll_param($param, $type);
+    return clean_topcoll_param($param);
 }
 
 /**
- * Used by required_topcoll_param to clean the variables and/or cast
- * to specific types, based on an options field.
+ * Used by required_topcoll_param to clean the toggle parameter.
  *
- * @param mixed $param the variable we are cleaning
- * @param string $type expected format of param after cleaning.
+ * @param string $param the variable we are cleaning
  * @return mixed
  * @throws coding_exception
  */
-function clean_topcoll_param($param, $type) {
+function clean_topcoll_param($param) {
     global $CFG;
 
     if (is_array($param)) {
-        throw new coding_exception('clean_topcoll_param() can not process arrays, please use clean_param_array() instead.');
+        throw new coding_exception('clean_topcoll_param() can not process arrays.');
     } else if (is_object($param)) {
         if (method_exists($param, '__toString')) {
             $param = $param->__toString();
         } else {
-            throw new coding_exception('clean_topcoll_param() can not process objects, please use clean_param_array() instead.');
+            throw new coding_exception('clean_topcoll_param() can not process objects.');
         }
     }
 
-    switch ($type) {
-        case PARAM_TOPCOLL:
-            $param = fix_utf8($param);
-
-            $chars = strlen($param);
-            for ($i = 0; $i < $chars; $i++) {
-                $charval = ord($param[$i]);
-                if (($charval < 58) || ($charval > 121)) {
-                    return '';
-                }
-            }
-            return $param;
-
-        default:
-            // Doh! throw error, switched parameters in optional_param or another serious problem.
-            print_error("unknownparamtype", '', '', $type);
+    $chars = strlen($param);
+    for ($i = 0; $i < $chars; $i++) {
+        $charval = ord($param[$i]);
+        if (($charval < 58) || ($charval > 121)) {
+            return false;
+        }
     }
+    return $param;
 }
