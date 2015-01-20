@@ -637,13 +637,12 @@ function block_progress_event_information($config, $modules, $course, $userid = 
     $numevents = 0;
     $numeventsconfigured = 0;
 
-    if($userid === 0) {
+    if ($userid === 0) {
         $userid = $USER->id;
     }
 
-    if (isset($config->orderby) && $config->orderby == 'orderbycourse') {
-        $sections = block_progress_course_sections($course);
-    }
+    // Get section information for the course module layout.
+    $sections = block_progress_course_sections($course);
 
     // Check each known module (described in lib.php).
     foreach ($modules as $module => $details) {
@@ -675,18 +674,15 @@ function block_progress_event_information($config, $modules, $course, $userid = 
 
                 // Gather together module information.
                 $coursemodule = block_progress_get_coursemodule($module, $record->id, $course);
-                $event = array(
+                $events[] = array(
                     'expected' => $expected,
                     'type'     => $module,
                     'id'       => $record->id,
                     'name'     => format_string($record->name),
                     'cm'       => $coursemodule,
+                    'section'  => $sections[$coursemodule->section]->section,
+                    'position' => array_search($coursemodule->id, $sections[$coursemodule->section]->sequence),
                 );
-                if (isset($config->orderby) && $config->orderby == 'orderbycourse') {
-                    $event['section'] = $sections[$coursemodule->section]->section;
-                    $event['position'] = array_search($coursemodule->id, $sections[$coursemodule->section]->sequence);
-                }
-                $events[] = $event;
             }
         }
     }
@@ -702,7 +698,7 @@ function block_progress_event_information($config, $modules, $course, $userid = 
     if (isset($config->orderby) && $config->orderby == 'orderbycourse') {
         usort($events, 'block_progress_compare_events');
     } else {
-        sort($events);
+        usort($events, 'block_progress_compare_times');
     }
     return $events;
 }
@@ -719,6 +715,21 @@ function block_progress_compare_events($a, $b) {
         return $a['section'] - $b['section'];
     } else {
         return $a['position'] - $b['position'];
+    }
+}
+
+/**
+ * Used to compare two activities/resources based their expected completion times
+ *
+ * @param array $a array of event information
+ * @param array $b array of event information
+ * @return <0, 0 or >0 depending on time then order of activities/resources
+ */
+function block_progress_compare_times($a, $b) {
+    if ($a['expected'] != $b['expected']) {
+        return $a['expected'] - $b['expected'];
+    } else {
+        return block_progress_compare_events($a, $b);
     }
 }
 
@@ -943,7 +954,8 @@ function block_progress_bar($modules, $config, $events, $userid, $instance, $att
             $cellcontent = $OUTPUT->pix_icon('blank', '', 'block_progress');
         }
         if (!empty($event['cm']->available)) {
-            $celloptions['onclick'] = 'document.location=\''.$CFG->wwwroot.'/mod/'.$event['type'].'/view.php?id='.$event['cm']->id.'\';';
+            $celloptions['onclick'] = 'document.location=\''.
+                $CFG->wwwroot.'/mod/'.$event['type'].'/view.php?id='.$event['cm']->id.'\';';
         }
         if ($counter == 1) {
             $celloptions['id'] .= 'first';
@@ -985,14 +997,14 @@ function block_progress_bar($modules, $config, $events, $userid, $instance, $att
         $content .= HTML_WRITER::start_tag('div', $divoptions);
         $link = '/mod/'.$event['type'].'/view.php?id='.$event['cm']->id;
         $text = $OUTPUT->pix_icon('icon', '', $event['type'], array('class' => 'moduleIcon')).s($event['name']);
-        if(!empty($event['cm']->available)) {
+        if (!empty($event['cm']->available)) {
             $content .= $OUTPUT->action_link($link, $text);
         } else {
             $content .= $text;
         }
         $content .= HTML_WRITER::empty_tag('br');
         $content .= get_string($action, 'block_progress').'&nbsp;';
-        $icon = ($attempted ? 'tick' : 'cross');
+        $icon = ($attempted && $attempted !== 'failed' ? 'tick' : 'cross');
         $content .= $OUTPUT->pix_icon($icon, '', 'block_progress');
         $content .= HTML_WRITER::empty_tag('br');
         if ($displaydate) {
@@ -1050,55 +1062,16 @@ function block_progress_course_sections($course) {
 }
 
 /**
- * Determines if a single activity/resource is visible to the given user.
- *
- * @param stdClass $coursemodule  the object with course module information
- * @param int      $userid        the user's ID (from the user table)
- * @param string   $coursecontext the context value of the course
- * @return bool whether the activity/resource is visible to the user
- */
-function block_progress_is_visible($coursemodule, $userid, $coursecontext) {
-    global $CFG;
-
-    // Check visibility in course.
-    if (!$coursemodule->visible && !has_capability('moodle/course:viewhiddenactivities', $coursecontext, $userid)) {
-        return false;
-    }
-
-    // Check availability, allowing for visible, but not accessible items.
-    if (!empty($CFG->enableavailability)) {
-        if (
-            !$coursemodule->available && empty($coursemodule->availableinfo) &&
-            !has_capability('moodle/course:viewhiddenactivities', $coursecontext, $userid)
-        ) {
-            return false;
-        }
-    }
-    // Check visibility by grouping constraints (includes capability check).
-    if (!empty($CFG->enablegroupmembersonly)) {
-        if (isset($coursemodule->uservisible)) {
-            if ($coursemodule->uservisible != 1 && empty($coursemodule->availableinfo)) {
-                return false;
-            }
-        }
-        else if (!groups_course_module_visible($coursemodule, $userid)) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-/**
  * Filters events that a user cannot see due to grouping constraints
  *
  * @param array  $events The possible events that can occur for modules
  * @param array  $userid The user's id
  * @param string $coursecontext the context value of the course
+ * @param string $course the course for filtering visibility
  * @return array The array with restricted events removed
  */
-function block_progress_filter_visibility($events, $userid, $coursecontext) {
-    global $CFG;
+function block_progress_filter_visibility($events, $userid, $coursecontext, $course = 0) {
+    global $CFG, $USER;
     $filteredevents = array();
 
     // Check if the events are empty or none are selected.
@@ -1111,9 +1084,43 @@ function block_progress_filter_visibility($events, $userid, $coursecontext) {
 
     // Keep only events that are visible.
     foreach ($events as $key => $event) {
-        if (block_progress_is_visible($event['cm'], $userid, $coursecontext)) {
-            $filteredevents[] = $event;
+
+        // Determine the correct user info to check.
+        if ($userid == $USER->id) {
+            $coursemodule = $event['cm'];
         }
+        else {
+            $coursemodule = block_progress_get_coursemodule($event['type'], $event['id'], $course->id, $userid);
+        }
+
+        // Check visibility in course.
+        if (!$coursemodule->visible && !has_capability('moodle/course:viewhiddenactivities', $coursecontext, $userid)) {
+            continue;
+        }
+
+        // Check availability, allowing for visible, but not accessible items.
+        if (!empty($CFG->enableavailability)) {
+            if (
+                isset($coursemodule->available) && !$coursemodule->available && empty($coursemodule->availableinfo) &&
+                !has_capability('moodle/course:viewhiddenactivities', $coursecontext, $userid)
+            ) {
+                continue;
+            }
+        }
+        // Check visibility by grouping constraints (includes capability check).
+        if (!empty($CFG->enablegroupmembersonly)) {
+            if (isset($coursemodule->uservisible)) {
+                if ($coursemodule->uservisible != 1 && empty($coursemodule->availableinfo)) {
+                    continue;
+                }
+            }
+            else if (!groups_course_module_visible($coursemodule, $userid)) {
+                continue;
+            }
+        }
+
+        // Save the visible event.
+        $filteredevents[] = $event;
     }
     return $filteredevents;
 }
@@ -1165,9 +1172,11 @@ function block_progress_get_block_context($blockid) {
  * @param int $courseid the course ID
  * @return stdClass The course module object
  */
-function block_progress_get_coursemodule($module, $recordid, $courseid) {
-    if (function_exists('get_fast_modinfo')) {
-        return get_fast_modinfo($courseid)->instances[$module][$recordid];
+function block_progress_get_coursemodule($module, $recordid, $courseid, $userid = 0) {
+    global $CFG;
+
+    if ($CFG->version >= 2012120300) {
+        return get_fast_modinfo($courseid, $userid)->instances[$module][$recordid];
     }
     else {
         return get_coursemodule_from_instance($module, $recordid, $courseid);
