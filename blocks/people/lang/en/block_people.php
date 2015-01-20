@@ -16,7 +16,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['pluginname'] = 'People List';
+$string['pluginname'] = 'People';
 $string['participantslist'] = 'Show participants list';
 $string['people:addinstance'] = 'Add a new people block';
 $string['people:myaddinstance'] = 'Add a new people block to My home';
