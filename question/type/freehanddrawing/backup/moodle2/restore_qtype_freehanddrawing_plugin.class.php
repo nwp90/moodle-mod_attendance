@@ -37,6 +37,7 @@ class restore_qtype_freehanddrawing_plugin extends restore_qtype_plugin {
     /**
      * Returns the paths to be handled by the plugin at question level
      */
+
     protected function define_question_plugin_structure() {
 
         $paths = array();
@@ -44,13 +45,10 @@ class restore_qtype_freehanddrawing_plugin extends restore_qtype_plugin {
         // This qtype uses question_answers, add them.
         $this->add_question_question_answers($paths);
 
-        // This qtype uses question_freehanddrawing_options and question_freehanddrawing_units, add them.
-        //$this->add_question_freehanddrawing_options($paths);
-        //$this->add_question_freehanddrawing_units($paths);
-
         // Add own qtype stuff.
         $elename = 'freehanddrawing';
-        $elepath = $this->get_pathfor('/freehanddrawing_records/freehanddrawing_record');
+        // We used get_recommended_name() so this works.
+        $elepath = $this->get_pathfor('/freehanddrawing');
         $paths[] = new restore_path_element($elename, $elepath);
 
         return $paths; // And we return the interesting paths.
@@ -66,18 +64,55 @@ class restore_qtype_freehanddrawing_plugin extends restore_qtype_plugin {
         $oldid = $data->id;
 
         // Detect if the question is created or mapped.
-        $oldquestionid   = $this->get_old_parentid('questionid');
-        $newquestionid   = $this->get_new_parentid('questionid');
-        $questioncreated = $this->get_mappingid('question_created', $oldquestionid) ? true : false;
+        $oldquestionid   = $this->get_old_parentid('question');
+        $newquestionid   = $this->get_new_parentid('question');
+        $questioncreated = (bool) $this->get_mappingid('question_created', $oldquestionid);
 
         // If the question has been created by restore, we need to create its
-        // question_freehanddrawing too.
+        // qtype_freehanddrawing_options too.
         if ($questioncreated) {
             // Adjust some columns.
-            $data->question = $newquestionid;
-            $data->answer = $this->get_mappingid('question_answer', $data->answer);
+            $data->questionid = $newquestionid;
             // Insert record.
             $newitemid = $DB->insert_record('qtype_freehanddrawing', $data);
+            // Create mapping (needed for decoding links).
+            $this->set_mapping('qtype_freehanddrawing', $oldid, $newquestionid);
         }
+    }
+
+    public function recode_response($questionid, $sequencenumber, array $response) {
+        if (array_key_exists('_order', $response)) {
+            $response['_order'] = $this->recode_choice_order($response['_order']);
+        }
+        return $response;
+    }
+
+    /**
+     * Recode the choice order as stored in the response.
+     * @param string $order the original order.
+     * @return string the recoded order.
+     */
+    protected function recode_choice_order($order) {
+        $neworder = array();
+        foreach (explode(',', $order) as $id) {
+            if ($newid = $this->get_mappingid('question_answer', $id)) {
+                $neworder[] = $newid;
+            }
+        }
+        return implode(',', $neworder);
+    }
+
+    /**
+     * Return the contents of this qtype to be processed by the links decoder
+     */
+    public static function define_decode_contents() {
+
+        $contents = array();
+
+        $fields = array('radius', 'threshold');
+        $contents[] = new restore_decode_content('qtype_freehanddrawing',
+                $fields, 'qtype_freehanddrawing');
+
+        return $contents;
     }
 }

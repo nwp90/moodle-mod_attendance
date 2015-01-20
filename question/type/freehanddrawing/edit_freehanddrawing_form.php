@@ -90,6 +90,7 @@ class qtype_freehanddrawing_edit_form extends question_edit_form {
         
         // File picker
         $mform->addElement('header', 'qtype_freehanddrawing_drawing_background_image', get_string('drawing_background_image', 'qtype_freehanddrawing'));
+        $mform->setExpanded('qtype_freehanddrawing_drawing_background_image');
         $mform->addElement('filepicker', 'qtype_freehanddrawing_image_file', get_string('file'), null,
                            array('maxbytes' => 1572864/*1.5MB*/, 'maxfiles' => 1, 'accepted_types' => array('.png', '.jpg', '.jpeg', '.gif')));
         $mform->addElement('html', "<div class=\"fitem\"><div class=\"fitemtitle\">" .
@@ -97,6 +98,7 @@ class qtype_freehanddrawing_edit_form extends question_edit_form {
         
         // Drawing Parameters and *actual* canvas
         $mform->addElement('header', 'qtype_freehanddrawing_drawing', get_string('drawing', 'qtype_freehanddrawing'));
+        $mform->setExpanded('qtype_freehanddrawing_drawing');
         $mform->addElement('select', 'radius',
         		get_string('set_radius', 'qtype_freehanddrawing'), array(
         				1 => 1,

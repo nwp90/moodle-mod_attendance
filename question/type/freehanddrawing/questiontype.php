@@ -194,7 +194,7 @@ class qtype_freehanddrawing extends question_type {
     	if (!is_array($extraquestionfields)) {
     		return false;
     	}
-    	//omit table name (question)
+    	// remove  table name from array of extra fields (question name)
     	array_shift($extraquestionfields);
     	$question->options = new stdClass();
     	foreach ($extraquestionfields as $field) {

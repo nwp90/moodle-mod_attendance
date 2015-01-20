@@ -41,16 +41,19 @@ YUI.add('moodle-qtype_freehanddrawing-form', function(Y) {
 			eraser_click_sub: null,
             eraser_tool_click_sub: null,
 			canvas_mousedown_sub: null,
+			canvas_touchstart_sub: null,
+			canvas_touchmove_sub: null,
+			canvas_touchend_sub: null,
 			canvas_mouseup_sub: null,
 			canvas_mouseout_sub: null,
 			drawing_radius_change_sub: null,
 			edit_mode: false,
 				
-			init: function(questionID, drawingRadius, correctAnswer) {
-				if (typeof correctAnswer != 'undefined') {
+			init: function(questionID, drawingRadius, correctAnswer, canvasInstanceID) {
+				if (typeof correctAnswer != 'undefined' && correctAnswer != 'undefined') {
 					// A correct answer is provided by the argument list--so this means the canvas is to be treated as READ ONLY
 					this.drawingRadius[questionID] = drawingRadius;
-					this.draw_correct_answer(questionID, correctAnswer);
+					this.draw_correct_answer(questionID, correctAnswer, canvasInstanceID);
 				} else {
 					// No correct answer provided in argument list (although one might pre-exist in the textarea)
 					// This means we allow drawing by the user.
@@ -89,12 +92,21 @@ YUI.add('moodle-qtype_freehanddrawing-form', function(Y) {
 					if(!this.canvas_mousedown_sub) { 
 						this.canvas_mousedown_sub = Y.delegate('mousedown', this.canvas_mousedown,  Y.config.doc, SELECTORS.GENERICCANVAS, this); 
 					}
+					if(!this.canvas_touchstart_sub) { 
+						this.canvas_touchstart_sub = Y.delegate('touchstart', this.canvas_touchstart,  Y.config.doc, SELECTORS.GENERICCANVAS, this); 
+					}
+					if(!this.canvas_touchmove_sub) { 
+						this.canvas_touchmove_sub = Y.delegate('touchmove', this.canvas_touchmove,  Y.config.doc, SELECTORS.GENERICCANVAS, this); 
+					}
+					if(!this.canvas_touchend_sub) { 
+						this.canvas_touchend_sub = Y.delegate('touchend', this.canvas_touchend,  Y.config.doc, SELECTORS.GENERICCANVAS, this); 
+					}
 					if(!this.canvas_mouseup_sub) { 
 						this.canvas_mouseup_sub =  Y.delegate('mouseup',   this.canvas_mouseup,    Y.config.doc, SELECTORS.GENERICCANVAS, this); 
 					}
-				if(!this.canvas_mouseout_sub) { 
-					this.canvas_mouseout_sub =  Y.delegate('mouseout',   this.canvas_mouseout,    Y.config.doc, SELECTORS.GENERICCANVAS, this); 
-				}
+    				if(!this.canvas_mouseout_sub) { 
+	    				this.canvas_mouseout_sub =  Y.delegate('mouseout',   this.canvas_mouseout,    Y.config.doc, SELECTORS.GENERICCANVAS, this); 
+		    		}
 					if(!this.drawing_radius_change_sub) { 
 						this.drawing_radius_change_sub =  Y.delegate('change', this.drawing_radius_change, Y.config.doc, SELECTORS.DRAWINGRADIUS, this); 
 					}
@@ -145,9 +157,9 @@ YUI.add('moodle-qtype_freehanddrawing-form', function(Y) {
         }
 	},
 
-	draw_correct_answer: function(questionID, correctAnswer) {
+	draw_correct_answer: function(questionID, correctAnswer, canvasInstanceID) {
 		Y.all(SELECTORS.READONLYCANVAS).each(function(node) {
-			if (node.ancestor().getAttribute('class') == 'qtype_freehanddrawing_id_' + questionID) {
+			if (node.ancestor().getAttribute('class') == 'qtype_freehanddrawing_id_' + questionID && node.ancestor().getData('canvas-instance-id') == canvasInstanceID) {
 				canvasNode = node;
 			}
 		}.bind(this));
@@ -157,11 +169,11 @@ YUI.add('moodle-qtype_freehanddrawing-form', function(Y) {
 		canvasNode.setStyles({ cursor: 'auto', });
 		
 	
-		this.canvasContext[questionID] = canvasNode.getDOMNode().getContext('2d');
+		this.canvasContext[canvasInstanceID] = canvasNode.getDOMNode().getContext('2d');
 		
 			var img = new Image();
 			img.onload = function() {
-				this.canvasContext[questionID].drawImage(img, 0, 0);
+				this.canvasContext[canvasInstanceID].drawImage(img, 0, 0);
 			}.bind(this);
 			img.src = correctAnswer;
 		
@@ -299,6 +311,24 @@ YUI.add('moodle-qtype_freehanddrawing-form', function(Y) {
 
 			Y.on('mousemove', this.canvas_mousemove, e.currentTarget, this);
 		}
+	},
+	canvas_touchstart: function(e) {
+        // --- To prevent scrolling ---
+        e.preventDefault();
+        e.stopPropagation();
+        this.canvas_mousedown(e);
+	},
+	canvas_touchmove: function(e) {
+        // --- To prevent scrolling ---
+        e.preventDefault();
+        e.stopPropagation();
+        this.canvas_mousemove(e);
+	},
+	canvas_touchend: function(e) {
+        // --- To prevent scrolling ---
+        e.preventDefault();
+        e.stopPropagation();
+        this.canvas_mouseup(e);
 	},
 	canvas_mousemove: function(e) {
 		questionID = this.canvas_get_question_id(e.currentTarget);
