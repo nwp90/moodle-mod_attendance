@@ -1,3 +1,11 @@
+moodle-site-otagounifom (2.8.2.20150115+0facmed1-1) wheezy; urgency=low
+
+  * New upstream version, and all plugins updated to latest versions
+    for 2.7/2.8.
+  * Will need subsequent version to remove obsolete plugins.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 21 Jan 2015 11:31:47 +1300
+
 moodle-site-otagounifom (2.8.0.20141110+0facmed1-1) wheezy; urgency=low
 
   * Update realbootstrapbase theme.
