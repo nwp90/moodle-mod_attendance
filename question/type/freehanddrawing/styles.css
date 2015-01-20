@@ -17,7 +17,7 @@
 #fitem_id_qtype_freehanddrawing_textarea_id_0 {
 		display: block;
 }
-input[type="submit"]:disabled {
+#page-question-type-freehanddrawing input[type="submit"]:disabled {
 	display: none;
 }
 .qtype_freehanddrawing_canvas {

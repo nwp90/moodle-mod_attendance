@@ -26,10 +26,10 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'qtype_freehanddrawing';
-$plugin->version   = 2013061100;
 
 $plugin->requires  = 2013040500;
 
 $plugin->release = 1;
 
 $plugin->maturity  = MATURITY_STABLE;
+$plugin->version = 2014061619;

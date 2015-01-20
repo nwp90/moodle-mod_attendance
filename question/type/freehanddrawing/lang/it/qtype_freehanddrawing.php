@@ -53,6 +53,6 @@ $string['threshold_must_be_reasonable'] = 'Risulta necessario selezionare una so
 $string['erase_canvas'] = 'Cancella la tua risposta';
 $string['no_response_summary'] = 'Nessuna sintesi delle risposte';
 $string['no_correct_answer_summary'] = 'Nessuna sintesi delle risposte esatte per i tipi di domanda di Disegno a mano libera.';
-$string['out_of_necessary'] = 'non necessario';
+$string['out_of_necessary'] = 'su un necessario del';
 $string['selected_background_image_filename'] = 'Immagine di sfondo selezionata';
 $string['eraser_tool'] = 'Strumento di cancellazione';

@@ -51,23 +51,18 @@ class backup_qtype_freehanddrawing_plugin extends backup_qtype_plugin {
         // to the tree before any other information that will use them.
         $this->add_question_question_answers($pluginwrapper);
 
-        // This qtype uses standard freehanddrawing units, add them here.
-        //$this->add_question_freehanddrawing_units($pluginwrapper);
-
-        // This qtype uses standard freehanddrawing options, add them here.
-        //$this->add_question_freehanddrawing_options($pluginwrapper);
-
         // Now create the qtype own structures.
-        $freehanddrawingrecords = new backup_nested_element('freehanddrawing_records');
-        $freehanddrawingrecord = new backup_nested_element('freehanddrawing_record', array('id'), array(
-            'answer', 'tolerance'));
+        $freehanddrawing = new backup_nested_element('freehanddrawing', array('id'), array(
+            'layout', 'single', 'shuffleanswers',
+            'correctfeedback', 'correctfeedbackformat',
+            'partiallycorrectfeedback', 'partiallycorrectfeedbackformat',
+            'incorrectfeedback', 'incorrectfeedbackformat', 'answernumbering', 'shownumcorrect', 'radius', 'threshold'));
 
         // Now the own qtype tree.
-        $pluginwrapper->add_child($freehanddrawingrecords);
-        $freehanddrawingrecords->add_child($freehanddrawingrecord);
+        $pluginwrapper->add_child($freehanddrawing);
 
         // Set source to populate the data.
-        $freehanddrawingrecord->set_source_table('qtype_freehanddrawing',
+        $freehanddrawing->set_source_table('qtype_freehanddrawing',
                 array('questionid' => backup::VAR_PARENTID));
 
         // Don't need to annotate ids nor files.
