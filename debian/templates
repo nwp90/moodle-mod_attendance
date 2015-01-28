@@ -32,7 +32,7 @@ Description: Database name
 
 Template: moodle-site-otagounifom/servername
 Type: string
-Default:
+Default: SET_SERVERNAME_HERE
 Description: Server name:
  This is the servername of the otagounifom moodle install.
  .
