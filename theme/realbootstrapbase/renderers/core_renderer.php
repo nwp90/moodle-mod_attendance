@@ -246,7 +246,7 @@ class theme_realbootstrapbase_core_renderer extends core_renderer {
  * @copyright  2014 Sam Hemelryk
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class theme_bootstrapbase_core_renderer_maintenance extends core_renderer_maintenance {
+class theme_realbootstrapbase_core_renderer_maintenance extends core_renderer_maintenance {
     /**
      * Renders notifications for maintenance scripts.
      *
