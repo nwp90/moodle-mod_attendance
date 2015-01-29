@@ -1,3 +1,9 @@
+moodle-site-otagounifom (2.8.2.20150115+0facmed2-1) wheezy; urgency=low
+
+  * Fix error in realbootstrapbase theme.
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 29 Jan 2015 16:28:47 +1300
+
 moodle-site-otagounifom (2.8.2.20150115+0facmed1-2) wheezy; urgency=low
 
   * Fix debconf questioning not to require answers, since we're not
