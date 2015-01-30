@@ -1,3 +1,9 @@
+moodle-site-otagounifom (2.8.2.20150129+0facmed2-1) wheezy; urgency=low
+
+  * Re-add brick and anomaly themes.
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 30 Jan 2015 13:49:37 +1300
+
 moodle-site-otagounifom (2.8.2.20150129+0facmed1-1) wheezy; urgency=low
 
   * Upstream weekly release 20150129
