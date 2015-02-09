@@ -1,3 +1,9 @@
+moodle-site-otagounifom (2.8.3.20150205+0facmed1-1) wheezy; urgency=low
+
+  * Upstream weekly release 2.8.3+ 20150205, needed for security fixes.
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 09 Feb 2015 16:20:55 +1300
+
 moodle-site-otagounifom (2.8.2.20150129+0facmed2-1) wheezy; urgency=low
 
   * Re-add brick and anomaly themes.
