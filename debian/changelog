@@ -1,3 +1,13 @@
+moodle-site-otagounifom (2.8.5.20150313+0facmed1-1) wheezy; urgency=low
+
+  * Update to upstream 2.8.5+ 20150313 for multiple security updates
+  * Add imagedragdrop plugin for Atto
+  * Add fullscreen plugin for Atto
+  * Add attendance plugin
+  * Add manual grading by student plugin
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 17 Mar 2015 14:08:03 +1300
+
 moodle-site-otagounifom (2.8.3.20150205+0facmed1-1) wheezy; urgency=low
 
   * Upstream weekly release 2.8.3+ 20150205, needed for security fixes.
