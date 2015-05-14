@@ -92,6 +92,20 @@ class block_progress_edit_form extends block_edit_form {
         $mform->setDefault('config_showpercentage', 0);
         $mform->addHelpButton('config_showpercentage', 'why_show_precentage', 'block_progress');
 
+        // Allow the block to be visible to a single group.
+        $groups = groups_get_all_groups($COURSE->id);
+        if (!empty($groups)) {
+            $groupsmenu = array();
+            $groupsmenu[0] = get_string('allparticipants');
+            foreach ($groups as $group) {
+                $groupsmenu[$group->id] = format_string($group->name);
+            }
+            $grouplabel = get_string('config_group', 'block_progress');
+            $mform->addElement('select', 'config_group', $grouplabel, $groupsmenu);
+            $mform->setDefault('config_group', '0');
+            $mform->addHelpButton('config_group', 'how_group_works', 'block_progress');
+        }
+
         // Get course section information.
         $sections = block_progress_course_sections($COURSE->id);
 
@@ -261,6 +275,11 @@ class block_progress_edit_form extends block_edit_form {
                         if (array_key_exists($coursemoduleid, $modulesinform)) {
                             $moduleinfo = $modulesinform[$coursemoduleid];
 
+                            // Start box.
+                            $attributes = array('class' => 'progressConfigBox');
+                            $moduleboxstart = HTML_WRITER::start_tag('div', $attributes);
+                            $mform->addElement('html', $moduleboxstart);
+
                             // Icon, module type and name.
                             $modulename = get_string('pluginname', $moduleinfo->module);
                             $icon = $OUTPUT->pix_icon('icon', $modulename, 'mod_'.$moduleinfo->module);
@@ -330,6 +349,10 @@ class block_progress_edit_form extends block_edit_form {
                             $mform->setType('config_action_'.$moduleinfo->uniqueid, PARAM_ALPHANUMEXT);
                             $mform->addHelpButton('config_action_'.$moduleinfo->uniqueid,
                                                   'what_actions_can_be_monitored', 'block_progress');
+
+                            // End box.
+                            $moduleboxend = HTML_WRITER::end_tag('div');
+                            $mform->addElement('html', $moduleboxend);
                         }
                     }
                 }
