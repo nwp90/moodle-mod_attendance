@@ -801,12 +801,19 @@ function block_progress_attempts($modules, $config, $events, $userid, $course) {
             else {
                 if ($modernlogging) {
                     foreach ($readers as $logstore => $reader) {
-                        if ($reader instanceof logstore_legacy\log\store) {
-                            $query = $module['actions']['viewed']['logstore_legacy'];
-                        }
-                        else if ($reader instanceof \core\log\sql_internal_reader) {
+                        if (
+                            $reader instanceof \core\log\sql_internal_table_reader ||
+                            $reader instanceof \core\log\sql_internal_reader
+                        ) {
                             $logtable = '{'.$reader->get_internal_log_table_name().'}';
                             $query = preg_replace('/\{log\}/', $logtable, $module['actions']['viewed']['sql_internal_reader']);
+                        }
+                        else if ($reader instanceof logstore_legacy\log\store) {
+                            $query = $module['actions']['viewed']['logstore_standard'];
+                        }
+                        else {
+                            // No logs available.
+                            continue;
                         }
                         $attempts[$uniqueid] = $DB->record_exists_sql($query, $parameters) ? true : false;
                         if ($attempts[$uniqueid]) {
@@ -872,10 +879,26 @@ function block_progress_bar($modules, $config, $events, $userid, $instance, $att
     global $OUTPUT, $CFG;
     $now = time();
     $numevents = count($events);
-    $dateformat = get_string('date_format', 'block_progress');
+    $dateformat = get_string('strftimerecentfull', 'langconfig');
     $tableoptions = array('class' => 'progressBarProgressTable',
                           'cellpadding' => '0',
                           'cellspacing' => '0');
+
+    // Get colours and use defaults if they are not set in global settings.
+    $colournames = array(
+        'attempted_colour' => 'attempted_colour',
+        'notattempted_colour' => 'notAttempted_colour',
+        'futurenotattempted_colour' => 'futureNotAttempted_colour'
+    );
+    $colours = array();
+    foreach ($colournames as $name => $stringkey) {
+        if (get_config('block_progress', $name)) {
+            $colours[$name] = get_config('block_progress', $name);
+        }
+        else {
+            $colours[$name] = get_string('block_progress', $stringkey);
+        }
+    }
 
     // Place now arrow.
     if ((!isset($config->orderby) || $config->orderby == 'orderbytime') && $config->displayNow == 1 && !$simple) {
@@ -937,20 +960,20 @@ function block_progress_bar($modules, $config, $events, $userid, $instance, $att
             'onmouseover' => 'M.block_progress.showInfo('.$instance.','.$userid.','.$event['cm']->id.');',
              'style' => 'background-color:');
         if ($attempted === true) {
-            $celloptions['style'] .= get_config('block_progress', 'attempted_colour').';';
+            $celloptions['style'] .= $colours['attempted_colour'].';';
             $cellcontent = $OUTPUT->pix_icon(
                                isset($config->progressBarIcons) && $config->progressBarIcons == 1 ?
                                'tick' : 'blank', '', 'block_progress');
         }
         else if (((!isset($config->orderby) || $config->orderby == 'orderbytime') && $event['expected'] < $now) ||
                  ($attempted === 'failed')) {
-            $celloptions['style'] .= get_config('block_progress', 'notattempted_colour').';';
+            $celloptions['style'] .= $colours['notattempted_colour'].';';
             $cellcontent = $OUTPUT->pix_icon(
                                isset($config->progressBarIcons) && $config->progressBarIcons == 1 ?
                                'cross':'blank', '', 'block_progress');
         }
         else {
-            $celloptions['style'] .= get_config('block_progress', 'futurenotattempted_colour').';';
+            $celloptions['style'] .= $colours['futurenotattempted_colour'].';';
             $cellcontent = $OUTPUT->pix_icon('blank', '', 'block_progress');
         }
         if (!empty($event['cm']->available)) {

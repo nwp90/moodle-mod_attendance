@@ -153,7 +153,16 @@ class block_progress extends block_base {
                             $blockinstance->events = block_progress_filter_visibility($blockinstance->events,
                                                          $USER->id, $context, $course);
                         }
-                        if ($blockinstance->visible == 0 || empty($blockinstance->config) || $blockinstance->events == 0) {
+                        if (
+                            $blockinstance->visible == 0 ||
+                            empty($blockinstance->config) ||
+                            $blockinstance->events == 0 ||
+                            (
+                                !empty($blockinstance->config->group) &&
+                                !has_capability('moodle/site:accessallgroups', $context) &&
+                                !groups_is_member($blockinstance->config->group, $USER->id)
+                            )
+                        ) {
                             unset($blockinstances[$blockid]);
                         }
                     }
@@ -183,13 +192,24 @@ class block_progress extends block_base {
                     }
                 }
             }
-            if ($this->content->text == '') {
+
+            // Show a message explaining lack of bars, but only while editing is on.
+            if ($this->page->user_is_editing() && $this->content->text == '') {
                 $this->content->text = get_string('no_blocks', 'block_progress');
             }
         }
 
         // Gather content for block on regular course.
         else {
+
+            // Check if user is in group for block.
+            if (
+                !empty($this->config->group) &&
+                !has_capability('moodle/site:accessallgroups', $this->context) &&
+                !groups_is_member($this->config->group, $USER->id)
+            ) {
+                return $this->content;
+            }
 
             // Check if any activities/resources have been created.
             $modules = block_progress_modules_in_use($COURSE->id);
