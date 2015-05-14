@@ -19,26 +19,19 @@
  *
  * @package    course/format
  * @subpackage grid
- * @copyright  &copy; 2012 G J Barnard in respect to modifications of standard topics format.
- * @author     G J Barnard - gjbarnard at gmail dot com, {@link http://about.me/gjbarnard} and
- *                           {@link http://moodle.org/user/profile.php?id=442195}
- * @author     Based on code originally written by Paul Krix and Julian Ridden.
+ * @copyright  &copy; 2013 G J Barnard in respect to modifications of standard topics format.
+ * @author     G J Barnard - gjbarnard at gmail dot com and {@link http://moodle.org/user/profile.php?id=442195}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-// Plugin version.
-$plugin->version = 2015022500;
-
-// Required Moodle version.
-$plugin->requires = 2014111000.00; // 2.8 (Build: 20141110).
-
-// Full name of the plugin.
-$plugin->component = 'format_grid';
-
-// Software maturity level.
-$plugin->maturity = MATURITY_STABLE;
-
-// User-friendly version number.
-$plugin->release = '2.8.2.1';
+echo '<!DOCTYPE html>';
+echo '<html dir="ltr" lang="en" xml:lang="en">';
+echo '<head>';
+echo '<title>Grid Format Image Test</title>';
+echo '<link rel="shortcut icon" href="'.$CFG->wwwroot.'/theme/image.php?theme=standard&amp;component=theme&amp;image=favicon" />';
+echo '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />';
+echo '<meta name="keywords" content="moodle, Grid Format Image Test" />';
+echo '<meta http-equiv="pragma" content="no-cache" />';
+echo '<meta http-equiv="expires" content="0" />';
+echo '</head>';
+echo '<body>';

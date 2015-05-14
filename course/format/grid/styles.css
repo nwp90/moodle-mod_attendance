@@ -120,7 +120,7 @@ div#gridmiddle-column > ul {
 }
 
 .course-content .gridicon_link {
-    cursor: pointer;
+    cursor: url('[[pix:format_grid|fa-hand-o-up-f]]'), auto;
 }
 .course-content ul.gridicons li p.icon_content {
     font-weight: bold;
@@ -163,7 +163,7 @@ div#gridshadebox_overlay {
     /* CSS3 standard */
     opacity: 0.7;
     z-index: 1;
-    cursor: pointer;
+    cursor: url('[[pix:format_grid|fa-times-circle-o-f]]'), auto;
 }
 #gridshadebox_content {
     background: #fff;
@@ -199,45 +199,146 @@ body.jsenabled #gridshadebox_content.hide_content {
     position: absolute;
     top: -10px;
     right: -10px;
-    cursor: pointer;
+    cursor: url('[[pix:format_grid|fa-hand-o-up-f]]'), auto;
+    z-index: 2;
 }
 
 .gridshadebox_arrow {
     position: absolute;
-    cursor: pointer;
+    cursor: inherit;
     height: 55px;
     width: 55px;
     top: 75px;
-    opacity: 0;
+    opacity: 0.35;
     transition: opacity .25s ease-in-out;
     -moz-transition: opacity .25s ease-in-out;
     -webkit-transition: opacity .25s ease-in-out;
 }
-.gridshadebox_arrow:hover {
-    opacity: 0.8;
-}
-.gridshadebox_left {
-    left: -28px;
-}
-.gridshadebox_right {
-    right: -28px;
+.gridshadebox_left_area:hover .gridshadebox_arrow, .gridshadebox_right_area:hover .gridshadebox_arrow {
+    opacity: 0.9;
 }
 
-.gridshadebox_arrow.gridshadebox_arrow_mobile {
+.gridshadebox_left_area {
+    position: absolute;
+    top: 0;
+    left: -55px;
+    width: 55px;
+    height: 100%;
+    cursor: url('[[pix:format_grid|fa-hand-o-left-f]]'), auto;
+}
+
+.gridshadebox_right_area {
+    position: absolute;
+    top: 0;
+    right: -55px;
+    width: 55px;
+    height: 100%;
+    cursor: url('[[pix:format_grid|fa-hand-o-right-f]]'), auto;
+}
+
+@media (max-width: 1199px) {
+    .gridshadebox_arrow {
+        height: 40px;
+        width: 40px;
+    }
+    .gridshadebox_left_area {
+        left: -40px;
+        width: 40px;
+    }
+    .gridshadebox_right_area {
+        right: -40px;
+        width: 40px;
+    }
+}
+
+@media (max-width: 767px) {
+    div#gridshadebox_overlay {
+        cursor: url('[[pix:format_grid|fa-times-circle-o-fsm]]'), auto;
+    }
+    #gridshadebox_close {
+        height: 28px;
+        width: 28px;
+        cursor: url('[[pix:format_grid|fa-hand-o-up-fsm]]'), auto;
+    }
+    .gridshadebox_arrow {
+        height: 30px;
+        width: 30px;
+    }
+    .gridshadebox_left_area {
+        left: -30px;
+        width: 30px;
+        cursor: url('[[pix:format_grid|fa-hand-o-left-fsm]]'), auto;
+    }
+    .gridshadebox_right_area {
+        right: -30px;
+        width: 30px;
+        cursor: url('[[pix:format_grid|fa-hand-o-right-fsm]]'), auto;
+    }
+}
+
+@media (max-width: 480px) {
+    #gridshadebox_close {
+        height: 20px;
+        width: 20px;
+        top: -7px;
+        right: -7px;
+    }
+    .gridshadebox_arrow {
+        height: 20px;
+        width: 20px;
+    }
+    .gridshadebox_left_area {
+        left: -20px;
+        width: 20px;
+    }
+    .gridshadebox_right_area {
+        right: -20px;
+        width: 20px;
+    }
+}
+
+.gridshadebox_arrow.gridshadebox_mobile {
+    height: 18px;
+    width: 18px;
+}
+
+.gridshadebox_arrow.gridshadebox_mobile.gridshadebox_left_area {
+    left: -18px;
+    width: 18px;
+}
+
+.gridshadebox_arrow.gridshadebox_mobile.gridshadebox_right_area {
+    right: -18px;
+    width: 10px;
+}
+
+.gridshadebox_arrow.gridshadebox_mobile, .gridshadebox_arrow.gridshadebox_mobile:hover {
     opacity: 1;
-    height: 27px;
-    width: 27px;
 }
 
-.gridshadebox_arrow.gridshadebox_arrow_mobile.gridshadebox_left {
-    left: -14px;
+#gridshadebox_close.gridshadebox_mobile {
+    height: 18px;
+    width: 18px;
+    top: -7px;
+    right: -7px;
 }
 
-.gridshadebox_arrow.gridshadebox_arrow_mobile.gridshadebox_right {
-    right: -14px;
+.gridshadebox_arrow.gridshadebox_tablet {
+    height: 31px;
+    width: 31px;
 }
 
-.gridshadebox_arrow.gridshadebox_arrow_tablet {
+.gridshadebox_arrow.gridshadebox_tablet.gridshadebox_left_area {
+    left: -31px;
+    width: 31px;
+}
+
+.gridshadebox_arrow.gridshadebox_tablet.gridshadebox_right_area {
+    right: -31px;
+    width: 31px;
+}
+
+.gridshadebox_arrow.gridshadebox_tablet, .gridshadebox_arrow.gridshadebox_tablet:hover {
     opacity: 1;
 }
 

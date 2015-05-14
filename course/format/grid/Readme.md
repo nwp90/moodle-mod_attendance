@@ -8,7 +8,7 @@ This version works with Moodle version 2014111000.00 release 2.8 (Build: 2014111
 next release.
 
 Please ensure that your hardware and software complies with 'Requirements' in 'Installing Moodle' on
-'docs.moodle.org/27/en/Installing_Moodle' / 'docs.moodle.org/dev/Moodle_2.8_release_notes'.
+'docs.moodle.org/28/en/Installing_Moodle' / 'docs.moodle.org/dev/Moodle_2.8_release_notes'.
 
 Free Software
 =============
@@ -246,6 +246,16 @@ Known Issues
 
 History
 =============
+25th February 2015 Version 2.8.2.1
+  1. Fixed 'Arrows still show when editing is on.' - #13.
+
+21st December 2014 Version 2.8.2
+  1. Revamped the arrows such that they are always visible.
+  2. Arrow and close image size responsive to screen size.
+  3. Changed the arrow images to FontAwesome: http://fontawesome.io/license/ and extracted with: https://icomoon.io/app/#/select.
+  4. Added change in cursor for the arrow areas.
+  5. Fix CONTRIB-5511: Navigation arrows should be hidden when only one section.
+
 16th November 2014 Version 2.8.1 - Stable version for Moodle 2.8.
   1.  Always show shadebox arrows on Tablets and Mobiles with the latter being half size.
 
