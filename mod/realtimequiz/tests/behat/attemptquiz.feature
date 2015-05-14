@@ -18,7 +18,7 @@ Feature: Students can attempt a quiz under the control of a teacher
     And I add a "Realtime quiz" to section "1" and I fill the form with:
       | Realtime quiz         | Test realtime quiz                |
       | Introduction          | Test the realtime quiz is working |
-      | Default question time | 20                                |
+      | Default question time | 30                                |
     And I follow "Test realtime quiz"
     And I press "Add question"
     And I set the following fields to these values:
@@ -43,7 +43,7 @@ Feature: Students can attempt a quiz under the control of a teacher
     And I set the field "No 'right' answer" to "1"
     And I press "Save question"
 
-  @javascript @wip
+  @javascript
   Scenario: Teacher starts quiz, then students attempt it
     When I follow "View quiz"
     And I set the field "sessionname" to "Test session"
