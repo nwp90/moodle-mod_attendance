@@ -14,21 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+require_once($CFG->dirroot . '/question/type/varnumericset/calculatorbase.php');
+
+
 /**
- * Pattern-match question type version information.
+ * Class for evaluating variants for varnumericset question type.
  *
- * @package   qtype_pmatch
+ * @package   qtype_varnumericset
  * @copyright 2011 The Open University
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->version   = 2015051000;
-$plugin->requires  = 2013101800;
-$plugin->cron      = 0;
-$plugin->component = 'qtype_pmatch';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.7 for Moodle 2.6+';
-
-$plugin->outestssufficient = true;
+class qtype_varnumericset_calculator extends qtype_varnumeric_calculator_base {
+}

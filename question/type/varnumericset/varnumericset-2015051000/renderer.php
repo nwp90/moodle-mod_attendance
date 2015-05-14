@@ -15,20 +15,25 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Pattern-match question type version information.
+ * variable numeric set question renderer class.
  *
- * @package   qtype_pmatch
- * @copyright 2011 The Open University
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    qtype
+ * @subpackage varnumericset
+ * @copyright  2011 The Open University
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2015051000;
-$plugin->requires  = 2013101800;
-$plugin->cron      = 0;
-$plugin->component = 'qtype_pmatch';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.7 for Moodle 2.6+';
+require_once($CFG->dirroot . '/question/type/varnumericset/rendererbase.php');
 
-$plugin->outestssufficient = true;
+/**
+ * Generates the output for variable numeric set question type.
+ *
+ * @copyright  2011 The Open University
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class qtype_varnumericset_renderer extends qtype_varnumeric_renderer_base {
+
+}

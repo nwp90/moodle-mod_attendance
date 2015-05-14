@@ -15,25 +15,36 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Question behaviour type specifically for use with the Opaque question type.
+ * Question type class for the variable numeric set question type.
  *
- * @package   qbehaviour_opaque
- * @copyright 2014 The Open University
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    qtype
+ * @subpackage varnumericset
+ * @copyright  2011 The Open University
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->libdir . '/questionlib.php');
+require_once($CFG->dirroot . '/question/engine/lib.php');
+require_once($CFG->dirroot . '/question/type/varnumericset/calculator.php');
+require_once($CFG->dirroot . '/question/type/varnumericset/questiontypebase.php');
+
 
 /**
- * Question behaviour type information specifically for use with the Opaque question type.
+ * The variable numeric set question type.
  *
- * @copyright 2014 The Open University
+ * @copyright  2011 The Open University
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class qbehaviour_opaque_type extends question_behaviour_type {
-    public function can_questions_finish_during_the_attempt() {
-        return true;
+class qtype_varnumericset extends qtype_varnumeric_base {
+
+    public function recalculate_every_time() {
+        return false;
+    }
+
+    public function db_table_prefix() {
+        return 'qtype_varnumericset';
     }
 }

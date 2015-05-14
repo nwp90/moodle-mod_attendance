@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Pattern-match question type version information.
+ * Variable numeric sets question type version information.
  *
- * @package   qtype_pmatch
+ * @package   qtype_varnumericset
  * @copyright 2011 The Open University
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -27,8 +27,8 @@ defined('MOODLE_INTERNAL') || die();
 $plugin->version   = 2015051000;
 $plugin->requires  = 2013101800;
 $plugin->cron      = 0;
-$plugin->component = 'qtype_pmatch';
+$plugin->component = 'qtype_varnumericset';
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.7 for Moodle 2.6+';
+$plugin->release   = '1.6 for Moodle 2.6+';
 
 $plugin->outestssufficient = true;
