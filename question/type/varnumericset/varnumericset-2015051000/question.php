@@ -15,20 +15,26 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Pattern-match question type version information.
+ * varnumericset question definition class.
  *
- * @package   qtype_pmatch
+ * @package   qtype_varnumericset
  * @copyright 2011 The Open University
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2015051000;
-$plugin->requires  = 2013101800;
-$plugin->cron      = 0;
-$plugin->component = 'qtype_pmatch';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.7 for Moodle 2.6+';
+require_once($CFG->dirroot . '/question/type/varnumericset/questionbase.php');
 
-$plugin->outestssufficient = true;
+/**
+ * Represents a varnumericset question.
+ *
+ * @copyright 2011 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class qtype_varnumericset_question extends qtype_varnumeric_question_base {
+    public function get_variants_selection_seed() {
+        return $this->get_random_seed();
+    }
+}

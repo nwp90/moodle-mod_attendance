@@ -15,20 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Pattern-match question type version information.
+ * Serve question type files
  *
- * @package   qtype_pmatch
- * @copyright 2011 The Open University
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @since      2.0
+ * @package    qtype
+ * @subpackage varnumericset
+ * @copyright  2011 The Open University
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2015051000;
-$plugin->requires  = 2013101800;
-$plugin->cron      = 0;
-$plugin->component = 'qtype_pmatch';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.7 for Moodle 2.6+';
 
-$plugin->outestssufficient = true;
+/**
+ * Checks file access for varnumeric set questions.
+ */
+function qtype_varnumericset_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
+    global $DB, $CFG;
+    require_once($CFG->libdir . '/questionlib.php');
+    question_pluginfile($course, $context, 'qtype_varnumericset', $filearea, $args, $forcedownload, $options);
+}

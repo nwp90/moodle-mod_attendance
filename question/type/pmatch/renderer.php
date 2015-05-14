@@ -65,7 +65,11 @@ class qtype_pmatch_renderer extends qtype_renderer {
 
         $htmlresponse = $question->allowsubscript || $question->allowsuperscript;
         if ($htmlresponse) {
-            $editor = get_texteditor('supsub');
+            if (class_exists('editor_ousupsub_helper')) {
+                $editor = editor_ousupsub_helper::get_editor();
+            } else {
+                $editor = get_texteditor('supsub');
+            }
             if ($editor === false) {
                 $htmlresponse = false;
             }
@@ -110,7 +114,7 @@ class qtype_pmatch_renderer extends qtype_renderer {
         }
         if ($placeholder) {
             $inputinplace = html_writer::tag('label', get_string('answer'),
-                    array('for' => $inputattributes['id'], 'class' => 'accesshide'));
+                    array('for' => $attributes['id'], 'class' => 'accesshide'));
             $inputinplace .= $input;
             $questiontext = substr_replace($questiontext, $inputinplace,
                      strpos($questiontext, $placeholder), strlen($placeholder));
