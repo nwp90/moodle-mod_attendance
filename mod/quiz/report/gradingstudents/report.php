@@ -219,7 +219,8 @@ class quiz_gradingstudents_report extends quiz_default_report {
                 $reviewlink = get_string('attemptid', 'quiz_gradingstudents', $attempt->attemptnumber);
             }
             $row = array();
-            $row[] = format_string($attempt->idnumber);
+            #$row[] = format_string($attempt->idnumber);
+            $row[] = fullname($attempt);
             $row[] = $reviewlink;
             $row[] = $this->format_count_for_table($attempt, 'needsgrading', 'grade');
             $row[] = $this->format_count_for_table($attempt, 'manuallygraded', 'updategrade');
@@ -385,7 +386,7 @@ class quiz_gradingstudents_report extends quiz_default_report {
         $params['state'] = 'finished';
         $sql = "SELECT qa.id AS attemptid, qa.uniqueid, qa.attempt AS attemptnumber,
                        qa.quiz AS quizid, qa.layout, qa.userid, qa.timefinish,
-                       qa.preview, qa.state, u.idnumber
+                       qa.preview, qa.state, u.*
                   FROM {user} u
                   JOIN {quiz_attempts} qa ON u.id = qa.userid
                  WHERE u.id $usql AND qa.quiz = :quizid AND qa.state = :state
