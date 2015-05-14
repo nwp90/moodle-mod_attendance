@@ -659,11 +659,11 @@ body.format-topcoll.editing .section .activity .actions {
     position: relative;
 }
 
-body.format-topcoll.editing .moodle-actionmenu ul.menubar {
+body.format-topcoll.editing #region-main .moodle-actionmenu ul.menubar {
     display: none;
 }
 
-body.format-topcoll.editing.jsenabled .moodle-actionmenu[data-enhance] ul.menubar {
+body.format-topcoll.editing.jsenabled #region-main .moodle-actionmenu[data-enhance] ul.menubar {
     display: inline-block;
 }
 
@@ -730,13 +730,16 @@ body.ie7 .course-content ul.ctopics li.section .right .spacer {
 }
 
 /* Toggle all */
-#toggle-all {
+#toggle-all, #topcoll-display-instructions {
     display: none; /* Hide when JavaScript not enabled. */
+}
+
+body.jsenabled #toggle-all, body.jsenabled #topcoll-display-instructions {
+    display: block;
 }
 
 body.jsenabled #toggle-all {
     background: none repeat scroll 0 0 transparent;
-    display: block;
 }
 
 #toggle-all .content .sectionbody h4 {
@@ -774,3 +777,30 @@ body.jsenabled #toggle-all {
 .dir-rtl #toggle-all .content .sectionbody h4, .dir-rtl #toggle-all .content .sectionbody h4 a {
     text-align: right;
 }
+
+.cttoggle {
+    font-family: inherit;
+    font-size: inherit;
+    font-style: inherit;
+}
+
+/* print styles. */
+@media print {
+    body.jsenabled .toggledsection {
+        display: block; /* If JavaScript is enabled and we are printing then this css will apply and the section will be shown. */
+    }
+    body.jsenabled #toggle-all, body.jsenabled #topcoll-display-instructions, .cttoggle {
+        display: none;
+    }
+    .course-content ul.ctopics li.section.main {
+        float: left;
+    }
+    body.format-topcoll .course-content ul.ctopics li.section.main {
+        padding-bottom: 0px;
+    }
+    ul.ctopics {
+        page-break-before: avoid;
+        page-break-after: avoid;
+    }
+}
+
