@@ -39,7 +39,6 @@ function lightboxgallery_supports($feature) {
         case FEATURE_MOD_ARCHETYPE:           return MOD_ARCHETYPE_RESOURCE;
         case FEATURE_GROUPS:                  return false;
         case FEATURE_GROUPINGS:               return false;
-        case FEATURE_GROUPMEMBERSONLY:        return true;
         case FEATURE_MOD_INTRO:               return true;
         case FEATURE_COMPLETION_TRACKS_VIEWS: return true;
         case FEATURE_GRADE_HAS_GRADE:         return false;
@@ -414,8 +413,7 @@ function lightboxgallery_get_file_info($browser, $areas, $course, $cm, $context,
  * @return string The trimmed string with a '...' appended for display.
  */
 function lightboxgallery_resize_text($text, $length) {
-    $textlib = new textlib();
-    return ($textlib->strlen($text) > $length ? $textlib->substr($text, 0, $length) . '...' : $text);
+    return core_text::strlen($text) > $length ? core_text::substr($text, 0, $length) . '...' : $text;
 }
 
 /**
