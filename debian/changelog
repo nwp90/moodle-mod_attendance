@@ -1,3 +1,25 @@
+moodle-site-otagounifom (2.8.6.20150515+0facmed1-1) wheezy; urgency=medium
+
+  * Update to Moodle 2.8.6 (security fixes)
+  * Update topcoll course format to 2015040900 release.
+  * Update grid format to 2015022500 release.
+  * Update qtype gapfill to 1.6 (2006082514) @ 20150515
+  * Update OU qtype and qbehaviours
+  * Update block progress to release 2015051200
+  * Update mod scheduler to 2014090102 release
+  * Update mod realtimequiz to release 2014103001
+  * Update mod questionnaire to version 2014111002 / build 2015031901
+  * Update mod lightboxgallery to release 2.8.0.2 (2015050401)
+  * Update mod_ and block_ checklist from git 20150515
+  * Update mod attendance to git d2c189c9d66ee9b0737a94186d5518a82942a587 (20150515)
+  * Add UNSW teambuilder module "2014082601" (actually 2015050400) for 2.7, 2.8.
+  * Add OU qtype_combined 1.3 for Moodle 2.6+ (2015051000)
+  * Add qbehaviour-deferredfeedbackexplain Version 1.0 for Moodle 2.6+ (2014111000)
+  * Add multichoiceset qtype 1.4 (2015040100) for 2.6-2.9
+  * Upgrade gradingstudents quiz marking plugin to 2015051000 from git and modify
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 15 May 2015 10:57:02 +1200
+
 moodle-site-otagounifom (2.8.5.20150313+0facmed1-1) wheezy; urgency=low
 
   * Update to upstream 2.8.5+ 20150313 for multiple security updates
