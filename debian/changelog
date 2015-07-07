@@ -1,3 +1,12 @@
+moodle-site-otagounifom (2.8.7.20150703+0facmed1-1) wheezy; urgency=medium
+
+  * New upstream version, with security fixes.
+  * Add atto styles plugin.
+  * Add atto htmlplus plugin.
+  * Add cbmgrades quiz reporting plugin.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 07 Jul 2015 12:26:43 +1200
+
 moodle-site-otagounifom (2.8.6.20150515+0facmed1-1) wheezy; urgency=medium
 
   * Update to Moodle 2.8.6 (security fixes)
