@@ -1,3 +1,10 @@
+moodle-site-otagounifom (2.8.8.20150914+0facmed1-1) wheezy; urgency=medium
+
+  * New upstream version, includes fixes for security issues.
+  * No local changes.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 15 Sep 2015 13:14:35 +1200
+
 moodle-site-otagounifom (2.8.7.20150703+0facmed2-1) wheezy; urgency=medium
 
   * Fix bug in grade checklist export plugin
