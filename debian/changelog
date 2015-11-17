@@ -1,3 +1,16 @@
+moodle-site-otagounifom (2.8.9.20151109+0facmed1-1) jessie; urgency=medium
+
+  * New upstream version, including fix for flowplayer XSS that's been
+    floating around for 12 months.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 10 Nov 2015 11:25:58 +1300
+
+moodle-site-otagounifom (2.8.8.20150914+0facmed2-1) wheezy; urgency=medium
+
+  * Fix for regression introduced in MDL-51090, came as part of 2.8.8 update.
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 21 Sep 2015 14:23:27 +1200
+
 moodle-site-otagounifom (2.8.8.20150914+0facmed1-1) wheezy; urgency=medium
 
   * New upstream version, includes fixes for security issues.
