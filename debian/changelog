@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.0.0.20151116+0facmed1-2) jessie; urgency=medium
+
+  * Fix debian/install
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 18 Nov 2015 11:52:46 +1300
+
 moodle-site-otagounifom (3.0.0.20151116+0facmed1-1) jessie; urgency=medium
 
   * New upstream version, previous local changes merged.
