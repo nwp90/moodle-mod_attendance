@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.0.0.20151116+0facmed1-1) jessie; urgency=medium
+
+  * New upstream version, previous local changes merged.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 18 Nov 2015 09:54:21 +1300
+
 moodle-site-otagounifom (2.8.9.20151109+0facmed1-1) jessie; urgency=medium
 
   * New upstream version, including fix for flowplayer XSS that's been
