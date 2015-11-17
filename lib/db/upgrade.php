@@ -1602,6 +1602,7 @@ function xmldb_main_upgrade($oldversion) {
 
     if ($oldversion < 2013021800.00) {
         // Add the site identifier to the cache config's file.
+        require_once($CFG->dirroot.'/cache/locallib.php');
         $siteidentifier = $DB->get_field('config', 'value', array('name' => 'siteidentifier'));
         cache_helper::update_site_identifier($siteidentifier);
 
