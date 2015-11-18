@@ -60,4 +60,3 @@ function xmldb_qtype_ddmarker_upgrade($oldversion) {
     }
     return true;
 }
-

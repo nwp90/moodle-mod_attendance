@@ -24,16 +24,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2015031800;
-$plugin->requires  = 2013101800;
-$plugin->cron      = 0;
+$plugin->version   = 2015111600;
+$plugin->requires  = 2015111000;
+
 $plugin->component = 'qtype_ddmarker';
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.8 for Moodle 2.5+';
 
 $plugin->dependencies = array(
-    'qtype_gapselect'     => 2014111200,
-    'qtype_ddimageortext' => 2014111200,
+    'qtype_gapselect'     => 2015111000,
+    'qtype_ddimageortext' => 2015111000,
 );
-
-$plugin->outestssufficient = true;
