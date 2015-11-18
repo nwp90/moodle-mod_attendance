@@ -32,19 +32,13 @@ defined('MOODLE_INTERNAL') || die();
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class restore_qtype_ddmarker_plugin extends restore_qtype_plugin {
-    /**
-     * Returns the qtype name.
-     *
-     * @return string The type name
-     */
+
     protected static function qtype_name() {
         return 'ddmarker';
     }
 
     /**
      * Returns the paths to be handled by the plugin at question level.
-     *
-     * @return array
      */
     protected function define_question_plugin_structure() {
 
@@ -67,9 +61,7 @@ class restore_qtype_ddmarker_plugin extends restore_qtype_plugin {
     }
 
     /**
-     * Process the qtype/{qtypename} element.
-     *
-     * @param array|object $data Drag and drop data to work with.
+     * Process the qtype/{qtypename} element
      */
     public function process_dds($data) {
         global $DB;
@@ -98,8 +90,6 @@ class restore_qtype_ddmarker_plugin extends restore_qtype_plugin {
 
     /**
      * Process the qtype/drags/drag element.
-     *
-     * @param array|object $data Drag and drop drag data to work with.
      */
     public function process_drag($data) {
         global $DB;
@@ -125,9 +115,7 @@ class restore_qtype_ddmarker_plugin extends restore_qtype_plugin {
     }
 
     /**
-     * Process the qtype/drags/drop element.
-     *
-     * @param array|object $data Drag and drop drops data to work with.
+     * Process the qtype/drags/drag element.
      */
     public function process_drop($data) {
         global $DB;
@@ -153,8 +141,6 @@ class restore_qtype_ddmarker_plugin extends restore_qtype_plugin {
 
     /**
      * Return the contents of this qtype to be processed by the links decoder
-     *
-     * @return array
      */
     public static function define_decode_contents() {
 

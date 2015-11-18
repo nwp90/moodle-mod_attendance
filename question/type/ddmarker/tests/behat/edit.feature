@@ -1,4 +1,4 @@
-@qtype @qtype_ddmarker
+@ou @ou_vle @qtype @qtype_ddmarker
 Feature: Test editing a drag and drop markers questions
   As a teacher
   In order to be able to update my drag and drop markers questions
