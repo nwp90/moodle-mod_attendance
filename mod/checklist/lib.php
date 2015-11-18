@@ -649,6 +649,11 @@ function checklist_print_overview($courses, &$htmlarray) {
 function checklist_cron() {
     global $CFG, $DB;
 
+    if ($CFG->branch >= 27) {
+        // In Moodle 2.7+, all updates happen via events, so cron is no longer needed.
+        return true;
+    }
+
     $lastcron = $DB->get_field('modules', 'lastcron', array('name' => 'checklist'));
     if (!$lastcron) {
         // First time run - checklists will take care of any updates before now.
@@ -680,24 +685,21 @@ function checklist_cron() {
             $courses[$checklist->course] = array($checklist->id => $checklist);
         }
     }
-    $courseids = implode(',', array_keys($courses));
+    $courseids = array_keys($courses);
 
     if (defined("DEBUG_CHECKLIST_AUTOUPDATE")) {
-        mtrace("Looking for updates in courses: $courseids");
+        mtrace("Looking for updates in courses: ".implode(', ', $courseids));
     }
 
-    // Process all logs since the last cron update.
     $logupdate = 0;
-    $totalcount = 0;
-    $logs = get_logs("l.time >= ? AND l.course IN ($courseids) AND cmid > 0", array($lastlogtime),
-                     'l.time ASC', '', '', $totalcount);
+    $logs = mod_checklist\local\autoupdate::get_logs($courseids, $lastlogtime);
     if ($logs) {
         if (defined("DEBUG_CHECKLIST_AUTOUPDATE")) {
             mtrace("Found ".count($logs)." log updates to check");
         }
         foreach ($logs as $log) {
-            $logupdate += checklist_autoupdate($log->course, $log->module, $log->action, $log->cmid,
-                                               $log->userid, $log->url, $courses[$log->course]);
+            $logupdate += checklist_autoupdate_internal($log->course, $log->module, $log->cmid, $log->userid,
+                                                        $courses[$log->course]);
         }
     }
 
