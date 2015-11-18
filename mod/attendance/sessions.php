@@ -33,6 +33,10 @@ $pageparams = new att_sessions_page_params();
 $id                     = required_param('id', PARAM_INT);
 $pageparams->action     = required_param('action', PARAM_INT);
 
+if (optional_param('deletehiddensessions', false, PARAM_TEXT)) {
+    $pageparams->action = att_sessions_page_params::ACTION_DELETE_HIDDEN;
+}
+
 if (empty($pageparams->action)) {
     // The form on manage.php can submit with the "choose" option - this should be fixed in the long term,
     // but in the meantime show a useful error and redirect when it occurs.
@@ -46,18 +50,19 @@ $att            = $DB->get_record('attendance', array('id' => $cm->instance), '*
 
 require_login($course, true, $cm);
 
-$att = new attendance($att, $cm, $course, $PAGE->context, $pageparams);
+$context = context_module::instance($cm->id);
+require_capability('mod/attendance:manageattendances', $context);
 
-$att->perm->require_manage_capability();
+$att = new attendance($att, $cm, $course, $context, $pageparams);
 
-$PAGE->set_url($att->url_sessions());
+$PAGE->set_url($att->url_sessions(array('action'=>$pageparams->action)));
 $PAGE->set_title($course->shortname. ": ".$att->name);
 $PAGE->set_heading($course->fullname);
 $PAGE->set_cacheable(true);
 $PAGE->set_button($OUTPUT->update_module_button($cm->id, 'attendance'));
 $PAGE->navbar->add($att->name);
 
-$formparams = array('course' => $course, 'cm' => $cm, 'modcontext' => $PAGE->context);
+$formparams = array('course' => $course, 'cm' => $cm, 'modcontext' => $context, 'att' => $att);
 switch ($att->pageparams->action) {
     case att_sessions_page_params::ACTION_ADD:
         $url = $att->url_sessions(array('action' => att_sessions_page_params::ACTION_ADD));
@@ -109,7 +114,7 @@ switch ($att->pageparams->action) {
         $params = array('action' => $att->pageparams->action, 'sessionid' => $sessionid, 'confirm' => 1, 'sesskey' => sesskey());
 
         echo $OUTPUT->header();
-        echo $OUTPUT->heading(get_string('attendanceforthecourse', 'attendance').' :: ' .$course->fullname);
+        echo $OUTPUT->heading(get_string('attendanceforthecourse', 'attendance').' :: ' .format_string($course->fullname));
         echo $OUTPUT->confirm($message, $att->url_sessions($params), $att->url_manage());
         echo $OUTPUT->footer();
         exit;
@@ -126,8 +131,10 @@ switch ($att->pageparams->action) {
             }
             redirect($att->url_manage(), get_string('sessiondeleted', 'attendance'));
         }
-        $sessid = required_param_array('sessid', PARAM_SEQUENCE);
-
+        $sessid = optional_param_array('sessid', '', PARAM_SEQUENCE);
+        if (empty($sessid)) {
+            print_error('nosessionsselected', 'attendance', $att->url_manage());
+        }
         $sessionsinfo = $att->get_sessions_info($sessid);
 
         $message = get_string('deletecheckfull', '', get_string('session', 'attendance'));
@@ -144,7 +151,7 @@ switch ($att->pageparams->action) {
                         'confirm' => 1, 'sesskey' => sesskey());
 
         echo $OUTPUT->header();
-        echo $OUTPUT->heading(get_string('attendanceforthecourse', 'attendance').' :: ' .$course->fullname);
+        echo $OUTPUT->heading(get_string('attendanceforthecourse', 'attendance').' :: ' .format_string($course->fullname));
         echo $OUTPUT->confirm($message, $att->url_sessions($params), $att->url_manage());
         echo $OUTPUT->footer();
         exit;
@@ -174,12 +181,31 @@ switch ($att->pageparams->action) {
         }
 
         break;
+    case att_sessions_page_params::ACTION_DELETE_HIDDEN:
+        $confirm  = optional_param('confirm', null, PARAM_INT);
+        if ($confirm && confirm_sesskey()) {
+            $sessions = $att->get_hidden_sessions();
+            $att->delete_sessions(array_keys($sessions));
+            redirect($att->url_manage(), get_string('hiddensessionsdeleted', 'attendance'));
+        }
+
+        $a = new stdClass();
+        $a->count = $att->get_hidden_sessions_count();
+        $a->date = userdate($course->startdate);
+        $message = get_string('confirmdeletehiddensessions', 'attendance', $a);
+
+        $params = array('action' => $att->pageparams->action, 'confirm' => 1, 'sesskey' => sesskey());
+        echo $OUTPUT->header();
+        echo $OUTPUT->heading(get_string('attendanceforthecourse', 'attendance').' :: ' .format_string($course->fullname));
+        echo $OUTPUT->confirm($message, $att->url_sessions($params), $att->url_manage());
+        echo $OUTPUT->footer();
+        exit;
 }
 
 $output = $PAGE->get_renderer('mod_attendance');
 $tabs = new attendance_tabs($att, attendance_tabs::TAB_ADD);
 echo $output->header();
-echo $output->heading(get_string('attendanceforthecourse', 'attendance').' :: ' .$course->fullname);
+echo $output->heading(get_string('attendanceforthecourse', 'attendance').' :: ' .format_string($course->fullname));
 echo $output->render($tabs);
 
 $mform->display();
@@ -230,6 +256,7 @@ function construct_sessions_data_for_add($formdata) {
                     if (isset($formdata->studentscanmark)) { // Students will be able to mark their own attendance.
                         $sess->studentscanmark = 1;
                     }
+                    $sess->statusset = $formdata->statusset;
 
                     fill_groupid($formdata, $sessions, $sess);
                 }
@@ -250,6 +277,7 @@ function construct_sessions_data_for_add($formdata) {
         if (isset($formdata->studentscanmark)) { // Students will be able to mark their own attendance.
             $sess->studentscanmark = 1; 
         }
+        $sess->statusset = $formdata->statusset;
 
         fill_groupid($formdata, $sessions, $sess);
     }

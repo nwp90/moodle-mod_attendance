@@ -24,6 +24,7 @@
 
 $string['attendance:addinstance'] = 'Add a new attendance activity';
 $string['Aacronym'] = 'A';
+$string['adduser'] = 'Add user';
 $string['Afull'] = 'Absent';
 $string['Eacronym'] = 'E';
 $string['Efull'] = 'Excused';
@@ -51,6 +52,7 @@ $string['attendance:changepreferences'] = 'Changing Preferences';
 $string['attendance:changeattendances'] = 'Changing Attendances';
 $string['attendance:export'] = 'Export Reports';
 $string['attendance:manageattendances'] = 'Manage Attendances';
+$string['attendance:managetemporaryusers'] = 'Manage temporary users';
 $string['attendance:takeattendances'] = 'Taking Attendances';
 $string['attendance:view'] = 'Viewing Attendances';
 $string['attendance:viewreports'] = 'Viewing Reports';
@@ -65,10 +67,12 @@ $string['cannottakeforgroup'] = 'You can\'t take attendance for group "{$a}"';
 $string['changeattendance'] = 'Change attendance';
 $string['changeduration'] = 'Change duration';
 $string['changesession'] = 'Change session';
+$string['checkweekdays'] = 'Select weekdays that fall within your selected session date range.';
 $string['column'] = 'column';
 $string['columns'] = 'columns';
 $string['commonsession'] = 'Common';
 $string['commonsessions'] = 'Common';
+$string['confirmdeleteuser'] = 'Are you sure you want to delete user \'{$a->fullname}\' ({$a->email})?<br/>All of their attendance records will be permanently deleted.';
 $string['countofselected'] = 'Count of selected';
 $string['copyfrom'] = 'Copy attendance data from';
 $string['createmultiplesessions'] = 'Create multiple sessions';
@@ -88,6 +92,7 @@ $string['deletelogs'] = 'Delete attendance data';
 $string['deleteselected'] = 'Delete selected';
 $string['deletesession'] = 'Delete session';
 $string['deletesessions'] = 'Delete all sessions';
+$string['deleteuser'] = 'Delete user';
 $string['deletingsession'] = 'Deleting session for the course';
 $string['deletingstatus'] = 'Deleting status for the course';
 $string['description'] = 'Description';
@@ -99,6 +104,9 @@ $string['downloadtext'] = 'Download in text format';
 $string['donotusepaging'] = 'Do not use paging';
 $string['duration'] = 'Duration';
 $string['editsession'] = 'Edit Session';
+$string['emptyacronym'] = 'Empty acronyms are not allowed. Status record not updated.';
+$string['emptydescription'] = 'Empty descriptions are not allowed. Status record not updated.';
+$string['edituser'] = 'Edit user';
 $string['endtime'] = 'Session end time';
 $string['endofperiod'] = 'End of period';
 $string['enrolmentend'] = 'User enrolment ends {$a}';
@@ -125,6 +133,7 @@ $string['indetail'] = 'In detail...';
 $string['invalidsessionenddate'] = 'The session end date can not be earlier than the session start date';
 $string['invalidaction'] = 'You must select an action';
 $string['jumpto'] = 'Jump to';
+$string['mergeuser'] = 'Merge user';
 $string['modulename'] = 'Attendance';
 $string['modulename_help'] = 'The attendance activity module enables a teacher to take attendance during class and students to view their own attendance record.
 
@@ -134,9 +143,11 @@ Reports are available for the entire class or individual students.';
 $string['modulenameplural'] = 'Attendances';
 $string['months'] = 'Months';
 $string['moreattendance'] = 'Attendance has been successfully taken for this page';
+$string['mustselectusers'] = 'Must select users to export';
 $string['myvariables'] = 'My Variables';
 $string['newdate'] = 'New date';
 $string['newduration'] = 'New duration';
+$string['newstatusset'] = 'New set of statuses';
 $string['noattforuser'] = 'No attendance records exist for the user';
 $string['nodescription'] = 'Regular class session';
 $string['noguest'] = 'Guest can\'t see attendance';
@@ -151,6 +162,9 @@ $string['nosessionsselected'] = 'No sessions selected';
 $string['notfound'] = 'Attendance activity not found in this course!';
 $string['noupgradefromthisversion'] = 'The Attendance module cannot upgrade from the version of attforblock you have installed. - please delete attforblock or upgrade it to the latest version before isntalling the new attendance module';
 $string['olddate'] = 'Old date';
+$string['onlyselectedusers'] = 'Export specific users';
+$string['participant'] = 'Participant';
+$string['percentage'] = 'Percentage';
 $string['period'] = 'Frequency';
 $string['pluginname'] = 'Attendance';
 $string['pluginadministration'] = 'Attendance administration';
@@ -158,6 +172,41 @@ $string['remark'] = 'Remark for: {$a}';
 $string['remarks'] = 'Remarks';
 $string['report'] = 'Report';
 $string['required'] = 'Required*';
+$string['requiredentries'] = '  Temporary records overwrite participant attendance records';
+$string['requiredentry'] = '  Temporary user merge help guide';
+$string['requiredentry_help'] = '<p align="center"><b>Attendance</b></p>
+<p align="left"><strong>Merge Accounts</strong></p>
+<p align="left">
+<table border="2" cellpadding="4">
+<tr>
+<th>Moodle User</th>
+<th>Temporary User</th>
+<th>Action</th>
+</tr>
+<tr>
+<td>Attendance data</td>
+<td>Attendance data</td>
+<td>Temporary user will override Moodle user</td>
+</tr>
+<tr>
+<td>No attendance data</td>
+<td>Attendance data</td>
+<td>Temporary user attendance will be transfered to Moodle user</td>
+</tr>
+<tr>
+<td>Attendance data</td>
+<td>No attendance data</td>
+<td>Temporary user will be deleted</td>
+</tr>
+<tr>
+<td>No attendance data</td>
+<td>No attendance data</td>
+<td>Temporary user will be deleted</td>
+</tr>
+</table>
+
+</p>
+<p align="left"><strong>Temporay user will be deleted in all cases after merge action</strong></p>';
 $string['resetdescription'] = 'Remember that deleting attendance data will erase information from database. You can just hide older sessions having changed start date of course!';
 $string['resetstatuses'] = 'Reset statuses to default';
 $string['restoredefaults'] = 'Restore defaults';
@@ -188,6 +237,7 @@ $string['sessiontype_help'] = 'There are two types of sessions: common and group
 ';
 $string['sessiontypeshort'] = 'Type';
 $string['sessionupdated'] = 'Session successfully updated';
+$string['setallstatuses'] = 'Set status for all users';
 $string['setallstatusesto'] = 'Set status for all users to «{$a}»';
 $string['settings'] = 'Settings';
 $string['showdefaults'] = 'Show defaults';
@@ -198,6 +248,7 @@ $string['startofperiod'] = 'Start of period';
 $string['status'] = 'Status';
 $string['statuses'] = 'Statuses';
 $string['statusdeleted'] = 'Status deleted';
+$string['statusset'] = 'Status set {$a}';
 $string['strftimedm'] = '%d.%m';
 $string['strftimedmy'] = '%d.%m.%Y';
 $string['strftimedmyhm'] = '%d.%m.%Y %H.%M'; // Line added to allow multiple sessions in the same day.
@@ -206,9 +257,24 @@ $string['strftimehm'] = '%H:%M'; // Line added to allow display of time.
 $string['strftimeshortdate'] = '%d.%m.%Y';
 $string['studentid'] = 'Student ID';
 $string['takeattendance'] = 'Take attendance';
+$string['tempaddform'] = 'Add temporary user';
+$string['tempexists'] = 'There is already a temporary user with this email address';
+$string['tempusers'] = 'Temporary users';
 $string['thiscourse'] = 'This course';
 $string['tablerenamefailed'] = 'Rename of old attforblock table to attendance failed';
+$string['tactions'] = 'Action';
+$string['tcreated'] = 'Created';
+$string['temptable'] = 'List of temporary users';
+$string['tempuser'] = 'Temporary user';
+$string['tempusersedit'] = 'Edit temporary user';
+$string['tempuserslist'] = 'Temporary users';
+$string['tempusermerge'] = 'Merge temporary user';
+$string['tuseremail'] = 'Email';
+$string['tusername'] = 'Full name';
 $string['update'] = 'Update';
+$string['usestatusset'] = 'Use status set';
+$string['userexists'] = 'There is already a real user with this email address';
+$string['users'] = 'Users to export';
 $string['variable'] = 'variable';
 $string['variablesupdated'] = 'Variables successfully updated';
 $string['versionforprinting'] = 'version for printing';
@@ -235,3 +301,10 @@ $string['lowgrade'] = 'Low grade';
 $string['submitattendance'] = 'Submit attendance';
 $string['attendancenotset'] = 'You must set your attendance';
 $string['export'] = 'Export';
+$string['points'] = 'Points';
+$string['unknowngroup'] = 'Unknown group';
+$string['notmember'] = 'not&nbsp;member';
+
+$string['deletehiddensessions'] = 'Delete all hidden sessions';
+$string['confirmdeletehiddensessions'] = 'Are you sure you want to delete {$a->count} sessions scheduled before the course start date ({$a->date})?';
+$string['hiddensessionsdeleted'] = 'All hidden sessions were delete';

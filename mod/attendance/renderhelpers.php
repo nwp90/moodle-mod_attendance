@@ -127,7 +127,7 @@ class user_sessions_cells_html_generator extends user_sessions_cells_generator {
 
     protected function construct_existing_status_cell($text) {
         $this->close_open_cell_if_needed();
-        $this->cells[] = $text;
+        $this->cells[] = html_writer::span($text, 'attendancestatus-'.$text);
     }
 
     protected function construct_hidden_status_cell($text) {
@@ -162,8 +162,21 @@ class user_sessions_cells_html_generator extends user_sessions_cells_generator {
     }
     
     protected function construct_remarks_cell($text) {
-        $this->close_open_cell_if_needed();
-        $this->cells[] = $text;
+        global $OUTPUT;
+
+        if (!trim($text)) {
+            return;
+        }
+
+        // Format the remark.
+        $icon = $OUTPUT->pix_icon('i/info', '');
+        $remark = html_writer::span($text, 'remarkcontent');
+        $remark = html_writer::span($icon.$remark, 'remarkholder');
+
+        // Add it into the previous cell.
+        $markcell = array_pop($this->cells);
+        $markcell .= ' '.$remark;
+        $this->cells[] = $markcell;
     }
 
     protected function construct_not_existing_for_user_session_cell($text) {
@@ -237,7 +250,7 @@ function construct_user_data_stat($stat, $statuses, $gradable, $grade, $maxgrade
         $row = new html_table_row();
         $row->cells[] = get_string('attendancegrade', 'attendance') .
                         $OUTPUT->help_icon('gradebookexplanation', 'attendance') . ':';
-        $row->cells[] = $grade . ' / ' . $maxgrade;
+        $row->cells[] = format_float($grade) . ' / ' . format_float($maxgrade);
         $stattable->data[] = $row;
 
         $row = new html_table_row();
@@ -247,7 +260,7 @@ function construct_user_data_stat($stat, $statuses, $gradable, $grade, $maxgrade
         } else {
             $percent = $grade / $maxgrade * 100;
         }
-        $row->cells[] = sprintf("%0.{$decimalpoints}f", $percent);
+        $row->cells[] = format_float(sprintf("%0.{$decimalpoints}f", $percent));
         $stattable->data[] = $row;
     }
 
