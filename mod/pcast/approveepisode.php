@@ -32,17 +32,17 @@ $mode = optional_param('mode', PCAST_APPROVAL_VIEW, PARAM_ALPHANUM);
 $hook = optional_param('hook', 'ALL', PARAM_CLEAN);
 
 
-$episode = $DB->get_record('pcast_episodes', array('id'=> $eid), '*', MUST_EXIST);
-$pcast = $DB->get_record('pcast', array('id'=> $episode->pcastid), '*', MUST_EXIST);
+$episode = $DB->get_record('pcast_episodes', array('id' => $eid), '*', MUST_EXIST);
+$pcast = $DB->get_record('pcast', array('id' => $episode->pcastid), '*', MUST_EXIST);
 $cm = get_coursemodule_from_instance('pcast', $pcast->id, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id'=> $cm->course), '*', MUST_EXIST);
+$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 
 require_login($course, false, $cm);
 
 $context = context_module::instance($cm->id);
 require_capability('mod/pcast:approve', $context);
 
-$url = new moodle_url('/mod/pcast/approveepisode.php', array('eid'=>$eid, 'mode'=>$mode, 'hook'=>$hook, 'newstate' => $newstate));
+$url = new moodle_url('/mod/pcast/approveepisode.php', array('eid' => $eid, 'mode' => $mode, 'hook' => $hook, 'newstate' => $newstate));
 
 $PAGE->set_url($url);
 $PAGE->set_context($context);
@@ -53,7 +53,13 @@ if ($newstate != $episode->approved and confirm_sesskey()) {
     $newepisode->approved     = $newstate;
     $newepisode->timemodified = time();
     $DB->update_record("pcast_episodes", $newepisode);
-    
+
+    // Delete cached RSS feeds.
+    if (!empty($CFG->enablerssfeeds)) {
+        require_once($CFG->dirroot.'/mod/pcast/rsslib.php');
+        pcast_rss_delete_file($pcast);
+    }
+
     // Trigger event about entry approval/disapproval.
     $params = array(
         'context' => $context,
@@ -61,7 +67,7 @@ if ($newstate != $episode->approved and confirm_sesskey()) {
     );
     if ($newstate) {
         $event = \mod_pcast\event\episode_approved::create($params);
-    } else  {
+    } else {
         $event = \mod_pcast\event\episode_disapproved::create($params);
     }
     $event->add_record_snapshot('pcast_episodes', $episode);
