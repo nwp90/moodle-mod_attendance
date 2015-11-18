@@ -69,7 +69,7 @@ class episode_approved extends \core\event\base {
      */
     public function get_url() {
         return new \moodle_url("/mod/pcast/showepisode.php",
-                array('eid' => $this->objectid,));
+                array('eid' => $this->objectid));
     }
 
     /**
@@ -95,6 +95,10 @@ class episode_approved extends \core\event\base {
         if (!$this->contextlevel === CONTEXT_MODULE) {
             throw new \coding_exception('Context level must be CONTEXT_MODULE.');
         }
+    }
+
+    public static function get_objectid_mapping() {
+        return array('db' => 'pcast_episodes', 'restore' => 'pcast_episode');
     }
 }
 
