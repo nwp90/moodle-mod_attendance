@@ -355,4 +355,5 @@ M.qtype_ddimageortext.init_form = function(config) {
 };
 
 
+
 }, '@VERSION@', {"requires": ["moodle-qtype_ddimageortext-dd", "form_filepicker"]});

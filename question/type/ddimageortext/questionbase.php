@@ -166,3 +166,4 @@ class qtype_ddtoimage_question_base extends qtype_gapselect_question_base {
         return $summary;
     }
 }
+

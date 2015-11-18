@@ -351,3 +351,4 @@ M.qtype_ddimageortext = M.qtype_ddimageortext || {};
 M.qtype_ddimageortext.init_form = function(config) {
     return new DDIMAGEORTEXT_FORM(config);
 };
+

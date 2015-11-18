@@ -1,18 +1,18 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Stack - http://stack.bham.ac.uk/
 //
-// Moodle is free software: you can redistribute it and/or modify
+// Stack is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// Moodle is distributed in the hope that it will be useful,
+// Stack is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// along with Stack.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Behat steps definitions for drag and drop onto image.
@@ -46,7 +46,7 @@ class behat_qtype_ddimageortext extends behat_base {
 
     /**
      * Get the xpath for a given drop box.
-     * @param string $placenumber the number of the drop box.
+     * @param string $dragitem the number of the drop box.
      * @return string the xpath expression.
      */
     protected function drop_xpath($placenumber) {
@@ -60,6 +60,7 @@ class behat_qtype_ddimageortext extends behat_base {
      * @param int $placenumber the number of the place to drop into.
      *
      * @Given /^I drag "(?P<drag_item>[^"]*)" to place "(?P<place_number>\d+)" in the drag and drop onto image question$/
+     * 
      */
     public function i_drag_to_place_in_the_drag_and_drop_onto_image_question($dragitem, $placenumber) {
         $generalcontext = behat_context_helper::get('behat_general');
