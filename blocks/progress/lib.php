@@ -66,6 +66,27 @@ function block_progress_monitorable_modules() {
     global $DB;
 
     return array(
+        'aspirelist' => array(
+            'actions' => array(
+                'viewed' => array (
+                    'logstore_legacy'     => "SELECT id
+                                                FROM {log}
+                                               WHERE course = :courseid
+                                                 AND module = 'aspirelist'
+                                                 AND action = 'view'
+                                                 AND cmid = :cmid
+                                                AND userid = :userid",
+                    'sql_internal_reader' => "SELECT id
+                                                FROM {log}
+                                               WHERE courseid = :courseid
+                                                 AND component = 'mod_aspirelist'
+                                                 AND action = 'viewed'
+                                                 AND objectid = :eventid
+                                                 AND userid = :userid",
+                ),
+            ),
+            'defaultAction' => 'viewed'
+        ),
         'assign' => array(
             'defaultTime' => 'duedate',
             'actions' => array(
@@ -88,6 +109,14 @@ function block_progress_monitorable_modules() {
                                       AND i.id = g.itemid
                                       AND g.userid = :userid
                                       AND (g.finalgrade IS NOT NULL OR g.excluded <> 0)",
+                'passedby'     => "SELECT g.finalgrade, i.gradepass
+                                     FROM {grade_grades} g, {grade_items} i
+                                    WHERE i.itemmodule = 'assign'
+                                      AND i.iteminstance = :eventid
+                                      AND i.id = g.itemid
+                                      AND g.userid = :userid
+                                      AND (g.finalgrade IS NOT NULL OR g.excluded <> 0)
+                                      AND g.finalgrade >= i.gradepass",
             ),
             'defaultAction' => 'submitted'
         ),
@@ -116,11 +145,19 @@ function block_progress_monitorable_modules() {
                                       AND i.id = g.itemid
                                       AND g.userid = :userid
                                       AND (g.finalgrade IS NOT NULL OR g.excluded <> 0)",
+                'passedby'     => "SELECT g.finalgrade, i.gradepass
+                                     FROM {grade_grades} g, {grade_items} i
+                                    WHERE i.itemmodule = 'assignment'
+                                      AND i.iteminstance = :eventid
+                                      AND i.id = g.itemid
+                                      AND g.userid = :userid
+                                      AND (g.finalgrade IS NOT NULL OR g.excluded <> 0)
+                                      AND g.finalgrade >= i.gradepass",
             ),
             'defaultAction' => 'submitted'
         ),
         'bigbluebuttonbn' => array(
-            'defaultTime' => 'timedue',
+            'defaultTime' => 'openingtime',
             'actions' => array(
                 'viewed' => array (
                     'logstore_legacy'     => "SELECT id
@@ -417,8 +454,72 @@ function block_progress_monitorable_modules() {
                                       AND i.id = g.itemid
                                       AND g.userid = :userid
                                       AND (g.finalgrade IS NOT NULL OR g.excluded <> 0)",
+                'passed'       => "SELECT g.finalgrade, i.gradepass
+                                     FROM {grade_grades} g, {grade_items} i
+                                    WHERE i.itemmodule = 'lesson'
+                                      AND i.iteminstance = :eventid
+                                      AND i.id = g.itemid
+                                      AND g.userid = :userid
+                                      AND (g.finalgrade IS NOT NULL OR g.excluded <> 0)",
+                'passedby'     => "SELECT g.finalgrade, i.gradepass
+                                     FROM {grade_grades} g, {grade_items} i
+                                    WHERE i.itemmodule = 'lesson'
+                                      AND i.iteminstance = :eventid
+                                      AND i.id = g.itemid
+                                      AND g.userid = :userid
+                                      AND (g.finalgrade IS NOT NULL OR g.excluded <> 0)
+                                      AND g.finalgrade >= i.gradepass",
             ),
             'defaultAction' => 'attempted'
+        ),
+        'lti' => array(
+            'actions' => array(
+                'graded'       => "SELECT g.rawgrade
+                                     FROM {grade_grades} g, {grade_items} i
+                                    WHERE i.itemmodule = 'lti'
+                                      AND i.iteminstance = :eventid
+                                      AND i.id = g.itemid
+                                      AND g.userid = :userid
+                                      AND (g.finalgrade IS NOT NULL OR g.excluded <> 0)",
+                'viewed' => array (
+                    'logstore_legacy'     => "SELECT id
+                                                FROM {log}
+                                               WHERE course = :courseid
+                                                 AND module = 'lti'
+                                                 AND action = 'view'
+                                                 AND cmid = :cmid
+                                                 AND userid = :userid",
+                    'sql_internal_reader' => "SELECT id
+                                                FROM {log}
+                                               WHERE courseid = :courseid
+                                                 AND component = 'mod_lti'
+                                                 AND action = 'viewed'
+                                                 AND objectid = :eventid
+                                                 AND userid = :userid",
+                ),
+            ),
+            'defaultAction' => 'graded'
+        ),
+        'ouwiki' => array(
+            'actions' => array(
+                'viewed' => array (
+                    'logstore_legacy'     => "SELECT id
+                                                FROM {log}
+                                               WHERE course = :courseid
+                                                 AND module = 'ouwiki'
+                                                 AND action = 'view'
+                                                 AND cmid = :cmid
+                                                 AND userid = :userid",
+                    'sql_internal_reader' => "SELECT id
+                                                FROM {log}
+                                               WHERE courseid = :courseid
+                                                 AND component = 'mod_ouwiki'
+                                                 AND action = 'viewed'
+                                                 AND objectid = :eventid
+                                                 AND userid = :userid",
+                ),
+            ),
+            'defaultAction' => 'viewed'
         ),
         'page' => array(
             'actions' => array(
@@ -434,6 +535,27 @@ function block_progress_monitorable_modules() {
                                                 FROM {log}
                                                WHERE courseid = :courseid
                                                  AND component = 'mod_page'
+                                                 AND action = 'viewed'
+                                                 AND objectid = :eventid
+                                                 AND userid = :userid",
+                ),
+            ),
+            'defaultAction' => 'viewed'
+        ),
+        'panopto' => array(
+            'actions' => array(
+               'viewed' => array (
+                    'logstore_legacy'     => "SELECT id
+                                                FROM {log}
+                                               WHERE course = :courseid
+                                                 AND module = 'panopto'
+                                                 AND action = 'view'
+                                                 AND cmid = :cmid
+                                                 AND userid = :userid",
+                    'sql_internal_reader' => "SELECT id
+                                                FROM {log}
+                                               WHERE courseid = :courseid
+                                                 AND component = 'mod_panopto'
                                                  AND action = 'viewed'
                                                  AND objectid = :eventid
                                                  AND userid = :userid",
@@ -482,6 +604,14 @@ function block_progress_monitorable_modules() {
                                       AND i.id = g.itemid
                                       AND g.userid = :userid
                                       AND (g.finalgrade IS NOT NULL OR g.excluded <> 0)",
+                'passedby'     => "SELECT g.finalgrade, i.gradepass
+                                     FROM {grade_grades} g, {grade_items} i
+                                    WHERE i.itemmodule = 'quiz'
+                                      AND i.iteminstance = :eventid
+                                      AND i.id = g.itemid
+                                      AND g.userid = :userid
+                                      AND (g.finalgrade IS NOT NULL OR g.excluded <> 0)
+                                      AND g.finalgrade >= i.gradepass",
             ),
             'defaultAction' => 'finished'
         ),
@@ -531,6 +661,27 @@ function block_progress_monitorable_modules() {
                                                 FROM {log}
                                                WHERE courseid = :courseid
                                                  AND component = 'mod_url'
+                                                 AND action = 'viewed'
+                                                 AND objectid = :eventid
+                                                 AND userid = :userid",
+                ),
+            ),
+            'defaultAction' => 'viewed'
+        ),
+        'video' => array(
+            'actions' => array(
+                'viewed' => array (
+                    'logstore_legacy'     => "SELECT id
+                                                FROM {log}
+                                               WHERE course = :courseid
+                                                 AND module = 'video'
+                                                 AND action = 'view'
+                                                 AND cmid = :cmid
+                                                 AND userid = :userid",
+                    'sql_internal_reader' => "SELECT id
+                                                FROM {log}
+                                               WHERE courseid = :courseid
+                                                 AND component = 'mod_video'
                                                  AND action = 'viewed'
                                                  AND objectid = :eventid
                                                  AND userid = :userid",
@@ -633,6 +784,8 @@ function block_progress_modules_in_use($course) {
  */
 function block_progress_event_information($config, $modules, $course, $userid = 0) {
     global $DB, $USER;
+
+    $dbmanager = $DB->get_manager(); // Used to check if fields exist.
     $events = array();
     $numevents = 0;
     $numeventsconfigured = 0;
@@ -647,7 +800,10 @@ function block_progress_event_information($config, $modules, $course, $userid = 
     // Check each known module (described in lib.php).
     foreach ($modules as $module => $details) {
         $fields = 'id, name';
-        if (array_key_exists('defaultTime', $details)) {
+        if (
+            array_key_exists('defaultTime', $details) &&
+            $dbmanager->field_exists($module, $details['defaultTime'])
+        ) {
             $fields .= ', '.$details['defaultTime'].' as due';
         }
 
@@ -809,7 +965,7 @@ function block_progress_attempts($modules, $config, $events, $userid, $course) {
                             $query = preg_replace('/\{log\}/', $logtable, $module['actions']['viewed']['sql_internal_reader']);
                         }
                         else if ($reader instanceof logstore_legacy\log\store) {
-                            $query = $module['actions']['viewed']['logstore_standard'];
+                            $query = $module['actions']['viewed']['logstore_legacy'];
                         }
                         else {
                             // No logs available.
@@ -1019,7 +1175,15 @@ function block_progress_bar($modules, $config, $events, $userid, $instance, $att
                             'style' => 'display: none;');
         $content .= HTML_WRITER::start_tag('div', $divoptions);
         $link = '/mod/'.$event['type'].'/view.php?id='.$event['cm']->id;
-        $text = $OUTPUT->pix_icon('icon', '', $event['type'], array('class' => 'moduleIcon')).s($event['name']);
+        $text = '';
+        $activityicon = $event['cm']->get_icon_url();
+        if (!empty($activityicon)) {
+            $text .= html_writer::empty_tag('img',
+                array('src' => $activityicon, 'class' => 'moduleIcon', 'alt' => '', 'role' => 'presentation'));
+        } else {
+            $text .= $OUTPUT->pix_icon('icon', '', $event['type'], array('class' => 'moduleIcon'));
+        }
+        $text .= s($event['name']);
         if (!empty($event['cm']->available)) {
             $content .= $OUTPUT->action_link($link, $text);
         } else {
@@ -1028,7 +1192,7 @@ function block_progress_bar($modules, $config, $events, $userid, $instance, $att
         $content .= HTML_WRITER::empty_tag('br');
         $content .= get_string($action, 'block_progress').'&nbsp;';
         $icon = ($attempted && $attempted !== 'failed' ? 'tick' : 'cross');
-        $content .= $OUTPUT->pix_icon($icon, '', 'block_progress');
+        $content .= $OUTPUT->pix_icon($icon, '', 'block_progress', array('class' => 'iconInInfo'));
         $content .= HTML_WRITER::empty_tag('br');
         if ($displaydate) {
             $content .= HTML_WRITER::start_tag('div', array('class' => 'expectedBy'));
