@@ -57,3 +57,13 @@ body#page-question-type-pmatch #fitem_id_addanswers {
 body#page-question-type-pmatch #fitem_id_answer_0 {
     margin-top: 1em;
 }
+
+.qtype_pmatch-selftest-bad {
+    font-weight: bold;
+    color: #f00;
+}
+
+.que.pmatch .formulation .questiontestslink {
+    float: right;
+    font-size: 0.7em;
+}
