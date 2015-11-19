@@ -82,7 +82,7 @@ if ($devicetype == "mobile") {
 }
 $renderer->set_portable($portable);
 
-if (!empty($displaysection)) {
+if ((!empty($displaysection)) && ($course->coursedisplay == COURSE_DISPLAY_MULTIPAGE)) {
     $renderer->print_single_section_page($course, null, null, null, null, $displaysection);
 } else {
     $defaulttogglepersistence = clean_param(get_config('format_topcoll', 'defaulttogglepersistence'), PARAM_INT);
@@ -175,10 +175,14 @@ if (!empty($displaysection)) {
     }
 
 <?php
+    $topcollsidewidth = get_string('topcollsidewidthlang', 'format_topcoll');
+    $topcollsidewidthdelim = strpos($topcollsidewidth, '-');
+    $topcollsidewidthlang = strcmp(substr($topcollsidewidth, 0, $topcollsidewidthdelim), current_language());
+    $topcollsidewidthval = substr($topcollsidewidth, $topcollsidewidthdelim + 1);
     // Dynamically changing widths with language.
-    if ((!$PAGE->user_is_editing()) && ($portable == 0)) { ?>
+    if ((!$PAGE->user_is_editing()) && ($portable == 0) && ($topcollsidewidthlang == 0)) { ?>
     .course-content ul.ctopics li.section.main .content, .course-content ul.ctopics li.tcsection .content {
-        margin: 0 <?php echo get_string('topcollsidewidth', 'format_topcoll'); ?>;
+        margin: 0 <?php echo $topcollsidewidthval; ?>;
     }
 <?php
     } else if ($PAGE->user_is_editing()) { ?>
@@ -189,15 +193,15 @@ if (!empty($displaysection)) {
     }
 
     // Make room for editing icons.
-    if (!$PAGE->user_is_editing()) { ?>
+    if ((!$PAGE->user_is_editing()) && ($topcollsidewidthlang == 0)) { ?>
     .course-content ul.ctopics li.section.main .side, .course-content ul.ctopics li.tcsection .side {
-        width: <?php echo get_string('topcollsidewidth', 'format_topcoll'); ?>;
+        width: <?php echo $topcollsidewidthval; ?>;
     }
 <?php
     }
 
     // Establish horizontal unordered list for horizontal columns.
-    if ($tcsettings['layoutcolumnorientation'] == 2) { ?>
+    if (($renderer->get_format_responsive()) && ($tcsettings['layoutcolumnorientation'] == 2)) { ?>
     .course-content ul.ctopics li.section {
         display: inline-block;
         vertical-align: top;
