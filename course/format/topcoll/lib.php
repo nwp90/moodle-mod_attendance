@@ -87,6 +87,18 @@ class format_topcoll extends format_base {
     }
 
     /**
+     * Returns the default section name for the format.
+     *
+     * @param stdClass $section Section object from database or just field course_sections section
+     * @return string The default value for the section name.
+     */
+    public function get_default_section_name($section) {
+        /* Follow the same logic so that this method is supported.  The MDL-51610 enchancement refactored things,
+           but that is not appropriate for us. */
+        return $this->get_section_name($section);
+    }
+    
+    /**
      * Gets the name for the provided course, section and state if need to add addional text.
      *
      * @param stdClass $course The course entry from DB
@@ -513,7 +525,7 @@ class format_topcoll extends format_base {
                     'element_attributes' => array(
                         array(1 => new lang_string('setlayoutstructuretopic', 'format_topcoll'),             // Topic.
                               2 => new lang_string('setlayoutstructureweek', 'format_topcoll'),              // Week.
-                              3 => new lang_string('setlayoutstructurelatweekfirst', 'format_topcoll'),      // Latest Week First.
+                              3 => new lang_string('setlayoutstructurelatweekfirst', 'format_topcoll'),      // Current Week First.
                               4 => new lang_string('setlayoutstructurecurrenttopicfirst', 'format_topcoll'), // Current Topic First.
                               5 => new lang_string('setlayoutstructureday', 'format_topcoll'))               // Day.
                     )
@@ -854,6 +866,7 @@ class format_topcoll extends format_base {
      */
     public function update_course_format_options($data, $oldcourse = null) {
         global $DB; // MDL-37976.
+
         /*
          * Notes: Using 'unset' to really ensure that the reset form elements never get into the database.
          *        This has to be done here so that the reset occurs after we have done updates such that the
@@ -910,8 +923,8 @@ class format_topcoll extends format_base {
             unset($data->resetalltoggleiconset);
         }
 
+        $data = (array) $data;
         if ($oldcourse !== null) {
-            $data = (array) $data;
             $oldcourse = (array) $oldcourse;
             $options = $this->course_format_options();
             foreach ($options as $key => $unused) {
@@ -931,7 +944,20 @@ class format_topcoll extends format_base {
                 }
             }
         }
+
         $changes = $this->update_format_options($data);
+
+        if ($changes && array_key_exists('numsections', $data)) {
+            // If the numsections was decreased, try to completely delete the orphaned sections (unless they are not empty).
+            $numsections = (int)$data['numsections'];
+            $maxsection = $DB->get_field_sql('SELECT max(section) from {course_sections}
+                        WHERE course = ?', array($this->courseid));
+            for ($sectionnum = $maxsection; $sectionnum > $numsections; $sectionnum--) {
+                if (!$this->delete_section($sectionnum, false)) {
+                    break;
+                }
+            }
+        }
 
         // Now we can do the reset.
         if (($resetalldisplayinstructions) || ($resetalllayout) || ($resetallcolour) || ($resetalltogglealignment) || ($resetalltoggleiconset)) {
@@ -1145,6 +1171,18 @@ class format_topcoll extends format_base {
         $data = array('layoutcolumns' => $layoutcolumns);
 
         $this->update_course_format_options($data);
+    }
+
+    /**
+     * Whether this format allows to delete sections
+     *
+     * Do not call this function directly, instead use {@link course_can_delete_section()}
+     *
+     * @param int|stdClass|section_info $section
+     * @return bool
+     */
+    public function can_delete_section($section) {
+        return true;
     }
 }
 

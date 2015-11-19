@@ -38,7 +38,7 @@ $string['formattopcoll'] = 'Collapsed Topics';
 
 // Used in format.php.
 $string['topcolltoggle'] = 'Toggle';
-$string['topcollsidewidth'] = '28px';
+$string['topcollsidewidthlang'] = 'en-28px';
 
 // Toggle all - Moodle Tracker CONTRIB-3190.
 $string['topcollall'] = 'sections.';  // Leave as AMOS maintains only the latest translation - so previous versions are still supported.
@@ -58,6 +58,8 @@ $string['page-course-view-topcoll-x'] = 'Any course page in the collapsed topics
 $string['hidefromothers'] = 'Hide section';
 $string['showfromothers'] = 'Show section';
 $string['currentsection'] = 'This section';
+$string['editsection'] = 'Edit section';
+$string['deletesection'] = 'Delete section';
 // These are 'topic' as they are only shown in 'topic' based structures.
 $string['markedthissection'] = 'This topic is highlighted as the current topic';
 $string['markthissection'] = 'Highlight this topic as the current topic';
@@ -89,18 +91,18 @@ $string['setlayout_section_number'] = 'Section number'; // 6.
 $string['setlayout_no_additions'] = 'No additions'; // 7.
 $string['setlayout_toggle_section_x'] = "'Topic x' / 'Week x' / 'Day x'"; // 8.
 
-$string['setlayoutelements'] = 'Set elements';
-$string['setlayoutstructure'] = 'Set structure';
+$string['setlayoutelements'] = 'Elements';
+$string['setlayoutstructure'] = 'Structure';
 $string['setlayoutstructuretopic'] = 'Topic';
 $string['setlayoutstructureweek'] = 'Week';
-$string['setlayoutstructurelatweekfirst'] = 'Current Week First';
-$string['setlayoutstructurecurrenttopicfirst'] = 'Current Topic First';
+$string['setlayoutstructurelatweekfirst'] = 'Current week first';
+$string['setlayoutstructurecurrenttopicfirst'] = 'Current topic first';
 $string['setlayoutstructureday'] = 'Day';
 $string['resetlayout'] = 'Layout'; // CONTRIB-3529.
 $string['resetalllayout'] = 'Layouts';
 
 // Colour enhancement - Moodle Tracker CONTRIB-3529.
-$string['setcolour'] = 'Set colour';
+$string['setcolour'] = 'Colour';
 $string['colourrule'] = "Please enter a valid RGB colour, six hexadecimal digits.";
 $string['settoggleforegroundcolour'] = 'Toggle foreground';
 $string['settoggleforegroundhovercolour'] = 'Toggle foreground hover';
@@ -110,12 +112,12 @@ $string['resetcolour'] = 'Colour';
 $string['resetallcolour'] = 'Colours';
 
 // Columns enhancement.
-$string['setlayoutcolumns'] = 'Set columns';
+$string['setlayoutcolumns'] = 'Columns';
 $string['one'] = 'One';
 $string['two'] = 'Two';
 $string['three'] = 'Three';
 $string['four'] = 'Four';
-$string['setlayoutcolumnorientation'] = 'Set column orientation';
+$string['setlayoutcolumnorientation'] = 'Column orientation';
 $string['columnvertical'] = 'Vertical';
 $string['columnhorizontal'] = 'Horizontal';
 
@@ -130,13 +132,13 @@ $string['setlayoutstructure_help'] = "The layout structure of the course.  You c
 
 'Weeks' - where each section is presented as a week in ascending week order from the start date of the course.
 
-'Current Week First' - which is the same as weeks but the current week is shown at the top and preceding weeks in descending order are displayed below except in editing mode where the structure is the same as 'Weeks'.
+'Current week first' - which is the same as weeks but the current week is shown at the top and preceding weeks in descending order are displayed below except in editing mode where the structure is the same as 'Weeks'.
 
-'Current Topic First' - which is the same as 'Topics' except that the current topic is shown at the top if it has been set.
+'Current topic first' - which is the same as 'Topics' except that the current topic is shown at the top if it has been set.
 
 'Day' - where each section is presented as a day in ascending day order from the start date of the course.";
 $string['setlayout_help'] = 'Contains the settings to do with the layout of the format within the course.';
-$string['resetlayout_help'] = 'Resets the layout element, structure, coloumns, icon position and shown section summary to the default values so it will be the same as a course the first time it is in the \'Collapsed Topics\' format.';
+$string['resetlayout_help'] = 'Resets the layout element, structure, columns, icon position and shown section summary to the default values so it will be the same as a course the first time it is in the \'Collapsed Topics\' format.';
 $string['resetalllayout_help'] = 'Resets the layout to the default values for all courses so it will be the same as a course the first time it is in the \'Collapsed Topics \'format.';
 // Moodle Tracker CONTRIB-3529.
 $string['setcolour_help'] = 'Contains the settings to do with the colour of the format within the course.';
@@ -159,7 +161,7 @@ $string['ctreset'] = 'Collapsed Topics reset options';
 $string['ctreset_help'] = 'Reset to Collapsed Topics defaults.';
 
 // Toggle alignment - CONTRIB-4098.
-$string['settogglealignment'] = 'Set the toggle text alignment';
+$string['settogglealignment'] = 'Toggle text alignment';
 $string['settogglealignment_help'] = 'Sets the alignment of the text in the toggle.';
 $string['left'] = 'Left';
 $string['center'] = 'Centre';
@@ -170,15 +172,15 @@ $string['resettogglealignment_help'] = 'Resets the toggle alignment to the defau
 $string['resetalltogglealignment_help'] = 'Resets the toggle alignment to the default values for all courses so it will be the same as a course the first time it is in the \'Collapsed Topics\' format.';
 
 // Icon position - CONTRIB-4470.
-$string['settoggleiconposition'] = 'Set icon position';
+$string['settoggleiconposition'] = 'Icon position';
 $string['settoggleiconposition_help'] = 'States that the icon should be on the left or the right of the toggle text.';
 $string['defaulttoggleiconposition'] = 'Icon position';
 $string['defaulttoggleiconposition_desc'] = 'States if the icon should be on the left or the right of the toggle text.';
 
 // Icon set enhancement.
-$string['settoggleiconset'] = 'Set icon set';
+$string['settoggleiconset'] = 'Icon set';
 $string['settoggleiconset_help'] = 'Sets the icon set of the toggle.';
-$string['settoggleallhover'] = 'Set toggle all icon hover';
+$string['settoggleallhover'] = 'Toggle all icon hover';
 $string['settoggleallhover_help'] = 'Sets if the toggle all icons will change when the mouse moves over them.';
 $string['arrow'] = 'Arrow';
 $string['bulb'] = 'Bulb';
@@ -313,8 +315,8 @@ Note: When turning persistence off, please remove any rows containing 'topcoll_t
       of the 'user_preferences' table in the database.  Where the 'x' in 'topcoll_toggle_x' will be
       a course id.  This is to save space if you do not intend to turn it back on.";
 
-$string['defaultuserpreference'] = 'What to do with the toggles when the user first accesses the course, adds more sections or toggle peristence is off';
-$string['defaultuserpreference_desc'] = 'States what to do with the toggles when the user first accesses the course, the state of additional sections when they are added or toggle persistence id off.';
+$string['defaultuserpreference'] = 'Initial toggle state';
+$string['defaultuserpreference_desc'] = 'States what to do with the toggles when the user first accesses the course, the state of additional sections when they are added or toggle persistence is off.';
 
 // Toggle icon size.
 $string['defaulttoggleiconsize'] = 'Toggle icon size';
@@ -373,6 +375,9 @@ $string['em3_7'] = '3.7em';
 $string['em3_8'] = '3.8em';
 $string['em3_9'] = '3.9em';
 $string['em4_0'] = '4.0em';
+
+$string['formatresponsive'] = 'Format responsive';
+$string['formatresponsive_desc'] = "Turn on if you are using a non-responsive theme and the format will adjust to the screen size / device.  Turn off if you are using a reponsive theme.  Bootstrap 2.3.2 support is built in, for other frameworks and versions, override the methods 'get_row_class()' and 'get_column_class()' in renderer.php.";
 
 // Show section summary when collapsed.
 $string['setshowsectionsummary'] = 'Show the section summary when collapsed';
