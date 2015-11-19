@@ -126,3 +126,45 @@
 #page-mod-attendance-sessions input[type="checkbox"] {
     margin-right: 2px;
 }
+
+.path-mod-attendance .setallstatuses {
+    text-align: right;
+}
+
+.path-mod-attendance .remarkholder {
+    position: relative;
+}
+
+.path-mod-attendance .remarkholder .remarkcontent {
+    display: none;
+    position: absolute;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    box-shadow: 3px 3px 5px #ccc;
+    background-color: white;
+    left: 20px;
+    top: 0;
+    padding: 5px;
+    width: 150px;
+    z-index: 5000;
+}
+
+.path-mod-attendance .remarkholder:hover .remarkcontent {
+    display: inline-block;
+}
+
+.path-mod-attendance .attendancestatus-P {
+    color: green;
+}
+
+.path-mod-attendance .attendancestatus-E {
+    color: #00AEE3;
+}
+
+.path-mod-attendance .attendancestatus-L {
+    color: #F7931E;
+}
+
+.path-mod-attendance .attendancestatus-A {
+    color: red;
+}

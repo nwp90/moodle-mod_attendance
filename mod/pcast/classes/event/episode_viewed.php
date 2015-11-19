@@ -80,7 +80,7 @@ class episode_viewed extends \core\event\base {
      * @return array|null
      */
     public function get_legacy_logdata() {
-        return array($this->courseid, 'pcast', 'view entry',
+        return array($this->courseid, 'pcast', 'view episode',
             "showepisode.php?eid={$this->objectid}",
             $this->objectid, $this->contextinstanceid);
     }
@@ -97,6 +97,10 @@ class episode_viewed extends \core\event\base {
         if (!$this->contextlevel === CONTEXT_MODULE) {
             throw new \coding_exception('Context level must be CONTEXT_MODULE.');
         }
+    }
+
+    public static function get_objectid_mapping() {
+        return array('db' => 'pcast_episodes', 'restore' => 'pcast_episode');
     }
 }
 

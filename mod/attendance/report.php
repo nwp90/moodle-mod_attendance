@@ -42,10 +42,11 @@ $attrecord = $DB->get_record('attendance', array('id' => $cm->instance), '*', MU
 
 require_login($course, true, $cm);
 
-$pageparams->init($cm);
-$att = new attendance($attrecord, $cm, $course, $PAGE->context, $pageparams);
+$context = context_module::instance($cm->id);
+require_capability('mod/attendance:viewreports', $context);
 
-$att->perm->require_view_reports_capability();
+$pageparams->init($cm);
+$att = new attendance($attrecord, $cm, $course, $context, $pageparams);
 
 $PAGE->set_url($att->url_report());
 $PAGE->set_pagelayout('report');
@@ -73,7 +74,7 @@ $event->trigger();
 // Output starts here.
 
 echo $output->header();
-echo $output->heading(get_string('attendanceforthecourse', 'attendance').' :: ' .$course->fullname);
+echo $output->heading(get_string('attendanceforthecourse', 'attendance').' :: ' .format_string($course->fullname));
 echo $output->render($tabs);
 echo $output->render($filtercontrols);
 echo $output->render($reportdata);

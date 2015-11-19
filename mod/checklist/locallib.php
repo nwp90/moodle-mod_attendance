@@ -2093,7 +2093,7 @@ class checklist_class {
                         $output .= html_writer::tag('button', get_string('togglerow', 'checklist'),
                                                     array(
                                                         'class' => 'make_c',
-                                                        'id' => $userid,
+                                                        'id' => $this->find_userid($row),
                                                         'type' => 'button'
                                                     ));
                         $output .= '</td>';
@@ -2153,6 +2153,19 @@ class checklist_class {
         $output .= '</table>';
 
         echo $output;
+    }
+
+    private function find_userid($row) {
+        foreach ($row as $colkey => $item) {
+            if ($colkey == 0) {
+                continue;
+            }
+            list($teachermark, $studentmark, $heading, $userid, $checkid) = $item;
+            if ($userid) {
+                return $userid;
+            }
+        }
+        return null;
     }
 
     protected function view_footer() {
@@ -3238,7 +3251,7 @@ class checklist_class {
     }
 
     public function update_all_autoupdate_checks() {
-        global $DB;
+        global $DB, $CFG;
 
         if (!$this->checklist->autoupdate) {
             return;
@@ -3248,7 +3261,11 @@ class checklist_class {
         if (!$users) {
             return;
         }
-        $userids = implode(',', array_keys($users));
+        $userids = array_keys($users);
+
+        if ($CFG->branch < 26) { // No auto class loading before Moodle 2.6.
+            require_once($CFG->dirroot.'/mod/checklist/classes/local/autoupdate.php');
+        }
 
         // Get a list of all the checklist items with a module linked to them (ignoring headings).
         $sql = "SELECT cm.id AS cmid, m.name AS mod_name, i.id AS itemid, cm.completion AS completion
@@ -3287,92 +3304,16 @@ class checklist_class {
                         }
                     }
                 }
-
                 continue;
             }
 
-            $logaction = '';
-            $logaction2 = false;
-
-            switch ($item->mod_name) {
-                case 'survey':
-                    $logaction = 'submit';
-                    break;
-                case 'quiz':
-                    $logaction = 'close attempt';
-                    break;
-                case 'forum':
-                    $logaction = 'add post';
-                    $logaction2 = 'add discussion';
-                    break;
-                case 'resource':
-                    $logaction = 'view';
-                    break;
-                case 'hotpot':
-                    $logaction = 'submit';
-                    break;
-                case 'wiki':
-                    $logaction = 'edit';
-                    break;
-                case 'checklist':
-                    $logaction = 'complete';
-                    break;
-                case 'choice':
-                    $logaction = 'choose';
-                    break;
-                case 'lams':
-                    $logaction = 'view';
-                    break;
-                case 'scorm':
-                    $logaction = 'view';
-                    break;
-                case 'assignment':
-                    $logaction = 'upload';
-                    break;
-                case 'journal':
-                    $logaction = 'add entry';
-                    break;
-                case 'lesson':
-                    $logaction = 'end';
-                    break;
-                case 'realtimequiz':
-                    $logaction = 'submit';
-                    break;
-                case 'workshop':
-                    $logaction = 'submit';
-                    break;
-                case 'glossary':
-                    $logaction = 'add entry';
-                    break;
-                case 'data':
-                    $logaction = 'add';
-                    break;
-                case 'chat':
-                    $logaction = 'talk';
-                    break;
-                case 'feedback':
-                    $logaction = 'submit';
-                    break;
-                default:
-                    continue 2;
-                    break;
-            }
-
-            $sql = 'SELECT DISTINCT userid ';
-            $sql .= "FROM {log} ";
-            $sql .= "WHERE cmid = ? AND (action = ?";
-            if ($logaction2) {
-                $sql .= ' OR action = ?';
-            }
-            $sql .= ") AND userid IN ($userids)";
-            $logentries = $DB->get_records_sql($sql, array($item->cmid, $logaction, $logaction2));
-
-            if (!$logentries) {
+            $loguserids = mod_checklist\local\autoupdate::get_logged_userids($item->mod_name, $item->cmid, $userids);
+            if (!$loguserids) {
                 continue;
             }
 
-            foreach ($logentries as $entry) {
-                $check = $DB->get_record('checklist_check', array('item' => $item->itemid, 'userid' => $entry->userid));
+            foreach ($loguserids as $loguserid) {
+                $check = $DB->get_record('checklist_check', array('item' => $item->itemid, 'userid' => $loguserid));
                 if ($check) {
                     if ($check->usertimestamp) {
                         continue;
@@ -3382,7 +3323,7 @@ class checklist_class {
                 } else {
                     $check = new stdClass;
                     $check->item = $item->itemid;
-                    $check->userid = $entry->userid;
+                    $check->userid = $loguserid;
                     $check->usertimestamp = time();
                     $check->teachertimestamp = 0;
                     $check->teachermark = CHECKLIST_TEACHERMARK_UNDECIDED;

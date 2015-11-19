@@ -18,8 +18,11 @@
  * Strings for component 'atto_fullscreen', language 'en'.
  *
  * @package    atto_fullscreen
- * @copyright  2014 Daniel Thies <dthies@ccal.edu>
+ * @copyright  2014 onward Daniel Thies <dthies@ccal.edu>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 $string['pluginname'] = 'Toggle full screen';
+$string['settings'] = 'Full screen settings';
+$string['requireedit'] = 'Require editing';
+$string['requireedit_desc'] = 'Require capability to manage activities before showing fullscreen button';
