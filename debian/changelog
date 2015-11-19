@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.0.0.20151116+0facmed2-1) jessie; urgency=medium
+
+  * Update all locally applied plugins.
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 19 Nov 2015 15:43:50 +1300
+
 moodle-site-otagounifom (3.0.0.20151116+0facmed1-2) jessie; urgency=medium
 
   * Fix debian/install
