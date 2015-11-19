@@ -25,5 +25,6 @@
 $plugin->version    = 2013081300;
 
 $plugin->requires     = 2013040500; // YYYYMMDDHH (This is the release version for Moodle 2.5).
+$plugin->component    = "block_recommender";
 $plugin->maturity     = MATURITY_STABLE;
 $plugin->release      = '2.5';
