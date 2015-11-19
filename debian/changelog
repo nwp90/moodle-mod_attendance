@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.0.0.20151116+0facmed3-1) jessie; urgency=medium
+
+  * Fix non-3.0 blocks lacking "component" in $plugin in version.php
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 20 Nov 2015 09:23:43 +1300
+
 moodle-site-otagounifom (3.0.0.20151116+0facmed2-1) jessie; urgency=medium
 
   * Update all locally applied plugins.
