@@ -1,3 +1,11 @@
+moodle-site-otagounifom (3.0.0.2015121000+0facmed1-1) jessie; urgency=medium
+
+  * Merge upstream changes - 20151210 weekly == v 2015111600.04
+  * Add bootstrapelements plugin, including fontawesome
+  * Fix mod_groupselect over-zealous styles.css
+
+ -- Nick Phillips <nwp@gaston.otago.ac.nz>  Wed, 16 Dec 2015 12:07:21 +1300
+
 moodle-site-otagounifom (3.0.0.20151116+0facmed4-1) jessie; urgency=medium
 
   * Update PDF feedback plugin, since we haven't got rid of it yet.
