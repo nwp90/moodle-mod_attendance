@@ -1,3 +1,10 @@
+moodle-site-otagounifom (3.0.0.2015121000+0facmed2-1) UNRELEASED; urgency=medium
+
+  * Fix mod bootstrapelements not to try to pull in fontawesome at all;
+    rely on theme pulling it in (which BCU does, at least).
+
+ -- Nick Phillips <nwp@gaston.otago.ac.nz>  Thu, 17 Dec 2015 09:07:09 +1300
+
 moodle-site-otagounifom (3.0.0.2015121000+0facmed1-1) jessie; urgency=medium
 
   * Merge upstream changes - 20151210 weekly == v 2015111600.04
