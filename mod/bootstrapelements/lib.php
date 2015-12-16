@@ -132,8 +132,10 @@ function bootstrapelements_get_coursemodule_info($coursemodule) {
             break;
         }
 
-        $iconstyle = '@import url("//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css");';
-        $info->content .= \html_writer::tag('style', $iconstyle);
+        // font-awesome is already pulled in, either by the stylesheet that this module
+        // provides, or in our case by the theme. It should not be needed *again*.
+        // $iconstyle = '@import url("//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css");';
+        // $info->content .= \html_writer::tag('style', $iconstyle);
 
         // $PAGE->requires->css('/mod/bootstrapelements/styles.css');
 
