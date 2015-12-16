@@ -1,4 +1,7 @@
-@import url("font-awesome.min.css");
+/* Don't get font-awesome ourselves; require that theme does so, as we
+   require support in theme anyway in order to be useful... */
+/* @import url("/lib/css/font-awesome.min.css"); */
+/* @import url("//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"); */
 
 .mod-bootstrapelements-toggle {
     min-width: 200px;
