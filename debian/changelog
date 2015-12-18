@@ -1,4 +1,4 @@
-moodle-site-otagounifom (3.0.0.2015121000+0facmed2-1) UNRELEASED; urgency=medium
+moodle-site-otagounifom (3.0.0.2015121000+0facmed2-1) jessie; urgency=medium
 
   * Fix mod bootstrapelements not to try to pull in fontawesome at all;
     rely on theme pulling it in (which BCU does, at least).
