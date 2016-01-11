@@ -1,3 +1,12 @@
+moodle-site-otagounifom (3.0.2.2016011100+0facmed1-1) jessie; urgency=medium
+
+  * New upstream release 3.0.2, incl security fixes for CVE-2016-0724,
+    CVE-2016-0725.
+  * Add "bootstrap" theme, which seems to be evolution of bootstrapbase,
+    but will coexist with it.
+
+ -- Nick Phillips <nwp@gaston.otago.ac.nz>  Tue, 12 Jan 2016 09:24:39 +1300
+
 moodle-site-otagounifom (3.0.0.2015121000+0facmed2-1) jessie; urgency=medium
 
   * Fix mod bootstrapelements not to try to pull in fontawesome at all;
