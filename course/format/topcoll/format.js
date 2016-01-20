@@ -29,7 +29,6 @@
  */
 
 M.course = M.course || {};
-
 M.course.format = M.course.format || {};
 
 /**
@@ -51,7 +50,7 @@ M.course.format.get_config = function() {
         section_node : 'li',
         section_class : 'section'
     };
-}
+};
 
 /**
  * Swap section
@@ -70,8 +69,7 @@ M.course.format.swap_sections = function(Y, node1, node2) {
     var sectionlist = Y.Node.all(CSS.COURSECONTENT + ' ' + M.course.format.get_section_selector(Y));
     // Swap menus
     sectionlist.item(node1).one(CSS.SECTIONADDMENUS).swap(sectionlist.item(node2).one(CSS.SECTIONADDMENUS));
-}
-
+};
 
 /**
  * Process sections after ajax response
@@ -104,7 +102,7 @@ M.course.format.process_sections = function(Y, sectionlist, response, sectionfro
         for (var i = sectionfrom; i <= sectionto; i++) {
             // Update section title.
             var content = Y.Node.create('<span>' + response.sectiontitles[i] + '</span>');
-            sectionlist.item(i).all('.'+CSS.SECTIONNAME).setHTML(content);
+            sectionlist.item(i).all('.' + CSS.SECTIONNAME).setHTML(content);
             // If the left content section number exists, then set it.
             leftcontent = sectionlist.item(i).one(SELECTORS.LEFTCONTENT);
             if (leftcontent) { // Only set if the section number is shown otherwise JS crashes and stops working.
@@ -131,4 +129,4 @@ M.course.format.process_sections = function(Y, sectionlist, response, sectionfro
             sectionlist.item(response.current).addClass('current');
         }
     }
-}
+};
