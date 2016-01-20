@@ -54,7 +54,8 @@
     vertical-align: middle;
 }
 
-.block_progress .progressEventInfo {
+.block_progress .progressEventInfo,
+.block_progress .progressPercentage {
     font-size: x-small;
     text-align: left;
     white-space: pre;
@@ -99,6 +100,16 @@
 
 .block_progress .expectedBy {
     margin: 5px auto;
+}
+
+.progressWarningBox {
+    border: 2px solid #F00;
+    padding: 10px;
+    background-color: #F66;
+    color: white;
+    margin: 10px 0;
+    font-size: large;
+    font-weight: bold;
 }
 
 .progressConfigBox {
