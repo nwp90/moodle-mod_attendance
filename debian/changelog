@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.0.2.2016011100+1catalyst1-1) jessie; urgency=medium
+
+  * Test build, no changes, see WR #253087
+
+ -- Pierre Guinoiseau <pierre.guinoiseau@catalyst.net.nz>  Fri, 26 Feb 2016 10:32:38 +1300
+
 moodle-site-otagounifom (3.0.2.2016011100+0facmed2-1) jessie; urgency=medium
 
   * Revert to standard Flowplayer
