@@ -1,3 +1,27 @@
+moodle-site-otagounifom (3.0.3.2016031500+0facmed1-1) jessie; urgency=medium
+
+  * New upstream release 3.0.3 with security fixes:
+    - CVE-2016-2151
+    - CVE-2016-2152
+    - CVE-2016-2153
+    - CVE-2016-2154
+    - CVE-2016-2155
+    - CVE-2016-2156
+    - CVE-2016-2157
+    - CVE-2016-2158
+    - MDL-52651
+    - CVE-2016-2159
+  * Added plugins:
+    - mod_qcreate
+    - quizaccess_honestycheck
+    - mod_zoom
+    - mod_game
+    - mod_activequiz
+    - courseformat_menutopic
+    - various atto plugins
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 15 Mar 2016 08:54:02 +1300
+
 moodle-site-otagounifom (3.0.2.2016011100+1catalyst1-1) jessie; urgency=medium
 
   * Test build, no changes, see WR #253087
