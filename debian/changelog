@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.0.3.2016031500+0facmed2-1) jessie; urgency=medium
+
+  * Add fix for completion report ordering.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 16 Mar 2016 13:20:11 +1300
+
 moodle-site-otagounifom (3.0.3.2016031500+0facmed1-1) jessie; urgency=medium
 
   * New upstream release 3.0.3 with security fixes:
