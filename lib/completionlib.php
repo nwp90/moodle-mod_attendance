@@ -423,10 +423,33 @@ class completion_info {
             // Load criteria from database
             $records = (array)$DB->get_records('course_completion_criteria', $params);
 
+            $activitycriteria = array();
+            $othercriteria = array();
+            foreach ($records as $record) {
+                $criterion = completion_criteria::factory((array)$record);
+                if ($record->criteriatype == COMPLETION_CRITERIA_TYPE_ACTIVITY) {
+                    $activitycriteria[$record->moduleinstance] = $criterion;
+                }
+                else {
+                    $othercriteria[$record->id] = $criterion;
+                }
+            }
+
             // Build array of criteria objects
             $this->criteria = array();
-            foreach ($records as $record) {
-                $this->criteria[$record->id] = completion_criteria::factory((array)$record);
+
+            // Order activity criteria in the order they appear in the course (by section)
+            $modinfo = get_fast_modinfo($this->course);
+            foreach ($modinfo->get_cms() as $cm) {
+                if (array_key_exists($cm->id, $activitycriteria)) {
+                    $criterion = $activitycriteria[$cm->id];
+                    $this->criteria[$criterion->id] = $criterion;
+                }
+            }
+
+            // Leave other criteria types in arbitrary order for now
+            foreach ($othercriteria as $criterion) {
+                $this->criteria[$criterion->id] = $criterion;
             }
         }
 
