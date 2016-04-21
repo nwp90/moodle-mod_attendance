@@ -39,6 +39,23 @@ require_once("$CFG->libdir/externallib.php");
 class local_presentation_external extends external_api {
 
     /**
+     * Describes the parameters for get_objects_by_tag
+     * To be used by any method getting objects purely by tag, with no
+     * other parameters.
+     *
+     * @return external_external_function_parameters
+     * @since Moodle 3.0
+     */
+    private static function get_objects_by_tag_parameters() {
+        return new external_function_parameters (
+            array(
+                'tags' => new external_multiple_structure(new external_value(PARAM_TAG, 'tag',
+                        '', VALUE_REQUIRED, '', NULL_NOT_ALLOWED), 'Array of tags', VALUE_DEFAULT, array()),
+            )
+        );
+    }
+
+    /**
      * Describes the parameters for get_resources_by_tag
      *
      * @return external_external_function_parameters
@@ -64,6 +81,7 @@ class local_presentation_external extends external_api {
         global $CFG, $DB, $USER;
         $returnfiles = array();
         $params = self::validate_parameters(self::get_resources_by_tag_parameters(), array('tags' => $tags));
+        $tags = $params['tags'];
         $return = array();
         if (!empty($tags)) {
             foreach($tags as $i => $tag) {
@@ -73,7 +91,8 @@ class local_presentation_external extends external_api {
             $sql = "select
                         f.id, r.id as resourceid, r.name as resourcename,
                         f.filename, f.filesize as size, f.itemid, f.filearea, f.filepath,
-                        f.mimetype, f.author, f.license, r.course as courseid,
+                        f.mimetype, f.author, f.license,
+                        c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
                         cx.id as resourcecontext
                     from
                         {modules} m
@@ -83,6 +102,8 @@ class local_presentation_external extends external_api {
                             on cx.instanceid=cm.id and cx.contextlevel=70
                         join {resource} r
                             on r.id = cm.instance
+                        join {course} c
+                            on r.course = c.id
                         join {tag_instance} ti
                             on ti.itemid = r.id and ti.itemtype = 'resource'
                         join {tag} t
@@ -96,7 +117,7 @@ class local_presentation_external extends external_api {
             $files = $DB->get_records_sql($sql, $tagvalues);
             foreach ($files as $file) {
                 $returnfile = new StdClass();
-                $keys = array('resourceid', 'resourcename', 'filename', 'size', 'mimetype', 'author', 'license', 'courseid');
+                $keys = array('resourceid', 'resourcename', 'filename', 'size', 'mimetype', 'author', 'license', 'courseid', 'coursename', 'courseshortname');
                 foreach ($keys as $key) {
                     $returnfile->$key = $file->$key;
                 }
@@ -118,7 +139,7 @@ class local_presentation_external extends external_api {
         return new external_multiple_structure(
             new external_single_structure(
                 array(
-                    'resourceid' => new external_value(PARAM_INT, 'Resouce ID'),
+                    'resourceid' => new external_value(PARAM_INT, 'Resource ID'),
                     'resourcename' => new external_value(PARAM_TEXT, 'Resource name'),
                     'filename' => new external_value(PARAM_TEXT, 'Name of file'),
                     'size' => new external_value(PARAM_INT, 'size of file'),
@@ -126,8 +147,94 @@ class local_presentation_external extends external_api {
                     'author' => new external_value(PARAM_TEXT, 'author of file'),
                     'license' => new external_value(PARAM_TEXT, 'licence of file'),
                     'courseid' => new external_value(PARAM_INT, 'moodle id of course'),
+                    'coursename' => new external_value(PARAM_TEXT, 'Name of course'),
+                    'courseshortname' => new external_value(PARAM_TEXT, 'Shortname of course'),
                     'link' => new external_value(PARAM_TEXT, 'link to file'),
                 ), 'resource'
+            )
+        );
+    }
+
+    /**
+     * Describes the parameters for get_lessons_by_tag
+     *
+     * @return external_external_function_parameters
+     * @since Moodle 3.0
+     */
+    public static function get_lessons_by_tag_parameters() {
+        return self::get_objects_by_tag_parameters();
+    }
+
+    /**
+     * Returns a list of lessons tagged by a provided list of tags.
+     *
+     * @param array $tags an array of tags
+     * @return array the lesson details
+     * @since Moodle 3.0
+     */
+    public static function get_lessons_by_tag($tags = array()) {
+        global $CFG, $DB, $USER;
+        $returnlessons = array();
+        $params = self::validate_parameters(self::get_objects_by_tag_parameters(), array('tags' => $tags));
+        $tags = $params['tags'];
+        $return = array();
+        if (!empty($tags)) {
+            foreach($tags as $i => $tag) {
+                $tags[$i] = strtolower($tag);
+            }
+            list($tagsql, $tagvalues) = $DB->get_in_or_equal($tags);
+            $sql = "select
+                        l.id as lessonid, l.name as lessonname,
+                        c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
+                        cx.id as lessoncontext
+                    from
+                        {modules} m
+                        join {course_modules} cm
+                            on cm.module = m.id
+                        join {context} cx
+                            on cx.instanceid=cm.id and cx.contextlevel=70
+                        join {lesson} l
+                            on l.id = cm.instance
+                        join {course} c
+                            on l.course = c.id
+                        join {tag_instance} ti
+                            on ti.itemid = l.id and ti.itemtype = 'lesson'
+                        join {tag} t
+                            on t.id = ti.tagid
+                    where
+                        t.name $tagsql
+                        and m.name='lesson'";
+            $lessons = $DB->get_records_sql($sql, $tagvalues);
+            foreach ($lessons as $lesson) {
+                $returnlesson = new StdClass();
+                $keys = array('lessonid', 'lessonname', 'coursename', 'courseshortname', 'courseid');
+                foreach ($keys as $key) {
+                    $returnlesson->$key = $lesson->$key;
+                }
+                $returnlesson->link = "$CFG->wwwroot/mod/lesson/view.php?id=$lesson->lessoncontext";
+                $returnlessons[] = $returnlesson;
+            }
+        }
+        return $returnlessons;
+    }
+
+    /**
+     * Describes the get_lessons_by_tag return value.
+     *
+     * @return external_single_structure
+     * @since Moodle 2.5
+     */
+     public static function get_lessons_by_tag_returns() {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'lessonid' => new external_value(PARAM_INT, 'Lesson ID'),
+                    'lessonname' => new external_value(PARAM_TEXT, 'Lesson name'),
+                    'coursename' => new external_value(PARAM_TEXT, 'Name of course'),
+                    'courseshortname' => new external_value(PARAM_TEXT, 'Shortname of course'),
+                    'courseid' => new external_value(PARAM_INT, 'Moodle id of course'),
+                    'link' => new external_value(PARAM_TEXT, 'Link to lesson'),
+                ), 'lesson'
             )
         );
     }
