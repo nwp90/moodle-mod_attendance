@@ -39,6 +39,69 @@ $functions = array(
         'classpath' => 'local/presentation/externallib.php',
         'description' => 'Returns a list of lessons tagged with a provided set of tags.',
         'type' => 'read',
+    ),
+    'local_presentation_get_quizzes_by_tag' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_quizzes_by_tag',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of quizzes tagged with a provided set of tags.',
+        'type' => 'read',
+    ),
+    'local_presentation_get_urls_by_tag' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_urls_by_tag',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of urls tagged with a provided set of tags.',
+        'type' => 'read',
+    ),
+    'local_presentation_get_workshops_by_tag' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_workshops_by_tag',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of workshops tagged with a provided set of tags.',
+        'type' => 'read',
+    ),
+    'local_presentation_get_assignments_by_tag' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_assignments_by_tag',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of new-style assignments (mod_assign) tagged with a provided set of tags.',
+        'type' => 'read',
+    ),
+    'local_presentation_get_pages_by_tag' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_pages_by_tag',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of pages tagged with a provided set of tags.',
+        'type' => 'read',
+    ),
+    'local_presentation_get_books_by_tag' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_books_by_tag',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of books tagged with a provided set of tags.',
+        'type' => 'read',
+    ),
+    'local_presentation_get_scorms_by_tag' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_scorms_by_tag',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of scorms tagged with a provided set of tags.',
+        'type' => 'read',
+    ),
+    'local_presentation_get_glossaries_by_tag' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_glossaries_by_tag',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of glossaries tagged with a provided set of tags.',
+        'type' => 'read',
+    ),
+    'local_presentation_get_ltis_by_tag' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_ltis_by_tag',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of ltis tagged with a provided set of tags.',
+        'type' => 'read',
     )
 );
 $services = array(
@@ -46,6 +109,15 @@ $services = array(
         'functions' => array (
             'local_presentation_get_resources_by_tag',
             'local_presentation_get_lessons_by_tag',
+            'local_presentation_get_quizzes_by_tag',
+            'local_presentation_get_urls_by_tag',
+            'local_presentation_get_workshops_by_tag',
+            'local_presentation_get_assignments_by_tag',
+            'local_presentation_get_pages_by_tag',
+            'local_presentation_get_books_by_tag',
+            'local_presentation_get_scorms_by_tag',
+            'local_presentation_get_glossaries_by_tag',
+            'local_presentation_get_ltis_by_tag',
         ),
         'restrictedusers' => 0, //if enabled, the Moodle administrator must link some user to this service
         'enabled' => 1, //if enabled, the service can be reachable on a default installation
