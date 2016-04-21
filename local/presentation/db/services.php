@@ -32,12 +32,20 @@ $functions = array(
         'classpath' => 'local/presentation/externallib.php',
         'description' => 'Returns a list of resources tagged with a provided set of tags.',
         'type' => 'read',
+    ),
+    'local_presentation_get_lessons_by_tag' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_lessons_by_tag',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of lessons tagged with a provided set of tags.',
+        'type' => 'read',
     )
 );
 $services = array(
     'presentation' => array( //the name of the web service
         'functions' => array (
             'local_presentation_get_resources_by_tag',
+            'local_presentation_get_lessons_by_tag',
         ),
         'restrictedusers' => 0, //if enabled, the Moodle administrator must link some user to this service
         'enabled' => 1, //if enabled, the service can be reachable on a default installation
