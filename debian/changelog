@@ -1,3 +1,10 @@
+moodle-site-otagounifom (3.0.4.2016052300+0catalyst1-1) jessie; urgency=medium
+
+  * Add noredirect patch
+  * Remove bootstrap 2.3.2 from lib/js
+
+ -- Pierre Guinoiseau <pierre.guinoiseau@catalyst.net.nz>  Mon, 23 May 2016 10:07:37 +1200
+
 moodle-site-otagounifom (3.0.4.2016050900+0facmed1-1) jessie; urgency=medium
 
   * New upstream version
