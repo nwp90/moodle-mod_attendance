@@ -285,7 +285,11 @@ if ($mform->is_cancelled()) {
 
     // save module tags
     if (!empty($CFG->usetags)) {
-        tag_set($fromform->modulename, $fromform->instance, $fromform->tags);
+        if (empty($fromform->tags)) {
+            $fromform->tags = array();
+        }
+        $component = "mod_". $module->name;
+        tag_set($fromform->modulename, $fromform->instance, $fromform->tags, $component, $context->id);
     }
 
     if (isset($fromform->submitbutton)) {
