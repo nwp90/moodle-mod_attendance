@@ -22,5 +22,5 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['participants:addinstance'] = 'Add a new people block';
-$string['pluginname'] = 'People';
+$string['participants:addinstance'] = 'Add a new participants block';
+$string['pluginname'] = 'Participants';
