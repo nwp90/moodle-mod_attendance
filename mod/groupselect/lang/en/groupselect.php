@@ -25,6 +25,7 @@ $string['groupselect:assign'] = 'Allow to assign teachers to groups';
 $string['groupselect:create'] = 'Allow creating of group';
 $string['groupselect:select'] = 'Allow becoming of group member';
 $string['groupselect:unselect'] = 'Allow leaving of group';
+$string['groupselect:export'] = 'Allow export of group user data (id, username, idnumber, firstname, lastname, email, group id)';
 $string['hidefullgroups'] = 'Hide full groups from the main view';
 $string['hidefullgroups_help'] = 'If set, hides all groups, which have reached max member count, from the main list view (excluding user\'s own group). May be useful if the activity has lots of groups.';
 $string['incorrectpassword'] = 'Incorrect password';
