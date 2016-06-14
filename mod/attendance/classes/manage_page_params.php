@@ -15,25 +15,25 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The mod_checklist instance list viewed event.
+ * Class definition for mod_attendance_manage_page_params
  *
- * @package    mod_checklist
- * @copyright  2014 Davo Smith <moodle@davosmith.co.uk>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_attendance
+ * @copyright  2016 Dan Marsden http://danmarsden.com
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-namespace mod_checklist\event;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
- * The mod_checklist instance list viewed event class.
+ * stores constants/data passed depending on view.
  *
- * @package    mod_checklist
- * @since      Moodle 2.7
- * @copyright  2014 Davo Smith <moodle@davosmith.co.uk>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  2016 Dan Marsden http://danmarsden.com
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class course_module_instance_list_viewed extends \core\event\course_module_instance_list_viewed {
-    // No need for any code here as everything is handled by the parent class.
+class mod_attendance_manage_page_params extends mod_attendance_page_with_filter_controls {
+    public function  __construct() {
+        $this->selectortype = mod_attendance_page_with_filter_controls::SELECTOR_SESS_TYPE;
+    }
+
+    public function get_significant_params() {
+        return array();
+    }
 }

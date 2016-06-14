@@ -14,19 +14,29 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+
 /**
- * Update checklists when events occur
+ * Class definition for mod_attendance_sessions_page_params
  *
- * @package   mod_checklist
- * @copyright 2015 Davo Smith, Synergy Learning
+ * @package   mod_attendance
+ * @copyright  2016 Dan Marsden http://danmarsden.com
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+/**
+ * stores constants/data used by sessions page params.
+ *
+ * @copyright  2016 Dan Marsden http://danmarsden.com
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class mod_attendance_sessions_page_params {
+    const ACTION_ADD              = 1;
+    const ACTION_UPDATE           = 2;
+    const ACTION_DELETE           = 3;
+    const ACTION_DELETE_SELECTED  = 4;
+    const ACTION_CHANGE_DURATION  = 5;
+    const ACTION_DELETE_HIDDEN    = 6;
 
-$observers = array(
-    array(
-        'eventname' => '*',
-        'callback' => '\mod_checklist\local\autoupdate::update_from_event'
-    )
-);
+    /** @var int view mode of taking attendance page*/
+    public $action;
+}
