@@ -91,7 +91,7 @@ if ($id) { // If the entry is specified.
 
 } else { // A new entry.
     require_capability('mod/pcast:write', $context);
-    $episode = new object();
+    $episode = new stdClass();
     $episode->id = null;
     $episode->summary = '';                // This will be updated later.
     $episode->summaryformat = FORMAT_HTML; // This will be updated later.
@@ -100,9 +100,11 @@ if ($id) { // If the entry is specified.
 
 $draftitemid = file_get_submitted_draft_itemid('mediafile');
 file_prepare_draft_area($draftitemid, $context->id, 'mod_pcast', 'episode', $episode->id,
-                        array('subdirs' => 0, 'maxbytes' => $pcast->maxbytes, 'maxfiles' => 1, 'filetypes' => array('audio', 'video')));
-$episode->mediafile = $draftitemid;
+                        array('subdirs' => 0, 'maxbytes' => $pcast->maxbytes, 'maxfiles' => 1,
+                              'filetypes' => array('audio', 'video'))
+                        );
 
+$episode->mediafile = $draftitemid;
 $episode->cmid = $cm->id;
 
 $draftideditor = file_get_submitted_draft_itemid('summary');
@@ -155,7 +157,9 @@ if ($mform->is_cancelled()) {
     }
 
     file_save_draft_area_files($episode->mediafile, $context->id, 'mod_pcast', 'episode', $episode->id,
-                               array('subdirs' => 0, 'maxbytes' => $pcast->maxbytes, 'maxfiles' => 1, 'filetypes' => array('audio', 'video')));
+                            array('subdirs' => 0, 'maxbytes' => $pcast->maxbytes,
+                                  'maxfiles' => 1, 'filetypes' => array('audio', 'video'))
+                            );
 
     // Get the duration if an MP3 file.
     $fs = get_file_storage();
@@ -195,6 +199,12 @@ if ($mform->is_cancelled()) {
 
     $event->add_record_snapshot('pcast_episodes', $episode);
     $event->trigger();
+
+    // Update completion state.
+    $completion = new completion_info($course);
+    if ($completion->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC && $pcast->completionepisodes) {
+        $completion->update_state($cm, COMPLETION_COMPLETE, $episode->userid);
+    }
 
     // Calculate hook.
     $hook = core_text::substr($episode->name, 0, 1);

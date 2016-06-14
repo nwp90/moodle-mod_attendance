@@ -42,7 +42,12 @@ require_login($course, false, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/pcast:approve', $context);
 
-$url = new moodle_url('/mod/pcast/approveepisode.php', array('eid' => $eid, 'mode' => $mode, 'hook' => $hook, 'newstate' => $newstate));
+$url = new moodle_url('/mod/pcast/approveepisode.php',
+        array('eid' => $eid,
+              'mode' => $mode,
+              'hook' => $hook,
+              'newstate' => $newstate)
+        );
 
 $PAGE->set_url($url);
 $PAGE->set_context($context);
@@ -72,6 +77,13 @@ if ($newstate != $episode->approved and confirm_sesskey()) {
     }
     $event->add_record_snapshot('pcast_episodes', $episode);
     $event->trigger();
+
+    // Update completion state.
+    $completion = new completion_info($course);
+    if ($completion->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC && $pcast->completionepisodes) {
+        $completion->update_state($cm, COMPLETION_COMPLETE, $episode->userid);
+    }
+
 }
 
 redirect("view.php?id=$cm->id&amp;mode=$mode&amp;hook=$hook");

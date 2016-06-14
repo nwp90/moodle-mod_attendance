@@ -41,7 +41,7 @@ defined('MOODLE_INTERNAL') || die();
  */
 function xmldb_pcast_upgrade($oldversion=0) {
 
-    global $CFG, $THEME, $DB;
+    global $DB;
     $dbman = $DB->get_manager();
 
     // RatingArea Upgrade.
@@ -142,6 +142,34 @@ function xmldb_pcast_upgrade($oldversion=0) {
 
         // Pcast savepoint reached.
         upgrade_mod_savepoint(true, 2014061600, 'pcast');
+    }
+
+    if ($oldversion < 2016053100) {
+
+        // Define field completionepisodes to be added to pcast.
+        $table = new xmldb_table('pcast');
+        $field = new xmldb_field('completionepisodes', XMLDB_TYPE_INTEGER, '9', null, null, null, '0', 'timemodified');
+
+        // Conditionally launch add field completionepisodes.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Pcast savepoint reached.
+        upgrade_mod_savepoint(true, 2016053100, 'pcast');
+    }
+
+    if ($oldversion < 2016060300) {
+
+        // Changing type of field summary on table pcast_episodes to text.
+        $table = new xmldb_table('pcast_episodes');
+        $field = new xmldb_field('summary', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, 'name');
+
+        // Launch change of type for field summary.
+        $dbman->change_field_type($table, $field);
+
+        // Pcast savepoint reached.
+        upgrade_mod_savepoint(true, 2016060300, 'pcast');
     }
 
     // Final return of upgrade result (true/false) to Moodle. Must be always the last line in the script.
