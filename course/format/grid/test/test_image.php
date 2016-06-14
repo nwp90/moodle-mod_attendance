@@ -25,10 +25,10 @@
  */
 // Instructions.
 // 1.  Ensure this file and the image '515-797no09sa.jpg' are in the Moodle installation folder '/course/format/grid/test'.
-// 2.  Ensure the value of courseid is for a valid course in the URL i.e. image_test.php?courseid=2.
+// 2.  Ensure the value of courseid is for a valid course in the URL i.e. test_image.php?courseid=2.
 // 3.1 In a browser, log into Moodle so that you have a valid MoodleSession cookie.
-// 3.2 In another tab of the same browser navigate to 'your moodle installation'/course/format/grid/test/image_test.php.
-//     E.g. http://localhost/moodlegjb/course/format/grid/test/image_test.php.
+// 3.2 In another tab of the same browser navigate to 'your moodle installation'/course/format/grid/test/test_image.php.
+//     E.g. http://localhost/moodlegjb/course/format/grid/test/test_image.php.
 // Success: Image shows.
 // Failure: Image does not show.
 
