@@ -13,35 +13,21 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
 /**
- * @see uninstall_plugin()
+ * Search area for mod_pcast activities.
  *
- * @package    mod
- * @subpackage pcast
- * @copyright  2012 Stephen Bourget
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_pcast
+ * @copyright 2016 Stephen Bourget
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-
+namespace mod_pcast\search;
 defined('MOODLE_INTERNAL') || die();
-
-
 /**
- * Custom module uninstall code
+ * Search area for mod_pcast activities.
  *
- * @global stdClass $DB
- * @return bool
+ * @package   mod_pcast
+ * @copyright 2016 Stephen Bourget
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-function mod_pcast_uninstall() {
-    global $DB;
-
-    $fs = get_file_storage();
-    // Remove all files stored in the pcast filepool area from the database.
-    $files = $DB->get_records('files', array('component' => 'mod_pcast'), 'id');
-    foreach ($files as $file) {
-        $fs->get_file_instance($file)->delete();
-    }
-    return true;
+class activity extends \core_search\area\base_activity {
 }

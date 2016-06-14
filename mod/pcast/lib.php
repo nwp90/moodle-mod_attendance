@@ -29,6 +29,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+require_once($CFG->libdir . '/completionlib.php');
+
 defined('MOODLE_INTERNAL') || die();
 
 define("PCAST_SHOW_ALL_CATEGORIES", 0);
@@ -76,19 +78,29 @@ define("PCAST_EPISODE_DISAPPROVE", 0);
  **/
 function pcast_supports($feature) {
     switch($feature) {
-        case FEATURE_GROUPS:                  return true;
-        case FEATURE_GROUPINGS:               return true;
-        case FEATURE_MOD_INTRO:               return true;
-        case FEATURE_SHOW_DESCRIPTION:        return true;
-        case FEATURE_COMPLETION_TRACKS_VIEWS: return true;
-        case FEATURE_GRADE_HAS_GRADE:         return true;
-        case FEATURE_GRADE_OUTCOMES:          return false;
-        case FEATURE_BACKUP_MOODLE2:          return true;
-        case FEATURE_RATE:                    return true;
-
-        default: return null;
+        case FEATURE_GROUPS:
+            return true;
+        case FEATURE_GROUPINGS:
+            return true;
+        case FEATURE_MOD_INTRO:
+            return true;
+        case FEATURE_SHOW_DESCRIPTION:
+            return true;
+        case FEATURE_COMPLETION_TRACKS_VIEWS:
+            return true;
+        case FEATURE_COMPLETION_HAS_RULES:
+            return true;
+        case FEATURE_GRADE_HAS_GRADE:
+            return true;
+        case FEATURE_GRADE_OUTCOMES:
+            return false;
+        case FEATURE_BACKUP_MOODLE2:
+            return true;
+        case FEATURE_RATE:
+            return true;
+        default:
+            return null;
     }
-
 }
 
 
@@ -276,22 +288,96 @@ function pcast_delete_instance($id) {
  * @return object $result
  */
 function pcast_user_outline($course, $user, $mod, $pcast) {
-
-    global $DB;
-
-    if ($logs = $DB->get_records("log", array('userid' => $user->id, 'module' => 'pcast',
-                                              'action' => 'view', 'info' => $pcast->id), "time ASC")) {
-
-        $numviews = count($logs);
-        $lastlog = array_pop($logs);
-
-        $result = new object();
-        $result->info = get_string("numviews", "", $numviews);
-        $result->time = $lastlog->time;
-
+    global $CFG;
+    require_once("$CFG->libdir/gradelib.php");
+    $grades = grade_get_grades($course->id, 'mod', 'pcast', $pcast->id, $user->id);
+    if (empty($grades->items[0]->grades)) {
+        $grade = false;
+    } else {
+        $grade = reset($grades->items[0]->grades);
+    }
+    if ($entries = pcast_get_user_episodes($pcast->id, $user->id)) {
+        $result = new stdClass();
+        $result->info = get_string("episodes", "pcast", count($entries));
+        $lastentry = array_pop($entries);
+        $result->time = $lastentry->timemodified;
+        if ($grade) {
+            $result->info .= ', ' . get_string('grade') . ': ' . $grade->str_long_grade;
+        }
+        return $result;
+    } else if ($grade) {
+        $result = new stdClass();
+        $result->info = get_string('grade') . ': ' . $grade->str_long_grade;
+        // Datesubmitted == time created. dategraded == time modified or time overridden.
+        // If grade was last modified by the user themselves use date graded. Otherwise use date submitted.
+        // TODO: move this copied & pasted code somewhere in the grades API. See MDL-26704.
+        if ($grade->usermodified == $user->id || empty($grade->datesubmitted)) {
+            $result->time = $grade->dategraded;
+        } else {
+            $result->time = $grade->datesubmitted;
+        }
         return $result;
     }
     return null;
+}
+
+/**
+ * Get all the episodes for a user in a podcast.
+ * @global object
+ * @param int $pcastid
+ * @param int $userid
+ * @return array
+ */
+function pcast_get_user_episodes($pcastid, $userid) {
+    global $DB;
+    $allnamefields = get_all_user_name_fields(true, 'u');
+    $sql = "SELECT p.id AS id,
+                   p.pcastid AS pcastid,
+                   p.course AS course,
+                   p.userid AS userid,
+                   p.name AS name,
+                   p.summary AS summary,
+                   p.summaryformat AS summaryformat,
+                   p.summarytrust AS summarytrust,
+                   p.mediafile AS mediafile,
+                   p.duration AS duration,
+                   p.explicit AS explicit,
+                   p.subtitle AS subtitle,
+                   p.keywords AS keywords,
+                   p.topcategory as topcatid,
+                   p.nestedcategory as nestedcatid,
+                   p.timecreated as timecreated,
+                   p.timemodified as timemodified,
+                   p.approved as approved,
+                   p.sequencenumber as sequencenumber,
+                   pcast.userscancomment as userscancomment,
+                   pcast.userscancategorize as userscancategorize,
+                   pcast.userscanpost as userscanpost,
+                   pcast.requireapproval as requireapproval,
+                   pcast.displayauthor as displayauthor,
+                   pcast.displayviews as displayviews,
+                   pcast.assessed as assessed,
+                   pcast.assesstimestart as assesstimestart,
+                   pcast.assesstimefinish as assesstimefinish,
+                   pcast.scale as scale,
+                   cat.name as topcategory,
+                   ncat.name as nestedcategory,
+                   $allnamefields
+              FROM {pcast_episodes} p
+         LEFT JOIN {pcast} AS pcast ON
+                   p.pcastid = pcast.id
+         LEFT JOIN {user} AS u ON
+                   p.userid = u.id
+         LEFT JOIN {pcast_itunes_categories} AS cat ON
+                   p.topcategory = cat.id
+         LEFT JOIN {pcast_itunes_nested_cat} AS ncat ON
+                   p.nestedcategory = ncat.id
+             WHERE pcast.id = ?
+               AND p.pcastid = pcast.id
+               AND p.userid = ?
+               AND p.userid = u.id
+          ORDER BY p.timemodified ASC";
+    return $DB->get_records_sql($sql, array($pcastid, $userid));
 
 }
 
@@ -308,22 +394,28 @@ function pcast_user_outline($course, $user, $mod, $pcast) {
  * @return object $result
  */
 function pcast_user_complete($course, $user, $mod, $pcast) {
-    global $CFG, $DB;
+    global $CFG, $OUTPUT;
+    require_once("$CFG->libdir/gradelib.php");
+    require_once($CFG->dirroot.'/mod/pcast/locallib.php');
 
-    if ($logs = $DB->get_records("log", array('userid' => $user->id, 'module' => 'pcast',
-                                              'action' => 'view', 'info' => $pcast->id), "time ASC")) {
-        $numviews = count($logs);
-        $lastlog = array_pop($logs);
+    $cm = get_coursemodule_from_instance("pcast", $pcast->id, $course->id);
 
-        $strmostrecently = get_string("mostrecently");
-        $strnumviews = get_string("numviews", "", $numviews);
-
-        echo "$strnumviews - $strmostrecently ".userdate($lastlog->time);
-
-    } else {
-        print_string("noviews", "pcast");
+    $grades = grade_get_grades($course->id, 'mod', 'pcast', $pcast->id, $user->id);
+    if (!empty($grades->items[0]->grades)) {
+        $grade = reset($grades->items[0]->grades);
+        echo $OUTPUT->container(get_string('grade').': '.$grade->str_long_grade);
+        if ($grade->str_feedback) {
+            echo $OUTPUT->container(get_string('feedback').': '.$grade->str_feedback);
+        }
     }
-
+    if ($episodes = pcast_get_user_episodes($pcast->id, $user->id)) {
+        foreach ($episodes as $episode) {
+            pcast_display_episode_brief($episode, $cm, false, false);
+        }
+    } else {
+        // Not contributed to.
+        echo get_string('noepisodesposted', 'pcast');
+    }
 }
 
 /**
@@ -363,11 +455,11 @@ function pcast_print_recent_activity($course, $viewfullnames, $timestart) {
     $allnamefields = get_all_user_name_fields(true, 'u');
 
     if (!$episodes = $DB->get_records_sql("SELECT e.id, e.name, e.approved, e.timemodified, e.pcastid,
-                                                 e.userid, $allnamefields
-                                            FROM {pcast_episodes} e
-                                            JOIN {user} u ON u.id = e.userid
-                                           WHERE e.pcastid IN ($plist) AND e.timemodified > ?
-                                        ORDER BY e.timemodified ASC", array($timestart))) {
+                                                  e.userid, $allnamefields
+                                             FROM {pcast_episodes} e
+                                             JOIN {user} u ON u.id = e.userid
+                                            WHERE e.pcastid IN ($plist) AND e.timemodified > ?
+                                         ORDER BY e.timemodified ASC", array($timestart))) {
         return false;
     }
 
@@ -391,7 +483,7 @@ function pcast_print_recent_activity($course, $viewfullnames, $timestart) {
     if (!$episodes) {
         return false;
     }
-    echo $OUTPUT->heading(get_string('newepisodes', 'pcast').':');
+    echo $OUTPUT->heading(get_string('newepisodes', 'pcast').':', 3);
 
     $strftimerecent = get_string('strftimerecent');
     foreach ($episodes as $episode) {
@@ -418,6 +510,70 @@ function pcast_print_recent_activity($course, $viewfullnames, $timestart) {
     }
 
     return true;
+}
+
+/**
+ * Function used to display updates in the course overview block
+ */
+
+function pcast_print_overview($courses, &$htmlarray) {
+    global $DB, $OUTPUT;
+
+    if (empty($courses) || !is_array($courses) || count($courses) == 0) {
+        return;
+    }
+
+    if (!$pcasts = get_all_instances_in_courses('pcast', $courses)) {
+        return;
+    }
+
+    foreach ($pcasts as $pcast) {
+
+        // Visibility.
+        $class = (!$pcast->visible) ? 'dimmed' : '';
+        // Link to activity.
+        $url = new moodle_url('/mod/pcast/view.php', array('id' => $pcast->coursemodule));
+        $url = html_writer::link($url, format_string($pcast->name), array('class' => $class));
+        $str = $OUTPUT->box(get_string('pcastactivityname', 'pcast', $url), 'name');
+        $display = false;
+
+        // Display relevant info based on permissions.
+        if (has_capability('mod/pcast:view', context_module::instance($pcast->coursemodule))) {
+            // For everyone list new episodes.
+            $newepisodes = $DB->count_records_select('pcast_episodes', "pcastid = ? AND approved = ? AND timemodified > ?",
+                array($pcast->id, PCAST_EPISODE_APPROVE, $courses[$pcast->course]->lastaccess));
+            if ($newepisodes > 0) {
+                $str .= $OUTPUT->box(get_string('viewnewepisodes', 'pcast', $newepisodes), 'info');
+                $display = true;
+            }
+        }
+        if (has_capability('mod/pcast:approve', context_module::instance($pcast->coursemodule))) {
+            // For teachers also list unapproved episodes.
+            $pending = $DB->count_records('pcast_episodes',
+                array('pcastid' => $pcast->id, 'approved' => PCAST_EPISODE_DISAPPROVE));
+
+            if ($pending > 0) {
+                $str .= $OUTPUT->box(get_string('viewunapprovedepisodes', 'pcast', $pending), 'info');
+                $display = true;
+            }
+        }
+        if (!has_any_capability(array('mod/pcast:approve', 'mod/pcast:view'),
+                context_module::instance($pcast->coursemodule))) {
+            // Does not have permission to do anything on this pcast activity.
+            $str = '';
+        }
+        // Make sure we have something to display.
+        if (!empty($str) and $display) {
+            // Generate the containing div.
+            $str = $OUTPUT->box($str, 'pcast overview');
+            if (empty($htmlarray[$pcast->course]['pcast'])) {
+                $htmlarray[$pcast->course]['pcast'] = $str;
+            } else {
+                $htmlarray[$pcast->course]['pcast'] .= $str;
+            }
+        }
+    }
+    return;
 }
 
 /**
@@ -508,14 +664,49 @@ function pcast_get_post_actions() {
     return array('add', 'update');
 }
 
- /**
-  * Tells if files in moddata are trusted and can be served without XSS protection.
-  *
-  * @return bool (true if file can be submitted by teacher only, otherwise false)
-  */
-
+/**
+ * Tells if files in moddata are trusted and can be served without XSS protection.
+ *
+ * @return bool (true if file can be submitted by teacher only, otherwise false)
+ */
 function pcast_is_moddata_trusted() {
     return false;
+}
+
+/**
+ * Obtains the automatic completion state for this pcast based on any conditions
+ * in pcast settings.
+ *
+ * @global object $DB
+ * @param object $course Course
+ * @param object $cm Course-module
+ * @param int $userid User ID
+ * @param bool $type Type of comparison (or/and; can be used as return value if no conditions)
+ * @return bool True if completed, false if not. (If no conditions, then return
+ *   value depends on comparison type)
+ */
+function pcast_get_completion_state($course, $cm, $userid, $type) {
+    global $DB;
+
+    // Get pcast details.
+    if (!($pcast = $DB->get_record('pcast', array('id' => $cm->instance)))) {
+        throw new Exception("Can't find podcast {$cm->instance}");
+    }
+
+    // Default return value.
+    $result = $type;
+
+    if ($pcast->completionepisodes) {
+        $value = $pcast->completionepisodes <= $DB->count_records('pcast_episodes',
+                array('pcastid' => $pcast->id, 'userid' => $userid, 'approved' => PCAST_EPISODE_APPROVE));
+        if ($type == COMPLETION_AND) {
+            $result = $result && $value;
+        } else {
+            $result = $result || $value;
+        }
+    }
+
+    return $result;
 }
 
 /**
@@ -550,11 +741,10 @@ function pcast_extend_settings_navigation(settings_navigation $settings, navigat
     global $PAGE, $DB, $CFG, $USER;
 
     $group = optional_param('group', '', PARAM_ALPHANUM);
-    
     $pcast = $DB->get_record('pcast', array("id" => $PAGE->cm->instance));
-        
-    // Display approval link only when required
-    if ($pcast->requireapproval) {    
+
+    // Display approval link only when required.
+    if ($pcast->requireapproval) {
         if (has_capability('mod/pcast:approve', $PAGE->cm->context)) {
             $pcastnode->add(get_string('waitingapproval', 'pcast'), new moodle_url('/mod/pcast/view.php',
                     array('id' => $PAGE->cm->id, 'mode' => PCAST_APPROVAL_VIEW)));
@@ -565,12 +755,17 @@ function pcast_extend_settings_navigation(settings_navigation $settings, navigat
     if (has_capability('mod/pcast:write', $PAGE->cm->context) and (has_capability('mod/pcast:manage', $PAGE->cm->context)
                                                                or has_capability('mod/pcast:approve', $PAGE->cm->context))) {
         // This is a teacher.
-        $pcastnode->add(get_string('addnewepisode', 'pcast'), new moodle_url('/mod/pcast/edit.php', array('cmid' => $PAGE->cm->id)));
+        $pcastnode->add(get_string('addnewepisode', 'pcast'),
+                        new moodle_url('/mod/pcast/edit.php',
+                        array('cmid' => $PAGE->cm->id)));
+
     } else if (has_capability('mod/pcast:write', $PAGE->cm->context)) {
-        // See if the activity allows student posting
-        if($pcast->userscanpost == true) {
-            // Add a link to ad an episode
-            $pcastnode->add(get_string('addnewepisode', 'pcast'), new moodle_url('/mod/pcast/edit.php', array('cmid' => $PAGE->cm->id)));
+        // See if the activity allows student posting.
+        if ($pcast->userscanpost == true) {
+            // Add a link to ad an episode.
+            $pcastnode->add(get_string('addnewepisode', 'pcast'),
+                        new moodle_url('/mod/pcast/edit.php',
+                        array('cmid' => $PAGE->cm->id)));
         }
     }
 
@@ -810,20 +1005,21 @@ function pcast_add_view_instance($pcast, $episode, $userid, $context) {
     global $DB;
 
     // Lookup the user add add to the view count.
-    if (!$view = $DB->get_record("pcast_views", array("episodeid" => $pcast->id, "userid" => $userid))) {
-        $view = null;
-        unset($view);
+    if (!$view = $DB->get_record("pcast_views", array("episodeid" => $episode->id, "userid" => $userid))) {
+
+        // User has never seen the podcast episode.
         $view = new stdClass();
         $view->userid = $userid;
         $view->views = 1;
-        $view->episodeid = $pcast->id;
+        $view->episodeid = $episode->id;
         $view->lastview = time();
 
         if (!$result = $DB->insert_record("pcast_views", $view)) {
             print_error('databaseerror', 'pcast');
         }
 
-    } else { // Never viewed the file before.
+    } else {
+        // The user has viewed the episode before.
         $view->views = $view->views + 1;
         $view->lastview = time();
         if (!$result = $DB->update_record("pcast_views", $view)) {
@@ -831,13 +1027,14 @@ function pcast_add_view_instance($pcast, $episode, $userid, $context) {
         }
     }
 
-        $event = \mod_pcast\event\episode_viewed::create(array(
-            'objectid' => $view->episodeid,
-            'context' => $context
-        ));
+    $event = \mod_pcast\event\episode_viewed::create(array(
+        'objectid' => $view->episodeid,
+        'context' => $context
+    ));
 
-        $event->add_record_snapshot('pcast_episodes', $episode);
-        $event->trigger();
+    $event->add_record_snapshot('pcast_episodes', $episode);
+    $event->add_record_snapshot('pcast', $pcast);
+    $event->trigger();
 
     return $result;
 }
@@ -1233,7 +1430,8 @@ function pcast_rating_permissions($contextid, $component, $ratingarea) {
  *            itemid => int the ID of the object being rated
  *            scaleid => int the scale from which the user can select a rating. Used for bounds checking. [required]
  *            rating => int the submitted rating
- *            rateduserid => int the id of the user whose items have been rated. NOT the user who submitted the ratings. 0 to update all. [required]
+ *            rateduserid => int the id of the user whose items have been rated.
+ *                           NOT the user who submitted the ratings. 0 to update all. [required]
  *            aggregation => int the aggregation method to apply when calculating grades ie RATING_AGGREGATE_AVERAGE [optional]
  * @return boolean true if the rating is valid. Will throw rating_exception if not
  */
@@ -1257,7 +1455,14 @@ function pcast_rating_validate($params) {
         throw new rating_exception('nopermissiontorate');
     }
 
-    $pcastsql = "SELECT p.id as pcastid, p.scale, p.course, e.userid as userid, e.approved, e.timecreated, p.assesstimestart, p.assesstimefinish
+    $pcastsql = "SELECT p.id as pcastid,
+                        p.scale,
+                        p.course,
+                        e.userid as userid,
+                        e.approved,
+                        e.timecreated,
+                        p.assesstimestart,
+                        p.assesstimefinish
                       FROM {pcast_episodes} e
                       JOIN {pcast} p ON e.pcastid = p.id
                      WHERE e.id = :itemid";
@@ -1327,7 +1532,7 @@ function pcast_rating_validate($params) {
  * @param int $userid specific user only, 0 means all
  */
 function pcast_update_grades($pcast=null, $userid=0, $nullifnone=true) {
-    global $CFG, $DB;
+    global $CFG;
     require_once($CFG->libdir.'/gradelib.php');
 
     if (!$pcast->assessed) {

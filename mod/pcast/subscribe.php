@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-
 /**
  * Library of interface functions and constants for module pcast
  *
@@ -27,7 +26,8 @@
  */
 
 // Disable moodle specific debug messages and any errors in output.
-define('NO_DEBUG_DISPLAY', true); // Comment this out to see any error messages during RSS generation.
+// Comment this out to see any error messages during RSS generation.
+define('NO_DEBUG_DISPLAY', true);
 
 // Sessions not used here, we recreate $USER every time we are called.
 define('NO_MOODLE_COOKIES', true);
@@ -77,7 +77,7 @@ if (!$userid) {
 }
 
 $user = get_complete_user_data('id', $userid);
-session_set_user($user); // For login and capability checks.
+\core\session\manager::set_user($user); // For login and capability checks.
 
 
 // Check the context actually exists.
@@ -91,7 +91,7 @@ try {
     $autologinguest = true;
     $setwantsurltome = true;
     $preventredirect = true;
-    require_login($course, $autologinguest, $cm, $setwantsurltome, $preventredirect);
+    require_course_login($course, $autologinguest, $cm, $setwantsurltome, $preventredirect);
 } catch (Exception $e) {
     if (isguestuser()) {
         pcast_rss_error('rsserrorguest');
@@ -112,7 +112,6 @@ if ($cm) {
         $uservalidated = true;
     }
 }
-
 
 // Check group mode 0/1/2 (All participants).
 $groupmode = groups_get_activity_groupmode($cm);
@@ -162,7 +161,6 @@ $filename = rss_get_file_name($pcast, $sql);
 $filename .= '_'.$groupid;
 $cachedfilepath = pcast_rss_get_file_full_name('mod_pcast', $filename);
 
-
 // Figure out the URL for the podcast based on the user info.
 $args = $pcast->id . '/' .$groupid;
 $url = new moodle_url(rss_get_url($context->id, $userid, 'pcast', $args));
@@ -177,7 +175,6 @@ if (!$status) {
     $cachedfilepath = null;
 }
 
-
 // Check that file exists.
 if (empty($cachedfilepath) || !file_exists($cachedfilepath)) {
     die($cachedfilepath);
@@ -186,7 +183,6 @@ if (empty($cachedfilepath) || !file_exists($cachedfilepath)) {
 
 // Send the .pcast file to the user!
 send_file($cachedfilepath, 'rss.pcast', 0, 0, 0, 1);   // DO NOT CACHE.
-
 
 
 /*
