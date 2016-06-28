@@ -1,0 +1,78 @@
+/**
+ * board
+ *
+ * @package    format_board
+ * @author     Rodrigo Brandão (rodrigobrandao.com.br)
+ * @copyright  2016 Rodrigo Brandão
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+.course-content ul.board {
+	margin: 0;
+	display: inline-block;
+	vertical-align: top;
+	width: 100%;
+}
+.course-content ul.board ul.section {
+	padding: 0;
+	margin: 0;
+}
+.course-content ul.board li.section.main {
+	border: 0;
+}
+.course-content ul.board li.section {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	display: inline-block;
+	float: left;
+	border: 0;
+}
+.course-content ul.board li.section .content {
+	padding: 0;
+	margin: 10px;
+	min-height: 40px;
+}
+.course-content ul.board li.section .content h3.sectionname {
+	padding: 0;
+	margin: 0;
+}
+.course-content ul.board li.section .left, .course-content ul.board li.section .right { 
+	width: 40px;
+	padding: 0 6px;
+	display: none;
+}
+.editing .course-content ul.board li.section .left, .editing .course-content ul.board li.section .right { 
+	display: block;
+}
+.editing .course-content ul.board li.section .content { 
+	border: 1px dashed #aaa;
+}
+.course-content ul.board li.section .right img.icon { 
+	padding: 0 0 4px 0;
+}
+.course-content ul.board li.section .left {
+	padding-top: 22px;
+	text-align: right;
+}
+.jsenabled .course-content ul.board li.section .left, .jsenabled .course-content ul.board li.section .right {
+	width:auto;
+}
+.course-content ul.board li.section .left .section-handle img.icon { 
+	padding:0;
+	vertical-align: baseline;
+}
+.course-content ul.board li.section .section_action_menu .textmenu, .course-content ul.board li.section .section_action_menu .menu-action-text { 
+	white-space: nowrap;
+}
+@media (max-width: 979px) {
+	.course-content ul.board {
+		width: 100% !important;
+	}
+}
+@media (max-width: 767px) {
+	.course-content ul.board li.section {
+		width: 100% !important;
+	}
+}
