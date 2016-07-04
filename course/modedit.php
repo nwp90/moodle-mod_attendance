@@ -157,6 +157,7 @@ if (!empty($add)) {
     $data->completionexpected = $cm->completionexpected;
     $data->completionusegrade = is_null($cm->completiongradeitemnumber) ? 0 : 1;
     $data->showdescription    = $cm->showdescription;
+    $data->tags               = core_tag_tag::get_item_tags_array('core', 'course_modules', $cm->id);
     if (!empty($CFG->enableavailability)) {
         $data->availabilityconditionsjson = $cm->availability;
     }
@@ -285,7 +286,11 @@ if ($mform->is_cancelled()) {
 
     // save module tags
     if (!empty($CFG->usetags)) {
-        tag_set($fromform->modulename, $fromform->instance, $fromform->tags);
+        if (empty($fromform->tags)) {
+            $fromform->tags = array();
+        }
+        $component = "mod_". $module->name;
+        tag_set($fromform->modulename, $fromform->instance, $fromform->tags, $component, $context->id);
     }
 
     if (isset($fromform->submitbutton)) {

@@ -28,9 +28,6 @@
 
 require_once(__DIR__ . '/../../../lib/behat/behat_base.php');
 
-use Behat\Behat\Context\Step\Given as Given;
-use Behat\Behat\Context\Step\When as When;
-
 /**
  * Log in log out steps definitions.
  *
@@ -67,13 +64,15 @@ class behat_auth extends behat_base {
         // There is no longer any need to worry about whether the navigation
         // bar needs to be expanded; user_menu now lives outside the
         // hamburger.
+
         // However, the user menu *always* needs to be expanded. if running JS.
         if ($this->running_javascript()) {
             $xpath = "//div[@class='usermenu']//a[contains(concat(' ', @class, ' '), ' toggle-display ')]";
+
             $this->execute('behat_general::i_click_on', array($xpath, "xpath_element"));
         }
+
         // No need to check for exceptions as it will checked after this step execution.
         $this->execute('behat_general::click_link', get_string('logout'));
     }
-
 }

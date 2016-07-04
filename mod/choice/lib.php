@@ -79,20 +79,23 @@ function choice_user_outline($course, $user, $mod, $choice) {
 }
 
 /**
- * @global object
+ * Callback for the "Complete" report - prints the activity summary for the given user
+ *
  * @param object $course
  * @param object $user
  * @param object $mod
  * @param object $choice
- * @return string|void
  */
 function choice_user_complete($course, $user, $mod, $choice) {
     global $DB;
-    if ($answer = $DB->get_record('choice_answers', array("choiceid" => $choice->id, "userid" => $user->id))) {
-        $result = new stdClass();
-        $result->info = "'".format_string(choice_get_option_text($choice, $answer->optionid))."'";
-        $result->time = $answer->timemodified;
-        echo get_string("answered", "choice").": $result->info. ".get_string("updated", '', userdate($result->time));
+    if ($answers = $DB->get_records('choice_answers', array("choiceid" => $choice->id, "userid" => $user->id))) {
+        $info = [];
+        foreach ($answers as $answer) {
+            $info[] = "'" . format_string(choice_get_option_text($choice, $answer->optionid)) . "'";
+        }
+        core_collator::asort($info);
+        echo get_string("answered", "choice") . ": ". join(', ', $info) . ". " .
+                get_string("updated", '', userdate($answer->timemodified));
     } else {
         print_string("notanswered", "choice");
     }
@@ -476,7 +479,7 @@ function prepare_choice_show_results($choice, $course, $cm, $allresponses) {
 
     //overwrite options value;
     $display->options = array();
-    $totaluser = 0;
+    $allusers = [];
     foreach ($choice->option as $optionid => $optiontext) {
         $display->options[$optionid] = new stdClass;
         $display->options[$optionid]->text = $optiontext;
@@ -484,13 +487,13 @@ function prepare_choice_show_results($choice, $course, $cm, $allresponses) {
 
         if (array_key_exists($optionid, $allresponses)) {
             $display->options[$optionid]->user = $allresponses[$optionid];
-            $totaluser += count($allresponses[$optionid]);
+            $allusers = array_merge($allusers, array_keys($allresponses[$optionid]));
         }
     }
     unset($display->option);
     unset($display->maxanswers);
 
-    $display->numberofuser = $totaluser;
+    $display->numberofuser = count(array_unique($allusers));
     $context = context_module::instance($cm->id);
     $display->viewresponsecapability = has_capability('mod/choice:readresponses', $context);
     $display->deleterepsonsecapability = has_capability('mod/choice:deleteresponses',$context);
@@ -513,7 +516,7 @@ function prepare_choice_show_results($choice, $course, $cm, $allresponses) {
  * @return bool
  */
 function choice_delete_responses($attemptids, $choice, $cm, $course) {
-    global $DB, $CFG;
+    global $DB, $CFG, $USER;
     require_once($CFG->libdir.'/completionlib.php');
 
     if(!is_array($attemptids) || empty($attemptids)) {
@@ -526,16 +529,36 @@ function choice_delete_responses($attemptids, $choice, $cm, $course) {
         }
     }
 
+    $context = context_module::instance($cm->id);
     $completion = new completion_info($course);
     foreach($attemptids as $attemptid) {
         if ($todelete = $DB->get_record('choice_answers', array('choiceid' => $choice->id, 'id' => $attemptid))) {
+            // Trigger the event answer deleted.
+            $eventdata = array();
+            $eventdata['objectid'] = $todelete->id;
+            $eventdata['context'] = $context;
+            $eventdata['userid'] = $USER->id;
+            $eventdata['courseid'] = $course->id;
+            $eventdata['relateduserid'] = $todelete->userid;
+            $eventdata['other'] = array();
+            $eventdata['other']['choiceid'] = $choice->id;
+            $eventdata['other']['optionid'] = $todelete->optionid;
+            $event = \mod_choice\event\answer_deleted::create($eventdata);
+            $event->add_record_snapshot('course', $course);
+            $event->add_record_snapshot('course_modules', $cm);
+            $event->add_record_snapshot('choice', $choice);
+            $event->add_record_snapshot('choice_answers', $todelete);
+            $event->trigger();
+
             $DB->delete_records('choice_answers', array('choiceid' => $choice->id, 'id' => $attemptid));
-            // Update completion state
-            if ($completion->is_enabled($cm) && $choice->completionsubmit) {
-                $completion->update_state($cm, COMPLETION_INCOMPLETE, $attemptid);
-            }
         }
     }
+
+    // Update completion state.
+    if ($completion->is_enabled($cm) && $choice->completionsubmit) {
+        $completion->update_state($cm, COMPLETION_INCOMPLETE);
+    }
+
     return true;
 }
 
@@ -807,12 +830,13 @@ function choice_extend_settings_navigation(settings_navigation $settings, naviga
         // Big function, approx 6 SQL calls per user.
         $allresponses = choice_get_response_data($choice, $PAGE->cm, $groupmode, $onlyactive);
 
-        $responsecount =0;
+        $allusers = [];
         foreach($allresponses as $optionid => $userlist) {
             if ($optionid) {
-                $responsecount += count($userlist);
+                $allusers = array_merge($allusers, array_keys($userlist));
             }
         }
+        $responsecount = count(array_unique($allusers));
         $choicenode->add(get_string("viewallresponses", "choice", $responsecount), new moodle_url('/mod/choice/report.php', array('id'=>$PAGE->cm->id)));
     }
 }
@@ -894,8 +918,10 @@ function choice_print_overview($courses, &$htmlarray) {
 
             // Display relevant info based on permissions.
             if (has_capability('mod/choice:readresponses', context_module::instance($choice->coursemodule))) {
-                $attempts = $DB->count_records('choice_answers', array('choiceid' => $choice->id));
-                $str .= $OUTPUT->box(get_string('viewallresponses', 'choice', $attempts), 'info');
+                $attempts = $DB->count_records_sql('SELECT COUNT(DISTINCT userid) FROM {choice_answers} WHERE choiceid = ?',
+                    [$choice->id]);
+                $url = new moodle_url('/mod/choice/report.php', ['id' => $choice->coursemodule]);
+                $str .= $OUTPUT->box(html_writer::link($url, get_string('viewallresponses', 'choice', $attempts)), 'info');
 
             } else if (has_capability('mod/choice:choose', context_module::instance($choice->coursemodule))) {
                 // See if the user has submitted anything.

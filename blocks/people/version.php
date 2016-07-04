@@ -17,16 +17,15 @@
 /**
  * Block "people" - Version file
  *
- * @package     block
- * @subpackage  block_people
- * @copyright   2013 Alexander Bias, University of Ulm <alexander.bias@uni-ulm.de>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    block_people
+ * @copyright  2013 Alexander Bias, University of Ulm <alexander.bias@uni-ulm.de>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'block_people';
-$plugin->version = 2015111600;
-$plugin->release = '3.0 (Build: 2016010100)';
+$plugin->version = 2016030700;
+$plugin->release = 'v3.0-r3';
 $plugin->requires = 2015111600;
 $plugin->maturity = MATURITY_STABLE;

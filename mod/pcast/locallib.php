@@ -157,8 +157,8 @@ function pcast_print_author_menu($cm, $pcast, $mode, $hook, $sortkey = '', $sort
 
 /**
  * Prints the category menu
- * @global stdClass
- * @global stdClass
+ * @global stdClass $DB
+ * @global stdClass $OUTPUT
  * @param object $cm
  * @param object $pcast
  * @param string $hook
@@ -167,9 +167,7 @@ function pcast_print_author_menu($cm, $pcast, $mode, $hook, $sortkey = '', $sort
  * @todo These styles should not be hard coded
  */
 function pcast_print_categories_menu($cm, $pcast, $hook=PCAST_SHOW_ALL_CATEGORIES) {
-     global $CFG, $DB, $OUTPUT;
-
-     $context = context_module::instance($cm->id);
+     global $DB, $OUTPUT;
 
      echo '<table border="0" width="100%">';
      echo '<tr>';
@@ -240,7 +238,6 @@ function pcast_print_categories_menu($cm, $pcast, $hook=PCAST_SHOW_ALL_CATEGORIE
 
 /**
  * Prints the link to display all episodes.
- * @global stdClass $CFG
  * @param object $cm
  * @param object $pcast
  * @param string $mode
@@ -248,7 +245,6 @@ function pcast_print_categories_menu($cm, $pcast, $hook=PCAST_SHOW_ALL_CATEGORIE
  */
 function pcast_print_all_links($cm, $pcast, $mode, $hook) {
 
-    global $CFG;
     $strallentries = get_string("allentries", "pcast");
     if ( $hook == 'ALL' ) {
         echo html_writer::tag('span', $strallentries, array('class' => 'pcast-bold'));
@@ -262,15 +258,12 @@ function pcast_print_all_links($cm, $pcast, $mode, $hook) {
 
 /**
  * Prints the symbols links used to sort the episodes.
- * @global stdClass $CFG
  * @param object $cm
  * @param object $pcast
  * @param string $mode
  * @param string $hook
  */
 function pcast_print_special_links($cm, $pcast, $mode, $hook) {
-
-    global $CFG;
 
     $strspecial = get_string("special", "pcast");
     if ( $hook == 'SPECIAL' ) {
@@ -287,7 +280,6 @@ function pcast_print_special_links($cm, $pcast, $mode, $hook) {
 
 /**
  * Prints the individual letter links used to sort the episodes.
- * @global stdClass $CFG
  * @param object $pcast
  * @param string $mode
  * @param string $hook
@@ -295,7 +287,6 @@ function pcast_print_special_links($cm, $pcast, $mode, $hook) {
  * @param string $sortorder
  */
 function pcast_print_alphabet_links($cm, $pcast, $mode, $hook, $sortkey, $sortorder) {
-    global $CFG;
 
     $alphabet = explode(",", get_string('alphabet', 'langconfig'));
     $lettersbyline = 26;
@@ -303,13 +294,13 @@ function pcast_print_alphabet_links($cm, $pcast, $mode, $hook, $sortkey, $sortor
         if ( $hook == $alphabet[$i] and $hook) {
             echo html_writer::tag('span', $alphabet[$i], array('class' => 'pcast-bold'));
         } else {
-            $strexplainspecial = strip_tags(get_string("explainspecial", "pcast"));
             $url = new moodle_url('/mod/pcast/view.php',
                    array('id' => $cm->id,
                          'mode' => $mode,
                          'hook' => urlencode($alphabet[$i]),
                          'sortkey' => $sortkey,
-                         'sortorder' => $sortorder));
+                         'sortorder' => $sortorder)
+                   );
 
             echo html_writer::tag('a', $alphabet[$i], array('href' => $url));
         }
@@ -324,7 +315,6 @@ function pcast_print_alphabet_links($cm, $pcast, $mode, $hook, $sortkey, $sortor
 
 /**
  * Prints the sort by ASC / DSC links on the view page.
- * @global stdClass $CFG
  * @global stdClass $OUTPUT
  * @param object $cm
  * @param string $mode
@@ -332,7 +322,7 @@ function pcast_print_alphabet_links($cm, $pcast, $mode, $hook, $sortkey, $sortor
  * @param string $sortorder
  */
 function pcast_print_sorting_links($cm, $mode, $sortkey = '', $sortorder = '', $hook='') {
-    global $CFG, $OUTPUT;
+    global $OUTPUT;
 
     // Get our strings.
     $asc    = get_string("ascending", "pcast");
@@ -566,7 +556,9 @@ function pcast_display_standard_episodes($pcast, $cm, $groupmode = 0, $hook='', 
                  OR ". $DB->sql_like('p.name', '?', false)."
                  )
                 ORDER BY $sort";
-        $episodes = $DB->get_records_sql($sql, array($pcast->id, '1', $USER->id, '1%', '2%', '3%', '4%', '5%', '6%', '7%', '8%', '9%', '0%'));
+        $episodes = $DB->get_records_sql($sql, array($pcast->id, '1', $USER->id,
+                                         '1%', '2%', '3%', '4%', '5%',
+                                         '6%', '7%', '8%', '9%', '0%'));
     } else {
         $sql .= " and ". $DB->sql_like('p.name', '?', false)." ORDER BY $sort";
         $episodes = $DB->get_records_sql($sql, array($pcast->id, '1', $USER->id, $hook.'%'));
@@ -603,7 +595,8 @@ function pcast_display_standard_episodes($pcast, $cm, $groupmode = 0, $hook='', 
                       'mode' => PCAST_STANDARD_VIEW,
                       'hook' => $hook,
                       'sortkey' => $sortkey,
-                      'sortorder' => $sortorder));
+                      'sortorder' => $sortorder)
+                );
 
         echo html_writer::start_tag('div', array('class' => 'pcast-paging'));
         echo $OUTPUT->paging_bar($count, $page, $pcast->episodesperpage, $url);
@@ -614,15 +607,34 @@ function pcast_display_standard_episodes($pcast, $cm, $groupmode = 0, $hook='', 
 
 /**
  * Determine if the user is able to view the specified episode.
+ * This takes in account group member access.
  * @param object $episode
  * @param object $cm
  * @param int $groupmode
  * @return bool (true if allowed, false if denied)
  */
-function pcast_group_allowed_viewing($episode, $cm, $groupmode) {
+function pcast_episode_allowed_viewing($episode, $cm, $groupmode) {
+    global $USER;
 
     $context = context_module::instance($cm->id);
     $currentgroup = 0;
+
+    // Does the user have the ability to view this episode?
+    if (!has_capability('mod/pcast:view', $context)) {
+        return false;
+    }
+
+    // Has the episode been approved? If not then should they be able to see it?
+    if ($episode->userid !== $USER->id) {
+        // Not the author, Is it approved?
+        if ($episode->approved == PCAST_EPISODE_DISAPPROVE) {
+            // Not Approved, Can they approve it?
+            if (!has_capability('mod/pcast:approve', $context)) {
+                // Cannot approve it, so they cannot see it.
+                return false;
+            }
+        }
+    }
 
     // Get the current group info.
     if ($groupmode > 0) {
@@ -741,7 +753,9 @@ function pcast_display_category_episodes($pcast, $cm, $groupmode = 0, $hook = PC
         $url = new moodle_url('/mod/pcast/view.php',
                 array('id' => $cm->id,
                       'mode' => PCAST_CATEGORY_VIEW,
-                      'hook' => $hook));
+                      'hook' => $hook)
+                );
+
         echo html_writer::start_tag('div', array('class' => 'pcast-paging'));
         echo $OUTPUT->paging_bar($count, $page, $pcast->episodesperpage, $url);
         echo html_writer::end_tag('div');
@@ -761,7 +775,8 @@ function pcast_display_category_episodes($pcast, $cm, $groupmode = 0, $hook = PC
  * @param string $sortorder
  * @param int $page
  */
-function pcast_display_date_episodes($pcast, $cm, $groupmode = 0, $hook='', $sortkey = PCAST_DATE_CREATED, $sortorder='desc', $page=0) {
+function pcast_display_date_episodes($pcast, $cm, $groupmode = 0, $hook='',
+                                     $sortkey = PCAST_DATE_CREATED, $sortorder='desc', $page=0) {
     global $DB, $USER, $OUTPUT;
 
     $context = context_module::instance($cm->id);
@@ -832,7 +847,8 @@ function pcast_display_date_episodes($pcast, $cm, $groupmode = 0, $hook='', $sor
                       'mode' => PCAST_DATE_VIEW,
                       'hook' => $hook,
                       'sortkey' => $sortkey,
-                      'sortorder' => $sortorder));
+                      'sortorder' => $sortorder)
+                );
 
         echo html_writer::start_tag('div', array('class' => 'pcast-paging'));
         echo $OUTPUT->paging_bar($count, $page, $pcast->episodesperpage, $url);
@@ -948,7 +964,8 @@ function pcast_display_author_episodes($pcast, $cm, $groupmode = 0, $hook='', $s
                       'mode' => PCAST_AUTHOR_VIEW,
                       'hook' => $hook,
                       'sortkey' => $sortkey,
-                      'sortorder' => $sortorder));
+                      'sortorder' => $sortorder)
+                );
 
         echo html_writer::start_tag('div', array('class' => 'pcast-paging'));
         echo $OUTPUT->paging_bar($count, $page, $pcast->episodesperpage, $url);
@@ -1041,12 +1058,13 @@ function pcast_display_approval_episodes($pcast, $cm, $groupmode = 0, $hook='', 
 
     if ($count > $pcast->episodesperpage) {
         // Print a paging bar here.
-        $url = new moodle_url('/mod/pcast/view.php', 
+        $url = new moodle_url('/mod/pcast/view.php',
                 array('id' => $cm->id,
                       'mode' => PCAST_APPROVAL_VIEW,
                       'hook' => $hook,
                       'sortkey' => $sortkey,
-                      'sortorder' => $sortorder));
+                      'sortorder' => $sortorder)
+                );
 
         echo html_writer::start_tag('div', array('class' => 'pcast-paging'));
         echo $OUTPUT->paging_bar($count, $page, $pcast->episodesperpage, $url);
@@ -1113,11 +1131,13 @@ function pcast_get_episode_sql() {
 /**
  * Function to print overview of the episode
  * @global stdClass $CFG
- * @param object $episode
- * @param object $cm
- * @param string $hook
+ * @global stdClass $DB
+ * @param type $episode
+ * @param type $cm
+ * @param type $showmedia
+ * @param type $showlinks
  */
-function pcast_display_episode_brief($episode, $cm, $hook ='ALL') {
+function pcast_display_episode_brief($episode, $cm, $showmedia= true, $showlinks = true) {
     global $CFG, $DB;
 
     $context = context_module::instance($cm->id);
@@ -1160,8 +1180,9 @@ function pcast_display_episode_brief($episode, $cm, $hook ='ALL') {
     }
 
     // Attachment.
-    $table->data[] = array (get_string("pcastmediafile", "pcast"), pcast_display_mediafile_link($episode, $cm, true));
-
+    if ($showmedia) {
+        $table->data[] = array (get_string("pcastmediafile", "pcast"), pcast_display_mediafile_link($episode, $cm));
+    }
     // Author.
     // Only print author if allowed or has manage rights.
     if (((isset($episode->displayauthor))and ($episode->displayauthor != '0')) or (has_capability('mod/pcast:manage', $context))) {
@@ -1179,41 +1200,53 @@ function pcast_display_episode_brief($episode, $cm, $hook ='ALL') {
     $ineditingperiod = ((time() - $episode->timecreated < $CFG->maxeditingtime));
     $link = '';
 
-        // Management Links.
+    // Management Links.
     if ((has_capability('mod/pcast:manage', $context)) or ($ineditingperiod)) {
 
         // Edit Link.
-        $url = new moodle_url('/mod/pcast/edit.php', array('cmid' => $cm->id, 'id' => $episode->id));
-        $link .= html_writer::tag('a', get_string('edit'), array('href' => $url, 'title' => get_string('editthisepisode', 'pcast')));
+        $url = new moodle_url('/mod/pcast/edit.php',
+                 array('cmid' => $cm->id, 'id' => $episode->id));
+        $link .= html_writer::tag('a', get_string('edit'),
+                 array('href' => $url, 'title' => get_string('editthisepisode', 'pcast')));
         $link .= ' | '."\n";
 
         // Delete link.
-        $url = new moodle_url('/mod/pcast/deleteepisode.php', array('id' => $cm->id, 'episode' => $episode->id, 'prevmode' => 0));
-        $link .= html_writer::tag('a', get_string('delete'), array('href' => $url, 'title' => get_string('deletethisepisode', 'pcast')));
+        $url = new moodle_url('/mod/pcast/deleteepisode.php',
+                 array('id' => $cm->id, 'episode' => $episode->id, 'prevmode' => 0));
+        $link .= html_writer::tag('a', get_string('delete'),
+                 array('href' => $url, 'title' => get_string('deletethisepisode', 'pcast')));
         $link .= ' | '."\n";
 
     }
         // View Link.
-        $url = new moodle_url('/mod/pcast/showepisode.php', array('eid' => $episode->id));
-        $link .= html_writer::tag('a', get_string('view'), array('href' => $url, 'title' => get_string('viewepisode', 'pcast')));
+        $url = new moodle_url('/mod/pcast/showepisode.php',
+                 array('eid' => $episode->id));
+        $link .= html_writer::tag('a', get_string('view'),
+                 array('href' => $url, 'title' => get_string('viewepisode', 'pcast')));
 
     // Approve / Disapprove Link.
     if ((has_capability('mod/pcast:approve', $context)) and ($episode->requireapproval)) {
         if (!$episode->approved) {
             // Approve link.
             $link .= ' | '."\n";
-            $url = new moodle_url('/mod/pcast/approveepisode.php', array('eid' => $episode->id, 'mode' => PCAST_APPROVAL_VIEW, 'sesskey' => sesskey()));
-            $link .= html_writer::tag('a', get_string('approve'), array('href' => $url, 'title' => get_string('approvethisepisode', 'pcast')));
+            $url = new moodle_url('/mod/pcast/approveepisode.php',
+                     array('eid' => $episode->id, 'mode' => PCAST_APPROVAL_VIEW, 'sesskey' => sesskey()));
+            $link .= html_writer::tag('a', get_string('approve'),
+                     array('href' => $url, 'title' => get_string('approvethisepisode', 'pcast')));
         } else {
             // Disapprove link.
             $link .= ' | '."\n";
-            $url = new moodle_url('/mod/pcast/approveepisode.php', array('eid' => $episode->id, 'newstate' => PCAST_EPISODE_DISAPPROVE, 'sesskey' => sesskey()));
-            $link .= html_writer::tag('a', get_string('disapprove', 'pcast'), array('href' => $url, 'title' => get_string('disapprovethisepisode', 'pcast')));
+            $url = new moodle_url('/mod/pcast/approveepisode.php',
+                     array('eid' => $episode->id, 'newstate' => PCAST_EPISODE_DISAPPROVE, 'sesskey' => sesskey()));
+            $link .= html_writer::tag('a', get_string('disapprove', 'pcast'),
+                     array('href' => $url, 'title' => get_string('disapprovethisepisode', 'pcast')));
         }
     }
 
     // Construct links.
-    $table->data[] = array ('', $link);
+    if ($showlinks) {
+        $table->data[] = array ('', $link);
+    }
 
     echo $html;
     echo html_writer::table($table);
@@ -1273,7 +1306,7 @@ function pcast_display_episode_full($episode, $cm, $course) {
     }
 
     // Attachment.
-    $table->data[] = array (get_string("pcastmediafile", "pcast"), pcast_display_mediafile_link($episode, $cm, false));
+    $table->data[] = array (get_string("pcastmediafile", "pcast"), pcast_display_mediafile_link($episode, $cm));
 
     // Duration.
     $length = array();
@@ -1323,7 +1356,10 @@ function pcast_display_episode_full($episode, $cm, $course) {
     }
 
     // Total Ratings.
-    if (($episode->assessed) and ((has_capability('moodle/rating:view', $context)) and ($episode->userid == $USER->id)) or (has_capability('moodle/rating:viewany', $context))) {
+    if (($episode->assessed) and ((has_capability('moodle/rating:view', $context))
+                             and ($episode->userid == $USER->id))
+                             or (has_capability('moodle/rating:viewany', $context))) {
+
         $table->data[] = array (get_string("totalratings", "pcast"), pcast_get_episode_rating_count($episode, $cm));
     }
 
@@ -1336,13 +1372,17 @@ function pcast_display_episode_full($episode, $cm, $course) {
     if ((has_capability('mod/pcast:manage', $context)) or ($ineditingperiod)) {
 
         // Edit Link.
-        $url = new moodle_url('/mod/pcast/edit.php', array('cmid' => $cm->id, 'id' => $episode->id));
-        $manage .= html_writer::tag('a', get_string('edit'), array('href' => $url, 'title' => get_string('editthisepisode', 'pcast')));
+        $url = new moodle_url('/mod/pcast/edit.php',
+                   array('cmid' => $cm->id, 'id' => $episode->id));
+        $manage .= html_writer::tag('a', get_string('edit'),
+                   array('href' => $url, 'title' => get_string('editthisepisode', 'pcast')));
         $manage .= ' | '."\n";
 
         // Delete link.
-        $url = new moodle_url('/mod/pcast/deleteepisode.php', array('id' => $cm->id, 'episode' => $episode->id, 'prevmode' => 0));
-        $manage .= html_writer::tag('a', get_string('delete'), array('href' => $url, 'title' => get_string('deletethisepisode', 'pcast')));
+        $url = new moodle_url('/mod/pcast/deleteepisode.php',
+                   array('id' => $cm->id, 'episode' => $episode->id, 'prevmode' => 0));
+        $manage .= html_writer::tag('a', get_string('delete'),
+                   array('href' => $url, 'title' => get_string('deletethisepisode', 'pcast')));
 
     }
 
@@ -1350,12 +1390,16 @@ function pcast_display_episode_full($episode, $cm, $course) {
     if ((has_capability('mod/pcast:approve', $context)) and ($episode->requireapproval)) {
         if (!$episode->approved) {
             // Approve link.
-            $url = new moodle_url('/mod/pcast/approveepisode.php', array('eid' => $episode->id, 'mode' => PCAST_APPROVAL_VIEW, 'sesskey' => sesskey()));
-            $approve .= html_writer::tag('a', get_string('approve'), array('href' => $url, 'title' => get_string('approvethisepisode', 'pcast')));
+            $url = new moodle_url('/mod/pcast/approveepisode.php',
+                        array('eid' => $episode->id, 'mode' => PCAST_APPROVAL_VIEW, 'sesskey' => sesskey()));
+            $approve .= html_writer::tag('a', get_string('approve'),
+                        array('href' => $url, 'title' => get_string('approvethisepisode', 'pcast')));
         } else {
             // Disapprove link.
-            $url = new moodle_url('/mod/pcast/approveepisode.php', array('eid' => $episode->id, 'newstate' => PCAST_EPISODE_DISAPPROVE, 'sesskey' => sesskey()));
-            $approve .= html_writer::tag('a', get_string('disapprove', 'pcast'), array('href' => $url, 'title' => get_string('disapprovethisepisode', 'pcast')));
+            $url = new moodle_url('/mod/pcast/approveepisode.php',
+                        array('eid' => $episode->id, 'newstate' => PCAST_EPISODE_DISAPPROVE, 'sesskey' => sesskey()));
+            $approve .= html_writer::tag('a', get_string('disapprove', 'pcast'),
+                        array('href' => $url, 'title' => get_string('disapprovethisepisode', 'pcast')));
         }
     }
 
@@ -1599,7 +1643,7 @@ function pcast_get_episode_rating_count($episode, $cm) {
  * @return string image string or nothing depending on $type param
  */
 
-function pcast_display_mediafile_link($episode, $cm, $audioonly=false) {
+function pcast_display_mediafile_link($episode, $cm) {
 
     global $CFG, $OUTPUT;
 
@@ -1609,14 +1653,14 @@ function pcast_display_mediafile_link($episode, $cm, $audioonly=false) {
 
     $fs = get_file_storage();
 
-    $imagereturn = '';
-
     if ($files = $fs->get_area_files($context->id, 'mod_pcast', 'episode', $episode->id, "timemodified", false)) {
         foreach ($files as $file) {
             $filename = $file->get_filename();
             $mimetype = $file->get_mimetype();
-            $iconimage = html_writer::empty_tag('img', array('src' => $OUTPUT->pix_url(file_mimetype_icon($mimetype)), 'class' => 'icon', 'alt' => $mimetype));
-            $path = file_encode_url($CFG->wwwroot.'/pluginfile.php', '/'.$context->id.'/mod_pcast/episode/'.$episode->id.'/'.$filename);
+            $iconimage = html_writer::empty_tag('img', array('src' => $OUTPUT->pix_url(file_mimetype_icon($mimetype)),
+                                                'class' => 'icon', 'alt' => $mimetype));
+            $path = file_encode_url($CFG->wwwroot.'/pluginfile.php',
+                                    '/'.$context->id.'/mod_pcast/episode/'.$episode->id.'/'.$filename);
         }
     }
 

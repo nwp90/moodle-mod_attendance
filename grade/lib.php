@@ -1002,6 +1002,11 @@ function print_grade_page_head($courseid, $active_type, $active_plugin=null,
         grade_extend_settings($plugin_info, $courseid);
     }
 
+    // Set the current report as active in the breadcrumbs.
+    if ($active_plugin !== null && $reportnav = $PAGE->settingsnav->find($active_plugin, navigation_node::TYPE_SETTING)) {
+        $reportnav->make_active();
+    }
+
     $returnval = $OUTPUT->header();
 
     if (!$return) {
@@ -1104,8 +1109,11 @@ class grade_plugin_return {
 
     /**
      * Old syntax of class constructor. Deprecated in PHP7.
+     *
+     * @deprecated since Moodle 3.1
      */
     public function grade_plugin_return($params = null) {
+        debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
         self::__construct($params);
     }
 
@@ -1470,8 +1478,15 @@ class grade_structure {
                         $icon->pix = 'i/outcomes';
                         $icon->title = s(get_string('outcome', 'grades'));
                     } else {
-                        $icon->pix = 'icon';
-                        $icon->component = $element['object']->itemmodule;
+                        $modinfo = get_fast_modinfo($element['object']->courseid);
+                        $module = $element['object']->itemmodule;
+                        $instanceid = $element['object']->iteminstance;
+                        if (isset($modinfo->instances[$module][$instanceid])) {
+                            $icon->url = $modinfo->instances[$module][$instanceid]->get_icon_url();
+                        } else {
+                            $icon->pix = 'icon';
+                            $icon->component = $element['object']->itemmodule;
+                        }
                         $icon->title = s(get_string('modulename', $element['object']->itemmodule));
                     }
                 } else if ($element['object']->itemtype == 'manual') {
@@ -1496,6 +1511,8 @@ class grade_structure {
             if ($spacerifnone) {
                 $outputstr = $OUTPUT->spacer() . ' ';
             }
+        } else if (isset($icon->url)) {
+            $outputstr = html_writer::img($icon->url, $icon->title, $icon->attributes);
         } else {
             $outputstr = $OUTPUT->pix_icon($icon->pix, $icon->title, $icon->component, $icon->attributes);
         }
@@ -2058,8 +2075,11 @@ class grade_seq extends grade_structure {
 
     /**
      * Old syntax of class constructor. Deprecated in PHP7.
+     *
+     * @deprecated since Moodle 3.1
      */
     public function grade_seq($courseid, $category_grade_last=false, $nooutcomes=false) {
+        debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
         self::__construct($courseid, $category_grade_last, $nooutcomes);
     }
 
@@ -2245,9 +2265,12 @@ class grade_tree extends grade_structure {
 
     /**
      * Old syntax of class constructor. Deprecated in PHP7.
+     *
+     * @deprecated since Moodle 3.1
      */
     public function grade_tree($courseid, $fillers=true, $category_grade_last=false,
                                $collapsed=null, $nooutcomes=false) {
+        debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
         self::__construct($courseid, $fillers, $category_grade_last, $collapsed, $nooutcomes);
     }
 
