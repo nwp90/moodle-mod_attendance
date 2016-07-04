@@ -16,8 +16,6 @@ Feature: Enable Block Completion in a course
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
       | student1 | C1     | student        |
-    And the following config values are set as admin:
-      | enablecompletion | 1 |
 
   Scenario: Add the block to a the course where completion is disabled
     Given I log in as "teacher1"

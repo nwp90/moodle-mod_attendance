@@ -69,6 +69,9 @@ if (!defined('FORUM_CRON_USER_CACHE')) {
  */
 define('FORUM_POSTS_ALL_USER_GROUPS', -2);
 
+define('FORUM_DISCUSSION_PINNED', 1);
+define('FORUM_DISCUSSION_UNPINNED', 0);
+
 /// STANDARD FUNCTIONS ///////////////////////////////////////////////////////////
 
 /**
@@ -407,11 +410,10 @@ WHERE
  *
  * @param int $postid The ID of the forum post we are notifying the user about
  * @param int $usertoid The ID of the user being notified
- * @param string $hostname The server's hostname
  * @return string A unique message-id
  */
-function forum_get_email_message_id($postid, $usertoid, $hostname) {
-    return '<'.hash('sha256',$postid.'to'.$usertoid).'@'.$hostname.'>';
+function forum_get_email_message_id($postid, $usertoid) {
+    return generate_email_messageid(hash('sha256', $postid . 'to' . $usertoid));
 }
 
 /**
@@ -593,9 +595,6 @@ function forum_cron() {
 
     if ($users && $posts) {
 
-        $urlinfo = parse_url($CFG->wwwroot);
-        $hostname = $urlinfo['host'];
-
         foreach ($users as $userto) {
             // Terminate if processing of any account takes longer than 2 minutes.
             core_php_time_limit::raise(120);
@@ -748,9 +747,9 @@ function forum_cron() {
 
                 $userfrom->customheaders = array (
                     // Headers to make emails easier to track.
-                    'List-Id: "'        . $cleanforumname . '" <moodleforum' . $forum->id . '@' . $hostname.'>',
+                    'List-Id: "'        . $cleanforumname . '" ' . generate_email_messageid('moodleforum' . $forum->id),
                     'List-Help: '       . $CFG->wwwroot . '/mod/forum/view.php?f=' . $forum->id,
-                    'Message-ID: '      . forum_get_email_message_id($post->id, $userto->id, $hostname),
+                    'Message-ID: '      . forum_get_email_message_id($post->id, $userto->id),
                     'X-Course-Id: '     . $course->id,
                     'X-Course-Name: '   . format_string($course->fullname, true),
 
@@ -786,23 +785,32 @@ function forum_cron() {
                         $canreply
                     );
 
+                $userfrom->customheaders[] = sprintf('List-Unsubscribe: <%s>',
+                    $data->get_unsubscribediscussionlink());
+
                 if (!isset($userto->viewfullnames[$forum->id])) {
                     $data->viewfullnames = has_capability('moodle/site:viewfullnames', $modcontext, $userto->id);
                 } else {
                     $data->viewfullnames = $userto->viewfullnames[$forum->id];
                 }
 
+                // Not all of these variables are used in the default language
+                // string but are made available to support custom subjects.
                 $a = new stdClass();
-                $a->courseshortname = $data->get_coursename();
-                $a->forumname = $cleanforumname;
                 $a->subject = $data->get_subject();
+                $a->forumname = $cleanforumname;
+                $a->sitefullname = format_string($site->fullname);
+                $a->siteshortname = format_string($site->shortname);
+                $a->courseidnumber = $data->get_courseidnumber();
+                $a->coursefullname = $data->get_coursefullname();
+                $a->courseshortname = $data->get_coursename();
                 $postsubject = html_to_text(get_string('postmailsubject', 'forum', $a), 0);
 
-                $rootid = forum_get_email_message_id($discussion->firstpost, $userto->id, $hostname);
+                $rootid = forum_get_email_message_id($discussion->firstpost, $userto->id);
 
                 if ($post->parent) {
                     // This post is a reply, so add reply header (RFC 2822).
-                    $parentid = forum_get_email_message_id($post->parent, $userto->id, $hostname);
+                    $parentid = forum_get_email_message_id($post->parent, $userto->id);
                     $userfrom->customheaders[] = "In-Reply-To: $parentid";
 
                     // If the post is deeply nested we also reference the parent message id and
@@ -1014,18 +1022,13 @@ function forum_cron() {
 
                 $headerdata = new stdClass();
                 $headerdata->sitename = format_string($site->fullname, true);
-                $headerdata->userprefs = $CFG->wwwroot.'/user/edit.php?id='.$userid.'&amp;course='.$site->id;
+                $headerdata->userprefs = $CFG->wwwroot.'/user/forum.php?id='.$userid.'&amp;course='.$site->id;
 
                 $posttext = get_string('digestmailheader', 'forum', $headerdata)."\n\n";
                 $headerdata->userprefs = '<a target="_blank" href="'.$headerdata->userprefs.'">'.get_string('digestmailprefs', 'forum').'</a>';
 
-                $posthtml = "<head>";
-/*                foreach ($CFG->stylesheets as $stylesheet) {
-                    //TODO: MDL-21120
-                    $posthtml .= '<link rel="stylesheet" type="text/css" href="'.$stylesheet.'" />'."\n";
-                }*/
-                $posthtml .= "</head>\n<body id=\"email\">\n";
-                $posthtml .= '<p>'.get_string('digestmailheader', 'forum', $headerdata).'</p><br /><hr size="1" noshade="noshade" />';
+                $posthtml = '<p>'.get_string('digestmailheader', 'forum', $headerdata).'</p>'
+                    . '<br /><hr size="1" noshade="noshade" />';
 
                 foreach ($thesediscussions as $discussionid) {
 
@@ -1078,6 +1081,7 @@ function forum_cron() {
 
                     $postsarray = $discussionposts[$discussionid];
                     sort($postsarray);
+                    $sentcount = 0;
 
                     foreach ($postsarray as $postid) {
                         $post = $posts[$postid];
@@ -1159,6 +1163,7 @@ function forum_cron() {
                                 $userto->markposts[$post->id] = $post->id;
                             }
                         }
+                        $sentcount++;
                     }
                     $footerlinks = array();
                     if ($canunsubscribe) {
@@ -1170,17 +1175,24 @@ function forum_cron() {
                     $posthtml .= "\n<div class='mdl-right'><font size=\"1\">" . implode('&nbsp;', $footerlinks) . '</font></div>';
                     $posthtml .= '<hr size="1" noshade="noshade" /></p>';
                 }
-                $posthtml .= '</body>';
 
                 if (empty($userto->mailformat) || $userto->mailformat != 1) {
                     // This user DOESN'T want to receive HTML
                     $posthtml = '';
                 }
 
-                $attachment = $attachname='';
-                // Directly email forum digests rather than sending them via messaging, use the
-                // site shortname as 'from name', the noreply address will be used by email_to_user.
-                $mailresult = email_to_user($userto, $site->shortname, $postsubject, $posttext, $posthtml, $attachment, $attachname);
+                $eventdata = new \core\message\message();
+                $eventdata->component           = 'mod_forum';
+                $eventdata->name                = 'digests';
+                $eventdata->userfrom            = core_user::get_noreply_user();
+                $eventdata->userto              = $userto;
+                $eventdata->subject             = $postsubject;
+                $eventdata->fullmessage         = $posttext;
+                $eventdata->fullmessageformat   = FORMAT_PLAIN;
+                $eventdata->fullmessagehtml     = $posthtml;
+                $eventdata->notification        = 1;
+                $eventdata->smallmessage        = get_string('smallmessagedigest', 'forum', $sentcount);
+                $mailresult = message_send($eventdata);
 
                 if (!$mailresult) {
                     mtrace("ERROR: mod/forum/cron.php: Could not send out digest mail to user $userto->id ".
@@ -1811,8 +1823,6 @@ function forum_get_all_discussion_posts($discussionid, $sort, $tracking=false) {
     $params = array();
 
     if ($tracking) {
-        $now = time();
-        $cutoffdate = $now - ($CFG->forum_oldpostdays * 24 * 3600);
         $tr_sel  = ", fr.id AS postread";
         $tr_join = "LEFT JOIN {forum_read} fr ON (fr.postid = p.id AND fr.userid = ?)";
         $params[] = $USER->id;
@@ -2614,7 +2624,7 @@ function forum_get_discussions($cm, $forumsort="", $fullpost=true, $unused=-1, $
     }
 
     $allnames = get_all_user_name_fields(true, 'u');
-    $sql = "SELECT $postdata, d.name, d.timemodified, d.usermodified, d.groupid, d.timestart, d.timeend, $allnames,
+    $sql = "SELECT $postdata, d.name, d.timemodified, d.usermodified, d.groupid, d.timestart, d.timeend, d.pinned, $allnames,
                    u.email, u.picture, u.imagealt $umfields
               FROM {forum_discussions} d
                    JOIN {forum_posts} p ON p.discussion = d.id
@@ -2622,17 +2632,15 @@ function forum_get_discussions($cm, $forumsort="", $fullpost=true, $unused=-1, $
                    $umtable
              WHERE d.forum = ? AND p.parent = 0
                    $timelimit $groupselect
-          ORDER BY $forumsort";
+          ORDER BY $forumsort, d.id DESC";
     return $DB->get_records_sql($sql, $params, $limitfrom, $limitnum);
 }
 
 /**
  * Gets the neighbours (previous and next) of a discussion.
  *
- * The calculation is based on the timemodified of the discussion and does not handle
- * the neighbours having an identical timemodified. The reason is that we do not have any
- * other mean to sort the records, e.g. we cannot use IDs as a greater ID can have a lower
- * timemodified.
+ * The calculation is based on the timemodified when time modified or time created is identical
+ * It will revert to using the ID to sort consistently. This is better tha skipping a discussion.
  *
  * For blog-style forums, the calculation is based on the original creation time of the
  * blog post.
@@ -2696,78 +2704,82 @@ function forum_get_discussion_neighbours($cm, $discussion, $forum) {
         }
     }
 
-    if ($forum->type === 'blog') {
-        $params['forumid'] = $cm->instance;
-        $params['discid1'] = $discussion->id;
-        $params['discid2'] = $discussion->id;
+    $params['forumid'] = $cm->instance;
+    $params['discid1'] = $discussion->id;
+    $params['discid2'] = $discussion->id;
+    $params['discid3'] = $discussion->id;
+    $params['discid4'] = $discussion->id;
+    $params['disctimecompare1'] = $discussion->timemodified;
+    $params['disctimecompare2'] = $discussion->timemodified;
+    $params['pinnedstate1'] = (int) $discussion->pinned;
+    $params['pinnedstate2'] = (int) $discussion->pinned;
+    $params['pinnedstate3'] = (int) $discussion->pinned;
+    $params['pinnedstate4'] = (int) $discussion->pinned;
 
-        $sql = "SELECT d.id, d.name, d.timemodified, d.groupid, d.timestart, d.timeend
-                  FROM {forum_discussions} d
-                  JOIN {forum_posts} p ON d.firstpost = p.id
-                 WHERE d.forum = :forumid
-                   AND d.id <> :discid1
-                       $timelimit
-                       $groupselect";
-
-        $sub = "SELECT pp.created
-                  FROM {forum_discussions} dd
-                  JOIN {forum_posts} pp ON dd.firstpost = pp.id
-                 WHERE dd.id = :discid2";
-
-        $prevsql = $sql . " AND p.created < ($sub)
-                       ORDER BY p.created DESC";
-
-        $nextsql = $sql . " AND p.created > ($sub)
-                       ORDER BY p.created ASC";
-
-        $neighbours['prev'] = $DB->get_record_sql($prevsql, $params, IGNORE_MULTIPLE);
-        $neighbours['next'] = $DB->get_record_sql($nextsql, $params, IGNORE_MULTIPLE);
-
-    } else {
-        $params['forumid'] = $cm->instance;
-        $params['discid'] = $discussion->id;
-        $params['disctimemodified'] = $discussion->timemodified;
-
-        $sql = "SELECT d.id, d.name, d.timemodified, d.groupid, d.timestart, d.timeend
-                  FROM {forum_discussions} d
-                 WHERE d.forum = :forumid
-                   AND d.id <> :discid
-                       $timelimit
-                       $groupselect";
-
-        if (empty($CFG->forum_enabletimedposts)) {
-            $prevsql = $sql . " AND d.timemodified < :disctimemodified";
-            $nextsql = $sql . " AND d.timemodified > :disctimemodified";
-
-        } else {
+    $sql = "SELECT d.id, d.name, d.timemodified, d.groupid, d.timestart, d.timeend
+              FROM {forum_discussions} d
+              JOIN {forum_posts} p ON d.firstpost = p.id
+             WHERE d.forum = :forumid
+               AND d.id <> :discid1
+                   $timelimit
+                   $groupselect";
+    $comparefield = "d.timemodified";
+    $comparevalue = ":disctimecompare1";
+    $comparevalue2  = ":disctimecompare2";
+    if (!empty($CFG->forum_enabletimedposts)) {
+        // Here we need to take into account the release time (timestart)
+        // if one is set, of the neighbouring posts and compare it to the
+        // timestart or timemodified of *this* post depending on if the
+        // release date of this post is in the future or not.
+        // This stops discussions that appear later because of the
+        // timestart value from being buried under discussions that were
+        // made afterwards.
+        $comparefield = "CASE WHEN d.timemodified < d.timestart
+                                THEN d.timestart ELSE d.timemodified END";
+        if ($discussion->timemodified < $discussion->timestart) {
             // Normally we would just use the timemodified for sorting
             // discussion posts. However, when timed discussions are enabled,
             // then posts need to be sorted base on the later of timemodified
             // or the release date of the post (timestart).
-            $params['disctimecompare'] = $discussion->timemodified;
-            if ($discussion->timemodified < $discussion->timestart) {
-                $params['disctimecompare'] = $discussion->timestart;
-            }
-
-            // Here we need to take into account the release time (timestart)
-            // if one is set, of the neighbouring posts and compare it to the
-            // timestart or timemodified of *this* post depending on if the
-            // release date of this post is in the future or not.
-            // This stops discussions that appear later because of the
-            // timestart value from being buried under discussions that were
-            // made afterwards.
-            $prevsql = $sql . " AND CASE WHEN d.timemodified < d.timestart
-                                    THEN d.timestart ELSE d.timemodified END < :disctimecompare";
-            $nextsql = $sql . " AND CASE WHEN d.timemodified < d.timestart
-                                    THEN d.timestart ELSE d.timemodified END > :disctimecompare";
+            $params['disctimecompare1'] = $discussion->timestart;
+            $params['disctimecompare2'] = $discussion->timestart;
         }
-        $prevsql .= ' ORDER BY '.forum_get_default_sort_order();
-        $nextsql .= ' ORDER BY '.forum_get_default_sort_order(false);
+    }
+    $orderbydesc = forum_get_default_sort_order(true, $comparefield, 'd', false);
+    $orderbyasc = forum_get_default_sort_order(false, $comparefield, 'd', false);
 
-        $neighbours['prev'] = $DB->get_record_sql($prevsql, $params, IGNORE_MULTIPLE);
-        $neighbours['next'] = $DB->get_record_sql($nextsql, $params, IGNORE_MULTIPLE);
+    if ($forum->type === 'blog') {
+         $subselect = "SELECT pp.created
+                   FROM {forum_discussions} dd
+                   JOIN {forum_posts} pp ON dd.firstpost = pp.id ";
+
+         $subselectwhere1 = " WHERE dd.id = :discid3";
+         $subselectwhere2 = " WHERE dd.id = :discid4";
+
+         $comparefield = "p.created";
+
+         $sub1 = $subselect.$subselectwhere1;
+         $comparevalue = "($sub1)";
+
+         $sub2 = $subselect.$subselectwhere2;
+         $comparevalue2 = "($sub2)";
+
+         $orderbydesc = "d.pinned, p.created DESC";
+         $orderbyasc = "d.pinned, p.created ASC";
     }
 
+    $prevsql = $sql . " AND ( (($comparefield < $comparevalue) AND :pinnedstate1 = d.pinned)
+                         OR ($comparefield = $comparevalue2 AND (d.pinned = 0 OR d.pinned = :pinnedstate4) AND d.id < :discid2)
+                         OR (d.pinned = 0 AND d.pinned <> :pinnedstate2))
+                   ORDER BY CASE WHEN d.pinned = :pinnedstate3 THEN 1 ELSE 0 END DESC, $orderbydesc, d.id DESC";
+
+    $nextsql = $sql . " AND ( (($comparefield > $comparevalue) AND :pinnedstate1 = d.pinned)
+                         OR ($comparefield = $comparevalue2 AND (d.pinned = 1 OR d.pinned = :pinnedstate4) AND d.id > :discid2)
+                         OR (d.pinned = 1 AND d.pinned <> :pinnedstate2))
+                   ORDER BY CASE WHEN d.pinned = :pinnedstate3 THEN 1 ELSE 0 END DESC, $orderbyasc, d.id ASC";
+
+    $neighbours['prev'] = $DB->get_record_sql($prevsql, $params, IGNORE_MULTIPLE);
+    $neighbours['next'] = $DB->get_record_sql($nextsql, $params, IGNORE_MULTIPLE);
     return $neighbours;
 }
 
@@ -2779,9 +2791,10 @@ function forum_get_discussion_neighbours($cm, $discussion, $forum) {
  * @param bool $desc True for DESC, False for ASC.
  * @param string $compare The field in the SQL to compare to normally sort by.
  * @param string $prefix The prefix being used for the discussion table.
+ * @param bool $pinned sort pinned posts to the top
  * @return string
  */
-function forum_get_default_sort_order($desc = true, $compare = 'd.timemodified', $prefix = 'd') {
+function forum_get_default_sort_order($desc = true, $compare = 'd.timemodified', $prefix = 'd', $pinned = true) {
     global $CFG;
 
     if (!empty($prefix)) {
@@ -2790,6 +2803,12 @@ function forum_get_default_sort_order($desc = true, $compare = 'd.timemodified',
 
     $dir = $desc ? 'DESC' : 'ASC';
 
+    if ($pinned == true) {
+        $pinned = "{$prefix}pinned DESC,";
+    } else {
+        $pinned = '';
+    }
+
     $sort = "{$prefix}timemodified";
     if (!empty($CFG->forum_enabletimedposts)) {
         $sort = "CASE WHEN {$compare} < {$prefix}timestart
@@ -2797,7 +2816,7 @@ function forum_get_default_sort_order($desc = true, $compare = 'd.timemodified',
                  ELSE {$compare}
                  END";
     }
-    return "$sort $dir";
+    return "$pinned $sort $dir";
 }
 
 /**
@@ -2913,8 +2932,6 @@ function forum_get_discussions_count($cm) {
     } else {
         $groupselect = "";
     }
-
-    $cutoffdate = $now - ($CFG->forum_oldpostdays*24*60*60);
 
     $timelimit = "";
 
@@ -3061,6 +3078,12 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
 
     // String cache
     static $str;
+    // This is an extremely hacky way to ensure we only print the 'unread' anchor
+    // the first time we encounter an unread post on a page. Ideally this would
+    // be moved into the caller somehow, and be better testable. But at the time
+    // of dealing with this bug, this static workaround was the most surgical and
+    // it fits together with only printing th unread anchor id once on a given page.
+    static $firstunreadanchorprinted = false;
 
     $modcontext = context_module::instance($cm->id);
 
@@ -3186,6 +3209,11 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
     // Prepare an array of commands
     $commands = array();
 
+    // Add a permalink.
+    $permalink = new moodle_url($discussionlink);
+    $permalink->set_anchor('p' . $post->id);
+    $commands[] = array('url' => $permalink, 'text' => get_string('permalink', 'forum'));
+
     // SPECIAL CASE: The front page can display a news item post to non-logged in users.
     // Don't display the mark read / unread controls in this case.
     if ($istracked && $CFG->forum_usermarksread && isloggedin()) {
@@ -3271,7 +3299,11 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
             $forumpostclass = ' read';
         } else {
             $forumpostclass = ' unread';
-            $output .= html_writer::tag('a', '', array('name'=>'unread'));
+            // If this is the first unread post printed then give it an anchor and id of unread.
+            if (!$firstunreadanchorprinted) {
+                $output .= html_writer::tag('a', '', array('id' => 'unread'));
+                $firstunreadanchorprinted = true;
+            }
         }
     } else {
         // ignore trackign status if not tracked or tracked param missing
@@ -3653,9 +3685,14 @@ function forum_print_discussion_header(&$post, $forum, $group = -1, $datestring 
     echo "\n\n";
     echo '<tr class="discussion r'.$rowcount.$timedoutsidewindow.'">';
 
-    // Topic
-    echo '<td class="topic starter">';
-
+    $topicclass = 'topic starter';
+    if (FORUM_DISCUSSION_PINNED == $post->pinned) {
+        $topicclass .= ' pinned';
+    }
+    echo '<td class="'.$topicclass.'">';
+    if (FORUM_DISCUSSION_PINNED == $post->pinned) {
+        echo $OUTPUT->pix_icon('i/pinned', get_string('discussionpinned', 'forum'), 'mod_forum');
+    }
     $canalwaysseetimedpost = $USER->id == $post->userid || $canviewhiddentimedposts;
     if ($timeddiscussion && $canalwaysseetimedpost) {
         echo $PAGE->get_renderer('mod_forum')->timed_discussion_tooltip($post, empty($timedoutsidewindow));
@@ -4371,6 +4408,10 @@ function forum_update_post($post, $mform, &$message) {
         $discussion->name      = $post->subject;
         $discussion->timestart = $post->timestart;
         $discussion->timeend   = $post->timeend;
+
+        if (isset($post->pinned)) {
+            $discussion->pinned = $post->pinned;
+        }
     }
     $post->message = file_save_draft_area_files($post->itemid, $context->id, 'mod_forum', 'post', $post->id,
             mod_forum_post_form::editor_options($context, $post->id), $post->message);
@@ -4403,7 +4444,7 @@ function forum_update_post($post, $mform, &$message) {
 function forum_add_discussion($discussion, $mform=null, $unused=null, $userid=null) {
     global $USER, $CFG, $DB;
 
-    $timenow = time();
+    $timenow = isset($discussion->timenow) ? $discussion->timenow : time();
 
     if (is_null($userid)) {
         $userid = $USER->id;
@@ -5453,7 +5494,7 @@ function forum_print_latest_discussions($course, $forum, $maxdiscussions = -1, $
         } else {
             $ownpost=false;
         }
-        // Use discussion name instead of subject of first post
+        // Use discussion name instead of subject of first post.
         $discussion->subject = $discussion->name;
 
         switch ($displayformat) {
@@ -7789,6 +7830,54 @@ function forum_discussion_view($modcontext, $forum, $discussion) {
     $event = \mod_forum\event\discussion_viewed::create($params);
     $event->add_record_snapshot('forum_discussions', $discussion);
     $event->add_record_snapshot('forum', $forum);
+    $event->trigger();
+}
+
+/**
+ * Set the discussion to pinned and trigger the discussion pinned event
+ *
+ * @param  stdClass $modcontext module context object
+ * @param  stdClass $forum      forum object
+ * @param  stdClass $discussion discussion object
+ * @since Moodle 3.1
+ */
+function forum_discussion_pin($modcontext, $forum, $discussion) {
+    global $DB;
+
+    $DB->set_field('forum_discussions', 'pinned', FORUM_DISCUSSION_PINNED, array('id' => $discussion->id));
+
+    $params = array(
+        'context' => $modcontext,
+        'objectid' => $discussion->id,
+        'other' => array('forumid' => $forum->id)
+    );
+
+    $event = \mod_forum\event\discussion_pinned::create($params);
+    $event->add_record_snapshot('forum_discussions', $discussion);
+    $event->trigger();
+}
+
+/**
+ * Set discussion to unpinned and trigger the discussion unpin event
+ *
+ * @param  stdClass $modcontext module context object
+ * @param  stdClass $forum      forum object
+ * @param  stdClass $discussion discussion object
+ * @since Moodle 3.1
+ */
+function forum_discussion_unpin($modcontext, $forum, $discussion) {
+    global $DB;
+
+    $DB->set_field('forum_discussions', 'pinned', FORUM_DISCUSSION_UNPINNED, array('id' => $discussion->id));
+
+    $params = array(
+        'context' => $modcontext,
+        'objectid' => $discussion->id,
+        'other' => array('forumid' => $forum->id)
+    );
+
+    $event = \mod_forum\event\discussion_unpinned::create($params);
+    $event->add_record_snapshot('forum_discussions', $discussion);
     $event->trigger();
 }
 

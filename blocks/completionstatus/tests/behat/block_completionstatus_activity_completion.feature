@@ -16,8 +16,6 @@ Feature: Enable Block Completion in a course using activity completion
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
       | student1 | C1     | student        |
-    And the following config values are set as admin:
-      | enablecompletion | 1 |
     And the following "activities" exist:
       | activity | course | idnumber | name           | intro                 |
       | page     | C1     | page1    | Test page name | Test page description |

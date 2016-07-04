@@ -35,6 +35,9 @@ env:
     # Run unit tests on Postgres
     - DB=pgsql    TASK=PHPUNIT
 
+    # Perform an upgrade test too.
+    - DB=pgsql    TASK=UPGRADE
+
     # Run a check for unbuilt files with Grunt.
     - DB=none     TASK=GRUNT
 
@@ -59,6 +62,10 @@ matrix:
         - env: DB=none     TASK=GRUNT
           php: 5.4
 
+        # Moodle 2.7 is not compatible with PHP 7 for the upgrade test.
+        - env: DB=pgsql    TASK=UPGRADE
+          php: 7.0
+
 cache:
     directories:
       - $HOME/.composer/cache
@@ -79,7 +86,7 @@ install:
 
 before_script:
     - >
-      if [ "$TASK" = 'PHPUNIT' ];
+      if [ "$TASK" = 'PHPUNIT' -o "$TASK" = 'UPGRADE' ];
       then
         # Copy generic configuration in place.
         cp config-dist.php config.php ;
@@ -163,7 +170,7 @@ before_script:
         # We need the official upstream for comparison
         git remote add upstream https://github.com/moodle/moodle.git;
 
-        git fetch upstream MOODLE_30_STABLE;
+        git fetch upstream MOODLE_31_STABLE;
         export GIT_PREVIOUS_COMMIT="`git merge-base FETCH_HEAD $TRAVIS_COMMIT`";
         export GIT_COMMIT="$TRAVIS_COMMIT";
         export UPSTREAM_FETCH_HEAD=`git rev-parse FETCH_HEAD`
@@ -174,11 +181,30 @@ before_script:
         export phpcmd=`which php`;
       fi
 
-    # Actually run the CI Tests - do this outside of the main test to make output clearer.
+    ########################################################################
+    # Upgrade test
+    ########################################################################
     - >
-      if [ "$TASK" = 'CITEST' ];
+      if [ "$TASK" = 'UPGRADE' ];
       then
-        bash local/ci/php_lint/php_lint.sh;
+        # We need the official upstream.
+        git remote add upstream https://github.com/moodle/moodle.git;
+
+        # Checkout 27 STABLE branch.
+        git fetch upstream MOODLE_27_STABLE;
+        git checkout MOODLE_27_STABLE;
+
+        # Perform the upgrade
+        php admin/cli/install_database.php --agree-license --adminpass=Password --adminemail=admin@example.com --fullname="Upgrade test" --shortname=Upgrade;
+
+        # Return to the previous commit
+        git checkout -;
+
+        # Perform the upgrade
+        php admin/cli/upgrade.php --non-interactive --allow-unstable ;
+
+        # The local_ci repository can be used to check upgrade savepoints.
+        git clone https://github.com/moodlehq/moodle-local_ci.git local/ci ;
       fi
 
 script:
@@ -201,4 +227,21 @@ script:
         # This ensures that we get the status of all files, including new files.
         git add . ;
         git diff --cached --exit-code ;
+      fi
+
+    ########################################################################
+    # Upgrade test
+    ########################################################################
+    - >
+      if [ "$TASK" = 'UPGRADE' ];
+      then
+        cp local/ci/check_upgrade_savepoints/check_upgrade_savepoints.php ./check_upgrade_savepoints.php
+        result=`php check_upgrade_savepoints.php`;
+        # Check if there are problems
+        count=`echo "$result" | grep -P "ERROR|WARN" | wc -l` ;
+        if (($count > 0));
+        then
+          echo "$result"
+          exit 1 ;
+        fi
       fi

@@ -89,6 +89,14 @@ function workshop_add_instance(stdclass $workshop) {
         $workshop->submissiongradepass = unformat_float($workshop->submissiongradepass);
     }
 
+    if (isset($workshop->submissionfiletypes)) {
+        $workshop->submissionfiletypes = workshop::clean_file_extensions($workshop->submissionfiletypes);
+    }
+
+    if (isset($workshop->overallfeedbackfiletypes)) {
+        $workshop->overallfeedbackfiletypes = workshop::clean_file_extensions($workshop->overallfeedbackfiletypes);
+    }
+
     // insert the new record so we get the id
     $workshop->id = $DB->insert_record('workshop', $workshop);
 
@@ -155,6 +163,14 @@ function workshop_update_instance(stdclass $workshop) {
 
     if (isset($workshop->submissiongradepass)) {
         $workshop->submissiongradepass = unformat_float($workshop->submissiongradepass);
+    }
+
+    if (isset($workshop->submissionfiletypes)) {
+        $workshop->submissionfiletypes = workshop::clean_file_extensions($workshop->submissionfiletypes);
+    }
+
+    if (isset($workshop->overallfeedbackfiletypes)) {
+        $workshop->overallfeedbackfiletypes = workshop::clean_file_extensions($workshop->overallfeedbackfiletypes);
     }
 
     // todo - if the grading strategy is being changed, we may want to replace all aggregated peer grades with nulls

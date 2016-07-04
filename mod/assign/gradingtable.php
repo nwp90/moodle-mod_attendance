@@ -833,16 +833,18 @@ class assign_grading_table extends table_sql implements renderable {
         $gradingdisabled = $this->assignment->grading_disabled($row->id);
 
         if (!$this->is_downloading() && $this->hasgrade) {
-            $name = $this->assignment->fullname($row);
-            $icon = $this->output->pix_icon('gradefeedback',
-                                            get_string('gradeuser', 'assign', $name),
-                                            'mod_assign');
             $urlparams = array('id' => $this->assignment->get_course_module()->id,
-                               'rownum'=>$this->rownum,
-                               'action' => 'grade',
-                               'useridlistid' => $this->assignment->get_useridlist_key_id());
+                               'rownum' => 0,
+                               'action' => 'grader');
+
+            if ($this->assignment->is_blind_marking()) {
+                $urlparams['blindid'] = $this->assignment->get_uniqueid_for_user($row->userid);
+            } else {
+                $urlparams['userid'] = $row->userid;
+            }
+
             $url = new moodle_url('/mod/assign/view.php', $urlparams);
-            $link = $this->output->action_link($url, $icon);
+            $link = '<a href="' . $url . '" class="btn btn-primary">' . get_string('grade') . '</a>';
             $grade .= $link . $separator;
         }
 
@@ -1008,10 +1010,15 @@ class assign_grading_table extends table_sql implements renderable {
 
         $actions = array();
 
-        $urlparams = array('id'=>$this->assignment->get_course_module()->id,
-                           'rownum'=>$this->rownum,
-                           'action' => 'grade',
-                           'useridlistid' => $this->assignment->get_useridlist_key_id());
+        $urlparams = array('id' => $this->assignment->get_course_module()->id,
+                               'rownum' => 0,
+                               'action' => 'grader');
+
+        if ($this->assignment->is_blind_marking()) {
+            $urlparams['blindid'] = $this->assignment->get_uniqueid_for_user($row->userid);
+        } else {
+            $urlparams['userid'] = $row->userid;
+        }
         $url = new moodle_url('/mod/assign/view.php', $urlparams);
         $noimage = null;
 
