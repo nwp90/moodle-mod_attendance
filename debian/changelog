@@ -1,3 +1,34 @@
+moodle-site-otagounifom (3.1.0.2016070100+0facmed1-1) jessie; urgency=medium
+
+  * Initial upgrade to 3.1+ prepared by Pierre, for testing
+  * Cherry pick latest patch for block_ajax_marking
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 11 Jul 2016 11:20:55 +1200
+
+moodle-site-otagounifom (3.0.4.2016062300+0facmed2-1) jessie; urgency=medium
+
+  * Fix MySQL-ism in mod_zoom
+  * Fix block_ajax_marking causing tests to fail
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 04 Jul 2016 16:37:07 +1200
+
+moodle-site-otagounifom (3.0.4.2016062300+0facmed1-1) jessie; urgency=medium
+
+  * New upstream version
+  * Plugin updates
+  * Added plugins:
+    - mod_poster
+    - mod_publication
+    - report_roster
+    - tool_syncgroups
+    - format_board
+    - local_purgequestioncategory
+    - local_quickrenamequestioncategories
+    - local_renumberquestioncategory
+    - local_resortquestioncategory
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 30 Jun 2016 14:13:38 +1200
+
 moodle-site-otagounifom (3.0.4.2016052300+0catalyst1-1) jessie; urgency=medium
 
   * Add noredirect patch
