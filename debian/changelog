@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.1.0.2016072100+0facmed1-1) jessie; urgency=medium
+
+  * Upgrade to latest 3.1 weekly.
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 25 Jul 2016 14:24:21 +1200
+
 moodle-site-otagounifom (3.1.0.2016070100+0facmed1-2) jessie; urgency=medium
 
   * Fix debian/install for 3.1
