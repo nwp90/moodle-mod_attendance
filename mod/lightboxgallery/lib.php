@@ -325,8 +325,8 @@ function lightboxgallery_get_participants($galleryid) {
     global $DB, $CFG;
 
     return $DB->get_records_sql("SELECT DISTINCT u.id, u.id
-                                   FROM {$CFG->prefix}user u,
-                                        {$CFG->prefix}lightboxgallery_comments c
+                                   FROM {user} u,
+                                        {lightboxgallery_comments} c
                                   WHERE c.gallery = $galleryid AND u.id = c.userid");
 }
 
@@ -353,7 +353,11 @@ function lightboxgallery_pluginfile($course, $cm, $context, $filearea, $args, $f
     global $CFG, $DB, $USER;
 
     require_once($CFG->libdir.'/filelib.php');
-    require_login($course, false, $cm);
+
+    $gallery = $DB->get_record('lightboxgallery', array('id' => $cm->instance));
+    if (!$gallery->ispublic) {
+        require_login($course, false, $cm);
+    }
 
     $relativepath = implode('/', $args);
     $fullpath = '/'.$context->id.'/mod_lightboxgallery/'.$filearea.'/'.$relativepath;
@@ -420,8 +424,6 @@ function lightboxgallery_get_file_info($browser, $areas, $course, $cm, $context,
         return new lightboxgallery_content_file_info($browser, $context, $storedfile, $urlbase, $areas[$filearea],
                                                         true, true, false, false);
     }
-
-    // Note: folder_intro handled in file_browser automatically.
 
     return null;
 }
