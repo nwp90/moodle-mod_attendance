@@ -46,7 +46,8 @@ $capabilities = array(
     'mod/attendance:changeattendances'
 );
 if (!has_any_capability($capabilities, $context)) {
-    redirect($att->url_view());
+    $url = new moodle_url('/mod/attendance/view.php', array('id' => $cm->id));
+    redirect($url);
 }
 
 $pageparams->init($cm);
@@ -74,7 +75,6 @@ $PAGE->set_url($att->url_manage());
 $PAGE->set_title($course->shortname. ": ".$att->name);
 $PAGE->set_heading($course->fullname);
 $PAGE->set_cacheable(true);
-$PAGE->set_button($OUTPUT->update_module_button($cm->id, 'attendance'));
 $PAGE->navbar->add($att->name);
 
 $output = $PAGE->get_renderer('mod_attendance');

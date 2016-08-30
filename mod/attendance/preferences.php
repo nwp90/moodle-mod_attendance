@@ -53,7 +53,6 @@ $PAGE->set_url($att->url_preferences());
 $PAGE->set_title($course->shortname. ": ".$att->name.' - '.get_string('settings', 'attendance'));
 $PAGE->set_heading($course->fullname);
 $PAGE->set_cacheable(true);
-$PAGE->set_button($OUTPUT->update_module_button($cm->id, 'attendance'));
 $PAGE->navbar->add(get_string('settings', 'attendance'));
 
 $errors = array();
@@ -122,9 +121,7 @@ switch ($att->pageparams->action) {
             $status = $statuses[$id];
             $errors[$id] = $att->update_status($status, $acronym[$id], $description[$id], $grade[$id], null);
         }
-        if ($att->grade > 0) {
-            attendance_update_all_users_grades($att, $cm);
-        }
+        attendance_update_users_grade($att);
         break;
 }
 
