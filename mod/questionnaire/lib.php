@@ -473,23 +473,23 @@ function questionnaire_pluginfile($course, $cm, $context, $filearea, $args, $for
     $componentid = (int)array_shift($args);
 
     if ($filearea != 'question') {
-        if (!$DB->get_record('questionnaire_survey', array('id' => $componentid))) {
+        if (!$DB->record_exists('questionnaire_survey', array('id' => $componentid))) {
             return false;
         }
     } else {
-        if (!$DB->get_record('questionnaire_question', array('id' => $componentid))) {
+        if (!$DB->record_exists('questionnaire_question', array('id' => $componentid))) {
             return false;
         }
     }
 
-    if ($DB->get_record('questionnaire', array('id' => $cm->instance))) {
+    if (!$DB->record_exists('questionnaire', array('id' => $cm->instance))) {
         return false;
     }
 
     $fs = get_file_storage();
     $relativepath = implode('/', $args);
     $fullpath = "/$context->id/mod_questionnaire/$filearea/$componentid/$relativepath";
-    if (!$file = $fs->get_file_by_hash(sha1($fullpath)) || $file->is_directory()) {
+    if (!($file = $fs->get_file_by_hash(sha1($fullpath))) || $file->is_directory()) {
         return false;
     }
 

@@ -168,10 +168,10 @@ class single extends base {
         ";
         $params = [$surveyid, 'y'];
         if ($responseid) {
-            $sql .= " AND qr.id = ?";
+            $sql .= " WHERE qr.id = ?";
             $params[] = $responseid;
         } else if ($userid) {
-            $sql .= " AND qr.username = ?"; // Note: username is the userid.
+            $sql .= " WHERE qr.username = ?"; // Note: username is the userid.
             $params[] = $userid;
         }
 
@@ -187,8 +187,7 @@ class single extends base {
         global $DB;
 
         $userfields = $this->user_fields_sql();
-        $extraselect = '';
-        $extraselect .= 'qrs.choice_id, qro.response, 0 AS rank';
+        $extraselect = 'qrs.choice_id, qro.response, 0 AS rank';
         $alias = 'qrs';
 
         return "
