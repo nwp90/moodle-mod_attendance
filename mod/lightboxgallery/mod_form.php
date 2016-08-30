@@ -59,7 +59,7 @@ class mod_lightboxgallery_mod_form extends moodleform_mod {
         $mform->addElement('header', 'galleryoptions', get_string('advanced'));
 
         $mform->addElement('select', 'perpage', get_string('imagesperpage', 'lightboxgallery'), $this->get_perpage_options());
-        $mform->setType('perpage', PARAM_INTEGER);
+        $mform->setType('perpage', PARAM_INT);
 
         $yesno = array(0 => get_string('no'), 1 => get_string('yes'));
 
@@ -79,32 +79,32 @@ class mod_lightboxgallery_mod_form extends moodleform_mod {
                                 $this->get_autoresize_options());
         $autoresizegroup[] = $mform->createElement('checkbox', 'autoresizedisabled', null, get_string('disable'));
         $mform->addGroup($autoresizegroup, 'autoresizegroup', get_string('autoresize', 'lightboxgallery'), ' ', false);
-        $mform->setType('autoresize', PARAM_INTEGER);
+        $mform->setType('autoresize', PARAM_INT);
         $mform->disabledIf('autoresizegroup', 'autoresizedisabled', 'checked');
         $mform->addHelpButton('autoresizegroup', 'autoresize', 'lightboxgallery');
 
         $mform->addElement('select', 'resize', sprintf('%s (%s)', get_string('edit_resize', 'lightboxgallery'),
                             core_text::strtolower(get_string('upload'))), lightboxgallery_resize_options());
-        $mform->setType('resize', PARAM_INTEGER);
+        $mform->setType('resize', PARAM_INT);
         $mform->disabledIf('resize', 'autoresize', 'eq', 1);
         $mform->disabledIf('resize', 'autoresizedisabled', 'checked');
 
         $mform->addElement('select', 'comments', get_string('allowcomments', 'lightboxgallery'), $yesno);
-        $mform->setType('comments', PARAM_INTEGER);
+        $mform->setType('comments', PARAM_INT);
 
         $mform->addElement('select', 'ispublic', get_string('makepublic', 'lightboxgallery'), $yesno);
-        $mform->setType('ispublic', PARAM_INTEGER);
+        $mform->setType('ispublic', PARAM_INT);
 
         if (lightboxgallery_rss_enabled()) {
             $mform->addElement('select', 'rss', get_string('allowrss', 'lightboxgallery'), $yesno);
-            $mform->setType('rss', PARAM_INTEGER);
+            $mform->setType('rss', PARAM_INT);
         } else {
             $mform->addElement('static', 'rssdisabled', get_string('allowrss', 'lightboxgallery'),
                                 get_string('rssglobaldisabled', 'admin'));
         }
 
         $mform->addElement('select', 'extinfo', get_string('extendedinfo', 'lightboxgallery'), $yesno);
-        $mform->setType('extinfo', PARAM_INTEGER);
+        $mform->setType('extinfo', PARAM_INT);
 
         // Module options.
 
