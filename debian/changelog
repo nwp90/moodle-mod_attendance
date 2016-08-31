@@ -1,3 +1,10 @@
+moodle-site-otagounifom (3.1.1.2016082500+0facmed1-1) jessie; urgency=medium
+
+  * New upstream weekly release
+  * Upgrade outdated plugins to latest release or github versions
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 31 Aug 2016 16:51:40 +1200
+
 moodle-site-otagounifom (3.1.0.2016072100+0facmed1-1) jessie; urgency=medium
 
   * Upgrade to latest 3.1 weekly.
