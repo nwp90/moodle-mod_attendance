@@ -22,6 +22,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+require_once(dirname(__FILE__) . '/calendar_helpers.php');
+
 /**
  * Main class with all Attendance related info.
  *
@@ -50,6 +52,9 @@ class mod_attendance_structure {
     /** @var float number (10, 5) unsigned, the maximum grade for attendance */
     public $grade;
 
+    /** @var int last time attendance was modified - used for global search */
+    public $timemodified;
+
     /** current page parameters */
     public $pageparams;
 
@@ -60,10 +65,6 @@ class mod_attendance_structure {
 
     // Array by sessionid.
     private $sessioninfo = array();
-
-    // Arrays by userid.
-    private $usertakensesscount = array();
-    private $userstatusesstat = array();
 
     /**
      * Initializes the attendance API instance using the data from DB
@@ -233,6 +234,7 @@ class mod_attendance_structure {
             'edate'     => $this->pageparams->enddate,
             'cgroup'    => $this->pageparams->get_current_sesstype());
         $sessions = $DB->get_records_select('attendance_sessions', $where, $params, 'sessdate asc');
+        $statussetmaxpoints = attendance_get_statusset_maxpoints($this->get_statuses(true, true));
         foreach ($sessions as $sess) {
             if (empty($sess->description)) {
                 $sess->description = get_string('nodescription', 'attendance');
@@ -240,6 +242,7 @@ class mod_attendance_structure {
                 $sess->description = file_rewrite_pluginfile_urls($sess->description,
                     'pluginfile.php', $this->context->id, 'mod_attendance', 'session', $sess->id);
             }
+            $sess->maxpoints = $statussetmaxpoints[$sess->statusset];
         }
 
         return $sessions;
@@ -351,6 +354,9 @@ class mod_attendance_structure {
                 $sess->description);
             $DB->set_field('attendance_sessions', 'description', $description, array('id' => $sess->id));
 
+            $sess->caleventid = 0;
+            attendance_create_calendar_event($sess);
+
             $infoarray = array();
             $infoarray[] = construct_session_full_date_time($sess->sessdate, $sess->duration);
 
@@ -391,6 +397,8 @@ class mod_attendance_structure {
 
         $sess->timemodified = time();
         $DB->update_record('attendance_sessions', $sess);
+
+        attendance_update_calendar_event($sess->caleventid, $sess->duration, $sess->sessdate);
 
         $info = construct_session_full_date_time($sess->sessdate, $sess->duration);
         $event = \mod_attendance\event\session_updated::create(array(
@@ -551,10 +559,15 @@ class mod_attendance_structure {
         // Fields we need from the user table.
         $userfields = user_picture::fields('u', array('username' , 'idnumber' , 'institution' , 'department'));
 
-        if (isset($this->pageparams->sort) and ($this->pageparams->sort == ATT_SORT_FIRSTNAME)) {
-            $orderby = "u.firstname ASC, u.lastname ASC, u.idnumber ASC, u.institution ASC, u.department ASC";
+        if (empty($this->pageparams->sort)) {
+            $this->pageparams->sort = ATT_SORT_DEFAULT;
+        }
+        if ($this->pageparams->sort == ATT_SORT_FIRSTNAME) {
+            $orderby = $DB->sql_fullname('u.firstname', 'u.lastname') . ', u.id';
+        } else if ($this->pageparams->sort == ATT_SORT_LASTNAME) {
+            $orderby = 'u.lastname, u.firstname, u.id';
         } else {
-            $orderby = "u.lastname ASC, u.firstname ASC, u.idnumber ASC, u.institution ASC, u.department ASC";
+            list($orderby, $sortparams) = users_order_by_sql('u');
         }
 
         if ($page) {
@@ -678,10 +691,15 @@ class mod_attendance_structure {
               GROUP BY ue.userid, ue.status";
         $params = array('zerotime' => 0, 'uid' => $userid, 'estatus' => ENROL_INSTANCE_ENABLED, 'courseid' => $this->course->id);
         $enrolments = $DB->get_record_sql($sql, $params);
-
-        $user->enrolmentstatus = $enrolments->status;
-        $user->enrolmentstart = $enrolments->mintime;
-        $user->enrolmentend = $enrolments->maxtime;
+        if (!empty($enrolments)) {
+            $user->enrolmentstatus = $enrolments->status;
+            $user->enrolmentstart = $enrolments->mintime;
+            $user->enrolmentend = $enrolments->maxtime;
+        } else {
+            $user->enrolmentstatus = '';
+            $user->enrolmentstart = 0;
+            $user->enrolmentend = 0;
+        }
 
         return $user;
     }
@@ -746,138 +764,8 @@ class mod_attendance_structure {
         return $DB->get_records('attendance_log', array('sessionid' => $sessionid), '', 'studentid,statusid,remarks,id');
     }
 
-    public function get_user_stat($userid) {
-        $ret = array();
-        $ret['completed'] = $this->get_user_taken_sessions_count($userid);
-        $ret['statuses'] = $this->get_user_statuses_stat($userid);
-
-        return $ret;
-    }
-
-    public function get_user_taken_sessions_count($userid) {
-        if (!array_key_exists($userid, $this->usertakensesscount)) {
-            if (!empty($this->pageparams->startdate) && !empty($this->pageparams->enddate)) {
-                $this->usertakensesscount[$userid] = attendance_get_user_taken_sessions_count($this->id, $this->course->startdate,
-                    $userid, $this->cm, $this->pageparams->startdate, $this->pageparams->enddate);
-            } else {
-                $this->usertakensesscount[$userid] = attendance_get_user_taken_sessions_count($this->id, $this->course->startdate,
-                    $userid, $this->cm);
-            }
-        }
-        return $this->usertakensesscount[$userid];
-    }
-
-    /**
-     *
-     * @param type $userid
-     * @param type $filters - An array things to filter by. For now only enddate is valid.
-     * @return type
-     */
-    public function get_user_statuses_stat($userid, array $filters = null) {
-        global $DB;
-        $params = array(
-            'aid'           => $this->id,
-            'cstartdate'    => $this->course->startdate,
-            'uid'           => $userid);
-
-        $processedfilters = array();
-
-        // We test for any valid filters sent.
-        if (isset($filters['enddate'])) {
-            $processedfilters[] = 'ats.sessdate <= :enddate';
-            $params['enddate'] = $filters['enddate'];
-        }
-
-        // Make the filter array into a SQL string.
-        if (!empty($processedfilters)) {
-            $processedfilters = ' AND '.implode(' AND ', $processedfilters);
-        } else {
-            $processedfilters = '';
-        }
-
-        $period = '';
-        if (!empty($this->pageparams->startdate) && !empty($this->pageparams->enddate)) {
-            $period = ' AND ats.sessdate >= :sdate AND ats.sessdate < :edate ';
-            $params['sdate'] = $this->pageparams->startdate;
-            $params['edate'] = $this->pageparams->enddate;
-        }
-
-        if ($this->get_group_mode()) {
-            $qry = "SELECT al.statusid, count(al.statusid) AS stcnt
-                  FROM {attendance_log} al
-                  JOIN {attendance_sessions} ats ON al.sessionid = ats.id
-                  LEFT JOIN {groups_members} gm ON gm.userid = al.studentid AND gm.groupid = ats.groupid
-                 WHERE ats.attendanceid = :aid AND
-                       ats.sessdate >= :cstartdate AND
-                       al.studentid = :uid AND
-                       (ats.groupid = 0 or gm.id is NOT NULL)".$period.$processedfilters."
-              GROUP BY al.statusid";
-        } else {
-            $qry = "SELECT al.statusid, count(al.statusid) AS stcnt
-                  FROM {attendance_log} al
-                  JOIN {attendance_sessions} ats
-                    ON al.sessionid = ats.id
-                 WHERE ats.attendanceid = :aid AND
-                       ats.sessdate >= :cstartdate AND
-                       al.studentid = :uid".$period.$processedfilters."
-              GROUP BY al.statusid";
-        }
-
-        // We do not want to cache, or use a cached version of the results when a filter is set.
-        if ($filters !== null) {
-            return $DB->get_records_sql($qry, $params);
-        } else if (!array_key_exists($userid, $this->userstatusesstat)) {
-            // Not filtered so if we do not already have them do the query.
-            $this->userstatusesstat[$userid] = $DB->get_records_sql($qry, $params);
-        }
-
-        // Return the cached stats.
-        return $this->userstatusesstat[$userid];
-    }
-
-    /**
-     *
-     * @param type $userid
-     * @param type $filters - An array things to filter by. For now only enddate is valid.
-     * @return type
-     */
-    public function get_user_grade($userid, array $filters = null) {
-        return attendance_get_user_grade($this->get_user_statuses_stat($userid, $filters), $this->get_statuses(true, true));
-    }
-
-    // For getting sessions count implemented simplest method - taken sessions.
-    // It can have error if users don't have attendance info for some sessions.
-    // In the future we can implement another methods:
-    // * all sessions between user start enrolment date and now;
-    // * all sessions between user start and end enrolment date.
-    // While implementing those methods we need recalculate grades of all users
-    // on session adding.
-    public function get_user_max_grade($userid) {
-        return attendance_get_user_max_grade($this->get_user_taken_sessions_count($userid), $this->get_statuses(true, true));
-    }
-
     public function update_users_grade($userids) {
-        global $DB;
-        $grades = array();
-
-        if ($this->grade < 0) {
-            $dbparams = array('id' => -($this->grade));
-            $this->scale = $DB->get_record('scale', $dbparams);
-            $scalearray = explode(',', $this->scale->scale);
-            $attendancegrade = count($scalearray);
-        } else {
-            $attendancegrade = $this->grade;
-        }
-
-        foreach ($userids as $userid) {
-            $grades[$userid] = new stdClass();
-            $grades[$userid]->userid = $userid;
-            $grades[$userid]->rawgrade = attendance_calc_user_grade_fraction($this->get_user_grade($userid),
-                    $this->get_user_max_grade($userid)) * $attendancegrade;
-        }
-
-        return grade_update('mod/attendance', $this->course->id, 'mod', 'attendance',
-            $this->id, 0, $grades);
+        attendance_update_users_grade($this, $userids);
     }
 
     public function get_user_filtered_sessions_log($userid) {
@@ -950,7 +838,7 @@ class mod_attendance_structure {
                      WHERE $where AND (ats.groupid = 0 or gm.id is NOT NULL)
                   ORDER BY ats.sessdate ASC";
         } else {
-            $sql = "SELECT $id, ats.id, ats.groupid, ats.sessdate, ats.duration, ats.description,
+            $sql = "SELECT $id, ats.id, ats.groupid, ats.sessdate, ats.duration, ats.description, ats.statusset,
                            al.statusid, al.remarks, ats.studentscanmark
                       FROM {attendance_sessions} ats
                 RIGHT JOIN {attendance_log} al
@@ -981,7 +869,7 @@ class mod_attendance_structure {
             $where = "ats.attendanceid = :aid AND ats.sessdate >= :csdate AND ats.groupid $gsql";
         }
 
-        $sql = "SELECT $id, ats.id, ats.groupid, ats.sessdate, ats.duration, ats.description,
+        $sql = "SELECT $id, ats.id, ats.groupid, ats.sessdate, ats.duration, ats.description, ats.statusset,
                        al.statusid, al.remarks, ats.studentscanmark
                   FROM {attendance_sessions} ats
              LEFT JOIN {attendance_log} al
@@ -1006,6 +894,9 @@ class mod_attendance_structure {
 
     public function delete_sessions($sessionsids) {
         global $DB;
+        if (attendance_existing_calendar_events_ids($sessionsids)) {
+            attendance_delete_calendar_events($sessionsids);
+        }
 
         list($sql, $params) = $DB->get_in_or_equal($sessionsids);
         $DB->delete_records_select('attendance_log', "sessionid $sql", $params);
@@ -1027,6 +918,9 @@ class mod_attendance_structure {
             $sess->duration = $duration;
             $sess->timemodified = $now;
             $DB->update_record('attendance_sessions', $sess);
+            if ($sess->caleventid) {
+                attendance_update_calendar_event($sess->caleventid, $duration);
+            }
             $event = \mod_attendance\event\session_duration_updated::create(array(
                 'objectid' => $this->id,
                 'context' => $this->context,

@@ -48,11 +48,9 @@ class mod_publication_mod_form extends moodleform_mod{
      * Define this form - called by the parent constructor
      */
     public function definition() {
-        global $DB, $CFG, $COURSE, $PAGE, $OUTPUT;
+        global $DB, $CFG, $COURSE, $PAGE;
 
         $PAGE->requires->js_call_amd('mod_publication/modform', 'initializer', array());
-
-        $config = get_config('publication');
 
         $mform = $this->_form;
         $mform->addElement('header', 'general', get_string('general', 'form'));
@@ -114,6 +112,11 @@ class mod_publication_mod_form extends moodleform_mod{
         if (count($disabled) == 0) {
             $mform->disabledif ('importfrom', 'mode', 'neq', PUBLICATION_MODE_IMPORT);
         }
+
+        $mform->addElement('advcheckbox', 'autoimport', get_string('autoimport', 'publication'));
+        $mform->setDefault('autoimport', get_config('publication', 'autoimport'));
+        $mform->addHelpButton('autoimport', 'autoimport', 'publication');
+        $mform->disabledIf('autoimport', 'mode', 'neq', PUBLICATION_MODE_IMPORT);
 
         $attributes = array();
         if (isset($this->current->id) && isset($this->current->obtainstudentapproval)) {

@@ -59,23 +59,21 @@ echo $OUTPUT->doctype() ?>
 
 <div id="page-header">
 
-        <div class="rounded-corner top-left"></div>
-        <div class="rounded-corner top-right"></div>
+    <div class="rounded-corner top-left"></div>
+    <div class="rounded-corner top-right"></div>
 
-            <div class="headermenu"><?php
-            echo $OUTPUT->login_info();
-            echo $OUTPUT->lang_menu();
-            echo $PAGE->headingmenu;
-        ?></div>
+        <div class="headermenu"><?php
+        echo $OUTPUT->login_info();
+        echo $OUTPUT->lang_menu();
+        echo $PAGE->headingmenu;
+    ?></div>
 
-        <h1 class="headermain"><?php echo $PAGE->heading ?></h1>
+    <h1 class="headermain"><?php echo $PAGE->heading ?></h1>
 
-        <?php if ($hastagline) { ?>
-            <h2 class="tagline"><?php echo $PAGE->theme->settings->tagline;?></h2>
-        <?php } ?>
-
-
-        <?php
+    <?php
+    if ($hastagline) { ?>
+        <h2 class="tagline"><?php echo $PAGE->theme->settings->tagline;?></h2><?php
+    }
     if ($hascustommenu) { ?>
         <div id="custommenu"><?php echo $custommenu; ?></div>
         <?php

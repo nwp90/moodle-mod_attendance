@@ -43,5 +43,83 @@ function xmldb_qtype_pmatch_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2013021201, 'qtype', 'pmatch');
     }
 
+    if ($oldversion < 2015101300) {
+        // Define table qtype_pmatch_test_responses to be created.
+        $table = new xmldb_table('qtype_pmatch_test_responses');
+
+        // Adding fields to table qtype_pmatch_test_responses.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('questionid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('response', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('expectedfraction', XMLDB_TYPE_NUMBER, '12, 7', null, null, null, '0');
+        $table->add_field('gradedfraction', XMLDB_TYPE_NUMBER, '12, 7', null, null, null, null);
+
+        // Adding keys to table qtype_pmatch_test_responses.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->add_key('questionid', XMLDB_KEY_FOREIGN, array('questionid'), 'question', array('id'));
+
+        // Conditionally launch create table for qtype_pmatch_test_responses.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Question savepoint reached.
+        upgrade_plugin_savepoint(true, 2015101200, 'qtype', 'pmatch');
+    }
+
+    if ($oldversion < 2016010400) {
+        // Define table qtype_pmatch_rule_matches to be created.
+        $table = new xmldb_table('qtype_pmatch_rule_matches');
+
+        // Adding fields to table qtype_pmatch_rule_matches.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('answerid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('testresponseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table qtype_pmatch_rule_matches.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->add_key('answerid', XMLDB_KEY_FOREIGN, array('answerid'), 'question_answers', array('id'));
+        $table->add_key('testresponseid', XMLDB_KEY_FOREIGN, array('testresponseid'), 'qtype_pmatch_test_responses', array('id'));
+
+        // Conditionally launch create table for qtype_pmatch_rule_matches.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Question savepoint reached.
+        upgrade_plugin_savepoint(true, 2016010400, 'qtype', 'pmatch');
+    }
+
+    if ($oldversion < 2016012600) {
+
+            // Define field questionid to be added to qtype_pmatch_rule_matches.
+        $table = new xmldb_table('qtype_pmatch_rule_matches');
+        $field = new xmldb_field('questionid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'testresponseid');
+        $key = new xmldb_key('questionid', XMLDB_KEY_FOREIGN, array('questionid'), 'question', array('id'));
+
+        // Conditionally launch add field questionid.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+            // Launch add key questionid.
+            $dbman->add_key($table, $key);
+        }
+
+        // Pmatch savepoint reached.
+        upgrade_plugin_savepoint(true, 2016012600, 'qtype', 'pmatch');
+    }
+
+    if ($oldversion < 2016020500) {
+        // Correct not null fields.
+        $table = new xmldb_table('qtype_pmatch_test_responses');
+        if ($dbman->table_exists($table)) {
+            $field = new xmldb_field('response', XMLDB_TYPE_TEXT, null, null, null, null, null);
+            $dbman->change_field_notnull($table, $field);
+            $field = new xmldb_field('expectedfraction', XMLDB_TYPE_NUMBER, '12, 7', null, null, null, '0');
+            $dbman->change_field_notnull($table, $field);
+        }
+        // Question savepoint reached.
+        upgrade_plugin_savepoint(true, 2016020500, 'qtype', 'pmatch');
+    }
+
     return true;
 }

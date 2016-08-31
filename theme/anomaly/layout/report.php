@@ -25,18 +25,18 @@
 $hasheading = ($PAGE->heading);
 $hasnavbar = (empty($PAGE->layout_options['nonavbar']) && $PAGE->has_navbar());
 $hasfooter = (empty($PAGE->layout_options['nofooter']));
-$hassidepre = (empty($PAGE->layout_options['noblocks']) && $PAGE->blocks->region_has_content('side-pre', $OUTPUT));
-$hassidepost = (empty($PAGE->layout_options['noblocks']) && $PAGE->blocks->region_has_content('side-post', $OUTPUT));
 $haslogininfo = (empty($PAGE->layout_options['nologininfo']));
 
+$hassidepre = (empty($PAGE->layout_options['noblocks']) && $PAGE->blocks->region_has_content('side-pre', $OUTPUT));
 $showsidepre = ($hassidepre && !$PAGE->blocks->region_completely_docked('side-pre', $OUTPUT));
-$showsidepost = ($hassidepost && !$PAGE->blocks->region_completely_docked('side-post', $OUTPUT));
 
 $custommenu = $OUTPUT->custom_menu();
 $hascustommenu = (empty($PAGE->layout_options['nocustommenu']) && !empty($custommenu));
 
 $bodyclasses = array();
-if (!$showsidepre) {
+if ($showsidepre) {
+    $bodyclasses[] = 'side-pre-only';
+} else {
     $bodyclasses[] = 'content-only';
 }
 if ($hascustommenu) {
@@ -66,8 +66,8 @@ echo $OUTPUT->doctype() ?>
 <body id="<?php p($PAGE->bodyid) ?>" class="<?php p($PAGE->bodyclasses.' '.join(' ', $bodyclasses)) ?>">
 <?php echo $OUTPUT->standard_top_of_body_html() ?>
 
-<div id="page">
-<?php if ($hasheading || $hasnavbar) { ?>
+<div id="page"><?php
+if ($hasheading || $hasnavbar) { ?>
     <div id="page-header">
         <div class="rounded-corner top-left"></div>
         <div class="rounded-corner top-right"></div>
@@ -75,11 +75,12 @@ echo $OUTPUT->doctype() ?>
         <h1 class="headermain"><?php echo $PAGE->heading ?></h1>
         <div class="headermenu"><?php
             echo $OUTPUT->login_info();
-            if (!empty($PAGE->layout_options['langmenu'])) {
+        if (!empty($PAGE->layout_options['langmenu'])) {
                 echo $OUTPUT->lang_menu();
-            }
+        }
             echo $PAGE->headingmenu
-        ?></div><?php } ?>
+        ?></div><?php
+} ?>
 
         <?php if (!empty($courseheader)) { ?>
             <div id="course-header"><?php echo $courseheader; ?></div>

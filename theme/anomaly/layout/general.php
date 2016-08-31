@@ -70,8 +70,8 @@ echo $OUTPUT->doctype() ?>
 <body id="<?php p($PAGE->bodyid) ?>" class="<?php p($PAGE->bodyclasses.' '.join(' ', $bodyclasses)) ?>">
 <?php echo $OUTPUT->standard_top_of_body_html() ?>
 
-<div id="page">
-<?php if ($hasheading || $hasnavbar || !empty($courseheader)) { ?>
+<div id="page"><?php
+if ($hasheading || $hasnavbar || !empty($courseheader)) { ?>
     <div id="page-header">
         <div class="rounded-corner top-left"></div>
         <div class="rounded-corner top-right"></div>
@@ -79,11 +79,12 @@ echo $OUTPUT->doctype() ?>
         <h1 class="headermain"><?php echo $PAGE->heading ?></h1>
         <div class="headermenu"><?php
             echo $OUTPUT->login_info();
-            if (!empty($PAGE->layout_options['langmenu'])) {
+        if (!empty($PAGE->layout_options['langmenu'])) {
                 echo $OUTPUT->lang_menu();
-            }
+        }
             echo $PAGE->headingmenu
-        ?></div><?php } ?>
+        ?></div><?php
+} ?>
 
         <?php if (!empty($courseheader)) { ?>
             <div id="course-header"><?php echo $courseheader; ?></div>

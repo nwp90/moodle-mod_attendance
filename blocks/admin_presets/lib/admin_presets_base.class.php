@@ -302,7 +302,8 @@ class admin_presets_base {
 
                 if ($child->settings) {
 
-                    foreach ($child->settings as $settingname => $values) {
+                    foreach ($child->settings as $values) {
+                        $settingname = $values->name;
 
                         unset($settingvalue);
 
@@ -337,7 +338,6 @@ class admin_presets_base {
 
                         // If there aren't any value loaded, skip that setting
                         if (!isset($settingvalue)) {
-                            //debugging('Setting '.$settingname.' skipped because it doesn\'t have value');
                             continue;
                         }
 
@@ -346,7 +346,7 @@ class admin_presets_base {
                         if (!$setting = $this->_get_setting($values, $settingvalue)) {
 
                             if (get_class($values) != 'admin_setting_heading') {
-                                //debugging(get_class($values).' class is not going to export/import settings');
+                                //debugging(get_class($values).' class is not going to export/import settings', DEBUG_DEVELOPER);
                             }
                             continue;
                         }
@@ -492,8 +492,8 @@ class admin_presets_base {
                     // The name of that page tree node
                     $pagenode = $child->name.'Node';
 
-                    foreach ($child->settings as $settingname => $values) {
-
+                    foreach ($child->settings as $values) {
+                        $settingname = $values->name;
 
                         // IF no plugin was specified mark as 'none'
                         if (!$plugin = $values->plugin) {

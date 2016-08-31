@@ -60,7 +60,7 @@ class publication{
      * @param context_module $context (optional) Course Module Context
      */
     public function __construct($cm, $course=null, $context=null) {
-        global $PAGE, $DB;
+        global $DB;
 
         $this->coursemodule = $cm;
 
@@ -293,86 +293,43 @@ class publication{
     }
 
     /**
-     * Display form with table containing all files
+     * Get userids to fetch files for, when displaying all submitted files or downloading them as ZIP
+     *
+     * @param int[] $customusers (optional) user ids for which the returned user ids have to filter
+     * @return int[] array of userids
      */
-    public function display_allfilesform() {
-        global $CFG, $OUTPUT, $DB, $USER;
+    public function get_users($users = array()) {
+        global $DB;
 
-        $cm = $this->coursemodule;
-        $context = $this->context;
-        $course = $this->course;
+        $customusers = '';
 
-        $updatepref = optional_param('updatepref', 0, PARAM_BOOL);
-        if ($updatepref) {
-            $perpage = optional_param('perpage', 10, PARAM_INT);
-            $perpage = ($perpage <= 0) ? 10 : $perpage;
-            $filter = optional_param('filter', 0, PARAM_INT);
-            set_user_preference('publication_perpage', $perpage);
+        if (is_array($users) && count($users) > 0) {
+            $customusers = " and u.id IN (" . implode($users, ', ') . ") ";
+        } else if ($users === false) {
+            return array();
         }
-
-        /* next we get perpage and quickgrade (allow quick grade) params
-         * from database
-        */
-        $perpage    = get_user_preferences('publication_perpage', 10);
-        $quickgrade = get_user_preferences('publication_quickgrade', 0);
-        $filter = get_user_preferences('publicationfilter', 0);
-
-        $page    = optional_param('page', 0, PARAM_INT);
-
-        $formattrs = array();
-        $formattrs['action'] = new moodle_url('/mod/publication/view.php');
-        $formattrs['id'] = 'fastg';
-        $formattrs['method'] = 'post';
-        $formattrs['class'] = 'mform';
-
-        $html = '';
-        $html .= html_writer::start_tag('form', $formattrs);
-        $html .= html_writer::empty_tag('input', array('type' => 'hidden',
-                'name' => 'id', 'value' => $this->get_coursemodule()->id));
-        $html .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'page',    'value' => $page));
-        $html .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()));
-        echo $html;
-
-        echo html_writer::start_tag('div', array('id' => 'id_allfiles', 'class' => 'clearfix', 'aria-live' => 'polite'));
-        $allfiles = get_string('allfiles', 'publication');
-        $publicfiles = get_string('publicfiles', 'publication');
-        $title = (has_capability('mod/publication:approve', $context)) ? $allfiles : $publication;
-        echo html_writer::tag('div', $title, array('class'  => 'legend'));
-        echo html_writer::start_div('fcontainer clearfix');
-
-        // Check to see if groups are being used in this assignment.
 
         // Find out current groups mode.
-        $groupmode = groups_get_activity_groupmode($cm);
-        $currentgroup = groups_get_activity_group($cm, true);
-
-        echo groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/publication/view.php?id=' . $cm->id, true);
-
-        $html = '';
+        $currentgroup = groups_get_activity_group($this->get_coursemodule(), true);
 
         // Get all ppl that are allowed to submit assignments.
-        list($esql, $params) = get_enrolled_sql($context, 'mod/publication:view', $currentgroup);
+        list($esql, $params) = get_enrolled_sql($this->context, 'mod/publication:view', $currentgroup);
 
-        $showall = false;
-
-        if (has_capability('mod/publication:approve', $context) ||
-            has_capability('mod/publication:grantextension', $context)) {
-            $showall = true;
-        }
-
-        if ($showall) {
+        if (has_capability('mod/publication:approve', $this->context)
+                || has_capability('mod/publication:grantextension', $this->context)) {
+            // We can skip the approval-checks for teachers!
             $sql = 'SELECT u.id FROM {user} u '.
                     'LEFT JOIN ('.$esql.') eu ON eu.id=u.id '.
-                    'WHERE u.deleted = 0 AND eu.id=u.id ';
+                    'WHERE u.deleted = 0 AND eu.id=u.id '. $customusers;
         } else {
             $sql = 'SELECT u.id FROM {user} u '.
                     'LEFT JOIN ('.$esql.') eu ON eu.id=u.id '.
                     'LEFT JOIN {publication_file} files ON (u.id = files.userid) '.
-                    'WHERE u.deleted = 0 AND eu.id=u.id '.
+                    'WHERE u.deleted = 0 AND eu.id=u.id '. $customusers .
                     'AND files.publication = '. $this->get_instance()->id . ' ';
 
             if ($this->get_instance()->mode == PUBLICATION_MODE_UPLOAD) {
-                // Node upload.
+                // Mode upload.
                 if ($this->get_instance()->obtainteacherapproval) {
                     // Need teacher approval.
 
@@ -397,17 +354,66 @@ class publication{
             $sql .= 'GROUP BY u.id';
         }
 
-        $users = $DB->get_records_sql($sql, $params);
-        if (!empty($users)) {
-            $users = array_keys($users);
+        $users = $DB->get_fieldset_sql($sql, $params);
+
+        return $users;
+    }
+
+    /**
+     * Display form with table containing all files
+     */
+    public function display_allfilesform() {
+        global $CFG, $OUTPUT, $DB;
+
+        $cm = $this->coursemodule;
+        $context = $this->context;
+        $course = $this->course;
+
+        $updatepref = optional_param('updatepref', 0, PARAM_BOOL);
+        if ($updatepref) {
+            $perpage = optional_param('perpage', 10, PARAM_INT);
+            $perpage = ($perpage <= 0) ? 10 : $perpage;
+            $filter = optional_param('filter', 0, PARAM_INT);
+            set_user_preference('publication_perpage', $perpage);
         }
 
-        // If groupmembersonly used, remove users who are not in any group.
-        if ($users and !empty($CFG->enablegroupmembersonly) and $cm->groupmembersonly) {
-            if ($groupingusers = groups_get_grouping_members($cm->groupingid, 'u.id', 'u.id')) {
-                $users = array_intersect($users, array_keys($groupingusers));
-            }
-        }
+        // Next we get perpage param from database!
+        $perpage    = get_user_preferences('publication_perpage', 10);
+        $filter = get_user_preferences('publicationfilter', 0);
+
+        $page    = optional_param('page', 0, PARAM_INT);
+
+        $formattrs = array();
+        $formattrs['action'] = new moodle_url('/mod/publication/view.php');
+        $formattrs['id'] = 'fastg';
+        $formattrs['method'] = 'post';
+        $formattrs['class'] = 'mform';
+
+        $html = '';
+        $html .= html_writer::start_tag('form', $formattrs);
+        $html .= html_writer::empty_tag('input', array('type' => 'hidden',
+                'name' => 'id', 'value' => $this->get_coursemodule()->id));
+        $html .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'page',    'value' => $page));
+        $html .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()));
+        echo $html;
+
+        echo html_writer::start_tag('div', array('id' => 'id_allfiles', 'class' => 'clearfix', 'aria-live' => 'polite'));
+        $allfiles = get_string('allfiles', 'publication');
+        $publicfiles = get_string('publicfiles', 'publication');
+        $title = (has_capability('mod/publication:approve', $context)) ? $allfiles : $publicfiles;
+        echo html_writer::tag('div', $title, array('class'  => 'legend'));
+        echo html_writer::start_div('fcontainer clearfix');
+
+        // Check to see if groups are being used in this assignment.
+
+        // Find out current groups mode.
+        $currentgroup = groups_get_activity_group($cm, true);
+
+        echo groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/publication/view.php?id=' . $cm->id, true);
+
+        $html = '';
+
+        $users = $this->get_users();
 
         $selectallnone = html_writer::checkbox('selectallnone', false, false, '', array('id'      => 'selectallnone',
                                                                                         'onClick' => 'toggle_userselection()'));
@@ -489,6 +495,7 @@ class publication{
         $totalfiles = 0;
 
         if (!empty($users)) {
+            list($usersql, $userparams) = $DB->get_in_or_equal($users, SQL_PARAMS_NAMED);
             $select = 'SELECT '.$ufields.', '.$useridentityfields.' username,
                                 COUNT(*) filecount,
                                 SUM(files.studentapproval) as status,
@@ -496,33 +503,27 @@ class publication{
             $sql = 'FROM {user} u '.
                     'LEFT JOIN {publication_file} files ON u.id = files.userid
                             AND files.publication = '.$this->get_instance()->id.' '.
-                                'WHERE '.$where.'u.id IN ('.implode(', ', $users).') '.
+                                'WHERE '.$where.'u.id '.$usersql.' '.
                                 'GROUP BY '.$ufields.', '.$useridentityfields.' username ';
+            $params = array_merge($params, $userparams);
 
             $ausers = $DB->get_records_sql($select.$sql.$sort, $params, $table->get_page_start(), $table->get_page_size());
             $table->pagesize($perpage, count($users));
 
             // Offset used to calculate index of student in that particular query, needed for the pop up to know who's next.
             $offset = $page * $perpage;
-            $strupdate = get_string('update');
 
             if ($ausers !== false) {
                 $endposition = $offset + $perpage;
                 $currentposition = 0;
 
-                $valid = $OUTPUT->pix_icon('i/valid',
-                        get_string('student_approved', 'publication'));
-                $questionmark = $OUTPUT->pix_icon('questionmark',
-                        get_string('student_pending', 'publication'),
-                        'mod_publication');
-                $invalid = $OUTPUT->pix_icon('i/invalid',
-                        get_string('student_rejected', 'publication'));
+                $valid = $OUTPUT->pix_icon('i/valid', get_string('student_approved', 'publication'));
+                $questionmark = $OUTPUT->pix_icon('questionmark', get_string('student_pending', 'publication'), 'mod_publication');
+                $invalid = $OUTPUT->pix_icon('i/invalid', get_string('student_rejected', 'publication'));
 
-                $visibleforstundetsyes = $OUTPUT->pix_icon('i/valid',
-                        get_string('visibleforstudents_yes', 'publication'));
+                $studvisibleyes = $OUTPUT->pix_icon('i/valid', get_string('visibleforstudents_yes', 'publication'));
 
-                $visibleforstundetsno = $OUTPUT->pix_icon('i/invalid',
-                        get_string('visibleforstudents_no', 'publication'));
+                $studvisibleno = $OUTPUT->pix_icon('i/invalid', get_string('visibleforstudents_no', 'publication'));
 
                 foreach ($ausers as $auser) {
                     if ($currentposition >= $offset && $currentposition < $endposition) {
@@ -606,9 +607,9 @@ class publication{
                             }
 
                             if ($this->has_filepermission($file->get_id())) {
-                                $visibleforuserstable->data[] = array($visibleforstundetsyes);
+                                $visibleforuserstable->data[] = array($studvisibleyes);
                             } else {
-                                $visibleforuserstable->data[] = array($visibleforstundetsno);
+                                $visibleforuserstable->data[] = array($studvisibleno);
                             }
 
                             if ($showfile) {
@@ -893,9 +894,6 @@ class publication{
         }
 
         if ($allowed) {
-            $sid = $record->userid;
-            $filearea = 'attachment';
-
             $fs = get_file_storage();
             $file = $fs->get_file_by_id($fileid);
             send_file($file, $file->get_filename(), 'default' , 0, false, true, $file->get_mimetype(), false);
@@ -922,82 +920,15 @@ class publication{
 
         $filesforzipping = array();
         $fs = get_file_storage();
-        $filearea = 'attachment';
-
-        // Find out current groups mode.
-        $groupmode = groups_get_activity_groupmode($this->get_coursemodule());
-        $currentgroup = groups_get_activity_group($this->get_coursemodule(), true);
 
         // Get group name for filename.
         $groupname = '';
-
-        // Get all ppl that are allowed to submit assignments.
-        list($esql, $params) = get_enrolled_sql($context, 'mod/publication:view', $currentgroup);
-
-        $showall = false;
-
-        if (has_capability('mod/publication:approve', $context) ||
-        has_capability('mod/publication:grantextension', $context)) {
-            $showall = true;
+        $currentgroup = groups_get_activity_group($cm, true);
+        if (!empty($currentgroup)) {
+            $groupname = $DB->get_field('groups', 'name', array('id' => $currentgroup)).'-';
         }
 
-        $customusers = '';
-
-        if (is_array($users) && count($users) > 0) {
-            $customusers = " and u.id IN (" . implode($users, ', ') . ") ";
-
-        } else if ($users == false) {
-            $customusers = " AND 1=2 ";
-        }
-
-        if ($showall) {
-            $sql = 'SELECT u.id FROM {user} u '.
-                    'LEFT JOIN ('.$esql.') eu ON eu.id=u.id '.
-                    'WHERE u.deleted = 0 AND eu.id=u.id '. $customusers;
-        } else {
-            $sql = 'SELECT u.id FROM {user} u '.
-                    'LEFT JOIN ('.$esql.') eu ON eu.id=u.id '.
-                    'LEFT JOIN {publication_file} files ON (u.id = files.userid) '.
-                    'WHERE u.deleted = 0 AND eu.id=u.id '. $customusers .
-                    'AND files.publication = '. $this->get_instance()->id . ' ';
-
-            if ($this->get_instance()->mode == PUBLICATION_MODE_UPLOAD) {
-                // Mode upload.
-                if ($this->get_instance()->obtainteacherapproval) {
-                    // Need teacher approval.
-
-                    $where = 'files.teacherapproval = 1';
-                } else {
-                    // No need for teacher approval.
-                    // Teacher only hasnt rejected.
-                    $where = '(files.teacherapproval = 1 OR files.teacherapproval IS NULL)';
-                }
-            } else {
-                // Mode import.
-                if (!$this->get_instance()->obtainstudentapproval) {
-                    // No need to ask student and teacher has approved.
-                    $where = 'files.teacherapproval = 1';
-                } else {
-                    // Student and teacher have approved.
-                    $where = 'files.teacherapproval = 1 AND files.studentapproval = 1';
-                }
-            }
-
-            $sql .= 'AND ' . $where . ' ';
-            $sql .= 'GROUP BY u.id';
-        }
-
-        $users = $DB->get_records_sql($sql, $params);
-        if (!empty($users)) {
-            $users = array_keys($users);
-        }
-
-        // If groupmembersonly used, remove users who are not in any group.
-        if ($users and !empty($CFG->enablegroupmembersonly) and $cm->groupmembersonly) {
-            if ($groupingusers = groups_get_grouping_members($cm->groupingid, 'u.id', 'u.id')) {
-                $users = array_intersect($users, array_keys($groupingusers));
-            }
-        }
+        $users = $this->get_users($users);
 
         $filename = str_replace(' ', '_', clean_filename($this->course->shortname.'-'.
                 $this->get_instance()->name.'-'.$groupname.$this->get_instance()->id.'.zip')); // Name of new zip file.
@@ -1007,8 +938,6 @@ class publication{
         $userfields['username'] = 'username';
         $userfields = implode(', ', $userfields);
 
-        $viewfullnames = has_capability('moodle/site:viewfullnames', $this->context);
-
         // Get all files from each user.
         foreach ($users as $uploader) {
             $auserid = $uploader;
@@ -1016,7 +945,6 @@ class publication{
             $conditions['userid'] = $uploader;
             $records = $DB->get_records('publication_file', $conditions);
 
-            $aassignid = $auserid; // Get name of this assignment for use in the file names.
             // Get user firstname/lastname.
             $auser = $DB->get_record('user', array('id' => $auserid), $userfields);
 
@@ -1030,8 +958,7 @@ class publication{
                     // Get files new name.
                     $fileext = strstr($file->get_filename(), '.');
                     $fileoriginal = str_replace($fileext, '', $file->get_filename());
-                    $fileforzipname = clean_filename(($viewfullnames ? fullname($auser) : '') .
-                            '_' . $fileoriginal.'_'.$auserid.$fileext);
+                    $fileforzipname = clean_filename(fullname($auser).'_'.$fileoriginal.'_'.$auserid.$fileext);
                     // Save file name to array for zipping.
                     $filesforzipping[$fileforzipname] = $file;
                 }
@@ -1145,7 +1072,7 @@ class publication{
                                 $dataobject->contenthash = "666";
                                 $dataobject->type = PUBLICATION_MODE_IMPORT;
 
-                                $newid = $DB->insert_record('publication_file', $dataobject);
+                                $DB->insert_record('publication_file', $dataobject);
                             } catch (Exception $e) {
                                 // File could not be copied, maybe it does allready exist.
                                 // Should not happen.

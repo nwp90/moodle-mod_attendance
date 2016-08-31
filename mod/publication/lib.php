@@ -35,7 +35,7 @@ defined('MOODLE_INTERNAL') || die();
  * @param mform $mform
  */
 function publication_add_instance($publication, $mform = null) {
-    global $CFG, $DB;
+    global $DB, $OUTPUT;
 
     $cmid       = $publication->coursemodule;
     $courseid   = $publication->course;
@@ -43,7 +43,7 @@ function publication_add_instance($publication, $mform = null) {
     try {
         $id = $DB->insert_record('publication', $publication);
     } catch (Exception $e) {
-        var_dump($e);
+        echo $OUTPUT->notification($e->message, 'error');
     }
 
     $DB->set_field('course_modules', 'instance', $id, array('id' => $cmid));
@@ -52,6 +52,17 @@ function publication_add_instance($publication, $mform = null) {
 
     $record->course     = $courseid;
     $record->cmid       = $cmid;
+
+    $course = $DB->get_record('course', array('id' => $record->course), '*', MUST_EXIST);
+    $cm = get_coursemodule_from_id('publication', $cmid, 0, false, MUST_EXIST);
+    $context = context_module::instance($cm->id);
+    $instance = new publication($cm, $course, $context);
+
+    if ($instance->get_instance()->mode == PUBLICATION_MODE_IMPORT
+            && !empty($instance->get_instance()->autoimport)) {
+        // Fetch all files right now!
+        $instance->importfiles();
+    }
 
     return $record->id;
 }
@@ -67,8 +78,6 @@ function publication_supports($feature) {
         case FEATURE_GROUPS:
             return true;
         case FEATURE_GROUPINGS:
-            return true;
-        case FEATURE_GROUPMEMBERSONLY:
             return true;
         case FEATURE_MOD_INTRO:
             return true;
@@ -97,13 +106,24 @@ function publication_supports($feature) {
  * @param mform $mform
  */
 function publication_update_instance($publication, $mform = null) {
-    global $CFG, $DB;
+    global $DB;
 
     $publication->id = $publication->instance;
 
     $publication->timemodified = time();
 
     $DB->update_record('publication', $publication);
+
+    $course = $DB->get_record('course', array('id' => $publication->course), '*', MUST_EXIST);
+    $cm = get_coursemodule_from_instance('publication', $publication->id, 0, false, MUST_EXIST);
+    $context = context_module::instance($cm->id);
+    $instance = new publication($cm, $course, $context);
+
+    if ($instance->get_instance()->mode == PUBLICATION_MODE_IMPORT
+            && !empty($instance->get_instance()->autoimport)) {
+        // Fetch all files right now!
+        $instance->importfiles();
+    }
 
     return true;
 }
@@ -115,15 +135,13 @@ function publication_update_instance($publication, $mform = null) {
  * @return boolean
  */
 function publication_delete_instance($id) {
-    global $CFG, $DB;
+    global $DB;
 
     if (! $publication = $DB->get_record('publication', array('id' => $id))) {
         return false;
     }
 
     $DB->delete_records('publication_extduedates', array('publication' => $publication->id));
-
-    $filerecords = $DB->get_records('publication_file', array('publication' => $publication->id));
 
     $fs = get_file_storage();
 
@@ -146,7 +164,7 @@ function publication_delete_instance($id) {
  *                        will know about (most noticeably, an icon).
  */
 function publication_get_coursemodule_info($coursemodule) {
-    global $CFG, $DB;
+    global $DB;
 
     $dbparams = array('id' => $coursemodule->instance);
     $fields = 'id, name, alwaysshowdescription, allowsubmissionsfromdate, intro, introformat';

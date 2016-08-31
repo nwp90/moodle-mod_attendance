@@ -19,15 +19,22 @@
  *
  * @package    theme_anomaly
  * @copyright  2010 Patrick Malley (http://newschoollearning.com/)
+ * @update     2016 Mary Evans
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version   = 2014041400; // The current module version (Date: YYYYMMDDXX)
-$plugin->requires  = 2014041101; // Requires this Moodle version
 $plugin->component = 'theme_anomaly'; // Full name of the plugin (used for diagnostics).
+
 $plugin->maturity  = MATURITY_STABLE;
+
+$plugin->release   = 'Anomaly 3.1 (Build: 20160813)'; // Human-friendly version name.
+
+$plugin->requires  = 2016052300; // Requires this Moodle version
+
+$plugin->version   = 2016081300; // The current module version (Date: YYYYMMDDXX)
+
 $plugin->dependencies = array(
-    'theme_base'  => 2013110500,
+    'theme_base'  => 2016052300,
 );
