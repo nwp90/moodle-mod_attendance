@@ -97,13 +97,13 @@ class admin_presets_import extends admin_presets_base {
                         }
 
                         if (empty($sitesettings[$plugin][$name])) {
-                            //debugging('Setting '.$plugin.'/'.$name.' not supported by this Moodle version');
+                            debugging('Setting '.$plugin.'/'.$name.' not supported by this Moodle version', DEBUG_DEVELOPER);
                             continue;
                         }
 
                         // Cleaning the setting value
                         if (!$presetsetting = $this->_get_setting($sitesettings[$plugin][$name]->get_settingdata(), $value)) {
-                            //debugging('Setting '.$plugin.'/'.$name.' not implemented');
+                            debugging('Setting '.$plugin.'/'.$name.' not implemented', DEBUG_DEVELOPER);
                             continue;
                         }
 
@@ -129,8 +129,8 @@ class admin_presets_import extends admin_presets_base {
                                 $itemattributenames = array_flip($itemattributes);
 
                                 // Check the attribute existence
-                                if (empty($itemattributenames[$attrname])) {
-                                    //debugging('The '.$plugin.'/'.$name.' attribute '.$attrname.' is not supported by this Moodle version');
+                                if (!isset($itemattributenames[$attrname])) {
+                                    debugging('The '.$plugin.'/'.$name.' attribute '.$attrname.' is not supported by this Moodle version', DEBUG_DEVELOPER);
                                     continue;
                                 }
 
