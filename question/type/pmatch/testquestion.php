@@ -15,157 +15,101 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 
+
 /**
- * This is a quick and dirty script to test a question against a list of
- * responses in a .csv file.
+ * This page allows responses to be tested against the rules contained in the question.
+ * The user can select one or more responses, and have the computer mark these, or
+ * delete them (so long as the user has edit capability).
  *
- * The CSV file should contain two columns, the first contains 0 or 1 (or
- * any number between) for whether that response should be considered correct.
- * The second column contains the response. The first row in the file is ignored
- * (on the assumption that it contains the column headers "mark","response".)
+ * The grading statistics show how accurately the question has marked the currently
+ * graded responses.
+ *
+ * The human mark is the bench mark by which the computer is judged and we assume
+ * that the human mark is the correct mark to give.
+ *
+ * Authors are interested in how many times the computer mark matches the human mark.
+ * Of the two values for pos and neg (e.g. Pos=0/21 Neg=49/51) the sum of the computer
+ * marks is always on the left and the sum of the human marks is always on the right.
+ *
+ * The statistics (Pos=0/21 Neg=49/51 Unm=0 Acc=68%) therefore mean:
+ * Pos  = Positive matches. The number of times the computer gave a positive grade (1) to
+ *        match the human markers positive grade. e.g. The computer gave a positive grade
+ *        to 0 of the 21 positive grades given by the human marker.
+ * Neg =  Negative matches. The number of times the computer gave a negative grade (0) to
+ *        match the human markers negative grade. e.g. the computer gave a negative grade
+ *        (0) to 49 of the 51 negative grades given by the human marker.
+ * Unm =  Unmarked responses. Responses that have not yet been graded by computer and are
+ *        not yet part of the accuracy statistics.
+ * Acc =  A percentage indicating the ability of the computer to accurately mark the
+ *        responses compared to a human marker expressed as a percentage. It is a ratio
+ *        of the number of times the computer gave the same mark as a human against the
+ *        total number of marks the human gave.
+ *        Which in this case is calculated as:
+ *        * The number of times the computer grade matches the human grade:
+ *          0 matched pos + 49 matched neg = 49 correct
+ *        * The total number of possible grades: pos 21 + new 51 = 72
+ *        * The computer question grading accuracy:
+ *          The number of times the computer grade matches the human grade / The total
+ *          number of possible grades
+ *          49/72 as a percentage gives 68%
+ *
+ * The table of responses can be sorted, paged, and manipulated with the options in the top
+ * section of the page.
  *
  * @package   qtype_pmatch
- * @copyright 2015 The Open University
+ * @copyright 2016 The Open University
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/questionlib.php');
-require_once($CFG->libdir . '/formslib.php');
-
-
-/**
- * The upload form.
- *
- * @copyright 2015 The Open University
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class qtype_pmatch_test_form extends moodleform {
-    protected function definition() {
-        $this->_form->addElement('header', 'header', get_string('testquestionformheader', 'qtype_pmatch'));
-
-        $this->_form->addElement('static', 'help', '', get_string('testquestionforminfo', 'qtype_pmatch'));
-
-        $this->_form->addElement('filepicker', 'responsesfile', get_string('testquestionformuploadlabel', 'qtype_pmatch'));
-        $this->_form->addRule('responsesfile', null, 'required', null, 'client');
-
-        $this->_form->addElement('hidden', 'id', 0);
-        $this->_form->setType('id', PARAM_INT);
-
-        $this->_form->addElement('submit', 'submitbutton', get_string('testquestionformsubmit', 'qtype_pmatch'));
-    }
-}
-
+require_once($CFG->dirroot . '/question/type/pmatch/lib.php');
+require_once($CFG->dirroot . '/question/type/pmatch/classes/output/testquestion_renderer.php');
 
 $questionid = required_param('id', PARAM_INT);
-
 $questiondata = $DB->get_record('question', array('id' => $questionid), '*', MUST_EXIST);
 if ($questiondata->qtype != 'pmatch') {
     throw new coding_exception('That is not a pattern-match question.');
 }
-
-require_login();
-question_require_capability_on($questiondata, 'view');
-$canedit = question_has_capability_on($questiondata, 'edit');
-
 $question = question_bank::load_question($questionid);
-$context = context::instance_by_id($question->contextid);
 
+// Process any other URL parameters, and do require_login.
+list($context, $urlparams) = qtype_pmatch_setup_question_test_page($question);
+
+$url = new moodle_url('/question/type/pmatch/testquestion.php', array('id' => $questionid));
+$PAGE->set_pagelayout('popup');
 $PAGE->set_url('/question/type/pmatch/testquestion.php', array('id' => $questionid));
-$PAGE->set_context($context);
+
+// Check permissions after initialising $PAGE so messages (not exceptions) can be rendered.
+$canview = question_has_capability_on($questiondata, 'view');
+try {
+    question_require_capability_on($questiondata, 'view');
+} catch (moodle_exception $e) {
+    if (defined('BEHAT_SITE_RUNNING')) {
+            echo $OUTPUT->header();
+            echo get_string('nopermissions', 'error', 'view');
+            echo $OUTPUT->footer();
+            exit;
+    } else {
+        throw $e;
+    }
+}
+
 $PAGE->set_title(get_string('testquestionformtitle', 'qtype_pmatch'));
 $PAGE->set_heading(get_string('testquestionformtitle', 'qtype_pmatch'));
 
-$form = new qtype_pmatch_test_form($PAGE->url);
-$form->set_data(array('id' => $questionid));
+$output = $PAGE->get_renderer('qtype_pmatch', 'testquestion');
+$controller = new \qtype_pmatch\testquestion_controller($question, $context);
 
-echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('testquestionheader', 'qtype_pmatch', format_string($questiondata->name)));
-echo '<p>' . $PAGE->get_renderer('core_question')->question_preview_link(
-        $question->id, $context, true) . '</p>';
+echo $output->header();
+echo $output->heading(get_string('testquestionformtitle', 'qtype_pmatch') . ': ' .
+        get_string('testquestionheader', 'qtype_pmatch', format_string($questiondata->name)));
 
-if ($fromform = $form->get_data()) {
-    $filename = $form->get_new_filename('responsesfile');
+echo $output->get_display_options_form($controller);
 
-    make_temp_directory('questionimport');
-    $responsefile = "{$CFG->tempdir}/questionimport/{$filename}";
-    if (!$result = $form->save_file('responsesfile', $responsefile, true)) {
-        throw new moodle_exception('uploadproblem');
-    }
+echo $output->get_uploadresponses_link($question);
+echo $output->get_responses_heading($question);
+echo $output->get_grade_summary($question);
 
-    $handle = fopen($responsefile, 'r');
-    if (!$handle) {
-        throw new coding_exception('Could not open CSV file.');
-    }
+echo $output->get_responses_table_form($controller);
 
-    $alldata = array();
-    $problems = array();
-    $row = 0;
-    while (($data = fgetcsv($handle)) !== false) {
-        $row += 1;
-        if ($row == 1) {
-            continue; // Skipping header row or comment.
-        }
-
-        if (count($data) != 2 || !is_numeric($data[0])) {
-            $problems[] = 'Each row should contain exactly two items, ' .
-                    'a numerical mark and a response. Row ' . $row . ' contains ' .
-                    count($data) . ' items.';
-        }
-
-        if (count($data) >= 2 && fix_utf8($data[1]) !== $data[1]) {
-            $problems[] = 'The response in row ' . $row .
-                    ' contains unrecognised special characters. The input must be valid UTF-8.';
-        }
-
-        $alldata[$row] = $data;
-    }
-    fclose($handle);
-    $rowcount = $row;
-
-    if ($problems) {
-        throw new coding_exception(html_writer::alist($problems));
-    }
-
-    $table = new html_table();
-    $table->head = array(
-            get_string('row', 'qtype_pmatch'),
-            get_string('testquestionexpectedmark', 'qtype_pmatch'),
-            get_string('testquestionactualmark', 'qtype_pmatch'),
-            get_string('testquestionresponse', 'qtype_pmatch'));
-    $counts = new stdClass();
-    $counts->correct = 0;
-    $counts->incorrectlymarkedright = 0;
-    $counts->incorrectlymarkedwrong = 0;
-
-    $pbar = new progress_bar('testingquestion', 500, true);
-    foreach ($alldata as $row => $data) {
-        \core_php_time_limit::raise(60);
-
-        list($expectedmark, $response) = $data;
-        list($actualmark, $notused) = $question->grade_response(array('answer' => $response));
-
-        $table->data[] = array($row, $expectedmark, 0 + $actualmark, s($response));
-        $table->rowclasses[] = 'qtype_pmatch-selftest-' . ($expectedmark == $actualmark ? 'ok' : 'bad');
-
-        if ($expectedmark == $actualmark) {
-            $counts->correct += 1;
-        } else if ($expectedmark < $actualmark) {
-            $counts->incorrectlymarkedright += 1;
-        } else {
-            $counts->incorrectlymarkedwrong += 1;
-        }
-
-        $pbar->update($row, $rowcount, get_string('processingxofy', 'qtype_pmatch',
-                array('row' => $row, 'total' => $rowcount)));
-    }
-
-    echo $OUTPUT->heading(get_string('testquestionheader', 'qtype_pmatch', s($filename)));
-    echo html_writer::table($table);
-    echo '<p>' . get_string('testquestionresultssummary','qtype_pmatch', $counts) . '</p>';
-
-    echo $OUTPUT->heading(get_string('testquestionuploadanother', 'qtype_pmatch'));
-}
-
-$form->display();
-echo $OUTPUT->footer();
+echo $output->footer();
