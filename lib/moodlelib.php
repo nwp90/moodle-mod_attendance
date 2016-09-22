@@ -1621,6 +1621,7 @@ function purge_all_caches() {
     cache_helper::purge_all();
 
     // Purge all other caches: rss, simplepie, etc.
+    clearstatcache();
     remove_dir($CFG->cachedir.'', true);
 
     // Make sure cache dir is writable, throws exception if not.
@@ -4456,6 +4457,7 @@ function hash_internal_user_password($password, $fasthash = false) {
  *
  * Updating the password will modify the $user object and the database
  * record to use the current hashing algorithm.
+ * It will remove Web Services user tokens too.
  *
  * @param stdClass $user User object (password property may be updated).
  * @param string $password Plain text password.
@@ -4505,6 +4507,10 @@ function update_internal_user_password($user, $password, $fasthash = false) {
         // Trigger event.
         $user = $DB->get_record('user', array('id' => $user->id));
         \core\event\user_password_updated::create_from_user($user)->trigger();
+
+        // Remove WS user tokens.
+        require_once($CFG->dirroot.'/webservice/lib.php');
+        webservice::delete_user_ws_tokens($user->id);
     }
 
     return true;
