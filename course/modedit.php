@@ -30,7 +30,6 @@ require_once($CFG->libdir.'/gradelib.php');
 require_once($CFG->libdir.'/completionlib.php');
 require_once($CFG->libdir.'/plagiarismlib.php');
 require_once($CFG->dirroot . '/course/modlib.php');
-require_once($CFG->dirroot.'/tag/lib.php');
 
 $add    = optional_param('add', '', PARAM_ALPHA);     // module name
 $update = optional_param('update', 0, PARAM_INT);
@@ -229,12 +228,6 @@ if (!empty($add)) {
     } else {
         $pageheading = get_string('updatinga', 'moodle', $fullmodulename);
     }
-
-    // fetch module tags
-    if (!empty($CFG->usetags) and !empty($data->instance)) {
-        $data->tags = tag_get_tags_array($data->modulename, $data->instance);
-    }
-
     $navbaraddition = null;
 
 } else {
@@ -282,15 +275,6 @@ if ($mform->is_cancelled()) {
         $fromform = add_moduleinfo($fromform, $course, $mform);
     } else {
         print_error('invaliddata');
-    }
-
-    // save module tags
-    if (!empty($CFG->usetags)) {
-        if (empty($fromform->tags)) {
-            $fromform->tags = array();
-        }
-        $component = "mod_". $module->name;
-        tag_set($fromform->modulename, $fromform->instance, $fromform->tags, $component, $context->id);
     }
 
     if (isset($fromform->submitbutton)) {
