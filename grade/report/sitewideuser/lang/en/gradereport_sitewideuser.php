@@ -24,5 +24,5 @@
  */
 
 $string['pluginname'] = 'Sitewide User report';
-$string['user:view'] = 'View your own grade report';
+$string['sitewideuser:view'] = 'View your own site-wide grade report';
 $string['modulename'] = 'Sitewide User report';
