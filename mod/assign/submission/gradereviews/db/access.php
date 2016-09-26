@@ -23,7 +23,7 @@
  */
 
 $capabilities = array(
-    'moodle/site:canreviewgrade' => array(
+    'assignsubmission/gradereviews:canreviewgrade' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_USER,
         'archetypes' => array(
@@ -31,7 +31,7 @@ $capabilities = array(
             'editingteacher' => CAP_ALLOW
         )
     ),
-    'moodle/site:caneditreviewgrade' => array(
+    'assignsubmission/gradereviews:caneditreviewgrade' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_USER,
         'archetypes' => array(

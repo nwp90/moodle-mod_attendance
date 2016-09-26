@@ -28,6 +28,8 @@
  * @return bool
  */
 function xmldb_assignsubmission_gradereviews_upgrade($oldversion) {
+    global $DB;
+
     // Moodle v2.3.0 release upgrade line.
     // Put any upgrade step following this.
 
@@ -49,6 +51,11 @@ function xmldb_assignsubmission_gradereviews_upgrade($oldversion) {
     // Moodle v2.9.0 release upgrade line.
     // Put any upgrade step following this.
 
+    if ($oldversion < 2016092700) {
+        # change capability names
+        $DB->set_field('capabilities', 'name', 'assignsubmission/gradereviews:canreviewgrade', array('name' => 'moodle/site:canreviewgrade',  'component' => 'assignsubmission_gradereviews'));
+        $DB->set_field('capabilities', 'name', 'assignsubmission/gradereviews:caneditreviewgrade', array('name' => 'moodle/site:caneditreviewgrade',  'component' => 'assignsubmission_gradereviews'));
+    }
     return true;
 }
 

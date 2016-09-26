@@ -177,8 +177,8 @@ class assign_submission_gradereviews extends assign_submission_plugin {
         global $CFG, $USER, $COURSE;
 
         // If student they do not show it.
-        if (has_capability('moodle/site:canreviewgrade', context_user::instance($USER->id))
-        || has_capability('moodle/site:canreviewgrade', context_course::instance($COURSE->id))) {
+        if (has_capability('assignsubmission/gradereviews:canreviewgrade', context_user::instance($USER->id))
+        || has_capability('assignsubmission/gradereviews:canreviewgrade', context_course::instance($COURSE->id))) {
             return (!empty($CFG->usecomments));
         }
 
