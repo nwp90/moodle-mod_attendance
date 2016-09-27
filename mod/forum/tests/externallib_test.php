@@ -79,6 +79,7 @@ class mod_forum_external_testcase extends externallib_advanced_testcase {
         $record->introformat = FORMAT_HTML;
         $record->course = $course2->id;
         $forum2 = self::getDataGenerator()->create_module('forum', $record);
+        $forum2->introfiles = [];
 
         // Add discussions to the forums.
         $record = new stdClass();
@@ -89,6 +90,7 @@ class mod_forum_external_testcase extends externallib_advanced_testcase {
         // Expect one discussion.
         $forum1->numdiscussions = 1;
         $forum1->cancreatediscussions = true;
+        $forum1->introfiles = [];
 
         $record = new stdClass();
         $record->course = $course2->id;
@@ -489,7 +491,9 @@ class mod_forum_external_testcase extends externallib_advanced_testcase {
                 'usermodifiedpictureurl' => '',
                 'numreplies' => 3,
                 'numunread' => 0,
-                'pinned' => FORUM_DISCUSSION_UNPINNED
+                'pinned' => FORUM_DISCUSSION_UNPINNED,
+                'locked' => false,
+                'canreply' => false,
             );
 
         // Call the external function passing forum id.

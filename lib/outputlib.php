@@ -314,6 +314,13 @@ class theme_config {
     public $uarrow = null;
 
     /**
+     * @var string Accessibility: Down arrow-like character.
+     * If the theme does not set characters, appropriate defaults
+     * are set automatically.
+     */
+    public $darrow = null;
+
+    /**
      * @var bool Some themes may want to disable ajax course editing.
      */
     public $enablecourseajax = true;
@@ -481,8 +488,8 @@ class theme_config {
         $this->name     = $config->name;
         $this->dir      = $config->dir;
 
-        if ($this->name != 'base') {
-            $baseconfig = theme_config::find_theme_config('base', $this->settings);
+        if ($this->name != 'bootstrapbase') {
+            $baseconfig = theme_config::find_theme_config('bootstrapbase', $this->settings);
         } else {
             $baseconfig = $config;
         }
@@ -491,7 +498,7 @@ class theme_config {
             'parents', 'sheets', 'parents_exclude_sheets', 'plugins_exclude_sheets',
             'javascripts', 'javascripts_footer', 'parents_exclude_javascripts',
             'layouts', 'enable_dock', 'enablecourseajax', 'supportscssoptimisation',
-            'rendererfactory', 'csspostprocess', 'editor_sheets', 'rarrow', 'larrow', 'uarrow',
+            'rendererfactory', 'csspostprocess', 'editor_sheets', 'rarrow', 'larrow', 'uarrow', 'darrow',
             'hidefromselector', 'doctype', 'yuicssmodules', 'blockrtlmanipulations',
             'lessfile', 'extralesscallback', 'lessvariablescallback', 'blockrendermethod');
 
@@ -503,9 +510,7 @@ class theme_config {
 
         // verify all parents and load configs and renderers
         foreach ($this->parents as $parent) {
-            if ($parent == 'base') {
-                $parent_config = $baseconfig;
-            } else if (!$parent_config = theme_config::find_theme_config($parent, $this->settings)) {
+            if (!$parent_config = theme_config::find_theme_config($parent, $this->settings)) {
                 // this is not good - better exclude faulty parents
                 continue;
             }
@@ -570,7 +575,7 @@ class theme_config {
     }
 
     /**
-     * Checks if arrows $THEME->rarrow, $THEME->larrow, $THEME->uarrow have been set (theme/-/config.php).
+     * Checks if arrows $THEME->rarrow, $THEME->larrow, $THEME->uarrow, $THEME->darrow have been set (theme/-/config.php).
      * If not it applies sensible defaults.
      *
      * Accessibility: right and left arrow Unicode characters for breadcrumb, calendar,
@@ -584,6 +589,7 @@ class theme_config {
             $this->rarrow = '&#x25BA;';
             $this->larrow = '&#x25C4;';
             $this->uarrow = '&#x25B2;';
+            $this->darrow = '&#x25BC;';
             if (empty($_SERVER['HTTP_USER_AGENT'])) {
                 $uagent = '';
             } else {
@@ -603,6 +609,7 @@ class theme_config {
                 $this->rarrow = '&rarr;';
                 $this->larrow = '&larr;';
                 $this->uarrow = '&uarr;';
+                $this->darrow = '&darr;';
             }
             elseif (isset($_SERVER['HTTP_ACCEPT_CHARSET'])
                 && false === stripos($_SERVER['HTTP_ACCEPT_CHARSET'], 'utf-8')) {
@@ -611,6 +618,7 @@ class theme_config {
                 $this->rarrow = '&gt;';
                 $this->larrow = '&lt;';
                 $this->uarrow = '^';
+                $this->darrow = 'v';
             }
 
             // RTL support - in RTL languages, swap r and l arrows
@@ -1937,8 +1945,8 @@ class theme_config {
             }
         }
 
-        // Last resort, try the base theme for names
-        return get_string('region-' . $region, 'theme_base');
+        // Last resort, try the bootstrapbase theme for names
+        return get_string('region-' . $region, 'theme_bootstrapbase');
     }
 
     /**

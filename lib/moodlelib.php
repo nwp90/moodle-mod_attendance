@@ -2054,6 +2054,11 @@ function make_timestamp($year, $month=1, $day=1, $hour=0, $minute=0, $second=0, 
 
     $time = $date->getTimestamp();
 
+    if ($time === false) {
+        throw new coding_exception('getTimestamp() returned false, please ensure you have passed correct values.'.
+            ' This can fail if year is more than 2038 and OS is 32 bit windows');
+    }
+
     // Moodle BC DST stuff.
     if (!$applydst) {
         $time += dst_offset_on($time, $timezone);
@@ -2679,7 +2684,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
     }
 
     // If the site is currently under maintenance, then print a message.
-    if (!empty($CFG->maintenance_enabled) and !has_capability('moodle/site:config', $sysctx)) {
+    if (!empty($CFG->maintenance_enabled) and !has_capability('moodle/site:maintenanceaccess', $sysctx)) {
         if ($preventredirect) {
             throw new require_login_exception('Maintenance in progress');
         }
@@ -3036,7 +3041,7 @@ function require_user_key_login($script, $instance=null) {
  * @param int $userid
  * @param int $instance optional instance id
  * @param string $iprestriction optional ip restricted access
- * @param timestamp $validuntil key valid only until given data
+ * @param int $validuntil key valid only until given data
  * @return string access key value
  */
 function create_user_key($script, $userid, $instance=null, $iprestriction=null, $validuntil=null) {
@@ -3079,7 +3084,7 @@ function delete_user_key($script, $userid) {
  * @param int $userid
  * @param int $instance optional instance id
  * @param string $iprestriction optional ip restricted access
- * @param timestamp $validuntil key valid only until given data
+ * @param int $validuntil key valid only until given date
  * @return string access key value
  */
 function get_user_key($script, $userid, $instance=null, $iprestriction=null, $validuntil=null) {
@@ -4124,6 +4129,12 @@ function authenticate_user_login($username, $password, $ignorelockout=false, &$f
     if ($user) {
         // Use manual if auth not set.
         $auth = empty($user->auth) ? 'manual' : $user->auth;
+
+        if (in_array($user->auth, $authsenabled)) {
+            $authplugin = get_auth_plugin($user->auth);
+            $authplugin->pre_user_login_hook($user);
+        }
+
         if (!empty($user->suspended)) {
             $failurereason = AUTH_LOGIN_SUSPENDED;
 
@@ -4371,7 +4382,6 @@ function password_is_legacy_hash($password) {
  */
 function validate_internal_user_password($user, $password) {
     global $CFG;
-    require_once($CFG->libdir.'/password_compat/lib/password.php');
 
     if ($user->password === AUTH_PASSWORD_NOT_CACHED) {
         // Internal password is not used at all, it can not validate.
@@ -4432,7 +4442,6 @@ function validate_internal_user_password($user, $password) {
  */
 function hash_internal_user_password($password, $fasthash = false) {
     global $CFG;
-    require_once($CFG->libdir.'/password_compat/lib/password.php');
 
     // Set the cost factor to 4 for fast hashing, otherwise use default cost.
     $options = ($fasthash) ? array('cost' => 4) : array();
@@ -4469,7 +4478,6 @@ function hash_internal_user_password($password, $fasthash = false) {
  */
 function update_internal_user_password($user, $password, $fasthash = false) {
     global $CFG, $DB;
-    require_once($CFG->libdir.'/password_compat/lib/password.php');
 
     // Figure out what the hashed password should be.
     if (!isset($user->auth)) {
@@ -4805,6 +4813,9 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
         echo $OUTPUT->notification($strdeleted.get_string('type_block_plural', 'plugin'), 'notifysuccess');
     }
 
+    // Get the list of all modules that are properly installed.
+    $allmodules = $DB->get_records_menu('modules', array(), '', 'name, id');
+
     // Delete every instance of every module,
     // this has to be done before deleting of course level stuff.
     $locations = core_component::get_plugin_list('mod');
@@ -4812,30 +4823,36 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
         if ($modname === 'NEWMODULE') {
             continue;
         }
-        if ($module = $DB->get_record('modules', array('name' => $modname))) {
+        if (array_key_exists($modname, $allmodules)) {
+            $sql = "SELECT cm.*, m.id AS modinstance, m.name, '$modname' AS modname
+              FROM {".$modname."} m
+                   LEFT JOIN {course_modules} cm ON cm.instance = m.id AND cm.module = :moduleid
+             WHERE m.course = :courseid";
+            $instances = $DB->get_records_sql($sql, array('courseid' => $course->id,
+                'modulename' => $modname, 'moduleid' => $allmodules[$modname]));
+
             include_once("$moddir/lib.php");                 // Shows php warning only if plugin defective.
             $moddelete = $modname .'_delete_instance';       // Delete everything connected to an instance.
             $moddeletecourse = $modname .'_delete_course';   // Delete other stray stuff (uncommon).
 
-            if ($instances = $DB->get_records($modname, array('course' => $course->id))) {
-                foreach ($instances as $instance) {
-                    if ($cm = get_coursemodule_from_instance($modname, $instance->id, $course->id)) {
+            if ($instances) {
+                foreach ($instances as $cm) {
+                    if ($cm->id) {
                         // Delete activity context questions and question categories.
                         question_delete_activity($cm,  $showfeedback);
-
                         // Notify the competency subsystem.
                         \core_competency\api::hook_course_module_deleted($cm);
                     }
                     if (function_exists($moddelete)) {
                         // This purges all module data in related tables, extra user prefs, settings, etc.
-                        $moddelete($instance->id);
+                        $moddelete($cm->modinstance);
                     } else {
                         // NOTE: we should not allow installation of modules with missing delete support!
                         debugging("Defective module '$modname' detected when deleting course contents: missing function $moddelete()!");
-                        $DB->delete_records($modname, array('id' => $instance->id));
+                        $DB->delete_records($modname, array('id' => $cm->modinstance));
                     }
 
-                    if ($cm) {
+                    if ($cm->id) {
                         // Delete cm and its context - orphaned contexts are purged in cron in case of any race condition.
                         context_helper::delete_instance(CONTEXT_MODULE, $cm->id);
                         $DB->delete_records('course_modules', array('id' => $cm->id));
@@ -4843,7 +4860,9 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
                 }
             }
             if (function_exists($moddeletecourse)) {
-                // Execute ptional course cleanup callback.
+                // Execute optional course cleanup callback. Deprecated since Moodle 3.2. TODO MDL-53297 remove in 3.6.
+                debugging("Callback delete_course is deprecated. Function $moddeletecourse should be converted " .
+                    'to observer of event \core\event\course_content_deleted', DEBUG_DEVELOPER);
                 $moddeletecourse($course, $showfeedback);
             }
             if ($instances and $showfeedback) {
@@ -4863,12 +4882,13 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
            'coursemoduleid IN (SELECT id from {course_modules} WHERE course=?)',
            array($courseid));
 
-    // Remove course-module data.
+    // Remove course-module data that has not been removed in modules' _delete_instance callbacks.
     $cms = $DB->get_records('course_modules', array('course' => $course->id));
+    $allmodulesbyid = array_flip($allmodules);
     foreach ($cms as $cm) {
-        if ($module = $DB->get_record('modules', array('id' => $cm->module))) {
+        if (array_key_exists($cm->module, $allmodulesbyid)) {
             try {
-                $DB->delete_records($module->name, array('id' => $cm->instance));
+                $DB->delete_records($allmodulesbyid[$cm->module], array('id' => $cm->instance));
             } catch (Exception $e) {
                 // Ignore weird or missing table problems.
             }
@@ -4881,17 +4901,19 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
         echo $OUTPUT->notification($strdeleted.get_string('type_mod_plural', 'plugin'), 'notifysuccess');
     }
 
-    // Cleanup the rest of plugins.
+    // Cleanup the rest of plugins. Deprecated since Moodle 3.2. TODO MDL-53297 remove in 3.6.
     $cleanuplugintypes = array('report', 'coursereport', 'format');
     $callbacks = get_plugins_with_function('delete_course', 'lib.php');
     foreach ($cleanuplugintypes as $type) {
         if (!empty($callbacks[$type])) {
             foreach ($callbacks[$type] as $pluginfunction) {
+                debugging("Callback delete_course is deprecated. Function $pluginfunction should be converted " .
+                    'to observer of event \core\event\course_content_deleted', DEBUG_DEVELOPER);
                 $pluginfunction($course->id, $showfeedback);
             }
-        }
-        if ($showfeedback) {
-            echo $OUTPUT->notification($strdeleted.get_string('type_'.$type.'_plural', 'plugin'), 'notifysuccess');
+            if ($showfeedback) {
+                echo $OUTPUT->notification($strdeleted.get_string('type_'.$type.'_plural', 'plugin'), 'notifysuccess');
+            }
         }
     }
 
@@ -7792,19 +7814,20 @@ function random_bytes_emulate($length) {
         }
     }
     if (function_exists('openssl_random_pseudo_bytes')) {
-        // For PHP 5.3 and later with openssl extension.
+        // If you have the openssl extension enabled.
         $hash = openssl_random_pseudo_bytes($length);
         if ($hash !== false) {
             return $hash;
         }
     }
 
-    // Bad luck, there is no reliable random generator, let's just hash some unique stuff that is hard to guess.
+    // Bad luck, there is no reliable random generator, let's just slowly hash some unique stuff that is hard to guess.
     $staticdata = serialize($CFG) . serialize($_SERVER);
     $hash = '';
     do {
         $hash .= sha1($staticdata . microtime(true) . uniqid('', true), true);
     } while (strlen($hash) < $length);
+
     return substr($hash, 0, $length);
 }
 
@@ -8618,8 +8641,6 @@ function getremoteaddr($default='0.0.0.0') {
 function cleanremoteaddr($addr, $compress=false) {
     $addr = trim($addr);
 
-    // TODO: maybe add a separate function is_addr_public() or something like this.
-
     if (strpos($addr, ':') !== false) {
         // Can be only IPv6.
         $parts = explode(':', $addr);
@@ -8710,6 +8731,17 @@ function cleanremoteaddr($addr, $compress=false) {
     }
 
     return implode('.', $parts);
+}
+
+
+/**
+ * Is IP address a public address?
+ *
+ * @param string $ip The ip to check
+ * @return bool true if the ip is public
+ */
+function ip_is_public($ip) {
+    return (bool) filter_var($ip, FILTER_VALIDATE_IP, (FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE));
 }
 
 /**

@@ -96,10 +96,8 @@ function s($var) {
         return '0';
     }
 
-    // When we move to PHP 5.4 as a minimum version, change ENT_QUOTES on the
-    // next line to ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, and remove the
-    // 'UTF-8' argument. Both bring a speed-increase.
-    return preg_replace('/&amp;#(\d+|x[0-9a-f]+);/i', '&#$1;', htmlspecialchars($var, ENT_QUOTES, 'UTF-8'));
+    return preg_replace('/&amp;#(\d+|x[0-9a-f]+);/i', '&#$1;',
+            htmlspecialchars($var, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE));
 }
 
 /**
@@ -2935,6 +2933,10 @@ function rebuildnolinktag($text) {
  */
 function print_maintenance_message() {
     global $CFG, $SITE, $PAGE, $OUTPUT;
+
+    header($_SERVER['SERVER_PROTOCOL'] . ' 503 Moodle under maintenance');
+    header('Status: 503 Moodle under maintenance');
+    header('Retry-After: 300');
 
     $PAGE->set_pagetype('maintenance-message');
     $PAGE->set_pagelayout('maintenance');

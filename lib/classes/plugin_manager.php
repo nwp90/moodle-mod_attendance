@@ -1660,11 +1660,13 @@ class core_plugin_manager {
         $plugins = array(
             'qformat' => array('blackboard', 'learnwise'),
             'enrol' => array('authorize'),
+            'report' => array('search'),
+            'repository' => array('alfresco'),
             'tinymce' => array('dragmath'),
             'tool' => array('bloglevelupgrade', 'qeupgradehelper', 'timezoneimport'),
-            'theme' => array('mymobile', 'afterburner', 'anomaly', 'arialist', 'binarius', 'boxxie', 'brick', 'formal_white',
-                'formfactor', 'fusion', 'leatherbound', 'magazine', 'nimble', 'nonzero', 'overlay', 'serenity', 'sky_high',
-                'splash', 'standard', 'standardold'),
+            'theme' => array('afterburner', 'anomaly', 'arialist', 'base', 'binarius', 'boxxie', 'brick', 'canvas',
+                'formal_white', 'formfactor', 'fusion', 'leatherbound', 'magazine', 'mymobile', 'nimble', 'nonzero',
+                'overlay', 'serenity', 'sky_high', 'splash', 'standard', 'standardold'),
             'webservice' => array('amf'),
         );
 
@@ -1870,12 +1872,12 @@ class core_plugin_manager {
 
             'report' => array(
                 'backups', 'competency', 'completion', 'configlog', 'courseoverview', 'eventlist',
-                'log', 'loglive', 'outline', 'participation', 'progress', 'questioninstances', 'search',
+                'log', 'loglive', 'outline', 'participation', 'progress', 'questioninstances',
                 'security', 'stats', 'performance', 'usersessions'
             ),
 
             'repository' => array(
-                'alfresco', 'areafiles', 'boxnet', 'coursefiles', 'dropbox', 'equella', 'filesystem',
+                'areafiles', 'boxnet', 'coursefiles', 'dropbox', 'equella', 'filesystem',
                 'flickr', 'flickr_public', 'googledocs', 'local', 'merlot',
                 'picasa', 'recent', 'skydrive', 's3', 'upload', 'url', 'user', 'webdav',
                 'wikimedia', 'youtube'
@@ -1898,7 +1900,7 @@ class core_plugin_manager {
             ),
 
             'theme' => array(
-                'base', 'bootstrapbase', 'canvas', 'clean', 'more'
+                'bootstrapbase', 'clean', 'more'
             ),
 
             'tool' => array(

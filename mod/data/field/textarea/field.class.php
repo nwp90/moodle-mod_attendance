@@ -27,6 +27,12 @@ require_once($CFG->dirroot.'/repository/lib.php');
 class data_field_textarea extends data_field_base {
 
     var $type = 'textarea';
+    /**
+     * priority for globalsearch indexing
+     *
+     * @var int
+     */
+    protected static $priority = self::LOW_PRIORITY;
 
     /**
      * Returns options for embedded files
@@ -275,4 +281,17 @@ class data_field_textarea extends data_field_base {
         }
         return false;
     }
+
+    /**
+     * Returns the presentable string value for a field content.
+     *
+     * The returned string should be plain text.
+     *
+     * @param stdClass $content
+     * @return string
+     */
+    public static function get_content_value($content) {
+        return content_to_text($content->content, $content->content1);
+    }
+
 }

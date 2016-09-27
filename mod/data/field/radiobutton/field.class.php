@@ -25,6 +25,12 @@
 class data_field_radiobutton extends data_field_base {
 
     var $type = 'radiobutton';
+    /**
+     * priority for globalsearch indexing
+     *
+     * @var int
+     */
+    protected static $priority = self::HIGH_PRIORITY;
 
     function display_add_field($recordid = 0, $formdata = null) {
         global $CFG, $DB, $OUTPUT;
@@ -96,7 +102,8 @@ class data_field_radiobutton extends data_field_base {
                 $options[$rec->content] = $rec->content;  //Build following indicies from the sql.
             }
         }
-        $return = html_writer::label(get_string('nameradiobutton', 'data'), 'menuf_'. $this->field->id, false, array('class' => 'accesshide'));
+        $return = html_writer::label(get_string('fieldtypelabel', "datafield_" . $this->type),
+            'menuf_' . $this->field->id, false, array('class' => 'accesshide'));
         $return .= html_writer::select($options, 'f_'.$this->field->id, $value);
         return $return;
     }

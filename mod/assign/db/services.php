@@ -207,7 +207,8 @@ $functions = array(
                 'description'   => 'List the participants for a single assignment, with some summary info about their submissions.',
                 'type'          => 'read',
                 'ajax'          => true,
-                'capabilities'  => 'mod/assign:view, mod/assign:viewgrades'
+                'capabilities'  => 'mod/assign:view, mod/assign:viewgrades',
+                'services'      => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
         ),
 
         'mod_assign_submit_grading_form' => array(
@@ -228,4 +229,14 @@ $functions = array(
                 'ajax'          => true,
                 'capabilities'  => 'mod/assign:view, mod/assign:viewgrades'
         ),
+        'mod_assign_view_assign' => array(
+            'classname'     => 'mod_assign_external',
+            'methodname'    => 'view_assign',
+            'classpath'     => 'mod/assign/externallib.php',
+            'description'   => 'Update the module completion status.',
+            'type'          => 'write',
+            'capabilities'  => 'mod/assign:view',
+            'services'      => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
+        ),
+
 );
