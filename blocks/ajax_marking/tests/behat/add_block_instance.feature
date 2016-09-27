@@ -7,7 +7,7 @@ Feature: Installing the AJAX Marking Block
     So that I can  see it and configure it
 
     Scenario: The block is available in the blocks dropdown
-        And the following "courses" exists:
+        And the following "courses" exist:
             | fullname | shortname | format |
             | Course 1 | C1        | topics |
         And I log in as "admin"

@@ -97,6 +97,13 @@ class behat_hooks extends behat_base {
     protected static $timings = array();
 
     /**
+     * Keeps track of current running suite name.
+     *
+     * @var string current running suite name
+     */
+    protected static $runningsuite = '';
+
+    /**
      * Hook to capture BeforeSuite event so as to give access to moodle codebase.
      * This will try and catch any exception and exists if anything fails.
      *
@@ -128,9 +135,14 @@ class behat_hooks extends behat_base {
         // Defined only when the behat CLI command is running, the moodle init setup process will
         // read this value and switch to $CFG->behat_dataroot and $CFG->behat_prefix instead of
         // the normal site.
-        define('BEHAT_TEST', 1);
+        if (!defined('BEHAT_TEST')) {
+            define('BEHAT_TEST', 1);
+        }
 
-        define('CLI_SCRIPT', 1);
+        if (!defined('CLI_SCRIPT')) {
+            define('CLI_SCRIPT', 1);
+        }
+
         // With BEHAT_TEST we will be using $CFG->behat_* instead of $CFG->dataroot, $CFG->prefix and $CFG->wwwroot.
         require_once(__DIR__ . '/../../../config.php');
 
@@ -264,7 +276,7 @@ class behat_hooks extends behat_base {
      * @throws behat_stop_exception If here we are not using the test database it should be because of a coding error
      */
     public function before_scenario(BeforeScenarioScope $scope) {
-        global $DB, $SESSION, $CFG;
+        global $DB, $CFG;
 
         // As many checks as we can.
         if (!defined('BEHAT_TEST') ||
@@ -290,10 +302,25 @@ class behat_hooks extends behat_base {
             throw new behat_stop_exception($e->getMessage());
         }
 
-        // We need the Mink session to do it and we do it only before the first scenario.
-        if (self::is_first_scenario()) {
-            behat_selectors::register_moodle_selectors($session);
-            behat_context_helper::set_session($scope->getEnvironment());
+        $suitename = $scope->getSuite()->getName();
+
+        // Register behat selectors for theme, if suite is changed. We do it for every suite change.
+        if ($suitename !== self::$runningsuite) {
+            behat_context_helper::set_environment($scope->getEnvironment());
+
+            // We need the Mink session to do it and we do it only before the first scenario.
+            $behatselectorclass = 'behat_selectors';
+            if ($suitename !== 'default') {
+                $overriddenselectorclass = behat_config_util::get_behat_theme_selector_override_classname($suitename, true);
+
+                // If override slector exist, then set it as default behat selectors class.
+                if (class_exists($overriddenselectorclass)) {
+                    $behatselectorclass = $overriddenselectorclass;
+                }
+            }
+
+            $behatselectorclass = new $behatselectorclass();
+            $behatselectorclass::register_moodle_selectors($session);
         }
 
         // Reset mink session between the scenarios.
@@ -317,6 +344,12 @@ class behat_hooks extends behat_base {
             }
         }
 
+        // Set the theme if not default.
+        if ($suitename !== "default") {
+            set_config('theme', $suitename);
+            self::$runningsuite = $suitename;
+        }
+
         // Start always in the the homepage.
         try {
             // Let's be conservative as we never know when new upstream issues will affect us.
@@ -324,7 +357,6 @@ class behat_hooks extends behat_base {
         } catch (UnknownError $e) {
             throw new behat_stop_exception($e->getMessage());
         }
-
 
         // Checking that the root path is a Moodle test site.
         if (self::is_first_scenario()) {
@@ -334,6 +366,7 @@ class behat_hooks extends behat_base {
 
             self::$initprocessesfinished = true;
         }
+
         // Run all test with medium (1024x768) screen size, to avoid responsive problems.
         $this->resize_window('medium');
     }

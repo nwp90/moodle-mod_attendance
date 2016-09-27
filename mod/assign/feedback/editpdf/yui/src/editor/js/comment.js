@@ -12,6 +12,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+/* global SELECTOR, COMMENTCOLOUR, COMMENTTEXTCOLOUR */
 
 /**
  * Provides an in browser PDF editor.
@@ -139,13 +140,13 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
      */
     this.clean = function() {
         return {
-            gradeid : this.gradeid,
-            x : parseInt(this.x, 10),
-            y : parseInt(this.y, 10),
-            width : parseInt(this.width, 10),
-            rawtext : this.rawtext,
-            pageno : this.currentpage,
-            colour : this.colour
+            gradeid: this.gradeid,
+            x: parseInt(this.x, 10),
+            y: parseInt(this.y, 10),
+            width: parseInt(this.width, 10),
+            rawtext: this.rawtext,
+            pageno: this.currentpage,
+            colour: this.colour
         };
     };
 
@@ -198,7 +199,7 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
         node.set('value', this.rawtext);
         scrollheight = node.get('scrollHeight');
         node.setStyles({
-            'height' : scrollheight + 'px',
+            'height': scrollheight + 'px',
             'overflow': 'hidden'
         });
         if (!this.editor.get('readonly')) {
@@ -322,7 +323,8 @@ var COMMENT = function(editor, gradeid, pageno, x, y, width, colour, rawtext) {
      * @method remove
      */
     this.remove = function() {
-        var i = 0, comments;
+        var i = 0;
+        var comments;
 
         comments = this.editor.pages[this.editor.currentpage].comments;
         for (i = 0; i < comments.length; i++) {

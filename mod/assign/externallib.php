@@ -341,6 +341,7 @@ class mod_assign_external extends external_api {
                 if (!isset($courses[$cid])) {
                     $courses[$cid] = get_course($cid);
                 }
+                $courses[$cid]->contextid = $context->id;
             } catch (Exception $e) {
                 unset($courses[$cid]);
                 $warnings[] = array(
@@ -378,6 +379,7 @@ class mod_assign_external extends external_api {
                      'm.markingworkflow, ' .
                      'm.markingallocation, ' .
                      'm.requiresubmissionstatement, '.
+                     'm.preventsubmissionnotingroup, '.
                      'm.intro, '.
                      'm.introformat';
         $coursearray = array();
@@ -439,6 +441,7 @@ class mod_assign_external extends external_api {
                         'markingworkflow' => $module->markingworkflow,
                         'markingallocation' => $module->markingallocation,
                         'requiresubmissionstatement' => $module->requiresubmissionstatement,
+                        'preventsubmissionnotingroup' => $module->preventsubmissionnotingroup,
                         'configs' => $configarray
                     );
 
@@ -449,23 +452,18 @@ class mod_assign_external extends external_api {
 
                         list($assignment['intro'], $assignment['introformat']) = external_format_text($module->intro,
                             $module->introformat, $context->id, 'mod_assign', 'intro', null);
+                        $assignment['introfiles'] = external_util::get_area_files($context->id, 'mod_assign', 'intro', false,
+                                                                                    false);
 
-                        $fs = get_file_storage();
-                        if ($files = $fs->get_area_files($context->id, 'mod_assign', ASSIGN_INTROATTACHMENT_FILEAREA,
-                                                            0, 'timemodified', false)) {
+                        $assignment['introattachments'] = external_util::get_area_files($context->id, 'mod_assign',
+                                                            ASSIGN_INTROATTACHMENT_FILEAREA, 0);
+                    }
 
-                            $assignment['introattachments'] = array();
-                            foreach ($files as $file) {
-                                $filename = $file->get_filename();
-
-                                $assignment['introattachments'][] = array(
-                                    'filename' => $filename,
-                                    'mimetype' => $file->get_mimetype(),
-                                    'fileurl'  => moodle_url::make_webservice_pluginfile_url(
-                                        $context->id, 'mod_assign', ASSIGN_INTROATTACHMENT_FILEAREA, 0, '/', $filename)->out(false)
-                                );
-                            }
-                        }
+                    if ($module->requiresubmissionstatement) {
+                        // Submission statement is required, return the submission statement value.
+                        $adminconfig = get_config('assign');
+                        list($assignment['submissionstatement'], $assignment['submissionstatementformat']) = external_format_text(
+                                $adminconfig->submissionstatement, FORMAT_MOODLE, $context->id, 'mod_assign', '', 0);
                     }
 
                     $assignmentarray[] = $assignment;
@@ -473,8 +471,8 @@ class mod_assign_external extends external_api {
             }
             $coursearray[]= array(
                 'id' => $courses[$id]->id,
-                'fullname' => $courses[$id]->fullname,
-                'shortname' => $courses[$id]->shortname,
+                'fullname' => external_format_string($courses[$id]->fullname, $course->contextid),
+                'shortname' => external_format_string($courses[$id]->shortname, $course->contextid),
                 'timemodified' => $courses[$id]->timemodified,
                 'assignments' => $assignmentarray
             );
@@ -521,19 +519,15 @@ class mod_assign_external extends external_api {
                 'markingworkflow' => new external_value(PARAM_INT, 'enable marking workflow'),
                 'markingallocation' => new external_value(PARAM_INT, 'enable marking allocation'),
                 'requiresubmissionstatement' => new external_value(PARAM_INT, 'student must accept submission statement'),
+                'preventsubmissionnotingroup' => new external_value(PARAM_INT, 'Prevent submission not in group', VALUE_OPTIONAL),
+                'submissionstatement' => new external_value(PARAM_RAW, 'Submission statement formatted.', VALUE_OPTIONAL),
+                'submissionstatementformat' => new external_format_value('submissionstatement', VALUE_OPTIONAL),
                 'configs' => new external_multiple_structure(self::get_assignments_config_structure(), 'configuration settings'),
                 'intro' => new external_value(PARAM_RAW,
                     'assignment intro, not allways returned because it deppends on the activity configuration', VALUE_OPTIONAL),
                 'introformat' => new external_format_value('intro', VALUE_OPTIONAL),
-                'introattachments' => new external_multiple_structure(
-                    new external_single_structure(
-                        array (
-                            'filename' => new external_value(PARAM_FILE, 'file name'),
-                            'mimetype' => new external_value(PARAM_RAW, 'mime type'),
-                            'fileurl'  => new external_value(PARAM_URL, 'file download url')
-                        )
-                    ), 'intro attachments files', VALUE_OPTIONAL
-                )
+                'introfiles' => new external_files('Files in the introduction text', VALUE_OPTIONAL),
+                'introattachments' => new external_files('intro attachments files', VALUE_OPTIONAL),
             ), 'assignment information object');
     }
 
@@ -621,24 +615,14 @@ class mod_assign_external extends external_api {
             $fileareas = $assignplugin->get_file_areas();
             foreach ($fileareas as $filearea => $name) {
                 $fileareainfo = array('area' => $filearea);
-                $files = $fs->get_area_files(
+
+                $fileareainfo['files'] = external_util::get_area_files(
                     $assign->get_context()->id,
                     $component,
                     $filearea,
-                    $item->id,
-                    "timemodified",
-                    false
+                    $item->id
                 );
-                foreach ($files as $file) {
-                    $filepath = $file->get_filepath().$file->get_filename();
-                    $fileurl = file_encode_url($CFG->wwwroot . '/webservice/pluginfile.php', '/' . $assign->get_context()->id .
-                        '/' . $component. '/'. $filearea . '/' . $item->id . $filepath);
-                    $fileinfo = array(
-                        'filepath' => $filepath,
-                        'fileurl' => $fileurl
-                        );
-                    $fileareainfo['files'][] = $fileinfo;
-                }
+
                 $plugin['fileareas'][] = $fileareainfo;
             }
 
@@ -814,15 +798,7 @@ class mod_assign_external extends external_api {
                     new external_single_structure(
                         array (
                             'area' => new external_value (PARAM_TEXT, 'file area'),
-                            'files' => new external_multiple_structure(
-                                new external_single_structure(
-                                    array (
-                                        'filepath' => new external_value (PARAM_TEXT, 'file path'),
-                                        'fileurl' => new external_value (PARAM_URL, 'file download url',
-                                            VALUE_OPTIONAL)
-                                    )
-                                ), 'files', VALUE_OPTIONAL
-                            )
+                            'files' => new external_files('files', VALUE_OPTIONAL),
                         )
                     ), 'fileareas', VALUE_OPTIONAL
                 ),
@@ -934,11 +910,8 @@ class mod_assign_external extends external_api {
                                                   'userflags' => $userflags));
 
         // Load assignment if it exists and if the user has the capability.
-        $cm = get_coursemodule_from_instance('assign', $params['assignmentid'], 0, false, MUST_EXIST);
-        $context = context_module::instance($cm->id);
-        self::validate_context($context);
+        list($assign, $course, $cm, $context) = self::validate_assign($params['assignmentid']);
         require_capability('mod/assign:grade', $context);
-        $assign = new assign($context, null, null);
 
         $results = array();
         foreach ($params['userflags'] as $userflag) {
@@ -1364,11 +1337,7 @@ class mod_assign_external extends external_api {
                         array('assignmentid' => $assignmentid,
                               'userids' => $userids));
 
-        $cm = get_coursemodule_from_instance('assign', $params['assignmentid'], 0, false, MUST_EXIST);
-        $context = context_module::instance($cm->id);
-        self::validate_context($context);
-
-        $assignment = new assign($context, $cm, null);
+        list($assignment, $course, $cm, $context) = self::validate_assign($params['assignmentid']);
 
         $warnings = array();
         foreach ($params['userids'] as $userid) {
@@ -1425,11 +1394,7 @@ class mod_assign_external extends external_api {
                         array('assignmentid' => $assignmentid,
                               'userids' => $userids));
 
-        $cm = get_coursemodule_from_instance('assign', $params['assignmentid'], 0, false, MUST_EXIST);
-        $context = context_module::instance($cm->id);
-        self::validate_context($context);
-
-        $assignment = new assign($context, $cm, null);
+        list($assignment, $course, $cm, $context) = self::validate_assign($params['assignmentid']);
 
         $warnings = array();
         foreach ($params['userids'] as $userid) {
@@ -1486,11 +1451,7 @@ class mod_assign_external extends external_api {
                         array('assignmentid' => $assignmentid,
                               'userids' => $userids));
 
-        $cm = get_coursemodule_from_instance('assign', $params['assignmentid'], 0, false, MUST_EXIST);
-        $context = context_module::instance($cm->id);
-        self::validate_context($context);
-
-        $assignment = new assign($context, $cm, null);
+        list($assignment, $course, $cm, $context) = self::validate_assign($params['assignmentid']);
 
         $warnings = array();
         foreach ($params['userids'] as $userid) {
@@ -1552,11 +1513,7 @@ class mod_assign_external extends external_api {
                                                 'jsonformdata' => $jsonformdata
                                             ));
 
-        $cm = get_coursemodule_from_instance('assign', $params['assignmentid'], 0, false, MUST_EXIST);
-        $context = context_module::instance($cm->id);
-        self::validate_context($context);
-
-        $assignment = new assign($context, $cm, null);
+        list($assignment, $course, $cm, $context) = self::validate_assign($params['assignmentid']);
 
         $serialiseddata = json_decode($params['jsonformdata']);
 
@@ -1628,11 +1585,7 @@ class mod_assign_external extends external_api {
                                             array('assignmentid' => $assignmentid,
                                                   'acceptsubmissionstatement' => $acceptsubmissionstatement));
 
-        $cm = get_coursemodule_from_instance('assign', $params['assignmentid'], 0, false, MUST_EXIST);
-        $context = context_module::instance($cm->id);
-        self::validate_context($context);
-
-        $assignment = new assign($context, $cm, null);
+        list($assignment, $course, $cm, $context) = self::validate_assign($params['assignmentid']);
 
         $warnings = array();
         $data = new stdClass();
@@ -1706,11 +1659,7 @@ class mod_assign_external extends external_api {
             return $warnings;
         }
 
-        $cm = get_coursemodule_from_instance('assign', $params['assignmentid'], 0, false, MUST_EXIST);
-        $context = context_module::instance($cm->id);
-        self::validate_context($context);
-
-        $assignment = new assign($context, $cm, null);
+        list($assignment, $course, $cm, $context) = self::validate_assign($params['assignmentid']);
 
         $warnings = array();
         foreach ($params['userids'] as $idx => $userid) {
@@ -1762,11 +1711,7 @@ class mod_assign_external extends external_api {
         $params = self::validate_parameters(self::reveal_identities_parameters(),
                                             array('assignmentid' => $assignmentid));
 
-        $cm = get_coursemodule_from_instance('assign', $params['assignmentid'], 0, false, MUST_EXIST);
-        $context = context_module::instance($cm->id);
-        self::validate_context($context);
-
-        $assignment = new assign($context, $cm, null);
+        list($assignment, $course, $cm, $context) = self::validate_assign($params['assignmentid']);
 
         $warnings = array();
         if (!$assignment->reveal_identities()) {
@@ -1833,11 +1778,7 @@ class mod_assign_external extends external_api {
                                             array('assignmentid' => $assignmentid,
                                                   'plugindata' => $plugindata));
 
-        $cm = get_coursemodule_from_instance('assign', $params['assignmentid'], 0, false, MUST_EXIST);
-        $context = context_module::instance($cm->id);
-        self::validate_context($context);
-
-        $assignment = new assign($context, $cm, null);
+        list($assignment, $course, $cm, $context) = self::validate_assign($params['assignmentid']);
 
         $notices = array();
 
@@ -1964,11 +1905,7 @@ class mod_assign_external extends external_api {
                                                   'plugindata' => $plugindata,
                                                   'advancedgradingdata' => $advancedgradingdata));
 
-        $cm = get_coursemodule_from_instance('assign', $params['assignmentid'], 0, false, MUST_EXIST);
-        $context = context_module::instance($cm->id);
-        self::validate_context($context);
-
-        $assignment = new assign($context, $cm, null);
+        list($assignment, $course, $cm, $context) = self::validate_assign($params['assignmentid']);
 
         $gradedata = (object)$params['plugindata'];
 
@@ -2102,10 +2039,7 @@ class mod_assign_external extends external_api {
                                                   'applytoall' => $applytoall,
                                                   'grades' => $grades));
 
-        $cm = get_coursemodule_from_instance('assign', $params['assignmentid'], 0, false, MUST_EXIST);
-        $context = context_module::instance($cm->id);
-        self::validate_context($context);
-        $assignment = new assign($context, $cm, null);
+        list($assignment, $course, $cm, $context) = self::validate_assign($params['assignmentid']);
 
         if ($assignment->get_instance()->teamsubmission && $params['applytoall']) {
             // Check that only 1 user per submission group is provided.
@@ -2184,11 +2118,7 @@ class mod_assign_external extends external_api {
         $params = self::validate_parameters(self::copy_previous_attempt_parameters(),
                                             array('assignmentid' => $assignmentid));
 
-        $cm = get_coursemodule_from_instance('assign', $params['assignmentid'], 0, false, MUST_EXIST);
-        $context = context_module::instance($cm->id);
-        self::validate_context($context);
-
-        $assignment = new assign($context, $cm, null);
+        list($assignment, $course, $cm, $context) = self::validate_assign($params['assignmentid']);
 
         $notices = array();
 
@@ -2237,7 +2167,6 @@ class mod_assign_external extends external_api {
      * @throws moodle_exception
      */
     public static function view_grading_table($assignid) {
-        global $DB, $CFG;
 
         $params = self::validate_parameters(self::view_grading_table_parameters(),
                                             array(
@@ -2245,16 +2174,8 @@ class mod_assign_external extends external_api {
                                             ));
         $warnings = array();
 
-        // Request and permission validation.
-        $assign = $DB->get_record('assign', array('id' => $params['assignid']), 'id', MUST_EXIST);
-        list($course, $cm) = get_course_and_cm_from_instance($assign, 'assign');
+        list($assign, $course, $cm, $context) = self::validate_assign($params['assignid']);
 
-        $context = context_module::instance($cm->id);
-        self::validate_context($context);
-
-        require_capability('mod/assign:view', $context);
-
-        $assign = new assign($context, null, null);
         $assign->require_view_grades();
         \mod_assign\event\grading_table_viewed::create_from_assign($assign)->trigger();
 
@@ -2301,7 +2222,6 @@ class mod_assign_external extends external_api {
      * @since Moodle 3.1
      */
     public static function view_submission_status($assignid) {
-        global $DB, $CFG;
 
         $warnings = array();
         $params = array(
@@ -2309,15 +2229,8 @@ class mod_assign_external extends external_api {
         );
         $params = self::validate_parameters(self::view_submission_status_parameters(), $params);
 
-        // Request and permission validation.
-        $assign = $DB->get_record('assign', array('id' => $params['assignid']), 'id', MUST_EXIST);
-        list($course, $cm) = get_course_and_cm_from_instance($assign, 'assign');
+        list($assign, $course, $cm, $context) = self::validate_assign($params['assignid']);
 
-        $context = context_module::instance($cm->id);
-        // Please, note that is not required to check mod/assign:view because is done by validate_context->require_login.
-        self::validate_context($context);
-
-        $assign = new assign($context, $cm, $course);
         \mod_assign\event\submission_status_viewed::create_from_assign($assign)->trigger();
 
         $result = array();
@@ -2366,7 +2279,7 @@ class mod_assign_external extends external_api {
      * @throws required_capability_exception
      */
     public static function get_submission_status($assignid, $userid = 0) {
-        global $USER, $DB;
+        global $USER;
 
         $warnings = array();
 
@@ -2376,14 +2289,7 @@ class mod_assign_external extends external_api {
         );
         $params = self::validate_parameters(self::get_submission_status_parameters(), $params);
 
-        // Request and permission validation.
-        $assign = $DB->get_record('assign', array('id' => $params['assignid']), 'id', MUST_EXIST);
-        list($course, $cm) = get_course_and_cm_from_instance($assign, 'assign');
-
-        $context = context_module::instance($cm->id);
-        self::validate_context($context);
-
-        $assign = new assign($context, $cm, $course);
+        list($assign, $course, $cm, $context) = self::validate_assign($params['assignid']);
 
         // Default value for userid.
         if (empty($params['userid'])) {
@@ -2631,16 +2537,10 @@ class mod_assign_external extends external_api {
                                             ));
         $warnings = array();
 
-        // Request and permission validation.
-        $assign = $DB->get_record('assign', array('id' => $params['assignid']), 'id', MUST_EXIST);
-        list($course, $cm) = get_course_and_cm_from_instance($assign, 'assign');
-
-        $context = context_module::instance($cm->id);
-        self::validate_context($context);
+        list($assign, $course, $cm, $context) = self::validate_assign($params['assignid']);
 
         require_capability('mod/assign:view', $context);
 
-        $assign = new assign($context, null, null);
         $assign->require_view_grades();
 
         $participants = $assign->list_participants_with_filter_status_and_group($params['groupid']);
@@ -2796,14 +2696,7 @@ class mod_assign_external extends external_api {
             'embeduser' => $embeduser
         ));
 
-        // Request and permission validation.
-        $assign = $DB->get_record('assign', array('id' => $params['assignid']), 'id', MUST_EXIST);
-        list($course, $cm) = get_course_and_cm_from_instance($assign, 'assign');
-
-        $context = context_module::instance($cm->id);
-        self::validate_context($context);
-
-        $assign = new assign($context, null, null);
+        list($assign, $course, $cm, $context) = self::validate_assign($params['assignid']);
         $assign->require_view_grades();
 
         $participant = $assign->get_participant($params['userid']);
@@ -2857,5 +2750,80 @@ class mod_assign_external extends external_api {
             'groupname' => new external_value(PARAM_NOTAGS, 'for group assignments this is the group name', VALUE_OPTIONAL),
             'user' => $userdescription,
         ));
+    }
+
+    /**
+     * Utility function for validating an assign.
+     *
+     * @param int $assignid assign instance id
+     * @return array array containing the assign, course, context and course module objects
+     * @since  Moodle 3.2
+     */
+    protected static function validate_assign($assignid) {
+        global $DB;
+
+        // Request and permission validation.
+        $assign = $DB->get_record('assign', array('id' => $assignid), 'id', MUST_EXIST);
+        list($course, $cm) = get_course_and_cm_from_instance($assign, 'assign');
+
+        $context = context_module::instance($cm->id);
+        // Please, note that is not required to check mod/assign:view because is done by validate_context->require_login.
+        self::validate_context($context);
+        $assign = new assign($context, $cm, $course);
+
+        return array($assign, $course, $cm, $context);
+    }
+
+    /**
+     * Describes the parameters for view_assign.
+     *
+     * @return external_external_function_parameters
+     * @since Moodle 3.2
+     */
+    public static function view_assign_parameters() {
+        return new external_function_parameters (
+            array(
+                'assignid' => new external_value(PARAM_INT, 'assign instance id'),
+            )
+        );
+    }
+
+    /**
+     * Update the module completion status.
+     *
+     * @param int $assignid assign instance id
+     * @return array of warnings and status result
+     * @since Moodle 3.2
+     */
+    public static function view_assign($assignid) {
+        $warnings = array();
+        $params = array(
+            'assignid' => $assignid,
+        );
+        $params = self::validate_parameters(self::view_assign_parameters(), $params);
+
+        list($assign, $course, $cm, $context) = self::validate_assign($params['assignid']);
+
+        $assign->set_module_viewed();
+
+        $result = array();
+        $result['status'] = true;
+        $result['warnings'] = $warnings;
+        return $result;
+    }
+
+    /**
+     * Describes the view_assign return value.
+     *
+     * @return external_single_structure
+     * @since Moodle 3.2
+     */
+    public static function view_assign_returns() {
+        return new external_single_structure(
+            array(
+                'status' => new external_value(PARAM_BOOL, 'status: true if success'),
+                'warnings' => new external_warnings(),
+            )
+        );
     }
 }

@@ -916,14 +916,16 @@ function external_format_string($str, $contextid, $striplinks = true, $options =
  * @param object/array $options text formatting options
  * @return array text + textformat
  * @since Moodle 2.3
+ * @since Moodle 3.2 component, filearea and itemid are optional parameters
  */
-function external_format_text($text, $textformat, $contextid, $component, $filearea, $itemid, $options = null) {
+function external_format_text($text, $textformat, $contextid, $component = null, $filearea = null, $itemid = null,
+                                $options = null) {
     global $CFG;
 
     // Get settings (singleton).
     $settings = external_settings::get_instance();
 
-    if ($settings->get_fileurl()) {
+    if ($component and $filearea and $settings->get_fileurl()) {
         require_once($CFG->libdir . "/filelib.php");
         $text = file_rewrite_pluginfile_urls($text, $settings->get_file(), $contextid, $component, $filearea, $itemid);
     }
@@ -1096,9 +1098,10 @@ class external_util {
      *
      * @param  array $courseids A list of course ids
      * @param  array $courses   An array of courses already pre-fetched, indexed by course id.
+     * @param  bool $addcontext True if the returned course object should include the full context object.
      * @return array            An array of courses and the validation warnings
      */
-    public static function validate_courses($courseids, $courses = array()) {
+    public static function validate_courses($courseids, $courses = array(), $addcontext = false) {
         // Delete duplicates.
         $courseids = array_unique($courseids);
         $warnings = array();
@@ -1115,6 +1118,9 @@ class external_util {
                 if (!isset($courses[$cid])) {
                     $courses[$cid] = get_course($cid);
                 }
+                if ($addcontext) {
+                    $courses[$cid]->context = $context;
+                }
             } catch (Exception $e) {
                 unset($courses[$cid]);
                 $warnings[] = array(
@@ -1129,4 +1135,70 @@ class external_util {
         return array($courses, $warnings);
     }
 
+    /**
+     * Returns all area files (optionally limited by itemid).
+     *
+     * @param int $contextid context ID
+     * @param string $component component
+     * @param string $filearea file area
+     * @param int $itemid item ID or all files if not specified
+     * @param bool $useitemidinurl wether to use the item id in the file URL (modules intro don't use it)
+     * @return array of files, compatible with the external_files structure.
+     * @since Moodle 3.2
+     */
+    public static function get_area_files($contextid, $component, $filearea, $itemid = false, $useitemidinurl = true) {
+        $files = array();
+        $fs = get_file_storage();
+
+        if ($areafiles = $fs->get_area_files($contextid, $component, $filearea, $itemid, 'itemid, filepath, filename', false)) {
+            foreach ($areafiles as $areafile) {
+                $file = array();
+                $file['filename'] = $areafile->get_filename();
+                $file['filepath'] = $areafile->get_filepath();
+                $file['mimetype'] = $areafile->get_mimetype();
+                $file['filesize'] = $areafile->get_filesize();
+                $file['timemodified'] = $areafile->get_timemodified();
+                $fileitemid = $useitemidinurl ? $areafile->get_itemid() : null;
+                $file['fileurl'] = moodle_url::make_webservice_pluginfile_url($contextid, $component, $filearea,
+                                    $fileitemid, $areafile->get_filepath(), $areafile->get_filename())->out(false);
+                $files[] = $file;
+            }
+        }
+        return $files;
+    }
+}
+
+/**
+ * External structure representing a set of files.
+ *
+ * @package    core_webservice
+ * @copyright  2016 Juan Leyva
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @since      Moodle 3.2
+ */
+class external_files extends external_multiple_structure {
+
+    /**
+     * Constructor
+     * @param string $desc Description for the multiple structure.
+     * @param int $required The type of value (VALUE_REQUIRED OR VALUE_OPTIONAL).
+     */
+    public function __construct($desc = 'List of files.', $required = VALUE_REQUIRED) {
+
+        parent::__construct(
+            new external_single_structure(
+                array(
+                    'filename' => new external_value(PARAM_FILE, 'File name.', VALUE_OPTIONAL),
+                    'filepath' => new external_value(PARAM_PATH, 'File path.', VALUE_OPTIONAL),
+                    'filesize' => new external_value(PARAM_INT, 'File size.', VALUE_OPTIONAL),
+                    'fileurl' => new external_value(PARAM_URL, 'Downloadable file url.', VALUE_OPTIONAL),
+                    'timemodified' => new external_value(PARAM_INT, 'Time modified.', VALUE_OPTIONAL),
+                    'mimetype' => new external_value(PARAM_RAW, 'File mime type.', VALUE_OPTIONAL),
+                ),
+                'File.'
+            ),
+            $desc,
+            $required
+        );
+    }
 }

@@ -56,11 +56,12 @@ list($options, $unrecognized) = cli_get_params(
         'updatesteps' => false,
         'fromrun'     => 1,
         'torun'       => 0,
+        'run-with-theme' => false,
     ),
     array(
         'h' => 'help',
         'j' => 'parallel',
-        'm' => 'maxruns'
+        'm' => 'maxruns',
     )
 );
 
@@ -78,8 +79,10 @@ Options:
 --disable      Disables test environment
 --diag         Get behat test environment status code
 --updatesteps  Update feature step file.
+
 -j, --parallel Number of parallel behat run operation
 -m, --maxruns  Max parallel processes to be executed at one time.
+--run-with-theme Run all core features with specified theme.
 
 -h, --help     Print out this help
 
@@ -175,12 +178,15 @@ if ($options['diag'] || $options['enable'] || $options['disable']) {
 } else if ($options['updatesteps']) {
     // Rewrite config file to ensure we have all the features covered.
     if (empty($options['parallel'])) {
-        behat_config_manager::update_config_file();
+        behat_config_manager::update_config_file('', true, '', $options['run-with-theme'], false, false);
     } else {
         // Update config file, ensuring we have up-to-date behat.yml.
         for ($i = $options['fromrun']; $i <= $options['torun']; $i++) {
             $CFG->behatrunprocess = $i;
-            behat_config_manager::update_config_file();
+
+            // Update config file for each run.
+            behat_config_manager::update_config_file('', true, '', $options['run-with-theme'],
+                $options['parallel'], $i);
         }
         unset($CFG->behatrunprocess);
     }

@@ -104,14 +104,16 @@ class mod_quiz_external_testcase extends externallib_advanced_testcase {
      *
      * @param  boolean $startattempt whether to start a new attempt
      * @param  boolean $finishattempt whether to finish the new attempt
+     * @param  string $behaviour the quiz preferredbehaviour, defaults to 'deferredfeedback'.
      * @return array array containing the quiz, context and the attempt
      */
-    private function create_quiz_with_questions($startattempt = false, $finishattempt = false) {
+    private function create_quiz_with_questions($startattempt = false, $finishattempt = false, $behaviour = 'deferredfeedback') {
 
         // Create a new quiz with attempts.
         $quizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_quiz');
         $data = array('course' => $this->course->id,
-                      'sumgrades' => 2);
+                      'sumgrades' => 2,
+                      'preferredbehaviour' => $behaviour);
         $quiz = $quizgenerator->create_instance($data);
         $context = context_module::instance($quiz->cmid);
 
@@ -189,8 +191,8 @@ class mod_quiz_external_testcase extends externallib_advanced_testcase {
 
         // Create what we expect to be returned when querying the two courses.
         // First for the student user.
-        $allusersfields = array('id', 'coursemodule', 'course', 'name', 'intro', 'introformat', 'timeopen', 'timeclose',
-                                'grademethod', 'section', 'visible', 'groupmode', 'groupingid');
+        $allusersfields = array('id', 'coursemodule', 'course', 'name', 'intro', 'introformat', 'introfiles', 'timeopen',
+                                'timeclose', 'grademethod', 'section', 'visible', 'groupmode', 'groupingid');
         $userswithaccessfields = array('timelimit', 'attempts', 'attemptonlast', 'grademethod', 'decimalpoints',
                                         'questiondecimalpoints', 'reviewattempt', 'reviewcorrectness', 'reviewmarks',
                                         'reviewspecificfeedback', 'reviewgeneralfeedback', 'reviewrightanswer',
@@ -211,6 +213,7 @@ class mod_quiz_external_testcase extends externallib_advanced_testcase {
         $quiz1->hasquestions = 0;
         $quiz1->hasfeedback = 0;
         $quiz1->autosaveperiod = get_config('quiz', 'autosaveperiod');
+        $quiz1->introfiles = [];
 
         $quiz2->coursemodule = $quiz2->cmid;
         $quiz2->introformat = 1;
@@ -221,6 +224,7 @@ class mod_quiz_external_testcase extends externallib_advanced_testcase {
         $quiz2->hasquestions = 0;
         $quiz2->hasfeedback = 0;
         $quiz2->autosaveperiod = get_config('quiz', 'autosaveperiod');
+        $quiz2->introfiles = [];
 
         foreach (array_merge($allusersfields, $userswithaccessfields) as $field) {
             $expected1[$field] = $quiz1->{$field};
@@ -925,6 +929,51 @@ class mod_quiz_external_testcase extends externallib_advanced_testcase {
         }
         $this->assertEquals(2, $found);
 
+    }
+
+    /**
+     * Test get_attempt_data with blocked questions.
+     * @since 3.2
+     */
+    public function test_get_attempt_data_with_blocked_questions() {
+        global $DB;
+
+        // Create a new quiz with one attempt started and using immediatefeedback.
+        list($quiz, $context, $quizobj, $attempt, $attemptobj) = $this->create_quiz_with_questions(
+                true, false, 'immediatefeedback');
+
+        $quizobj = $attemptobj->get_quizobj();
+
+        // Make second question blocked by the first one.
+        $structure = $quizobj->get_structure();
+        $slots = $structure->get_slots();
+        $structure->update_question_dependency(end($slots)->id, true);
+
+        $quizobj->preload_questions();
+        $quizobj->load_questions();
+        $questions = $quizobj->get_questions();
+
+        $this->setUser($this->student);
+
+        // We receive one question per page.
+        $result = mod_quiz_external::get_attempt_data($attempt->id, 0);
+        $result = external_api::clean_returnvalue(mod_quiz_external::get_attempt_data_returns(), $result);
+
+        $this->assertEquals($attempt, (object) $result['attempt']);
+        $this->assertCount(1, $result['questions']);
+        $this->assertEquals(1, $result['questions'][0]['slot']);
+        $this->assertEquals(1, $result['questions'][0]['number']);
+        $this->assertEquals(false, $result['questions'][0]['blockedbyprevious']);
+
+        // Now try the last page.
+        $result = mod_quiz_external::get_attempt_data($attempt->id, 1);
+        $result = external_api::clean_returnvalue(mod_quiz_external::get_attempt_data_returns(), $result);
+
+        $this->assertEquals($attempt, (object) $result['attempt']);
+        $this->assertCount(1, $result['questions']);
+        $this->assertEquals(2, $result['questions'][0]['slot']);
+        $this->assertEquals(2, $result['questions'][0]['number']);
+        $this->assertEquals(true, $result['questions'][0]['blockedbyprevious']);
     }
 
     /**

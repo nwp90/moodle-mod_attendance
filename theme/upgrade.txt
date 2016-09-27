@@ -1,6 +1,20 @@
 This files describes API changes in /theme/* themes,
 information provided here is intended especially for theme designer.
 
+=== 3.2 ===
+
+* A new core setting now enables admins to upload the logos of their site. Using the
+  following methods, themers can instantly support branding logos without the need
+  to implement specific theme settings:
+  * $OUTPUT->get_logo_url($maxwidth, $maxheight);
+  * $OUTPUT->get_compact_logo_url($maxwidth, $maxheight);
+Removed themes:
+ * base, canvas
+   During the upgrade process the themes will be uninstalled and all their settings will be deleted.
+   If you wish to keep your theme and its settings, download it from moodle.org and put it back in
+   the theme/ directory BEFORE UPGRADING.
+ * CLI svgtool.php has moved from theme/base/cli to admin/cli and paths should be relative to the new location.
+
 === 3.1 ===
 
 * A new search box for global search has been added to bootstrap and clean layout files, if

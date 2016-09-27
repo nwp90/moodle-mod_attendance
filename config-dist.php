@@ -59,6 +59,10 @@ $CFG->dboptions = array(
     'dbport'    => '',          // the TCP port number to use when connecting
                                 //  to the server. keep empty string for the
                                 //  default port
+    'dbhandlesoptions' => false,// On PostgreSQL poolers like pgbouncer don't
+                                // support advanced options on connection.
+                                // If you set those in the database then
+                                // the advanced settings will not be sent.
 );
 
 
@@ -248,6 +252,15 @@ $CFG->admin = 'admin';
 //      $CFG->session_memcached_prefix = 'memc.sess.key.';
 //      $CFG->session_memcached_acquire_lock_timeout = 120;
 //      $CFG->session_memcached_lock_expire = 7200;       // Ignored if PECL memcached is below version 2.2.0
+//
+//   Redis session handler (requires redis server and redis extension):
+//      $CFG->session_handler_class = '\core\session\redis';
+//      $CFG->session_redis_host = '127.0.0.1';
+//      $CFG->session_redis_port = 6379;  // Optional.
+//      $CFG->session_redis_database = 0;  // Optional, default is db 0.
+//      $CFG->session_redis_prefix = ''; // Optional, default is don't set one.
+//      $CFG->session_redis_acquire_lock_timeout = 120;
+//      $CFG->session_redis_lock_expire = 7200;
 //
 //   Memcache session handler (requires memcached server and memcache extension):
 //      $CFG->session_handler_class = '\core\session\memcache';
@@ -639,6 +652,7 @@ $CFG->admin = 'admin';
 // $CFG->phpunit_prefix = 'phpu_';
 // $CFG->phpunit_dataroot = '/home/example/phpu_moodledata';
 // $CFG->phpunit_directorypermissions = 02777; // optional
+// $CFG->phpunit_profilingenabled = true; // optional to profile PHPUnit runs.
 //
 //
 //=========================================================================
@@ -851,7 +865,7 @@ $CFG->admin = 'admin';
 // ALL DONE!  To continue installation, visit your main page with a browser
 //=========================================================================
 
-require_once(dirname(__FILE__) . '/lib/setup.php'); // Do not edit
+require_once(__DIR__ . '/lib/setup.php'); // Do not edit
 
 // There is no php closing tag in this file,
 // it is intentional because it prevents trailing whitespace problems!

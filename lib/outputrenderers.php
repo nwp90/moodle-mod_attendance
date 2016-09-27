@@ -261,6 +261,51 @@ class renderer_base {
     public function pix_url($imagename, $component = 'moodle') {
         return $this->page->theme->pix_url($imagename, $component);
     }
+
+    /**
+     * Return the site's logo URL, if any.
+     *
+     * @param int $maxwidth The maximum width, or null when the maximum width does not matter.
+     * @param int $maxheight The maximum height, or null when the maximum height does not matter.
+     * @return moodle_url|false
+     */
+    public function get_logo_url($maxwidth = null, $maxheight = 100) {
+        global $CFG;
+        $logo = get_config('core_admin', 'logo');
+        if (empty($logo)) {
+            return false;
+        }
+
+        // Hide the requested size in the file path.
+        $filepath = ((int) $maxwidth . 'x' . (int) $maxheight) . '/';
+
+        // Use $CFG->themerev to prevent browser caching when the file changes.
+        return moodle_url::make_pluginfile_url(context_system::instance()->id, 'core_admin', 'logo', $filepath,
+            theme_get_revision(), $logo);
+    }
+
+    /**
+     * Return the site's compact logo URL, if any.
+     *
+     * @param int $maxwidth The maximum width, or null when the maximum width does not matter.
+     * @param int $maxheight The maximum height, or null when the maximum height does not matter.
+     * @return moodle_url|false
+     */
+    public function get_compact_logo_url($maxwidth = 100, $maxheight = 100) {
+        global $CFG;
+        $logo = get_config('core_admin', 'logocompact');
+        if (empty($logo)) {
+            return false;
+        }
+
+        // Hide the requested size in the file path.
+        $filepath = ((int) $maxwidth . 'x' . (int) $maxheight) . '/';
+
+        // Use $CFG->themerev to prevent browser caching when the file changes.
+        return moodle_url::make_pluginfile_url(context_system::instance()->id, 'core_admin', 'logocompact', $filepath,
+            theme_get_revision(), $logo);
+    }
+
 }
 
 
@@ -2685,12 +2730,19 @@ EOD;
     /**
      * Returns HTML to display the 'Update this Modulename' button that appears on module pages.
      *
+     * @deprecated since Moodle 3.2
+     *
      * @param string $cmid the course_module id.
      * @param string $modulename the module name, eg. "forum", "quiz" or "workshop"
      * @return string the HTML for the button, if this user has permission to edit it, else an empty string.
      */
     public function update_module_button($cmid, $modulename) {
         global $CFG;
+
+        debugging('core_renderer::update_module_button() has been deprecated and should not be used anymore. Activity modules ' .
+            'should not add the edit module button, the link is already available in the Administration block. Themes can choose ' .
+            'to display the link in the buttons row consistently for all module types.', DEBUG_DEVELOPER);
+
         if (has_capability('moodle/course:manageactivities', context_module::instance($cmid))) {
             $modulename = get_string('modulename', $modulename);
             $string = get_string('updatethis', '', $modulename);
@@ -3617,6 +3669,17 @@ EOD;
     }
 
     /**
+     * Accessibility: Down arrow-like character.
+     * If the theme does not set characters, appropriate defaults
+     * are set automatically.
+     *
+     * @return string
+     */
+    public function darrow() {
+        return $this->page->theme->darrow;
+    }
+
+    /**
      * Returns the custom menu if one has been set
      *
      * A custom menu can be configured by browsing to
@@ -4280,6 +4343,52 @@ EOD;
     public function render_inplace_editable(\core\output\inplace_editable $element) {
         return $this->render_from_template('core/inplace_editable', $element->export_for_template($this));
     }
+
+    /**
+     * Renders a bar chart.
+     *
+     * @param \core\chart_bar $chart The chart.
+     * @return string.
+     */
+    public function render_chart_bar(\core\chart_bar $chart) {
+        return $this->render_chart($chart);
+    }
+
+    /**
+     * Renders a line chart.
+     *
+     * @param \core\chart_line $chart The chart.
+     * @return string.
+     */
+    public function render_chart_line(\core\chart_line $chart) {
+        return $this->render_chart($chart);
+    }
+
+    /**
+     * Renders a pie chart.
+     *
+     * @param \core\chart_pie $chart The chart.
+     * @return string.
+     */
+    public function render_chart_pie(\core\chart_pie $chart) {
+        return $this->render_chart($chart);
+    }
+
+    /**
+     * Renders a chart.
+     *
+     * @param \core\chart_base $chart The chart.
+     * @param bool $withtable Whether to include a data table with the chart.
+     * @return string.
+     */
+    public function render_chart(\core\chart_base $chart, $withtable = true) {
+        $chartdata = json_encode($chart);
+        return $this->render_from_template('core/chart', (object) [
+            'chartdata' => $chartdata,
+            'withtable' => $withtable
+        ]);
+    }
+
 }
 
 /**

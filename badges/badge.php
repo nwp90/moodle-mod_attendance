@@ -24,7 +24,7 @@
  * @author     Yuliya Bozhko <yuliya.bozhko@totaralms.com>
  */
 
-require_once(dirname(dirname(__FILE__)) . '/config.php');
+require_once(__DIR__ . '/../config.php');
 require_once($CFG->libdir . '/badgeslib.php');
 require_once($CFG->libdir . '/filelib.php');
 
@@ -70,5 +70,17 @@ badges_setup_backpack_js();
 echo $OUTPUT->header();
 
 echo $output->render($badge);
+
+// Trigger event, badge viewed.
+$other = array('badgeid' => $badge->badgeid, 'badgehash' => $id);
+$eventparams = array('context' => $PAGE->context, 'other' => $other);
+
+// If the badge does not belong to this user, log it appropriately.
+if (($badge->recipient->id != $USER->id)) {
+    $eventparams['relateduserid'] = $badge->recipient->id;
+}
+
+$event = \core\event\badge_viewed::create($eventparams);
+$event->trigger();
 
 echo $OUTPUT->footer();
