@@ -44,7 +44,7 @@ Feature: Gradebook calculations for calculated grade items before the fix 201506
     And I turn editing mode on
     And I give the grade "75.00" to the user "Student 1" for the grade item "grade item 1"
     And I press "Save changes"
-    And I follow "User report"
+    And I navigate to "User report" node in "Grade administration"
     And I select "Student 1" from the "Select all or one user" singleselect
     And the following should exist in the "user-grade" table:
       | Grade item                          | Calculated weight | Grade  | Range | Percentage | Contribution to course total |
@@ -71,7 +71,7 @@ Feature: Gradebook calculations for calculated grade items before the fix 201506
     And I turn editing mode on
     And I give the grade "75.00" to the user "Student 1" for the grade item "grade item 1"
     And I press "Save changes"
-    And I follow "User report"
+    And I navigate to "User report" node in "Grade administration"
     And I select "Student 1" from the "Select all or one user" singleselect
     And the following should exist in the "user-grade" table:
       | Grade item                          | Calculated weight | Grade  | Range | Percentage | Contribution to course total |
@@ -84,7 +84,7 @@ Feature: Gradebook calculations for calculated grade items before the fix 201506
     And I follow "Grader report"
     And I give the grade "65.00" to the user "Student 2" for the grade item "grade item 1"
     And I press "Save changes"
-    And I follow "User report"
+    And I navigate to "User report" node in "Grade administration"
     When I select "Student 1" from the "Select all or one user" singleselect
     Then the following should exist in the "user-grade" table:
       | Grade item                          | Calculated weight | Grade  | Range | Percentage | Contribution to course total |
@@ -101,7 +101,7 @@ Feature: Gradebook calculations for calculated grade items before the fix 201506
     And I set the following fields to these values:
       | Min and max grades used in calculation | Initial min and max grades |
     And I press "Save changes"
-    And I follow "User report"
+    And I navigate to "User report" node in "Grade administration"
     And I select "Student 1" from the "Select all or one user" singleselect
     And the following should exist in the "user-grade" table:
       | Grade item                          | Calculated weight | Grade  | Range | Percentage | Contribution to course total |
@@ -137,7 +137,7 @@ Feature: Gradebook calculations for calculated grade items before the fix 201506
     And I turn editing mode on
     And I give the grade "75.00" to the user "Student 1" for the grade item "grade item 1"
     And I press "Save changes"
-    And I follow "User report"
+    And I navigate to "User report" node in "Grade administration"
     When I select "Student 1" from the "Select all or one user" singleselect
     Then the following should exist in the "user-grade" table:
       | Grade item   | Calculated weight | Grade  | Range | Percentage | Contribution to course total |
@@ -151,7 +151,7 @@ Feature: Gradebook calculations for calculated grade items before the fix 201506
     And I follow "Grader report"
     And I give the grade "65.00" to the user "Student 2" for the grade item "grade item 1"
     And I press "Save changes"
-    And I follow "User report"
+    And I navigate to "User report" node in "Grade administration"
     And I select "Student 1" from the "Select all or one user" singleselect
     And the following should exist in the "user-grade" table:
       | Grade item   | Calculated weight | Grade  | Range | Percentage | Contribution to course total |

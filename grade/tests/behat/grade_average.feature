@@ -62,6 +62,7 @@ Feature: Average grades are displayed in the gradebook
     And I am on site homepage
     And I follow "Course 1"
     And I navigate to "Grades" node in "Course administration"
+    And I pause scenario execution
     Then I should see "50.00" in the ".level2.column-grade" "css_element"
     Then I should see "50.00" in the ".level2.column-average" "css_element"
     And I log out

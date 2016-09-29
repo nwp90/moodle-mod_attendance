@@ -92,7 +92,7 @@ Feature: View gradebook when scales are used
       | -1-                | -2-      | -3-            | -4-          |
       | Range              | F–A      | 0.00–5.00      | 0.00–5.00    |
       | Overall average    | C        | 3.00           | 3.00         |
-    And I follow "User report"
+    And I navigate to "User report" node in "Grade administration"
     And I select "Student 3" from the "Select all or one user" singleselect
     And the following should exist in the "user-grade" table:
       | Grade item          | Grade | Range | Percentage | Contribution to course total |
@@ -138,7 +138,7 @@ Feature: View gradebook when scales are used
       | -1-                | -2-      | -3-            | -4-            |
       | Range              | F–A      | 1.00–5.00      | 0.00–100.00    |
       | Overall average    | C        | 3.00           | <overallavg>   |
-    And I follow "User report"
+    And I navigate to "User report" node in "Grade administration"
     And I select "Student 3" from the "Select all or one user" singleselect
     And the following should exist in the "user-grade" table:
       | Grade item                   | Grade          | Range | Percentage    | Contribution to course total |

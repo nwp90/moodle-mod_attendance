@@ -49,7 +49,7 @@ Feature: We can change the maximum and minimum number of points for manual items
       | Maximum grade | 10 |
       | Rescale existing grades | No |
     And I press "Save changes"
-    And I follow "User report"
+    And I navigate to "User report" node in "Grade administration"
     And I select "Student 1" from the "Select all or one user" singleselect
     Then the following should exist in the "user-grade" table:
       | Grade item    | Calculated weight | Grade  | Contribution to course total |
@@ -65,7 +65,7 @@ Feature: We can change the maximum and minimum number of points for manual items
       | Maximum grade | 20 |
       | Rescale existing grades | Yes |
     And I press "Save changes"
-    And I follow "User report"
+    And I navigate to "User report" node in "Grade administration"
     And I select "Student 1" from the "Select all or one user" singleselect
     And the following should exist in the "user-grade" table:
       | Grade item    | Calculated weight | Grade  | Contribution to course total |
