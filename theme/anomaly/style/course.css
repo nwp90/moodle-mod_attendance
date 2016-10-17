@@ -1,6 +1,0 @@
-/** Fix for MDL-52232 **/
-
-#page-course-view-topics span.hidden,
-#page-course-view-weeks span.hidden {
-    display: none;
-}
