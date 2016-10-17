@@ -66,7 +66,7 @@ Feature: View gradebook when single item scales are used
       | -1-                | -2-       | -3-            | -4-          |
       | Range              | Ace!–Ace! | 0.00–1.00      | 0.00–1.00    |
       | Overall average    | Ace!      | 1.00           | 1.00         |
-    And I follow "User report"
+    And I navigate to "User report" node in "Grade administration"
     And I select "Student 1" from the "Select all or one user" singleselect
     And the following should exist in the "user-grade" table:
       | Grade item          | Grade | Range     | Contribution to course total |
@@ -104,7 +104,7 @@ Feature: View gradebook when single item scales are used
       | -1-                | -2-       | -3-            | -4-            |
       | Range              | Ace!–Ace! | 0.00–100.0     | 0.00–100.00    |
       | Overall average    | Ace!      | <catavg>       | <overallavg>   |
-    And I follow "User report"
+    And I navigate to "User report" node in "Grade administration"
     And I select "Student 1" from the "Select all or one user" singleselect
     And the following should exist in the "user-grade" table:
       | Grade item                                       | Grade          | Range       | Contribution to course total |

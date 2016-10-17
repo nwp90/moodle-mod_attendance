@@ -101,7 +101,7 @@ Feature: We can use a minimum grade different than zero
     And I give the grade "0.00" to the user "Student 2" for the grade item "Manual item 5"
     And I give the grade "0.00" to the user "Student 2" for the grade item "Manual item 6"
     And I press "Save changes"
-    And I follow "User report"
+    And I navigate to "User report" node in "Grade administration"
     And I set the field "Select all or one user" to "Student 1"
     Then the following should exist in the "user-grade" table:
       | Grade item    | Calculated weight | Grade  | Contribution to course total |

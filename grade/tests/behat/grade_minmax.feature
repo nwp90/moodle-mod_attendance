@@ -77,7 +77,7 @@ Feature: We can choose what min or max grade to use when aggregating grades.
     And I give the grade "20.00" to the user "Student 2" for the grade item "MI 1"
     And I give the grade "10.00" to the user "Student 2" for the grade item "MI 3"
     And I press "Save changes"
-    And I follow "User report"
+    And I navigate to "User report" node in "Grade administration"
     And I select "Student 1" from the "Select all or one user" singleselect
     And the following should exist in the "user-grade" table:
       | Grade item   | Calculated weight | Grade  | Range | Percentage | Contribution to course total |
@@ -107,7 +107,7 @@ Feature: We can choose what min or max grade to use when aggregating grades.
       | Maximum grade           | 50.00 |
       | Minimum grade           | 5.00  |
       | Rescale existing grades | No    |
-    And I follow "User report"
+    And I navigate to "User report" node in "Grade administration"
     And I select "Student 1" from the "Select all or one user" singleselect
     And the following should exist in the "user-grade" table:
       | Grade item   | Calculated weight | Grade  | Range | Percentage | Contribution to course total |
@@ -132,7 +132,7 @@ Feature: We can choose what min or max grade to use when aggregating grades.
     And I set the following settings for grade item "MI 5":
       | Maximum grade          | 200.00 |
       | Rescale existing grades | No    |
-    And I follow "User report"
+    And I navigate to "User report" node in "Grade administration"
     And I select "Student 1" from the "Select all or one user" singleselect
     And the following should exist in the "user-grade" table:
       | Grade item   | Calculated weight | Grade  | Range | Percentage | Contribution to course total |
@@ -146,7 +146,7 @@ Feature: We can choose what min or max grade to use when aggregating grades.
     And I navigate to "Course grade settings" node in "Grade administration > Setup"
     When I set the field "Min and max grades used in calculation" to "Initial min and max grades"
     And I press "Save changes"
-    And I follow "User report"
+    And I navigate to "User report" node in "Grade administration"
     And I select "Student 1" from the "Select all or one user" singleselect
     Then the following should exist in the "user-grade" table:
       | Grade item   | Calculated weight | Grade  | Range | Percentage | Contribution to course total |

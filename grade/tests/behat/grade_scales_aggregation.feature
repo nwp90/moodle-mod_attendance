@@ -46,7 +46,7 @@ Feature: Control the aggregation of the scales
     And I press "Save changes"
     And I set the following settings for grade item "Course 1":
       | Aggregation | <aggregation> |
-    And I follow "User report"
+    And I navigate to "User report" node in "Grade administration"
     And I select "Student 1" from the "Select all or one user" singleselect
     Then the following should exist in the "user-grade" table:
       | Grade item             | Grade          | Percentage  | Contribution to course total |
@@ -61,7 +61,7 @@ Feature: Control the aggregation of the scales
     And I log in as "teacher1"
     And I follow "Course 1"
     And I navigate to "Grades" node in "Course administration"
-    And I follow "User report"
+    And I navigate to "User report" node in "Grade administration"
     And I select "Student 1" from the "Select all or one user" singleselect
     And the following should exist in the "user-grade" table:
       | Grade item             | Grade          | Percentage  | Contribution to course total |
