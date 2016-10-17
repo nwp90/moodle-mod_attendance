@@ -4629,3 +4629,992 @@ function put_records_csv($file, $records, $table = NULL) {
     @chmod($CFG->tempdir.'/'.$file, $CFG->filepermissions);
     return true;
 }
+
+/**
+ * Determines if the given value is a valid CSS colour.
+ *
+ * A CSS colour can be one of the following:
+ *    - Hex colour:  #AA66BB
+ *    - RGB colour:  rgb(0-255, 0-255, 0-255)
+ *    - RGBA colour: rgba(0-255, 0-255, 0-255, 0-1)
+ *    - HSL colour:  hsl(0-360, 0-100%, 0-100%)
+ *    - HSLA colour: hsla(0-360, 0-100%, 0-100%, 0-1)
+ *
+ * Or a recognised browser colour mapping {@link css_optimiser::$htmlcolours}
+ *
+ * @deprecated since Moodle 3.2
+ * @todo MDL-56173 for final deprecation in Moodle 3.6
+ * @param string $value The colour value to check
+ * @return bool
+ */
+function css_is_colour($value) {
+    debugging('css_is_colour() is deprecated without a replacement. Please copy the implementation '.
+        'into your plugin if you need this functionality.', DEBUG_DEVELOPER);
+
+    $value = trim($value);
+
+    $hex  = '/^#([a-fA-F0-9]{1,3}|[a-fA-F0-9]{6})$/';
+    $rgb  = '#^rgb\s*\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$#i';
+    $rgba = '#^rgba\s*\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1}(\.\d+)?)\s*\)$#i';
+    $hsl  = '#^hsl\s*\(\s*(\d{1,3})\s*,\s*(\d{1,3})\%\s*,\s*(\d{1,3})\%\s*\)$#i';
+    $hsla = '#^hsla\s*\(\s*(\d{1,3})\s*,\s*(\d{1,3})\%\s*,\s*(\d{1,3})\%\s*,\s*(\d{1}(\.\d+)?)\s*\)$#i';
+
+    if (in_array(strtolower($value), array('inherit'))) {
+        return true;
+    } else if (preg_match($hex, $value)) {
+        return true;
+    } else if (in_array(strtolower($value), array_keys(css_optimiser::$htmlcolours))) {
+        return true;
+    } else if (preg_match($rgb, $value, $m) && $m[1] < 256 && $m[2] < 256 && $m[3] < 256) {
+        // It is an RGB colour.
+        return true;
+    } else if (preg_match($rgba, $value, $m) && $m[1] < 256 && $m[2] < 256 && $m[3] < 256) {
+        // It is an RGBA colour.
+        return true;
+    } else if (preg_match($hsl, $value, $m) && $m[1] <= 360 && $m[2] <= 100 && $m[3] <= 100) {
+        // It is an HSL colour.
+        return true;
+    } else if (preg_match($hsla, $value, $m) && $m[1] <= 360 && $m[2] <= 100 && $m[3] <= 100) {
+        // It is an HSLA colour.
+        return true;
+    }
+    // Doesn't look like a colour.
+    return false;
+}
+
+/**
+ * Returns true is the passed value looks like a CSS width.
+ * In order to pass this test the value must be purely numerical or end with a
+ * valid CSS unit term.
+ *
+ * @param string|int $value
+ * @return boolean
+ * @deprecated since Moodle 3.2
+ * @todo MDL-56173 for final deprecation in Moodle 3.6
+ */
+function css_is_width($value) {
+    debugging('css_is_width() is deprecated without a replacement. Please copy the implementation '.
+        'into your plugin if you need this functionality.', DEBUG_DEVELOPER);
+
+    $value = trim($value);
+    if (in_array(strtolower($value), array('auto', 'inherit'))) {
+        return true;
+    }
+    if ((string)$value === '0' || preg_match('#^(\-\s*)?(\d*\.)?(\d+)\s*(em|px|pt|\%|in|cm|mm|ex|pc)$#i', $value)) {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * A simple sorting function to sort two array values on the number of items they contain
+ *
+ * @param array $a
+ * @param array $b
+ * @return int
+ * @deprecated since Moodle 3.2
+ * @todo MDL-56173 for final deprecation in Moodle 3.6
+ */
+function css_sort_by_count(array $a, array $b) {
+    debugging('css_sort_by_count() is deprecated without a replacement. Please copy the implementation '.
+        'into your plugin if you need this functionality.', DEBUG_DEVELOPER);
+
+    $a = count($a);
+    $b = count($b);
+    if ($a == $b) {
+        return 0;
+    }
+    return ($a > $b) ? -1 : 1;
+}
+
+/**
+ * A basic CSS optimiser that strips out unwanted things and then processes CSS organising and cleaning styles.
+ * @deprecated since Moodle 3.2
+ * @todo MDL-56173 for final deprecation in Moodle 3.6
+ */
+class css_optimiser {
+    /**
+     * An array of the common HTML colours that are supported by most browsers.
+     *
+     * This reference table is used to allow us to unify colours, and will aid
+     * us in identifying buggy CSS using unsupported colours.
+     *
+     * @var string[]
+     * @deprecated since Moodle 3.2
+     * @todo MDL-56173 for final deprecation in Moodle 3.6
+     */
+    public static $htmlcolours = array(
+        'aliceblue' => '#F0F8FF',
+        'antiquewhite' => '#FAEBD7',
+        'aqua' => '#00FFFF',
+        'aquamarine' => '#7FFFD4',
+        'azure' => '#F0FFFF',
+        'beige' => '#F5F5DC',
+        'bisque' => '#FFE4C4',
+        'black' => '#000000',
+        'blanchedalmond' => '#FFEBCD',
+        'blue' => '#0000FF',
+        'blueviolet' => '#8A2BE2',
+        'brown' => '#A52A2A',
+        'burlywood' => '#DEB887',
+        'cadetblue' => '#5F9EA0',
+        'chartreuse' => '#7FFF00',
+        'chocolate' => '#D2691E',
+        'coral' => '#FF7F50',
+        'cornflowerblue' => '#6495ED',
+        'cornsilk' => '#FFF8DC',
+        'crimson' => '#DC143C',
+        'cyan' => '#00FFFF',
+        'darkblue' => '#00008B',
+        'darkcyan' => '#008B8B',
+        'darkgoldenrod' => '#B8860B',
+        'darkgray' => '#A9A9A9',
+        'darkgrey' => '#A9A9A9',
+        'darkgreen' => '#006400',
+        'darkKhaki' => '#BDB76B',
+        'darkmagenta' => '#8B008B',
+        'darkolivegreen' => '#556B2F',
+        'arkorange' => '#FF8C00',
+        'darkorchid' => '#9932CC',
+        'darkred' => '#8B0000',
+        'darksalmon' => '#E9967A',
+        'darkseagreen' => '#8FBC8F',
+        'darkslateblue' => '#483D8B',
+        'darkslategray' => '#2F4F4F',
+        'darkslategrey' => '#2F4F4F',
+        'darkturquoise' => '#00CED1',
+        'darkviolet' => '#9400D3',
+        'deeppink' => '#FF1493',
+        'deepskyblue' => '#00BFFF',
+        'dimgray' => '#696969',
+        'dimgrey' => '#696969',
+        'dodgerblue' => '#1E90FF',
+        'firebrick' => '#B22222',
+        'floralwhite' => '#FFFAF0',
+        'forestgreen' => '#228B22',
+        'fuchsia' => '#FF00FF',
+        'gainsboro' => '#DCDCDC',
+        'ghostwhite' => '#F8F8FF',
+        'gold' => '#FFD700',
+        'goldenrod' => '#DAA520',
+        'gray' => '#808080',
+        'grey' => '#808080',
+        'green' => '#008000',
+        'greenyellow' => '#ADFF2F',
+        'honeydew' => '#F0FFF0',
+        'hotpink' => '#FF69B4',
+        'indianred ' => '#CD5C5C',
+        'indigo ' => '#4B0082',
+        'ivory' => '#FFFFF0',
+        'khaki' => '#F0E68C',
+        'lavender' => '#E6E6FA',
+        'lavenderblush' => '#FFF0F5',
+        'lawngreen' => '#7CFC00',
+        'lemonchiffon' => '#FFFACD',
+        'lightblue' => '#ADD8E6',
+        'lightcoral' => '#F08080',
+        'lightcyan' => '#E0FFFF',
+        'lightgoldenrodyellow' => '#FAFAD2',
+        'lightgray' => '#D3D3D3',
+        'lightgrey' => '#D3D3D3',
+        'lightgreen' => '#90EE90',
+        'lightpink' => '#FFB6C1',
+        'lightsalmon' => '#FFA07A',
+        'lightseagreen' => '#20B2AA',
+        'lightskyblue' => '#87CEFA',
+        'lightslategray' => '#778899',
+        'lightslategrey' => '#778899',
+        'lightsteelblue' => '#B0C4DE',
+        'lightyellow' => '#FFFFE0',
+        'lime' => '#00FF00',
+        'limegreen' => '#32CD32',
+        'linen' => '#FAF0E6',
+        'magenta' => '#FF00FF',
+        'maroon' => '#800000',
+        'mediumaquamarine' => '#66CDAA',
+        'mediumblue' => '#0000CD',
+        'mediumorchid' => '#BA55D3',
+        'mediumpurple' => '#9370D8',
+        'mediumseagreen' => '#3CB371',
+        'mediumslateblue' => '#7B68EE',
+        'mediumspringgreen' => '#00FA9A',
+        'mediumturquoise' => '#48D1CC',
+        'mediumvioletred' => '#C71585',
+        'midnightblue' => '#191970',
+        'mintcream' => '#F5FFFA',
+        'mistyrose' => '#FFE4E1',
+        'moccasin' => '#FFE4B5',
+        'navajowhite' => '#FFDEAD',
+        'navy' => '#000080',
+        'oldlace' => '#FDF5E6',
+        'olive' => '#808000',
+        'olivedrab' => '#6B8E23',
+        'orange' => '#FFA500',
+        'orangered' => '#FF4500',
+        'orchid' => '#DA70D6',
+        'palegoldenrod' => '#EEE8AA',
+        'palegreen' => '#98FB98',
+        'paleturquoise' => '#AFEEEE',
+        'palevioletred' => '#D87093',
+        'papayawhip' => '#FFEFD5',
+        'peachpuff' => '#FFDAB9',
+        'peru' => '#CD853F',
+        'pink' => '#FFC0CB',
+        'plum' => '#DDA0DD',
+        'powderblue' => '#B0E0E6',
+        'purple' => '#800080',
+        'red' => '#FF0000',
+        'rosybrown' => '#BC8F8F',
+        'royalblue' => '#4169E1',
+        'saddlebrown' => '#8B4513',
+        'salmon' => '#FA8072',
+        'sandybrown' => '#F4A460',
+        'seagreen' => '#2E8B57',
+        'seashell' => '#FFF5EE',
+        'sienna' => '#A0522D',
+        'silver' => '#C0C0C0',
+        'skyblue' => '#87CEEB',
+        'slateblue' => '#6A5ACD',
+        'slategray' => '#708090',
+        'slategrey' => '#708090',
+        'snow' => '#FFFAFA',
+        'springgreen' => '#00FF7F',
+        'steelblue' => '#4682B4',
+        'tan' => '#D2B48C',
+        'teal' => '#008080',
+        'thistle' => '#D8BFD8',
+        'tomato' => '#FF6347',
+        'transparent' => 'transparent',
+        'turquoise' => '#40E0D0',
+        'violet' => '#EE82EE',
+        'wheat' => '#F5DEB3',
+        'white' => '#FFFFFF',
+        'whitesmoke' => '#F5F5F5',
+        'yellow' => '#FFFF00',
+        'yellowgreen' => '#9ACD32'
+    );
+
+    /**
+     * Used to orocesses incoming CSS optimising it and then returning it. Now just returns
+     * what is sent to it. Do not use.
+     *
+     * @param string $css The raw CSS to optimise
+     * @return string The optimised CSS
+     * @deprecated since Moodle 3.2
+     * @todo MDL-56173 for final deprecation in Moodle 3.6
+     */
+    public function process($css) {
+        debugging('class css_optimiser is deprecated and no longer does anything, '.
+            'please consider using stylelint to optimise your css.', DEBUG_DEVELOPER);
+
+        return $css;
+    }
+}
+
+/**
+ * Load the course contexts for all of the users courses
+ *
+ * @deprecated since Moodle 3.2
+ * @param array $courses array of course objects. The courses the user is enrolled in.
+ * @return array of course contexts
+ */
+function message_get_course_contexts($courses) {
+    debugging('message_get_course_contexts() is deprecated and is no longer used.', DEBUG_DEVELOPER);
+
+    $coursecontexts = array();
+
+    foreach($courses as $course) {
+        $coursecontexts[$course->id] = context_course::instance($course->id);
+    }
+
+    return $coursecontexts;
+}
+
+/**
+ * strip off action parameters like 'removecontact'
+ *
+ * @deprecated since Moodle 3.2
+ * @param moodle_url/string $moodleurl a URL. Typically the current page URL.
+ * @return string the URL minus parameters that perform actions (like adding/removing/blocking a contact).
+ */
+function message_remove_url_params($moodleurl) {
+    debugging('message_remove_url_params() is deprecated and is no longer used.', DEBUG_DEVELOPER);
+
+    $newurl = new moodle_url($moodleurl);
+    $newurl->remove_params('addcontact','removecontact','blockcontact','unblockcontact');
+    return $newurl->out();
+}
+
+/**
+ * Count the number of messages with a field having a specified value.
+ * if $field is empty then return count of the whole array
+ * if $field is non-existent then return 0
+ *
+ * @deprecated since Moodle 3.2
+ * @param array $messagearray array of message objects
+ * @param string $field the field to inspect on the message objects
+ * @param string $value the value to test the field against
+ */
+function message_count_messages($messagearray, $field='', $value='') {
+    debugging('message_count_messages() is deprecated and is no longer used.', DEBUG_DEVELOPER);
+
+    if (!is_array($messagearray)) return 0;
+    if ($field == '' or empty($messagearray)) return count($messagearray);
+
+    $count = 0;
+    foreach ($messagearray as $message) {
+        $count += ($message->$field == $value) ? 1 : 0;
+    }
+    return $count;
+}
+
+/**
+ * Count the number of users blocked by $user1
+ *
+ * @deprecated since Moodle 3.2
+ * @param object $user1 user object
+ * @return int the number of blocked users
+ */
+function message_count_blocked_users($user1=null) {
+    debugging('message_count_blocked_users() is deprecated, please use \core_message\api::count_blocked_users() instead.',
+        DEBUG_DEVELOPER);
+
+    return \core_message\api::count_blocked_users($user1);
+}
+
+/**
+ * Print a message contact link
+ *
+ * @deprecated since Moodle 3.2
+ * @param int $userid the ID of the user to apply to action to
+ * @param string $linktype can be add, remove, block or unblock
+ * @param bool $return if true return the link as a string. If false echo the link.
+ * @param string $script the URL to send the user to when the link is clicked. If null, the current page.
+ * @param bool $text include text next to the icons?
+ * @param bool $icon include a graphical icon?
+ * @return string  if $return is true otherwise bool
+ */
+function message_contact_link($userid, $linktype='add', $return=false, $script=null, $text=false, $icon=true) {
+    debugging('message_contact_link() is deprecated and is no longer used.', DEBUG_DEVELOPER);
+
+    global $OUTPUT, $PAGE;
+
+    //hold onto the strings as we're probably creating a bunch of links
+    static $str;
+
+    if (empty($script)) {
+        //strip off previous action params like 'removecontact'
+        $script = message_remove_url_params($PAGE->url);
+    }
+
+    if (empty($str->blockcontact)) {
+        $str = new stdClass();
+        $str->blockcontact   =  get_string('blockcontact', 'message');
+        $str->unblockcontact =  get_string('unblockcontact', 'message');
+        $str->removecontact  =  get_string('removecontact', 'message');
+        $str->addcontact     =  get_string('addcontact', 'message');
+    }
+
+    $command = $linktype.'contact';
+    $string  = $str->{$command};
+
+    $safealttext = s($string);
+
+    $safestring = '';
+    if (!empty($text)) {
+        $safestring = $safealttext;
+    }
+
+    $img = '';
+    if ($icon) {
+        $iconpath = null;
+        switch ($linktype) {
+            case 'block':
+                $iconpath = 't/block';
+                break;
+            case 'unblock':
+                $iconpath = 't/unblock';
+                break;
+            case 'remove':
+                $iconpath = 't/removecontact';
+                break;
+            case 'add':
+            default:
+                $iconpath = 't/addcontact';
+        }
+
+        $img = '<img src="'.$OUTPUT->pix_url($iconpath).'" class="iconsmall" alt="'.$safealttext.'" />';
+    }
+
+    $output = '<span class="'.$linktype.'contact">'.
+        '<a href="'.$script.'&amp;'.$command.'='.$userid.
+        '&amp;sesskey='.sesskey().'" title="'.$safealttext.'">'.
+        $img.
+        $safestring.'</a></span>';
+
+    if ($return) {
+        return $output;
+    } else {
+        echo $output;
+        return true;
+    }
+}
+
+/**
+ * Get the users recent event notifications
+ *
+ * @deprecated since Moodle 3.2
+ * @param object $user the current user
+ * @param int $limitfrom can be used for paging
+ * @param int $limitto can be used for paging
+ * @return array
+ */
+function message_get_recent_notifications($user, $limitfrom=0, $limitto=100) {
+    debugging('message_get_recent_notifications() is deprecated and is no longer used.', DEBUG_DEVELOPER);
+
+    global $DB;
+
+    $userfields = user_picture::fields('u', array('lastaccess'));
+    $sql = "SELECT mr.id AS message_read_id, $userfields, mr.notification, mr.smallmessage, mr.fullmessage, mr.fullmessagehtml, mr.fullmessageformat, mr.timecreated as timecreated, mr.contexturl, mr.contexturlname
+              FROM {message_read} mr
+                   JOIN {user} u ON u.id=mr.useridfrom
+             WHERE mr.useridto = :userid1 AND u.deleted = '0' AND mr.notification = :notification
+             ORDER BY mr.timecreated DESC";
+    $params = array('userid1' => $user->id, 'notification' => 1);
+
+    $notifications =  $DB->get_records_sql($sql, $params, $limitfrom, $limitto);
+    return $notifications;
+}
+
+/**
+ * echo or return a link to take the user to the full message history between themselves and another user
+ *
+ * @deprecated since Moodle 3.2
+ * @param int $userid1 the ID of the user displayed on the left (usually the current user)
+ * @param int $userid2 the ID of the other user
+ * @param bool $return true to return the link as a string. False to echo the link.
+ * @param string $keywords any keywords to highlight in the message history
+ * @param string $position anchor name to jump to within the message history
+ * @param string $linktext optionally specify the link text
+ * @return string|bool. Returns a string if $return is true. Otherwise returns a boolean.
+ */
+function message_history_link($userid1, $userid2, $return=false, $keywords='', $position='', $linktext='') {
+    debugging('message_history_link() is deprecated and is no longer used.', DEBUG_DEVELOPER);
+
+    global $OUTPUT, $PAGE;
+    static $strmessagehistory;
+
+    if (empty($strmessagehistory)) {
+        $strmessagehistory = get_string('messagehistory', 'message');
+    }
+
+    if ($position) {
+        $position = "#$position";
+    }
+    if ($keywords) {
+        $keywords = "&search=".urlencode($keywords);
+    }
+
+    if ($linktext == 'icon') {  // Icon only
+        $fulllink = '<img src="'.$OUTPUT->pix_url('t/messages') . '" class="iconsmall" alt="'.$strmessagehistory.'" />';
+    } else if ($linktext == 'both') {  // Icon and standard name
+        $fulllink = '<img src="'.$OUTPUT->pix_url('t/messages') . '" class="iconsmall" alt="" />';
+        $fulllink .= '&nbsp;'.$strmessagehistory;
+    } else if ($linktext) {    // Custom name
+        $fulllink = $linktext;
+    } else {                   // Standard name only
+        $fulllink = $strmessagehistory;
+    }
+
+    $popupoptions = array(
+        'height' => 500,
+        'width' => 500,
+        'menubar' => false,
+        'location' => false,
+        'status' => true,
+        'scrollbars' => true,
+        'resizable' => true);
+
+    $link = new moodle_url('/message/index.php?history='.MESSAGE_HISTORY_ALL."&user1=$userid1&user2=$userid2$keywords$position");
+    if ($PAGE->url && $PAGE->url->get_param('viewing')) {
+        $link->param('viewing', $PAGE->url->get_param('viewing'));
+    }
+    $action = null;
+    $str = $OUTPUT->action_link($link, $fulllink, $action, array('title' => $strmessagehistory));
+
+    $str = '<span class="history">'.$str.'</span>';
+
+    if ($return) {
+        return $str;
+    } else {
+        echo $str;
+        return true;
+    }
+}
+
+/**
+ * Search a user's messages
+ *
+ * Returns a list of posts found using an array of search terms
+ * eg   word  +word -word
+ *
+ * @deprecated since Moodle 3.2
+ * @param array $searchterms an array of search terms (strings)
+ * @param bool $fromme include messages from the user?
+ * @param bool $tome include messages to the user?
+ * @param mixed $courseid SITEID for admins searching all messages. Other behaviour not yet implemented
+ * @param int $userid the user ID of the current user
+ * @return mixed An array of messages or false if no matching messages were found
+ */
+function message_search($searchterms, $fromme=true, $tome=true, $courseid='none', $userid=0) {
+    debugging('message_search() is deprecated and is no longer used.', DEBUG_DEVELOPER);
+
+    global $CFG, $USER, $DB;
+
+    // If user is searching all messages check they are allowed to before doing anything else.
+    if ($courseid == SITEID && !has_capability('moodle/site:readallmessages', context_system::instance())) {
+        print_error('accessdenied','admin');
+    }
+
+    // If no userid sent then assume current user.
+    if ($userid == 0) $userid = $USER->id;
+
+    // Some differences in SQL syntax.
+    if ($DB->sql_regex_supported()) {
+        $REGEXP    = $DB->sql_regex(true);
+        $NOTREGEXP = $DB->sql_regex(false);
+    }
+
+    $searchcond = array();
+    $params = array();
+    $i = 0;
+
+    // Preprocess search terms to check whether we have at least 1 eligible search term.
+    // If we do we can drop words around it like 'a'.
+    $dropshortwords = false;
+    foreach ($searchterms as $searchterm) {
+        if (strlen($searchterm) >= 2) {
+            $dropshortwords = true;
+        }
+    }
+
+    foreach ($searchterms as $searchterm) {
+        $i++;
+
+        $NOT = false; // Initially we aren't going to perform NOT LIKE searches, only MSSQL and Oracle.
+
+        if ($dropshortwords && strlen($searchterm) < 2) {
+            continue;
+        }
+        // Under Oracle and MSSQL, trim the + and - operators and perform simpler LIKE search.
+        if (!$DB->sql_regex_supported()) {
+            if (substr($searchterm, 0, 1) == '-') {
+                $NOT = true;
+            }
+            $searchterm = trim($searchterm, '+-');
+        }
+
+        if (substr($searchterm,0,1) == "+") {
+            $searchterm = substr($searchterm,1);
+            $searchterm = preg_quote($searchterm, '|');
+            $searchcond[] = "m.fullmessage $REGEXP :ss$i";
+            $params['ss'.$i] = "(^|[^a-zA-Z0-9])$searchterm([^a-zA-Z0-9]|$)";
+
+        } else if (substr($searchterm,0,1) == "-") {
+            $searchterm = substr($searchterm,1);
+            $searchterm = preg_quote($searchterm, '|');
+            $searchcond[] = "m.fullmessage $NOTREGEXP :ss$i";
+            $params['ss'.$i] = "(^|[^a-zA-Z0-9])$searchterm([^a-zA-Z0-9]|$)";
+
+        } else {
+            $searchcond[] = $DB->sql_like("m.fullmessage", ":ss$i", false, true, $NOT);
+            $params['ss'.$i] = "%$searchterm%";
+        }
+    }
+
+    if (empty($searchcond)) {
+        $searchcond = " ".$DB->sql_like('m.fullmessage', ':ss1', false);
+        $params['ss1'] = "%";
+    } else {
+        $searchcond = implode(" AND ", $searchcond);
+    }
+
+    // There are several possibilities
+    // 1. courseid = SITEID : The admin is searching messages by all users
+    // 2. courseid = ??     : A teacher is searching messages by users in
+    //                        one of their courses - currently disabled
+    // 3. courseid = none   : User is searching their own messages;
+    //    a.  Messages from user
+    //    b.  Messages to user
+    //    c.  Messages to and from user
+
+    if ($fromme && $tome) {
+        $searchcond .= " AND ((useridto = :useridto AND timeusertodeleted = 0) OR
+            (useridfrom = :useridfrom AND timeuserfromdeleted = 0))";
+        $params['useridto'] = $userid;
+        $params['useridfrom'] = $userid;
+    } else if ($fromme) {
+        $searchcond .= " AND (useridfrom = :useridfrom AND timeuserfromdeleted = 0)";
+        $params['useridfrom'] = $userid;
+    } else if ($tome) {
+        $searchcond .= " AND (useridto = :useridto AND timeusertodeleted = 0)";
+        $params['useridto'] = $userid;
+    }
+    if ($courseid == SITEID) { // Admin is searching all messages.
+        $m_read   = $DB->get_records_sql("SELECT m.id, m.useridto, m.useridfrom, m.smallmessage, m.fullmessage, m.timecreated
+                                            FROM {message_read} m
+                                           WHERE $searchcond", $params, 0, MESSAGE_SEARCH_MAX_RESULTS);
+        $m_unread = $DB->get_records_sql("SELECT m.id, m.useridto, m.useridfrom, m.smallmessage, m.fullmessage, m.timecreated
+                                            FROM {message} m
+                                           WHERE $searchcond", $params, 0, MESSAGE_SEARCH_MAX_RESULTS);
+
+    } else if ($courseid !== 'none') {
+        // This has not been implemented due to security concerns.
+        $m_read   = array();
+        $m_unread = array();
+
+    } else {
+
+        if ($fromme and $tome) {
+            $searchcond .= " AND (m.useridfrom=:userid1 OR m.useridto=:userid2)";
+            $params['userid1'] = $userid;
+            $params['userid2'] = $userid;
+
+        } else if ($fromme) {
+            $searchcond .= " AND m.useridfrom=:userid";
+            $params['userid'] = $userid;
+
+        } else if ($tome) {
+            $searchcond .= " AND m.useridto=:userid";
+            $params['userid'] = $userid;
+        }
+
+        $m_read   = $DB->get_records_sql("SELECT m.id, m.useridto, m.useridfrom, m.smallmessage, m.fullmessage, m.timecreated
+                                            FROM {message_read} m
+                                           WHERE $searchcond", $params, 0, MESSAGE_SEARCH_MAX_RESULTS);
+        $m_unread = $DB->get_records_sql("SELECT m.id, m.useridto, m.useridfrom, m.smallmessage, m.fullmessage, m.timecreated
+                                            FROM {message} m
+                                           WHERE $searchcond", $params, 0, MESSAGE_SEARCH_MAX_RESULTS);
+
+    }
+
+    /// The keys may be duplicated in $m_read and $m_unread so we can't
+    /// do a simple concatenation
+    $messages = array();
+    foreach ($m_read as $m) {
+        $messages[] = $m;
+    }
+    foreach ($m_unread as $m) {
+        $messages[] = $m;
+    }
+
+    return (empty($messages)) ? false : $messages;
+}
+
+/**
+ * Given a message object that we already know has a long message
+ * this function truncates the message nicely to the first
+ * sane place between $CFG->forum_longpost and $CFG->forum_shortpost
+ *
+ * @deprecated since Moodle 3.2
+ * @param string $message the message
+ * @param int $minlength the minimum length to trim the message to
+ * @return string the shortened message
+ */
+function message_shorten_message($message, $minlength = 0) {
+    debugging('message_shorten_message() is deprecated and is no longer used.', DEBUG_DEVELOPER);
+
+    $i = 0;
+    $tag = false;
+    $length = strlen($message);
+    $count = 0;
+    $stopzone = false;
+    $truncate = 0;
+    if ($minlength == 0) $minlength = MESSAGE_SHORTLENGTH;
+
+
+    for ($i=0; $i<$length; $i++) {
+        $char = $message[$i];
+
+        switch ($char) {
+            case "<":
+                $tag = true;
+                break;
+            case ">":
+                $tag = false;
+                break;
+            default:
+                if (!$tag) {
+                    if ($stopzone) {
+                        if ($char == '.' or $char == ' ') {
+                            $truncate = $i+1;
+                            break 2;
+                        }
+                    }
+                    $count++;
+                }
+                break;
+        }
+        if (!$stopzone) {
+            if ($count > $minlength) {
+                $stopzone = true;
+            }
+        }
+    }
+
+    if (!$truncate) {
+        $truncate = $i;
+    }
+
+    return substr($message, 0, $truncate);
+}
+
+/**
+ * Given a string and an array of keywords, this function looks
+ * for the first keyword in the string, and then chops out a
+ * small section from the text that shows that word in context.
+ *
+ * @deprecated since Moodle 3.2
+ * @param string $message the text to search
+ * @param array $keywords array of keywords to find
+ */
+function message_get_fragment($message, $keywords) {
+    debugging('message_get_fragment() is deprecated and is no longer used.', DEBUG_DEVELOPER);
+
+    $fullsize = 160;
+    $halfsize = (int)($fullsize/2);
+
+    $message = strip_tags($message);
+
+    foreach ($keywords as $keyword) {  // Just get the first one
+        if ($keyword !== '') {
+            break;
+        }
+    }
+    if (empty($keyword)) {   // None found, so just return start of message
+        return message_shorten_message($message, 30);
+    }
+
+    $leadin = $leadout = '';
+
+/// Find the start of the fragment
+    $start = 0;
+    $length = strlen($message);
+
+    $pos = strpos($message, $keyword);
+    if ($pos > $halfsize) {
+        $start = $pos - $halfsize;
+        $leadin = '...';
+    }
+/// Find the end of the fragment
+    $end = $start + $fullsize;
+    if ($end > $length) {
+        $end = $length;
+    } else {
+        $leadout = '...';
+    }
+
+/// Pull out the fragment and format it
+
+    $fragment = substr($message, $start, $end - $start);
+    $fragment = $leadin.highlight(implode(' ',$keywords), $fragment).$leadout;
+    return $fragment;
+}
+
+/**
+ * Retrieve the messages between two users
+ *
+ * @deprecated since Moodle 3.2
+ * @param object $user1 the current user
+ * @param object $user2 the other user
+ * @param int $limitnum the maximum number of messages to retrieve
+ * @param bool $viewingnewmessages are we currently viewing new messages?
+ */
+function message_get_history($user1, $user2, $limitnum=0, $viewingnewmessages=false) {
+    debugging('message_get_history() is deprecated and is no longer used.', DEBUG_DEVELOPER);
+
+    global $DB, $CFG;
+
+    $messages = array();
+
+    //we want messages sorted oldest to newest but if getting a subset of messages we need to sort
+    //desc to get the last $limitnum messages then flip the order in php
+    $sort = 'asc';
+    if ($limitnum>0) {
+        $sort = 'desc';
+    }
+
+    $notificationswhere = null;
+    //we have just moved new messages to read. If theyre here to see new messages dont hide notifications
+    if (!$viewingnewmessages && $CFG->messaginghidereadnotifications) {
+        $notificationswhere = 'AND notification=0';
+    }
+
+    //prevent notifications of your own actions appearing in your own message history
+    $ownnotificationwhere = ' AND NOT (useridfrom=? AND notification=1)';
+
+    $sql = "((useridto = ? AND useridfrom = ? AND timeusertodeleted = 0) OR
+        (useridto = ? AND useridfrom = ? AND timeuserfromdeleted = 0))";
+    if ($messages_read = $DB->get_records_select('message_read', $sql . $notificationswhere . $ownnotificationwhere,
+        array($user1->id, $user2->id, $user2->id, $user1->id, $user1->id),
+        "timecreated $sort", '*', 0, $limitnum)) {
+        foreach ($messages_read as $message) {
+            $messages[] = $message;
+        }
+    }
+    if ($messages_new = $DB->get_records_select('message', $sql . $ownnotificationwhere,
+        array($user1->id, $user2->id, $user2->id, $user1->id, $user1->id),
+        "timecreated $sort", '*', 0, $limitnum)) {
+        foreach ($messages_new as $message) {
+            $messages[] = $message;
+        }
+    }
+
+    $result = core_collator::asort_objects_by_property($messages, 'timecreated', core_collator::SORT_NUMERIC);
+
+    //if we only want the last $limitnum messages
+    $messagecount = count($messages);
+    if ($limitnum > 0 && $messagecount > $limitnum) {
+        $messages = array_slice($messages, $messagecount - $limitnum, $limitnum, true);
+    }
+
+    return $messages;
+}
+
+/**
+ * Constructs the add/remove contact link to display next to other users
+ *
+ * @deprecated since Moodle 3.2
+ * @param bool $incontactlist is the user a contact
+ * @param bool $isblocked is the user blocked
+ * @param stdClass $contact contact object
+ * @param string $script the URL to send the user to when the link is clicked. If null, the current page.
+ * @param bool $text include text next to the icons?
+ * @param bool $icon include a graphical icon?
+ * @return string
+ */
+function message_get_contact_add_remove_link($incontactlist, $isblocked, $contact, $script=null, $text=false, $icon=true) {
+    debugging('message_get_contact_add_remove_link() is deprecated and is no longer used.', DEBUG_DEVELOPER);
+
+    $strcontact = '';
+
+    if($incontactlist){
+        $strcontact = message_contact_link($contact->id, 'remove', true, $script, $text, $icon);
+    } else if ($isblocked) {
+        $strcontact = message_contact_link($contact->id, 'add', true, $script, $text, $icon);
+    } else{
+        $strcontact = message_contact_link($contact->id, 'add', true, $script, $text, $icon);
+    }
+
+    return $strcontact;
+}
+
+/**
+ * Constructs the block contact link to display next to other users
+ *
+ * @deprecated since Moodle 3.2
+ * @param bool $incontactlist is the user a contact?
+ * @param bool $isblocked is the user blocked?
+ * @param stdClass $contact contact object
+ * @param string $script the URL to send the user to when the link is clicked. If null, the current page.
+ * @param bool $text include text next to the icons?
+ * @param bool $icon include a graphical icon?
+ * @return string
+ */
+function message_get_contact_block_link($incontactlist, $isblocked, $contact, $script=null, $text=false, $icon=true) {
+    debugging('message_get_contact_block_link() is deprecated and is no longer used.', DEBUG_DEVELOPER);
+
+    $strblock   = '';
+
+    //commented out to allow the user to block a contact without having to remove them first
+    /*if ($incontactlist) {
+        //$strblock = '';
+    } else*/
+    if ($isblocked) {
+        $strblock   = message_contact_link($contact->id, 'unblock', true, $script, $text, $icon);
+    } else{
+        $strblock   = message_contact_link($contact->id, 'block', true, $script, $text, $icon);
+    }
+
+    return $strblock;
+}
+
+/**
+ * marks ALL messages being sent from $fromuserid to $touserid as read
+ *
+ * @deprecated since Moodle 3.2
+ * @param int $touserid the id of the message recipient
+ * @param int $fromuserid the id of the message sender
+ * @return void
+ */
+function message_mark_messages_read($touserid, $fromuserid) {
+    debugging('message_mark_messages_read() is deprecated and is no longer used, please use
+        \core_message\api::mark_all_read_for_user() instead.', DEBUG_DEVELOPER);
+
+    \core_message\api::mark_all_read_for_user($touserid, $fromuserid);
+}
+
+/**
+ * Return a list of page types
+ *
+ * @deprecated since Moodle 3.2
+ * @param string $pagetype current page type
+ * @param stdClass $parentcontext Block's parent context
+ * @param stdClass $currentcontext Current context of block
+ */
+function message_page_type_list($pagetype, $parentcontext, $currentcontext) {
+    debugging('message_page_type_list() is deprecated and is no longer used.', DEBUG_DEVELOPER);
+
+    return array('messages-*'=>get_string('page-message-x', 'message'));
+}
+
+/**
+ * Determines if a user is permitted to send another user a private message.
+ * If no sender is provided then it defaults to the logged in user.
+ *
+ * @deprecated since Moodle 3.2
+ * @param object $recipient User object.
+ * @param object $sender User object.
+ * @return bool true if user is permitted, false otherwise.
+ */
+function message_can_post_message($recipient, $sender = null) {
+    debugging('message_can_post_message() is deprecated and is no longer used, please use
+        \core_message\api::can_post_message() instead.', DEBUG_DEVELOPER);
+
+    return \core_message\api::can_post_message($recipient, $sender);
+}
+
+/**
+ * Checks if the recipient is allowing messages from users that aren't a
+ * contact. If not then it checks to make sure the sender is in the
+ * recipient's contacts.
+ *
+ * @deprecated since Moodle 3.2
+ * @param object $recipient User object.
+ * @param object $sender User object.
+ * @return bool true if $sender is blocked, false otherwise.
+ */
+function message_is_user_non_contact_blocked($recipient, $sender = null) {
+    debugging('message_is_user_non_contact_blocked() is deprecated and is no longer used, please use
+        \core_message\api::is_user_non_contact_blocked() instead.', DEBUG_DEVELOPER);
+
+    return \core_message\api::is_user_non_contact_blocked($recipient, $sender);
+}
+
+/**
+ * Checks if the recipient has specifically blocked the sending user.
+ *
+ * Note: This function will always return false if the sender has the
+ * readallmessages capability at the system context level.
+ *
+ * @deprecated since Moodle 3.2
+ * @param object $recipient User object.
+ * @param object $sender User object.
+ * @return bool true if $sender is blocked, false otherwise.
+ */
+function message_is_user_blocked($recipient, $sender = null) {
+    debugging('message_is_user_blocked() is deprecated and is no longer used, please use
+        \core_message\api::is_user_blocked() instead.', DEBUG_DEVELOPER);
+
+    return \core_message\api::is_user_blocked($recipient, $sender);
+}

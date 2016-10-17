@@ -81,9 +81,6 @@ class renderer_base {
         global $CFG;
 
         if ($this->mustache === null) {
-            require_once($CFG->dirroot . '/lib/mustache/src/Mustache/Autoloader.php');
-            Mustache_Autoloader::register();
-
             $themename = $this->page->theme->name;
             $themerev = theme_get_revision();
 
@@ -148,6 +145,14 @@ class renderer_base {
         static $templatecache = array();
         $mustache = $this->get_mustache();
 
+        try {
+            // Grab a copy of the existing helper to be restored later.
+            $uniqidhelper = $mustache->getHelper('uniqid');
+        } catch (Mustache_Exception_UnknownHelperException $e) {
+            // Helper doesn't exist.
+            $uniqidhelper = null;
+        }
+
         // Provide 1 random value that will not change within a template
         // but will be different from template to template. This is useful for
         // e.g. aria attributes that only work with id attributes and must be
@@ -163,7 +168,16 @@ class renderer_base {
                 throw new moodle_exception('Unknown template: ' . $templatename);
             }
         }
-        return trim($template->render($context));
+
+        $renderedtemplate = trim($template->render($context));
+
+        // If we had an existing uniqid helper then we need to restore it to allow
+        // handle nested calls of render_from_template.
+        if ($uniqidhelper) {
+            $mustache->addHelper('uniqid', $uniqidhelper);
+        }
+
+        return $renderedtemplate;
     }
 
 
@@ -540,6 +554,15 @@ class core_renderer extends renderer_base {
             $output .= '<meta http-equiv="refresh" content="'.$this->page->periodicrefreshdelay.';url='.$this->page->url->out().'" />';
         }
 
+        // Smart App Banners meta tag is only displayed if mobile services are enabled and configured.
+        if (!empty($CFG->enablemobilewebservice)) {
+            $mobilesettings = get_config('tool_mobile');
+            if (!empty($mobilesettings->enablesmartappbanners) and !empty($mobilesettings->iosappid)) {
+                $output .= '<meta name="apple-itunes-app" content="app-id=' . s($mobilesettings->iosappid) . ', ';
+                $output .= 'app-argument=' . $this->page->url->out() . '"/>';
+            }
+        }
+
         // flow player embedding support
         $this->page->requires->js_function_call('M.util.load_flowplayer');
 
@@ -610,7 +633,7 @@ class core_renderer extends renderer_base {
      */
     public function standard_top_of_body_html() {
         global $CFG;
-        $output = $this->page->requires->get_top_of_body_code();
+        $output = $this->page->requires->get_top_of_body_code($this);
         if ($this->page->pagelayout !== 'embedded' && !empty($CFG->additionalhtmltopofbody)) {
             $output .= "\n".$CFG->additionalhtmltopofbody;
         }
@@ -1293,9 +1316,6 @@ class core_renderer extends renderer_base {
         }
         $menu->set_constraint('.block-region');
         $menu->attributes['class'] .= ' block-control-actions commands';
-        if (isset($CFG->blockeditingmenu) && !$CFG->blockeditingmenu) {
-            $menu->do_not_enhance();
-        }
         return $this->render($menu);
     }
 
@@ -1310,31 +1330,8 @@ class core_renderer extends renderer_base {
      * @return string HTML
      */
     public function render_action_menu(action_menu $menu) {
-        $menu->initialise_js($this->page);
-
-        $output = html_writer::start_tag('div', $menu->attributes);
-        $output .= html_writer::start_tag('ul', $menu->attributesprimary);
-        foreach ($menu->get_primary_actions($this) as $action) {
-            if ($action instanceof renderable) {
-                $content = $this->render($action);
-            } else {
-                $content = $action;
-            }
-            $output .= html_writer::tag('li', $content, array('role' => 'presentation'));
-        }
-        $output .= html_writer::end_tag('ul');
-        $output .= html_writer::start_tag('ul', $menu->attributessecondary);
-        foreach ($menu->get_secondary_actions() as $action) {
-            if ($action instanceof renderable) {
-                $content = $this->render($action);
-            } else {
-                $content = $action;
-            }
-            $output .= html_writer::tag('li', $content, array('role' => 'presentation'));
-        }
-        $output .= html_writer::end_tag('ul');
-        $output .= html_writer::end_tag('div');
-        return $output;
+        $context = $menu->export_for_template($this);
+        return $this->render_from_template('core/action_menu', $context);
     }
 
     /**
@@ -1344,53 +1341,7 @@ class core_renderer extends renderer_base {
      * @return string HTML fragment
      */
     protected function render_action_menu_link(action_menu_link $action) {
-        static $actioncount = 0;
-        $actioncount++;
-
-        $comparetoalt = '';
-        $text = '';
-        if (!$action->icon || $action->primary === false) {
-            $text .= html_writer::start_tag('span', array('class'=>'menu-action-text', 'id' => 'actionmenuaction-'.$actioncount));
-            if ($action->text instanceof renderable) {
-                $text .= $this->render($action->text);
-            } else {
-                $text .= $action->text;
-                $comparetoalt = (string)$action->text;
-            }
-            $text .= html_writer::end_tag('span');
-        }
-
-        $icon = '';
-        if ($action->icon) {
-            $icon = $action->icon;
-            if ($action->primary || !$action->actionmenu->will_be_enhanced()) {
-                $action->attributes['title'] = $action->text;
-            }
-            if (!$action->primary && $action->actionmenu->will_be_enhanced()) {
-                if ((string)$icon->attributes['alt'] === $comparetoalt) {
-                    $icon->attributes['alt'] = '';
-                }
-                if (isset($icon->attributes['title']) && (string)$icon->attributes['title'] === $comparetoalt) {
-                    unset($icon->attributes['title']);
-                }
-            }
-            $icon = $this->render($icon);
-        }
-
-        // A disabled link is rendered as formatted text.
-        if (!empty($action->attributes['disabled'])) {
-            // Do not use div here due to nesting restriction in xhtml strict.
-            return html_writer::tag('span', $icon.$text, array('class'=>'currentlink', 'role' => 'menuitem'));
-        }
-
-        $attributes = $action->attributes;
-        unset($action->attributes['disabled']);
-        $attributes['href'] = $action->url;
-        if ($text !== '') {
-            $attributes['aria-labelledby'] = 'actionmenuaction-'.$actioncount;
-        }
-
-        return html_writer::tag('a', $icon.$text, $attributes);
+        return $this->render_from_template('core/action_menu_link', $action->export_for_template($this));
     }
 
     /**
@@ -1697,44 +1648,8 @@ class core_renderer extends renderer_base {
      * @return string HTML fragment
      */
     protected function render_action_link(action_link $link) {
-        global $CFG;
-
-        $text = '';
-        if ($link->icon) {
-            $text .= $this->render($link->icon);
-        }
-
-        if ($link->text instanceof renderable) {
-            $text .= $this->render($link->text);
-        } else {
-            $text .= $link->text;
-        }
-
-        // A disabled link is rendered as formatted text
-        if (!empty($link->attributes['disabled'])) {
-            // do not use div here due to nesting restriction in xhtml strict
-            return html_writer::tag('span', $text, array('class'=>'currentlink'));
-        }
-
-        $attributes = $link->attributes;
-        unset($link->attributes['disabled']);
-        $attributes['href'] = $link->url;
-
-        if ($link->actions) {
-            if (empty($attributes['id'])) {
-                $id = html_writer::random_id('action_link');
-                $attributes['id'] = $id;
-            } else {
-                $id = $attributes['id'];
-            }
-            foreach ($link->actions as $action) {
-                $this->add_action_handler($action, $id);
-            }
-        }
-
-        return html_writer::tag('a', $text, $attributes);
+        return $this->render_from_template('core/action_link', $link->export_for_template($this));
     }
-
 
     /**
      * Renders an action_icon.
@@ -2412,39 +2327,7 @@ class core_renderer extends renderer_base {
      * @return string HTML fragment
      */
     protected function render_help_icon(help_icon $helpicon) {
-        global $CFG;
-
-        // first get the help image icon
-        $src = $this->pix_url('help');
-
-        $title = get_string($helpicon->identifier, $helpicon->component);
-
-        if (empty($helpicon->linktext)) {
-            $alt = get_string('helpprefix2', '', trim($title, ". \t"));
-        } else {
-            $alt = get_string('helpwiththis');
-        }
-
-        $attributes = array('src'=>$src, 'alt'=>$alt, 'class'=>'iconhelp');
-        $output = html_writer::empty_tag('img', $attributes);
-
-        // add the link text if given
-        if (!empty($helpicon->linktext)) {
-            // the spacing has to be done through CSS
-            $output .= $helpicon->linktext;
-        }
-
-        // now create the link around it - we need https on loginhttps pages
-        $url = new moodle_url($CFG->httpswwwroot.'/help.php', array('component' => $helpicon->component, 'identifier' => $helpicon->identifier, 'lang'=>current_language()));
-
-        // note: this title is displayed only if JS is disabled, otherwise the link will have the new ajax tooltip
-        $title = get_string('helpprefix2', '', trim($title, ". \t"));
-
-        $attributes = array('href' => $url, 'title' => $title, 'aria-haspopup' => 'true', 'target'=>'_blank');
-        $output = html_writer::tag('a', $output, $attributes);
-
-        // and finally span
-        return html_writer::tag('span', $output, array('class' => 'helptooltip'));
+        return $this->render_from_template('core/help_icon', $helpicon->export_for_template($this));
     }
 
     /**
@@ -2818,7 +2701,7 @@ EOD;
      * @param string $debuginfo Debugging information
      * @return string the HTML to output.
      */
-    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null) {
+    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null, $errorcode = "") {
         global $CFG;
 
         $output = '';
@@ -3310,6 +3193,27 @@ EOD;
     }
 
     /**
+     * Allow plugins to provide some content to be rendered in the navbar.
+     * The plugin must define a PLUGIN_render_navbar_output function that returns
+     * the HTML they wish to add to the navbar.
+     *
+     * @return string HTML for the navbar
+     */
+    public function navbar_plugin_output() {
+        $output = '';
+
+        if ($pluginsfunction = get_plugins_with_function('render_navbar_output')) {
+            foreach ($pluginsfunction as $plugintype => $plugins) {
+                foreach ($plugins as $pluginfunction) {
+                    $output .= $pluginfunction($this);
+                }
+            }
+        }
+
+        return $output;
+    }
+
+    /**
      * Construct a user menu, returning HTML that can be echoed out by a
      * layout file.
      *
@@ -3444,7 +3348,6 @@ EOD;
         $divider->primary = false;
 
         $am = new action_menu();
-        $am->initialise_js($this->page);
         $am->set_menu_trigger(
             $returnstr
         );
@@ -4227,22 +4130,56 @@ EOD;
             $imagedata = $this->user_picture($user, array('size' => 100));
             // Check to see if we should be displaying a message button.
             if (!empty($CFG->messaging) && $USER->id != $user->id && has_capability('moodle/site:sendmessage', $context)) {
+                $iscontact = !empty(message_get_contact($user->id));
+                $contacttitle = $iscontact ? 'removefromyourcontacts' : 'addtoyourcontacts';
+                $contacturlaction = $iscontact ? 'removecontact' : 'addcontact';
+                $contactimage = $iscontact ? 'removecontact' : 'addcontact';
                 $userbuttons = array(
                     'messages' => array(
                         'buttontype' => 'message',
                         'title' => get_string('message', 'message'),
                         'url' => new moodle_url('/message/index.php', array('id' => $user->id)),
                         'image' => 'message',
-                        'linkattributes' => message_messenger_sendmessage_link_params($user),
+                        'linkattributes' => array('role' => 'button'),
                         'page' => $this->page
-                    )
+                    ),
+                    'togglecontact' => array(
+                        'buttontype' => 'togglecontact',
+                        'title' => get_string($contacttitle, 'message'),
+                        'url' => new moodle_url('/message/index.php', array(
+                                'user1' => $USER->id,
+                                'user2' => $user->id,
+                                $contacturlaction => $user->id,
+                                'sesskey' => sesskey())
+                        ),
+                        'image' => $contactimage,
+                        'linkattributes' => \core_message\helper::togglecontact_link_params($user, $iscontact),
+                        'page' => $this->page
+                    ),
                 );
+
                 $this->page->requires->string_for_js('changesmadereallygoaway', 'moodle');
             }
         }
 
         $contextheader = new context_header($heading, $headinglevel, $imagedata, $userbuttons);
         return $this->render_context_header($contextheader);
+    }
+
+    /**
+     * Renders the skip links for the page.
+     *
+     * @param array $links List of skip links.
+     * @return string HTML for the skip links.
+     */
+    public function render_skip_links($links) {
+        $context = [ 'links' => []];
+
+        foreach ($links as $url => $text) {
+            $context['links'][] = [ 'url' => $url, 'text' => $text];
+        }
+
+        return $this->render_from_template('core/skip_links', $context);
     }
 
      /**
@@ -4277,8 +4214,8 @@ EOD;
             foreach ($contextheader->additionalbuttons as $button) {
                 if (!isset($button->page)) {
                     // Include js for messaging.
-                    if ($button['buttontype'] === 'message') {
-                        message_messenger_requirejs();
+                    if ($button['buttontype'] === 'togglecontact') {
+                        \core_message\helper::togglecontact_requirejs();
                     }
                     $image = $this->pix_icon($button['formattedimage'], $button['title'], 'moodle', array(
                         'class' => 'iconsmall',
@@ -4389,6 +4326,83 @@ EOD;
         ]);
     }
 
+    /**
+     * Renders the login form.
+     *
+     * @param \core_auth\output\login $form The renderable.
+     * @return string
+     */
+    public function render_login(\core_auth\output\login $form) {
+        $context = $form->export_for_template($this);
+
+        // Override because rendering is not supported in template yet.
+        $context->cookieshelpiconformatted = $this->help_icon('cookiesenabled');
+        $context->errorformatted = $this->error_text($context->error);
+
+        return $this->render_from_template('core/login', $context);
+    }
+
+    /**
+     * Renders an mform element from a template.
+     *
+     * @param HTML_QuickForm_element $element element
+     * @param bool $required if input is required field
+     * @param bool $advanced if input is an advanced field
+     * @param string $error error message to display
+     * @param bool $ingroup True if this element is rendered as part of a group
+     * @return mixed string|bool
+     */
+    public function mform_element($element, $required, $advanced, $error, $ingroup) {
+        $templatename = 'core_form/element-' . $element->getType();
+        if ($ingroup) {
+            $templatename .= "-inline";
+        }
+        try {
+            // We call this to generate a file not found exception if there is no template.
+            // We don't want to call export_for_template if there is no template.
+            core\output\mustache_template_finder::get_template_filepath($templatename);
+
+            if ($element instanceof templatable) {
+                $elementcontext = $element->export_for_template($this);
+
+                $helpbutton = '';
+                if (method_exists($element, 'getHelpButton')) {
+                    $helpbutton = $element->getHelpButton();
+                }
+                $label = $element->getLabel();
+                if (method_exists($element, 'getText')) {
+                    $label .= ' ' . $element->getText();
+                }
+
+                $context = array(
+                    'element' => $elementcontext,
+                    'label' => $label,
+                    'required' => $required,
+                    'advanced' => $advanced,
+                    'helpbutton' => $helpbutton,
+                    'error' => $error
+                );
+                return $this->render_from_template($templatename, $context);
+            }
+        } catch (Exception $e) {
+            // No template for this element.
+            return false;
+        }
+    }
+
+    /**
+     * Renders a progress bar.
+     *
+     * Do not use $OUTPUT->render($bar), instead use progress_bar::create().
+     *
+     * @param  progress_bar $bar The bar.
+     * @return string HTML fragment
+     */
+    public function render_progress_bar(progress_bar $bar) {
+        global $PAGE;
+        $data = $bar->export_for_template($this);
+        return $this->render_from_template('core/progress_bar', $data);
+    }
 }
 
 /**
@@ -4444,7 +4458,7 @@ class core_renderer_cli extends core_renderer {
      * @param string $debuginfo Debugging information
      * @return string A template fragment for a fatal error
      */
-    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null) {
+    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null, $errorcode = "") {
         global $CFG;
 
         $output = "!!! $message !!!\n";
@@ -4519,13 +4533,14 @@ class core_renderer_ajax extends core_renderer {
      * @param string $debuginfo Debugging information
      * @return string A template fragment for a fatal error
      */
-    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null) {
+    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null, $errorcode = "") {
         global $CFG;
 
         $this->page->set_context(null); // ugly hack - make sure page context is set to something, we do not want bogus warnings here
 
         $e = new stdClass();
         $e->error      = $message;
+        $e->errorcode  = $errorcode;
         $e->stacktrace = NULL;
         $e->debuginfo  = NULL;
         $e->reproductionlink = NULL;

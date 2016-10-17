@@ -1149,15 +1149,6 @@ function xmldb_main_upgrade($oldversion) {
         // Launch add key tagcloudid.
         $dbman->add_key($table, $key);
 
-        // Define index tagcolltype (not unique) to be added to tag.
-        $table = new xmldb_table('tag');
-        $index = new xmldb_index('tagcolltype', XMLDB_INDEX_NOTUNIQUE, array('tagcollid', 'tagtype'));
-
-        // Conditionally launch add index tagcolltype.
-        if (!$dbman->index_exists($table, $index)) {
-            $dbman->add_index($table, $index);
-        }
-
         // Main savepoint reached.
         upgrade_main_savepoint(true, 2016011300.02);
     }
@@ -1327,6 +1318,7 @@ function xmldb_main_upgrade($oldversion) {
         }
 
         // Define index tagcolltype (not unique) to be dropped form tag.
+        // This index is no longer created however it was present at some point and it's better to be safe and try to drop it.
         $index = new xmldb_index('tagcolltype', XMLDB_INDEX_NOTUNIQUE, array('tagcollid', 'tagtype'));
 
         // Conditionally launch drop index tagcolltype.
@@ -2213,6 +2205,71 @@ function xmldb_main_upgrade($oldversion) {
 
         // Main savepoint reached.
         upgrade_main_savepoint(true, 2016091900.02);
+    }
+
+    if ($oldversion < 2016100300.00) {
+        unset_config('enablecssoptimiser');
+
+        upgrade_main_savepoint(true, 2016100300.00);
+    }
+
+    if ($oldversion < 2016100501.00) {
+
+        // Define field enddate to be added to course.
+        $table = new xmldb_table('course');
+        $field = new xmldb_field('enddate', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'startdate');
+
+        // Conditionally launch add field enddate.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2016100501.00);
+    }
+
+    if ($oldversion < 2016101100.00) {
+        // Define field component to be added to message.
+        $table = new xmldb_table('message');
+        $field = new xmldb_field('component', XMLDB_TYPE_CHAR, '100', null, null, null, null, 'timeusertodeleted');
+
+        // Conditionally launch add field component.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field eventtype to be added to message.
+        $field = new xmldb_field('eventtype', XMLDB_TYPE_CHAR, '100', null, null, null, null, 'component');
+
+        // Conditionally launch add field eventtype.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2016101100.00);
+    }
+
+    if ($oldversion < 2016101101.00) {
+        // Define field component to be added to message_read.
+        $table = new xmldb_table('message_read');
+        $field = new xmldb_field('component', XMLDB_TYPE_CHAR, '100', null, null, null, null, 'timeusertodeleted');
+
+        // Conditionally launch add field component.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field eventtype to be added to message_read.
+        $field = new xmldb_field('eventtype', XMLDB_TYPE_CHAR, '100', null, null, null, null, 'component');
+
+        // Conditionally launch add field eventtype.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2016101101.00);
     }
 
     return true;
