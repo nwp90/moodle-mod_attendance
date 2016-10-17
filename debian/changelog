@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.2.0~dev.2016101400+0facmed1-1) jessie; urgency=medium
+
+  * Update to Moodle 3.2dev
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 17 Oct 2016 15:31:05 +1300
+
 moodle-site-otagounifom (3.1.2.2016091500+0facmed1-1) jessie; urgency=medium
 
   * Moodle 3.1.2+, includes fix for MDL-16-0022
