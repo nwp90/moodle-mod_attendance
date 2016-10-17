@@ -1,3 +1,10 @@
+moodle-site-otagounifom (3.2.0~dev.2016101400+0facmed2-1) jessie; urgency=medium
+
+  * Remove themes broken by unavailability of suitable base themes
+    (anomaly, brick, sky_high)
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 18 Oct 2016 10:12:00 +1300
+
 moodle-site-otagounifom (3.2.0~dev.2016101400+0facmed1-1) jessie; urgency=medium
 
   * Update to Moodle 3.2dev
