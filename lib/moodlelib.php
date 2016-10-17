@@ -1225,6 +1225,25 @@ function clean_param($param, $type) {
 }
 
 /**
+ * Whether the PARAM_* type is compatible in RTL.
+ *
+ * Being compatible with RTL means that the data they contain can flow
+ * from right-to-left or left-to-right without compromising the user experience.
+ *
+ * Take URLs for example, they are not RTL compatible as they should always
+ * flow from the left to the right. This also applies to numbers, email addresses,
+ * configuration snippets, base64 strings, etc...
+ *
+ * This function tries to best guess which parameters can contain localised strings.
+ *
+ * @param string $paramtype Constant PARAM_*.
+ * @return bool
+ */
+function is_rtl_compatible($paramtype) {
+    return $paramtype == PARAM_TEXT || $paramtype == PARAM_NOTAGS;
+}
+
+/**
  * Makes sure the data is using valid utf8, invalid characters are discarded.
  *
  * Note: this function is not intended for full objects with methods and private properties.
@@ -2625,8 +2644,17 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
         }
     }
 
-    // Check that the user account is properly set up.
-    if (user_not_fully_set_up($USER)) {
+    // Check that the user account is properly set up. If we can't redirect to
+    // edit their profile, perform just the lax check. It will allow them to
+    // use filepicker on the profile edit page.
+
+    if ($preventredirect) {
+        $usernotfullysetup = user_not_fully_set_up($USER, false);
+    } else {
+        $usernotfullysetup = user_not_fully_set_up($USER, true);
+    }
+
+    if ($usernotfullysetup) {
         if ($preventredirect) {
             throw new require_login_exception('User not fully set-up');
         }
@@ -2657,7 +2685,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
     if (!$USER->policyagreed and !is_siteadmin()) {
         if (!empty($CFG->sitepolicy) and !isguestuser()) {
             if ($preventredirect) {
-                throw new require_login_exception('Policy not agreed');
+                throw new moodle_exception('sitepolicynotagreed', 'error', '', $CFG->sitepolicy);
             }
             if ($setwantsurltome) {
                 $SESSION->wantsurl = qualified_me();
@@ -2665,7 +2693,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
             redirect($CFG->wwwroot .'/user/policy.php');
         } else if (!empty($CFG->sitepolicyguest) and isguestuser()) {
             if ($preventredirect) {
-                throw new require_login_exception('Policy not agreed');
+                throw new moodle_exception('sitepolicynotagreed', 'error', '', $CFG->sitepolicyguest);
             }
             if ($setwantsurltome) {
                 $SESSION->wantsurl = qualified_me();
@@ -2688,7 +2716,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
         if ($preventredirect) {
             throw new require_login_exception('Maintenance in progress');
         }
-
+        $PAGE->set_context(null);
         print_maintenance_message();
     }
 
@@ -3141,14 +3169,39 @@ function update_user_login_times() {
 /**
  * Determines if a user has completed setting up their account.
  *
+ * The lax mode (with $strict = false) has been introduced for special cases
+ * only where we want to skip certain checks intentionally. This is valid in
+ * certain mnet or ajax scenarios when the user cannot / should not be
+ * redirected to edit their profile. In most cases, you should perform the
+ * strict check.
+ *
  * @param stdClass $user A {@link $USER} object to test for the existence of a valid name and email
+ * @param bool $strict Be more strict and assert id and custom profile fields set, too
  * @return bool
  */
-function user_not_fully_set_up($user) {
+function user_not_fully_set_up($user, $strict = true) {
+    global $CFG;
+    require_once($CFG->dirroot.'/user/profile/lib.php');
+
     if (isguestuser($user)) {
         return false;
     }
-    return (empty($user->firstname) or empty($user->lastname) or empty($user->email) or over_bounce_threshold($user));
+
+    if (empty($user->firstname) or empty($user->lastname) or empty($user->email) or over_bounce_threshold($user)) {
+        return true;
+    }
+
+    if ($strict) {
+        if (empty($user->id)) {
+            // Strict mode can be used with existing accounts only.
+            return true;
+        }
+        if (!profile_has_required_custom_fields_set($user->id)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 /**
@@ -4517,8 +4570,10 @@ function update_internal_user_password($user, $password, $fasthash = false) {
         \core\event\user_password_updated::create_from_user($user)->trigger();
 
         // Remove WS user tokens.
-        require_once($CFG->dirroot.'/webservice/lib.php');
-        webservice::delete_user_ws_tokens($user->id);
+        if (!empty($CFG->passwordchangetokendeletion)) {
+            require_once($CFG->dirroot.'/webservice/lib.php');
+            webservice::delete_user_ws_tokens($user->id);
+        }
     }
 
     return true;
@@ -5125,6 +5180,15 @@ function reset_course_userdata($data) {
         }
 
         $status[] = array('component' => $componentstr, 'item' => get_string('datechanged'), 'error' => false);
+    }
+
+    if (!empty($data->reset_end_date)) {
+        // If the user set a end date value respect it.
+        $DB->set_field('course', 'enddate', $data->reset_end_date, array('id' => $data->courseid));
+    } else if ($data->timeshift > 0 && $data->reset_end_date_old) {
+        // If there is a time shift apply it to the end date as well.
+        $enddate = $data->reset_end_date_old + $data->timeshift;
+        $DB->set_field('course', 'enddate', $enddate, array('id' => $data->courseid));
     }
 
     if (!empty($data->reset_events)) {
@@ -8755,103 +8819,6 @@ function fullclone($thing) {
     return unserialize(serialize($thing));
 }
 
- /**
-  * If new messages are waiting for the current user, then insert
-  * JavaScript to pop up the messaging window into the page
-  *
-  * @return void
-  */
-function message_popup_window() {
-    global $USER, $DB, $PAGE, $CFG;
-
-    if (!$PAGE->get_popup_notification_allowed() || empty($CFG->messaging)) {
-        return;
-    }
-
-    if (!isloggedin() || isguestuser()) {
-        return;
-    }
-
-    if (!isset($USER->message_lastpopup)) {
-        $USER->message_lastpopup = 0;
-    } else if ($USER->message_lastpopup > (time()-120)) {
-        // Don't run the query to check whether to display a popup if its been run in the last 2 minutes.
-        return;
-    }
-
-    // A quick query to check whether the user has new messages.
-    $messagecount = $DB->count_records('message', array('useridto' => $USER->id));
-    if ($messagecount < 1) {
-        return;
-    }
-
-    // There are unread messages so now do a more complex but slower query.
-    $messagesql = "SELECT m.id, c.blocked
-                     FROM {message} m
-                     JOIN {message_working} mw ON m.id=mw.unreadmessageid
-                     JOIN {message_processors} p ON mw.processorid=p.id
-                     LEFT JOIN {message_contacts} c ON c.contactid = m.useridfrom
-                                                   AND c.userid = m.useridto
-                    WHERE m.useridto = :userid
-                      AND p.name='popup'";
-
-    // If the user was last notified over an hour ago we can re-notify them of old messages
-    // so don't worry about when the new message was sent.
-    $lastnotifiedlongago = $USER->message_lastpopup < (time()-3600);
-    if (!$lastnotifiedlongago) {
-        $messagesql .= 'AND m.timecreated > :lastpopuptime';
-    }
-
-    $waitingmessages = $DB->get_records_sql($messagesql, array('userid' => $USER->id, 'lastpopuptime' => $USER->message_lastpopup));
-
-    $validmessages = 0;
-    foreach ($waitingmessages as $messageinfo) {
-        if ($messageinfo->blocked) {
-            // Message is from a user who has since been blocked so just mark it read.
-            // Get the full message to mark as read.
-            $messageobject = $DB->get_record('message', array('id' => $messageinfo->id));
-            message_mark_message_read($messageobject, time());
-        } else {
-            $validmessages++;
-        }
-    }
-
-    if ($validmessages > 0) {
-        $strmessages = get_string('unreadnewmessages', 'message', $validmessages);
-        $strgomessage = get_string('gotomessages', 'message');
-        $strstaymessage = get_string('ignore', 'admin');
-
-        $notificationsound = null;
-        $beep = get_user_preferences('message_beepnewmessage', '');
-        if (!empty($beep)) {
-            // Browsers will work down this list until they find something they support.
-            $sourcetags =  html_writer::empty_tag('source', array('src' => $CFG->wwwroot.'/message/bell.wav', 'type' => 'audio/wav'));
-            $sourcetags .= html_writer::empty_tag('source', array('src' => $CFG->wwwroot.'/message/bell.ogg', 'type' => 'audio/ogg'));
-            $sourcetags .= html_writer::empty_tag('source', array('src' => $CFG->wwwroot.'/message/bell.mp3', 'type' => 'audio/mpeg'));
-            $sourcetags .= html_writer::empty_tag('embed',  array('src' => $CFG->wwwroot.'/message/bell.wav', 'autostart' => 'true', 'hidden' => 'true'));
-
-            $notificationsound = html_writer::tag('audio', $sourcetags, array('preload' => 'auto', 'autoplay' => 'autoplay'));
-        }
-
-        $url = $CFG->wwwroot.'/message/index.php';
-        $content =  html_writer::start_tag('div', array('id' => 'newmessageoverlay', 'class' => 'mdl-align')).
-                        html_writer::start_tag('div', array('id' => 'newmessagetext')).
-                            $strmessages.
-                        html_writer::end_tag('div').
-
-                        $notificationsound.
-                        html_writer::start_tag('div', array('id' => 'newmessagelinks')).
-                        html_writer::link($url, $strgomessage, array('id' => 'notificationyes')).'&nbsp;&nbsp;&nbsp;'.
-                        html_writer::link('', $strstaymessage, array('id' => 'notificationno')).
-                        html_writer::end_tag('div');
-                    html_writer::end_tag('div');
-
-        $PAGE->requires->js_init_call('M.core_message.init_notification', array('', $content, $url));
-
-        $USER->message_lastpopup = time();
-    }
-}
-
 /**
  * Used to make sure that $min <= $value <= $max
  *
@@ -8901,6 +8868,11 @@ function get_performance_info() {
     $info = array();
     $info['html'] = '';         // Holds userfriendly HTML representation.
     $info['txt']  = me() . ' '; // Holds log-friendly representation.
+
+    if (!empty($CFG->themedesignermode)) {
+        // Attempt to avoid devs debugging peformance issues, when its caused by css building and so on.
+        $info['html'] = '<p><strong>Warning: Theme designer mode is enabled.</strong></p>';
+    }
 
     $info['realtime'] = microtime_diff($PERF->starttime, microtime());
 

@@ -888,7 +888,10 @@ function forum_cron() {
             }
 
             // Mark processed posts as read.
-            forum_tp_mark_posts_read($userto, $userto->markposts);
+            if (get_user_preferences('forum_markasreadonnotification', 1, $userto->id) == 1) {
+                forum_tp_mark_posts_read($userto, $userto->markposts);
+            }
+
             unset($userto);
         }
     }
@@ -1202,7 +1205,9 @@ function forum_cron() {
                     $usermailcount++;
 
                     // Mark post as read if forum_usermarksread is set off
-                    forum_tp_mark_posts_read($userto, $userto->markposts);
+                    if (get_user_preferences('forum_markasreadonnotification', 1, $userto->id) == 1) {
+                        forum_tp_mark_posts_read($userto, $userto->markposts);
+                    }
                 }
             }
         }
@@ -3928,22 +3933,10 @@ function forum_print_mode_form($id, $mode, $forumtype='') {
  * @return string
  */
 function forum_search_form($course, $search='') {
-    global $CFG, $OUTPUT;
-
-    $output  = '<div class="forumsearch">';
-    $output .= '<form action="'.$CFG->wwwroot.'/mod/forum/search.php" style="display:inline">';
-    $output .= '<fieldset class="invisiblefieldset">';
-    $output .= $OUTPUT->help_icon('search');
-    $output .= '<label class="accesshide" for="search" >'.get_string('search', 'forum').'</label>';
-    $output .= '<input id="search" name="search" type="text" size="18" value="'.s($search, true).'" />';
-    $output .= '<label class="accesshide" for="searchforums" >'.get_string('searchforums', 'forum').'</label>';
-    $output .= '<input id="searchforums" value="'.get_string('searchforums', 'forum').'" type="submit" />';
-    $output .= '<input name="id" type="hidden" value="'.$course->id.'" />';
-    $output .= '</fieldset>';
-    $output .= '</form>';
-    $output .= '</div>';
-
-    return $output;
+    global $CFG, $PAGE;
+    $forumsearch = new \mod_forum\output\quick_search_form($course->id, $search);
+    $output = $PAGE->get_renderer('mod_forum');
+    return $output->render($forumsearch);
 }
 
 
@@ -5363,10 +5356,6 @@ function forum_print_latest_discussions($course, $forum, $maxdiscussions = -1, $
     }
 
     if ($canstart) {
-        echo '<div class="singlebutton forumaddnew">';
-        echo "<form id=\"newdiscussionform\" method=\"get\" action=\"$CFG->wwwroot/mod/forum/post.php\">";
-        echo '<div>';
-        echo "<input type=\"hidden\" name=\"forum\" value=\"$forum->id\" />";
         switch ($forum->type) {
             case 'news':
             case 'blog':
@@ -5379,10 +5368,10 @@ function forum_print_latest_discussions($course, $forum, $maxdiscussions = -1, $
                 $buttonadd = get_string('addanewdiscussion', 'forum');
                 break;
         }
-        echo '<input type="submit" value="'.$buttonadd.'" />';
-        echo '</div>';
-        echo '</form>';
-        echo "</div>\n";
+        $button = new single_button(new moodle_url('/mod/forum/post.php', ['forum' => $forum->id]), $buttonadd, 'get');
+        $button->class = 'singlebutton forumaddnew';
+        $button->formid = 'newdiscussionform';
+        echo $OUTPUT->render($button);
 
     } else if (isguestuser() or !isloggedin() or $forum->type == 'news' or
         $forum->type == 'qanda' and !has_capability('mod/forum:addquestion', $context) or
