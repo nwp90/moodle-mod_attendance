@@ -317,19 +317,18 @@ class behat_hooks extends behat_base {
             $namedpartialclass = 'behat_partial_named_selector';
             $namedexactclass = 'behat_exact_named_selector';
 
-            if ($suitename !== 'default') {
-                // If override selector exist, then set it as default behat selectors class.
-                $overrideclass = behat_config_util::get_behat_theme_selector_override_classname($suitename, 'named_partial', true);
-                if (class_exists($overrideclass)) {
-                    $namedpartialclass = $overrideclass;
-                }
-
-                // If override selector exist, then set it as default behat selectors class.
-                $overrideclass = behat_config_util::get_behat_theme_selector_override_classname($suitename, 'named_exact', true);
-                if (class_exists($overrideclass)) {
-                    $namedexactclass = $overrideclass;
-                }
+            // If override selector exist, then set it as default behat selectors class.
+            $overrideclass = behat_config_util::get_behat_theme_selector_override_classname($suitename, 'named_partial', true);
+            if (class_exists($overrideclass)) {
+                $namedpartialclass = $overrideclass;
             }
+
+            // If override selector exist, then set it as default behat selectors class.
+            $overrideclass = behat_config_util::get_behat_theme_selector_override_classname($suitename, 'named_exact', true);
+            if (class_exists($overrideclass)) {
+                $namedexactclass = $overrideclass;
+            }
+
             $this->getSession()->getSelectorsHandler()->registerSelector('named_partial', new $namedpartialclass());
             $this->getSession()->getSelectorsHandler()->registerSelector('named_exact', new $namedexactclass());
         }
@@ -594,7 +593,7 @@ class behat_hooks extends behat_base {
      *
      * @Given /^I look for exceptions$/
      * @throw Exception Unknown type, depending on what we caught in the hook or basic \Exception.
-     * @see Moodle\BehatExtension\Tester\MoodleStepTester
+     * @see Moodle\BehatExtension\EventDispatcher\Tester\ChainedStepTester
      */
     public function i_look_for_exceptions() {
         // If the step already failed in a hook throw the exception.

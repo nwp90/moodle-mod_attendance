@@ -3,6 +3,7 @@ information provided here is intended especially for theme designer.
 
 === 3.2 ===
 
+* A new theme config 'undeletableblocktypes' allows a theme to define which blocks are deletable.
 * A new core setting now enables admins to upload the logos of their site. Using the
   following methods, themers can instantly support branding logos without the need
   to implement specific theme settings:
@@ -17,6 +18,8 @@ Removed themes:
 * Bootstrap 4 was added as part of a the new theme 'boost'.
 * Themes can now automatically compile SCSS on the fly. This works the same way as it
   does compiling LESS on the fly, effecitvely adding $THEME->scssfile to your config.
+* Two new callbacks allow themes to inject SCSS code before and after the content provided
+  by the SCSS file $THEME->scssfile. See $THEME->prescsscallback and $THEME->extrascsscallback.
 * Using .dir-rtl for RTL styling is deprecated and should not be used any more. From now
   the styles are automatically flipped when the language is right-to-left. However,
   as this is not always perfect, you can define exceptions. Please refer to the documentation

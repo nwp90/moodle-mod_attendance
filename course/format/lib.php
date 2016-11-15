@@ -96,6 +96,9 @@ abstract class format_base {
      * @return string
      */
     protected static final function get_format_or_default($format) {
+        global $CFG;
+        require_once($CFG->dirroot . '/course/lib.php');
+
         if (array_key_exists($format, self::$classesforformat)) {
             return self::$classesforformat[$format];
         }
@@ -482,7 +485,7 @@ abstract class format_base {
         }
         $blocknames = array(
             BLOCK_POS_LEFT => array(),
-            BLOCK_POS_RIGHT => array('search_forums', 'news_items', 'calendar_upcoming', 'recent_activity')
+            BLOCK_POS_RIGHT => array()
         );
         return $blocknames;
     }
