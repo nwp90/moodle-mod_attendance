@@ -99,7 +99,7 @@ $settings->make_active();
 $renderer = $PAGE->get_renderer('core_message');
 $requestedconversation = false;
 $conversations = \core_message\api::get_conversations($user1->id, 0, 20);
-$messages = null;
+$messages = [];
 if (!$user2realuser) {
     // If there are conversations, but the user has not chosen a particular one, then render the most recent one.
     $user2 = new stdClass();
@@ -117,7 +117,7 @@ if (!$user2realuser) {
 
 // Mark the conversation as read.
 if (!empty($user2->id)) {
-    if ($currentuser) {
+    if ($currentuser && isset($conversations[$user2->id])) {
         // Mark the conversation we are loading as read.
         \core_message\api::mark_all_read_for_user($user1->id, $user2->id);
         // Ensure the UI knows it's read as well.

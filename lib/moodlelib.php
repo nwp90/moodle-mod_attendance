@@ -317,7 +317,7 @@ define('PARAM_COMPONENT', 'component');
 define('PARAM_AREA', 'area');
 
 /**
- * PARAM_PLUGIN is used for plugin names such as 'forum', 'glossary', 'ldap', 'radius', 'paypal', 'completionstatus'.
+ * PARAM_PLUGIN is used for plugin names such as 'forum', 'glossary', 'ldap', 'paypal', 'completionstatus'.
  * Only lowercase ascii letters, numbers and underscores are allowed, it has to start with a letter.
  * NOTE: numbers and underscores are strongly discouraged in plugin names! Underscores are forbidden in module names.
  */
@@ -519,6 +519,21 @@ define('COURSE_DISPLAY_MULTIPAGE', 1);
  * Authentication constant: String used in password field when password is not stored.
  */
 define('AUTH_PASSWORD_NOT_CACHED', 'not cached');
+
+/**
+ * Email from header to never include via information.
+ */
+define('EMAIL_VIA_NEVER', 0);
+
+/**
+ * Email from header to always include via information.
+ */
+define('EMAIL_VIA_ALWAYS', 1);
+
+/**
+ * Email from header to only include via information if the address is no-reply.
+ */
+define('EMAIL_VIA_NO_REPLY_ONLY', 2);
 
 // PARAMETER HANDLING.
 
@@ -2639,8 +2654,10 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
                     redirect($wwwroot .'/login/change_password.php');
                 }
             }
+        } else if ($userauth->can_change_password()) {
+            throw new moodle_exception('forcepasswordchangenotice');
         } else {
-            print_error('nopasswordchangeforced', 'auth');
+            throw new moodle_exception('nopasswordchangeforced', 'auth');
         }
     }
 
@@ -2656,7 +2673,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
 
     if ($usernotfullysetup) {
         if ($preventredirect) {
-            throw new require_login_exception('User not fully set-up');
+            throw new moodle_exception('usernotfullysetup');
         }
         if ($setwantsurltome) {
             $SESSION->wantsurl = qualified_me();
@@ -3010,6 +3027,36 @@ function require_course_login($courseorid, $autologinguest = true, $cm = null, $
 }
 
 /**
+ * Validates a user key, checking if the key exists, is not expired and the remote ip is correct.
+ *
+ * @param  string $keyvalue the key value
+ * @param  string $script   unique script identifier
+ * @param  int $instance    instance id
+ * @return stdClass the key entry in the user_private_key table
+ * @since Moodle 3.2
+ * @throws moodle_exception
+ */
+function validate_user_key($keyvalue, $script, $instance) {
+    global $DB;
+
+    if (!$key = $DB->get_record('user_private_key', array('script' => $script, 'value' => $keyvalue, 'instance' => $instance))) {
+        print_error('invalidkey');
+    }
+
+    if (!empty($key->validuntil) and $key->validuntil < time()) {
+        print_error('expiredkey');
+    }
+
+    if ($key->iprestriction) {
+        $remoteaddr = getremoteaddr(null);
+        if (empty($remoteaddr) or !address_in_subnet($remoteaddr, $key->iprestriction)) {
+            print_error('ipmismatch');
+        }
+    }
+    return $key;
+}
+
+/**
  * Require key login. Function terminates with error if key not found or incorrect.
  *
  * @uses NO_MOODLE_COOKIES
@@ -3030,20 +3077,7 @@ function require_user_key_login($script, $instance=null) {
 
     $keyvalue = required_param('key', PARAM_ALPHANUM);
 
-    if (!$key = $DB->get_record('user_private_key', array('script' => $script, 'value' => $keyvalue, 'instance' => $instance))) {
-        print_error('invalidkey');
-    }
-
-    if (!empty($key->validuntil) and $key->validuntil < time()) {
-        print_error('expiredkey');
-    }
-
-    if ($key->iprestriction) {
-        $remoteaddr = getremoteaddr(null);
-        if (empty($remoteaddr) or !address_in_subnet($remoteaddr, $key->iprestriction)) {
-            print_error('ipmismatch');
-        }
-    }
+    $key = validate_user_key($keyvalue, $script, $instance);
 
     if (!$user = $DB->get_record('user', array('id' => $key->userid))) {
         print_error('invaliduserid');
@@ -5720,35 +5754,58 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
     $temprecipients = array();
     $tempreplyto = array();
 
-    $supportuser = core_user::get_support_user();
+    // Make sure that we fall back onto some reasonable no-reply address.
+    $noreplyaddress = empty($CFG->noreplyaddress) ? 'noreply@' . get_host_from_url($CFG->wwwroot) : $CFG->noreplyaddress;
 
     // Make up an email address for handling bounces.
     if (!empty($CFG->handlebounces)) {
         $modargs = 'B'.base64_encode(pack('V', $user->id)).substr(md5($user->email), 0, 16);
         $mail->Sender = generate_email_processing_address(0, $modargs);
     } else {
-        $mail->Sender = $supportuser->email;
+        $mail->Sender = $noreplyaddress;
     }
 
-    if (!empty($CFG->emailonlyfromnoreplyaddress)) {
+    $alloweddomains = null;
+    if (!empty($CFG->allowedemaildomains)) {
+        $alloweddomains = explode(PHP_EOL, $CFG->allowedemaildomains);
+    }
+
+    // Email will be sent using no reply address.
+    if (empty($alloweddomains)) {
         $usetrueaddress = false;
-        if (empty($replyto) && $from->maildisplay) {
-            $replyto = $from->email;
-            $replytoname = fullname($from);
-        }
     }
 
     if (is_string($from)) { // So we can pass whatever we want if there is need.
-        $mail->From     = $CFG->noreplyaddress;
+        $mail->From     = $noreplyaddress;
         $mail->FromName = $from;
-    } else if ($usetrueaddress and $from->maildisplay) {
-        $mail->From     = $from->email;
-        $mail->FromName = fullname($from);
-    } else {
-        $mail->From     = $CFG->noreplyaddress;
-        $mail->FromName = fullname($from);
+    // Check if using the true address is true, and the email is in the list of allowed domains for sending email,
+    // and that the senders email setting is either displayed to everyone, or display to only other users that are enrolled
+    // in a course with the sender.
+    } else if ($usetrueaddress && can_send_from_real_email_address($from, $user, $alloweddomains)) {
+        $mail->From = $from->email;
+        $fromdetails = new stdClass();
+        $fromdetails->name = fullname($from);
+        $fromdetails->url = $CFG->wwwroot;
+        $fromstring = $fromdetails->name;
+        if ($CFG->emailfromvia == EMAIL_VIA_ALWAYS) {
+            $fromstring = get_string('emailvia', 'core', $fromdetails);
+        }
+        $mail->FromName = $fromstring;
         if (empty($replyto)) {
-            $tempreplyto[] = array($CFG->noreplyaddress, get_string('noreplyname'));
+            $tempreplyto[] = array($from->email, fullname($from));
+        }
+    } else {
+        $mail->From = $noreplyaddress;
+        $fromdetails = new stdClass();
+        $fromdetails->name = fullname($from);
+        $fromdetails->url = $CFG->wwwroot;
+        $fromstring = $fromdetails->name;
+        if ($CFG->emailfromvia != EMAIL_VIA_NEVER) {
+            $fromstring = get_string('emailvia', 'core', $fromdetails);
+        }
+        $mail->FromName = $fromstring;
+        if (empty($replyto)) {
+            $tempreplyto[] = array($noreplyaddress, get_string('noreplyname'));
         }
     }
 
@@ -5946,6 +6003,27 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
         }
         return false;
     }
+}
+
+/**
+ * Check to see if a user's real email address should be used for the "From" field.
+ *
+ * @param  object $from The user object for the user we are sending the email from.
+ * @param  object $user The user object that we are sending the email to.
+ * @param  array $alloweddomains An array of allowed domains that we can send email from.
+ * @return bool Returns true if we can use the from user's email adress in the "From" field.
+ */
+function can_send_from_real_email_address($from, $user, $alloweddomains) {
+    // Email is in the list of allowed domains for sending email,
+    // and the senders email setting is either displayed to everyone, or display to only other users that are enrolled
+    // in a course with the sender.
+    if (\core\ip_utils::is_domain_in_allowed_list(substr($from->email, strpos($from->email, '@') + 1), $alloweddomains)
+                && ($from->maildisplay == core_user::MAILDISPLAY_EVERYONE
+                || ($from->maildisplay == core_user::MAILDISPLAY_COURSE_MEMBERS_ONLY
+                && enrol_get_shared_courses($user, $from, false, true)))) {
+        return true;
+    }
+    return false;
 }
 
 /**
@@ -8866,36 +8944,37 @@ function get_performance_info() {
     global $CFG, $PERF, $DB, $PAGE;
 
     $info = array();
-    $info['html'] = '';         // Holds userfriendly HTML representation.
     $info['txt']  = me() . ' '; // Holds log-friendly representation.
 
+    $info['html'] = '';
     if (!empty($CFG->themedesignermode)) {
         // Attempt to avoid devs debugging peformance issues, when its caused by css building and so on.
-        $info['html'] = '<p><strong>Warning: Theme designer mode is enabled.</strong></p>';
+        $info['html'] .= '<p><strong>Warning: Theme designer mode is enabled.</strong></p>';
     }
+    $info['html'] .= '<ul class="list-unstyled m-l-1">';         // Holds userfriendly HTML representation.
 
     $info['realtime'] = microtime_diff($PERF->starttime, microtime());
 
-    $info['html'] .= '<span class="timeused">'.$info['realtime'].' secs</span> ';
+    $info['html'] .= '<li class="timeused">'.$info['realtime'].' secs</li> ';
     $info['txt'] .= 'time: '.$info['realtime'].'s ';
 
     if (function_exists('memory_get_usage')) {
         $info['memory_total'] = memory_get_usage();
         $info['memory_growth'] = memory_get_usage() - $PERF->startmemory;
-        $info['html'] .= '<span class="memoryused">RAM: '.display_size($info['memory_total']).'</span> ';
+        $info['html'] .= '<li class="memoryused">RAM: '.display_size($info['memory_total']).'</li> ';
         $info['txt']  .= 'memory_total: '.$info['memory_total'].'B (' . display_size($info['memory_total']).') memory_growth: '.
             $info['memory_growth'].'B ('.display_size($info['memory_growth']).') ';
     }
 
     if (function_exists('memory_get_peak_usage')) {
         $info['memory_peak'] = memory_get_peak_usage();
-        $info['html'] .= '<span class="memoryused">RAM peak: '.display_size($info['memory_peak']).'</span> ';
+        $info['html'] .= '<li class="memoryused">RAM peak: '.display_size($info['memory_peak']).'</li> ';
         $info['txt']  .= 'memory_peak: '.$info['memory_peak'].'B (' . display_size($info['memory_peak']).') ';
     }
 
     $inc = get_included_files();
     $info['includecount'] = count($inc);
-    $info['html'] .= '<span class="included">Included '.$info['includecount'].' files</span> ';
+    $info['html'] .= '<li class="included">Included '.$info['includecount'].' files</li> ';
     $info['txt']  .= 'includecount: '.$info['includecount'].' ';
 
     if (!empty($CFG->early_install_lang) or empty($PAGE)) {
@@ -8908,7 +8987,7 @@ function get_performance_info() {
         list($filterinfo, $nicenames) = $filtermanager->get_performance_summary();
         $info = array_merge($filterinfo, $info);
         foreach ($filterinfo as $key => $value) {
-            $info['html'] .= "<span class='$key'>$nicenames[$key]: $value </span> ";
+            $info['html'] .= "<li class='$key'>$nicenames[$key]: $value </li> ";
             $info['txt'] .= "$key: $value ";
         }
     }
@@ -8918,23 +8997,23 @@ function get_performance_info() {
         list($filterinfo, $nicenames) = $stringmanager->get_performance_summary();
         $info = array_merge($filterinfo, $info);
         foreach ($filterinfo as $key => $value) {
-            $info['html'] .= "<span class='$key'>$nicenames[$key]: $value </span> ";
+            $info['html'] .= "<li class='$key'>$nicenames[$key]: $value </li> ";
             $info['txt'] .= "$key: $value ";
         }
     }
 
     if (!empty($PERF->logwrites)) {
         $info['logwrites'] = $PERF->logwrites;
-        $info['html'] .= '<span class="logwrites">Log DB writes '.$info['logwrites'].'</span> ';
+        $info['html'] .= '<li class="logwrites">Log DB writes '.$info['logwrites'].'</li> ';
         $info['txt'] .= 'logwrites: '.$info['logwrites'].' ';
     }
 
     $info['dbqueries'] = $DB->perf_get_reads().'/'.($DB->perf_get_writes() - $PERF->logwrites);
-    $info['html'] .= '<span class="dbqueries">DB reads/writes: '.$info['dbqueries'].'</span> ';
+    $info['html'] .= '<li class="dbqueries">DB reads/writes: '.$info['dbqueries'].'</li> ';
     $info['txt'] .= 'db reads/writes: '.$info['dbqueries'].' ';
 
     $info['dbtime'] = round($DB->perf_get_queries_time(), 5);
-    $info['html'] .= '<span class="dbtime">DB queries time: '.$info['dbtime'].' secs</span> ';
+    $info['html'] .= '<li class="dbtime">DB queries time: '.$info['dbtime'].' secs</li> ';
     $info['txt'] .= 'db queries time: ' . $info['dbtime'] . 's ';
 
     if (function_exists('posix_times')) {
@@ -8943,7 +9022,7 @@ function get_performance_info() {
             foreach ($ptimes as $key => $val) {
                 $info[$key] = $ptimes[$key] -  $PERF->startposixtimes[$key];
             }
-            $info['html'] .= "<span class=\"posixtimes\">ticks: $info[ticks] user: $info[utime] sys: $info[stime] cuser: $info[cutime] csys: $info[cstime]</span> ";
+            $info['html'] .= "<li class=\"posixtimes\">ticks: $info[ticks] user: $info[utime] sys: $info[stime] cuser: $info[cutime] csys: $info[cstime]</li> ";
             $info['txt'] .= "ticks: $info[ticks] user: $info[utime] sys: $info[stime] cuser: $info[cutime] csys: $info[cstime] ";
         }
     }
@@ -8963,7 +9042,7 @@ function get_performance_info() {
     }
     if (!empty($serverload)) {
         $info['serverload'] = $serverload;
-        $info['html'] .= '<span class="serverload">Load average: '.$info['serverload'].'</span> ';
+        $info['html'] .= '<li class="serverload">Load average: '.$info['serverload'].'</li> ';
         $info['txt'] .= "serverload: {$info['serverload']} ";
     }
 
@@ -8975,8 +9054,8 @@ function get_performance_info() {
     }
 
     if ($stats = cache_helper::get_stats()) {
-        $html = '<span class="cachesused">';
-        $html .= '<span class="cache-stats-heading">Caches used (hits/misses/sets)</span>';
+        $html = '<ul class="cachesused list-unstyled m-l-1">';
+        $html .= '<li class="cache-stats-heading">Caches used (hits/misses/sets)</li>';
         $text = 'Caches used (hits/misses/sets): ';
         $hits = 0;
         $misses = 0;
@@ -8996,34 +9075,34 @@ function get_performance_info() {
                     $mode = ' <span title="request cache">[r]</span>';
                     break;
             }
-            $html .= '<span class="cache-definition-stats cache-mode-'.$modeclass.'">';
-            $html .= '<span class="cache-definition-stats-heading">'.$definition.$mode.'</span>';
+            $html .= '<ul class="cache-definition-stats list-unstyled m-l-1 cache-mode-'.$modeclass.'">';
+            $html .= '<li class="cache-definition-stats-heading p-t-1">'.$definition.$mode.'</li>';
             $text .= "$definition {";
             foreach ($details['stores'] as $store => $data) {
                 $hits += $data['hits'];
                 $misses += $data['misses'];
                 $sets += $data['sets'];
                 if ($data['hits'] == 0 and $data['misses'] > 0) {
-                    $cachestoreclass = 'nohits';
+                    $cachestoreclass = 'nohits text-danger';
                 } else if ($data['hits'] < $data['misses']) {
-                    $cachestoreclass = 'lowhits';
+                    $cachestoreclass = 'lowhits text-warning';
                 } else {
-                    $cachestoreclass = 'hihits';
+                    $cachestoreclass = 'hihits text-success';
                 }
                 $text .= "$store($data[hits]/$data[misses]/$data[sets]) ";
-                $html .= "<span class=\"cache-store-stats $cachestoreclass\">$store: $data[hits] / $data[misses] / $data[sets]</span>";
+                $html .= "<li class=\"cache-store-stats $cachestoreclass\">$store: $data[hits] / $data[misses] / $data[sets]</li>";
             }
-            $html .= '</span>';
+            $html .= '</ul>';
             $text .= '} ';
         }
-        $html .= "<span class='cache-total-stats'>Total: $hits / $misses / $sets</span>";
-        $html .= '</span> ';
+        $html .= '</ul> ';
+        $html .= "<div class='cache-total-stats row'>Total: $hits / $misses / $sets</div>";
         $info['cachesused'] = "$hits / $misses / $sets";
         $info['html'] .= $html;
         $info['txt'] .= $text.'. ';
     } else {
         $info['cachesused'] = '0 / 0 / 0';
-        $info['html'] .= '<span class="cachesused">Caches used (hits/misses/sets): 0/0/0</span>';
+        $info['html'] .= '<div class="cachesused">Caches used (hits/misses/sets): 0/0/0</div>';
         $info['txt'] .= 'Caches used (hits/misses/sets): 0/0/0 ';
     }
 

@@ -196,14 +196,19 @@ class api {
         }
 
         // Now, let's get the courses.
+        // Make sure to limit searches to enrolled courses.
+        $enrolledcourses = enrol_get_my_courses(array('id', 'cacherev'));
         $courses = array();
-        if ($arrcourses = \coursecat::search_courses(array('search' => $search), array('limit' => $limitnum))) {
+        if ($arrcourses = \coursecat::search_courses(array('search' => $search), array('limit' => $limitnum),
+                array('moodle/course:viewparticipants'))) {
             foreach ($arrcourses as $course) {
-                $data = new \stdClass();
-                $data->id = $course->id;
-                $data->shortname = $course->shortname;
-                $data->fullname = $course->fullname;
-                $courses[] = $data;
+                if (isset($enrolledcourses[$course->id])) {
+                    $data = new \stdClass();
+                    $data->id = $course->id;
+                    $data->shortname = $course->shortname;
+                    $data->fullname = $course->fullname;
+                    $courses[] = $data;
+                }
             }
         }
 
@@ -348,7 +353,7 @@ class api {
                 if (isset($userfields['lastaccess'])) {
                     $data->isonline = helper::is_online($userfields['lastaccess']);
                 } else {
-                    $data->isonline = 0;
+                    $data->isonline = false;
                 }
             } else {
                 // Technically the access checks in user_get_user_details are correct,
@@ -362,12 +367,12 @@ class api {
                 $data->email = '';
                 $data->profileimageurl = '';
                 $data->profileimageurlsmall = '';
-                $data->isonline = 0;
+                $data->isonline = false;
             }
             // Check if the contact has been blocked.
             $contact = $DB->get_record('message_contacts', array('userid' => $userid, 'contactid' => $otheruserid));
             if ($contact) {
-                $data->isblocked = $contact->blocked;
+                $data->isblocked = (bool) $contact->blocked;
                 $data->iscontact = true;
             } else {
                 $data->isblocked = false;
@@ -383,14 +388,14 @@ class api {
      *
      * @param int $userid The user id of who we want to delete the messages for (this may be done by the admin
      *  but will still seem as if it was by the user)
-     * @return bool Returns true if a user can delete the message, false otherwise.
+     * @return bool Returns true if a user can delete the conversation, false otherwise.
      */
     public static function can_delete_conversation($userid) {
         global $USER;
 
         $systemcontext = \context_system::instance();
 
-        // Let's check if the user is allowed to delete this message.
+        // Let's check if the user is allowed to delete this conversation.
         if (has_capability('moodle/site:deleteanymessage', $systemcontext) ||
             ((has_capability('moodle/site:deleteownmessage', $systemcontext) &&
                 $USER->id == $userid))) {
@@ -411,7 +416,7 @@ class api {
      * @return bool
      */
     public static function delete_conversation($userid, $otheruserid) {
-        global $DB, $USER;
+        global $DB;
 
         // We need to update the tables to mark all messages as deleted from and to the other user. This seems worse than it
         // is, that's because our DB structure splits messages into two tables (great idea, huh?) which causes code like this.
@@ -457,7 +462,7 @@ class api {
 
                 // Trigger event for deleting the message.
                 \core\event\message_deleted::create_from_ids($message->useridfrom, $message->useridto,
-                    $USER->id, $messagetable, $message->id)->trigger();
+                    $userid, $messagetable, $message->id)->trigger();
             }
         }
 
@@ -667,5 +672,112 @@ class api {
         }
 
         return false;
+    }
+
+    /**
+     * Get specified message processor, validate corresponding plugin existence and
+     * system configuration.
+     *
+     * @param string $name  Name of the processor.
+     * @param bool $ready only return ready-to-use processors.
+     * @return mixed $processor if processor present else empty array.
+     * @since Moodle 3.2
+     */
+    public static function get_message_processor($name, $ready = false) {
+        global $DB, $CFG;
+
+        $processor = $DB->get_record('message_processors', array('name' => $name));
+        if (empty($processor)) {
+            // Processor not found, return.
+            return array();
+        }
+
+        $processor = self::get_processed_processor_object($processor);
+        if ($ready) {
+            if ($processor->enabled && $processor->configured) {
+                return $processor;
+            } else {
+                return array();
+            }
+        } else {
+            return $processor;
+        }
+    }
+
+    /**
+     * Returns weather a given processor is enabled or not.
+     * Note:- This doesn't check if the processor is configured or not.
+     *
+     * @param string $name Name of the processor
+     * @return bool
+     */
+    public static function is_processor_enabled($name) {
+
+        $cache = \cache::make('core', 'message_processors_enabled');
+        $status = $cache->get($name);
+
+        if ($status === false) {
+            $processor = self::get_message_processor($name);
+            if (!empty($processor)) {
+                $cache->set($name, $processor->enabled);
+                return $processor->enabled;
+            } else {
+                return false;
+            }
+        }
+
+        return $status;
+    }
+
+    /**
+     * Set status of a processor.
+     *
+     * @param \stdClass $processor processor record.
+     * @param 0|1 $enabled 0 or 1 to set the processor status.
+     * @return bool
+     * @since Moodle 3.2
+     */
+    public static function update_processor_status($processor, $enabled) {
+        global $DB;
+        $cache = \cache::make('core', 'message_processors_enabled');
+        $cache->delete($processor->name);
+        return $DB->set_field('message_processors', 'enabled', $enabled, array('id' => $processor->id));
+    }
+
+    /**
+     * Given a processor object, loads information about it's settings and configurations.
+     * This is not a public api, instead use @see \core_message\api::get_message_processor()
+     * or @see \get_message_processors()
+     *
+     * @param \stdClass $processor processor object
+     * @return \stdClass processed processor object
+     * @since Moodle 3.2
+     */
+    public static function get_processed_processor_object(\stdClass $processor) {
+        global $CFG;
+
+        $processorfile = $CFG->dirroot. '/message/output/'.$processor->name.'/message_output_'.$processor->name.'.php';
+        if (is_readable($processorfile)) {
+            include_once($processorfile);
+            $processclass = 'message_output_' . $processor->name;
+            if (class_exists($processclass)) {
+                $pclass = new $processclass();
+                $processor->object = $pclass;
+                $processor->configured = 0;
+                if ($pclass->is_system_configured()) {
+                    $processor->configured = 1;
+                }
+                $processor->hassettings = 0;
+                if (is_readable($CFG->dirroot.'/message/output/'.$processor->name.'/settings.php')) {
+                    $processor->hassettings = 1;
+                }
+                $processor->available = 1;
+            } else {
+                print_error('errorcallingprocessor', 'message');
+            }
+        } else {
+            $processor->available = 0;
+        }
+        return $processor;
     }
 }

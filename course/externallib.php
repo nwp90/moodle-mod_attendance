@@ -160,6 +160,7 @@ class core_course_external extends external_api {
             //retrieve sections
             $modinfo = get_fast_modinfo($course);
             $sections = $modinfo->get_section_info_all();
+            $coursenumsections = course_get_format($course)->get_course()->numsections;
 
             //for each sections (first displayed to last displayed)
             $modinfosections = $modinfo->get_sections();
@@ -201,6 +202,7 @@ class core_course_external extends external_api {
                         external_format_text($section->summary, $section->summaryformat,
                                 $context->id, 'course', 'section', $section->id, $options);
                 $sectionvalues['section'] = $section->section;
+                $sectionvalues['hiddenbynumsections'] = $section->section > $coursenumsections ? 1 : 0;
                 $sectioncontents = array();
 
                 //for each module of the section
@@ -329,6 +331,8 @@ class core_course_external extends external_api {
                     'summary' => new external_value(PARAM_RAW, 'Section description'),
                     'summaryformat' => new external_format_value('summary'),
                     'section' => new external_value(PARAM_INT, 'Section number inside the course', VALUE_OPTIONAL),
+                    'hiddenbynumsections' => new external_value(PARAM_INT, 'Whether is a section hidden in the course format',
+                                                                VALUE_OPTIONAL),
                     'modules' => new external_multiple_structure(
                             new external_single_structure(
                                 array(
@@ -2492,10 +2496,12 @@ class core_course_external extends external_api {
                         $info->outcomes = array();
                     }
                     $id = str_replace('outcome_', '', $key);
-                    $outcome = $outcome = grade_outcome::fetch(array('id' => $id));
+                    $outcome = grade_outcome::fetch(array('id' => $id));
+                    $scaleitems = $outcome->load_scale();
                     $info->outcomes[] = array(
                         'id' => $id,
-                        'name' => external_format_string($outcome->get_name(), $context->id)
+                        'name' => external_format_string($outcome->get_name(), $context->id),
+                        'scale' => $scaleitems->scale
                     );
                 }
             }
@@ -2572,6 +2578,7 @@ class core_course_external extends external_api {
                                 array(
                                     'id' => new external_value(PARAM_ALPHANUMEXT, 'Outcome id'),
                                     'name'  => new external_value(PARAM_TEXT, 'Outcome full name'),
+                                    'scale' => new external_value(PARAM_TEXT, 'Scale items')
                                 )
                             ),
                             'Outcomes information', VALUE_OPTIONAL
@@ -3014,6 +3021,134 @@ class core_course_external extends external_api {
         return new external_single_structure(
             array(
                 'courses' => new external_multiple_structure(self::get_course_structure(false), 'Course'),
+                'warnings' => new external_warnings()
+            )
+        );
+    }
+
+    /**
+     * Returns description of method parameters
+     *
+     * @return external_function_parameters
+     * @since Moodle 3.2
+     */
+    public static function check_updates_parameters() {
+        return new external_function_parameters(
+            array(
+                'courseid' => new external_value(PARAM_INT, 'Course id to check'),
+                'tocheck' => new external_multiple_structure(
+                    new external_single_structure(
+                        array(
+                            'contextlevel' => new external_value(PARAM_ALPHA, 'The context level for the file location.
+                                                                                Only module supported right now.'),
+                            'id' => new external_value(PARAM_INT, 'Context instance id'),
+                            'since' => new external_value(PARAM_INT, 'Check updates since this time stamp'),
+                        )
+                    ),
+                    'Instances to check'
+                ),
+                'filter' => new external_multiple_structure(
+                    new external_value(PARAM_ALPHANUM, 'Area name: configuration, fileareas, completion, ratings, comments,
+                                                        gradeitems, outcomes'),
+                    'Check only for updates in these areas', VALUE_DEFAULT, array()
+                )
+            )
+        );
+    }
+
+    /**
+     * Check if there is updates affecting the user for the given course and contexts.
+     * Right now only modules are supported.
+     * This WS calls mod_check_updates_since for each module to check if there is any update the user should we aware of.
+     *
+     * @param int $courseid the list of modules to check
+     * @param array $tocheck the list of modules to check
+     * @param array $filter check only for updates in these areas
+     * @return array list of updates and warnings
+     * @throws moodle_exception
+     * @since Moodle 3.2
+     */
+    public static function check_updates($courseid, $tocheck, $filter = array()) {
+        global $CFG, $DB;
+
+        $params = self::validate_parameters(
+            self::check_updates_parameters(),
+            array(
+                'courseid' => $courseid,
+                'tocheck' => $tocheck,
+                'filter' => $filter,
+            )
+        );
+
+        $course = get_course($params['courseid']);
+        $context = context_course::instance($course->id);
+        self::validate_context($context);
+
+        list($instances, $warnings) = course_check_updates($course, $params['tocheck'], $filter);
+
+        $instancesformatted = array();
+        foreach ($instances as $instance) {
+            $updates = array();
+            foreach ($instance['updates'] as $name => $data) {
+                if (empty($data->updated)) {
+                    continue;
+                }
+                $updatedata = array(
+                    'name' => $name,
+                );
+                if (!empty($data->timeupdated)) {
+                    $updatedata['timeupdated'] = $data->timeupdated;
+                }
+                if (!empty($data->itemids)) {
+                    $updatedata['itemids'] = $data->itemids;
+                }
+                $updates[] = $updatedata;
+            }
+            if (!empty($updates)) {
+                $instancesformatted[] = array(
+                    'contextlevel' => $instance['contextlevel'],
+                    'id' => $instance['id'],
+                    'updates' => $updates
+                );
+            }
+        }
+
+        return array(
+            'instances' => $instancesformatted,
+            'warnings' => $warnings
+        );
+    }
+
+    /**
+     * Returns description of method result value
+     *
+     * @return external_description
+     * @since Moodle 3.2
+     */
+    public static function check_updates_returns() {
+        return new external_single_structure(
+            array(
+                'instances' => new external_multiple_structure(
+                    new external_single_structure(
+                        array(
+                            'contextlevel' => new external_value(PARAM_ALPHA, 'The context level'),
+                            'id' => new external_value(PARAM_INT, 'Instance id'),
+                            'updates' => new external_multiple_structure(
+                                new external_single_structure(
+                                    array(
+                                        'name' => new external_value(PARAM_ALPHANUMEXT, 'Name of the area updated.'),
+                                        'timeupdated' => new external_value(PARAM_INT, 'Last time was updated', VALUE_OPTIONAL),
+                                        'itemids' => new external_multiple_structure(
+                                            new external_value(PARAM_INT, 'Instance id'),
+                                            'The ids of the items updated',
+                                            VALUE_OPTIONAL
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                ),
                 'warnings' => new external_warnings()
             )
         );

@@ -1,5 +1,30 @@
 /* core.less */
 
+#region-main > .card {
+    overflow-x: auto;
+    overflow-y: visible;
+    min-height: 45rem;
+}
+
+.context-header-settings-menu,
+.region-main-settings-menu {
+    float: right;
+    width: 4em;
+    height: 2em;
+    display: block;
+}
+
+.context-header-settings-menu .dropdown-toggle > .icon,
+#region-main-settings-menu .dropdown-toggle > .icon {
+    height: 24px;
+    width: auto;
+}
+/** Prevent user notifications overlapping with region main settings menu */
+#user-notifications {
+    display: block;
+    overflow: hidden;
+}
+
 /** Page layout CSS starts **/
 .layout-option-noheader #page-header,
 .layout-option-nonavbar #page-navbar,
@@ -223,33 +248,6 @@ img.activityicon {
     vertical-align: middle;
 }
 
-.boxaligncenter {
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.boxalignright {
-    margin-left: auto;
-    margin-right: 0;
-}
-
-.boxalignleft {
-    margin-left: 0;
-    margin-right: auto;
-}
-
-.boxwidthnarrow {
-    width: 30%;
-}
-
-.boxwidthnormal {
-    width: 50%;
-}
-
-.boxwidthwide {
-    width: 80%;
-}
-
 .headermain {
     font-weight: bold;
 }
@@ -281,14 +279,8 @@ form.popupform div {
 .arrow_button input {
     overflow: hidden;
 }
-/** The 1-pixel padding is there to avoid phantom scroll bars on OS X (FF, Safari and Chrome)**/
 .no-overflow {
     overflow: auto;
-    padding-bottom: 1px;
-}
-
-.pagelayout-report .no-overflow {
-    overflow: visible;
 }
 
 .no-overflow > .generaltable {
@@ -305,7 +297,8 @@ form.popupform div {
 }
 
 span.hide,
-div.hide {
+div.hide,
+.hidden {
     display: none;
 }
 // Accessibility: Skip block link, for keyboard-only users.
@@ -1083,58 +1076,13 @@ tr.flagged-tag a {
 
 #page-enrol-users {
     .enrol_user_buttons {
-        float: right;
+        text-align: right;
 
-        .enrolusersbutton {
-            display: inline;
-
-            div,
-            form {
-                display: inline;
-                margin-right: 0;
-            }
-        }
     }
 
     #filterform {
         @extend .card;
-        display: inline-block;
-
-        .fitem {
-            display: inline-block;
-            line-height: $line-height-base * 2;
-            margin-right: .3em;
-            white-space: nowrap;
-
-            label {
-                display: inline;
-                line-height: $line-height-base;
-                padding-right: .3em;
-            }
-
-            :before,
-            :after {
-                display: inline;
-            }
-        }
-
-        div,
-        fieldset {
-            display: inline-block;
-            clear: none;
-            width: auto;
-            margin: 0;
-        }
-
-        select,
-        .ftext input {
-            width: 7em;
-        }
-
-        input,
-        select {
-            margin-bottom: 0;
-        }
+        @extend .card-block;
     }
 
     .user-enroller-panel .uep-search-results .user .details {
@@ -1254,11 +1202,6 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
     }
 }
 
-/** Moodle modals. */
-.modal.show {
-    display: block;
-}
-
 /* Moodle Dialogue Settings (moodle-core-dialogue)  */
 .moodle-dialogue-base .moodle-dialogue-lightbox {
     background-color: $gray;
@@ -1294,6 +1237,12 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
 .moodle-dialogue-base .moodle-dialogue-wrap {
     background-color: #fff;
     border: 1px solid #ccc;
+}
+
+// Show is a bootstrap 2 class - but we use it for modals. We don't want to enable it everywhere because they removed
+// it for a reason (conflicts with jquery .show()).
+.modal.show {
+    display: block;
 }
 
 .moodle-dialogue-base .moodle-dialogue-wrap.moodle-dialogue-content {
@@ -1342,18 +1291,6 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
     right: 0;
     margin: 0;
     border: 0;
-}
-
-.moodle-dialogue-confirm .confirmation-dialogue {
-    text-align: center;
-}
-
-.moodle-dialogue-confirm .confirmation-dialogue input {
-    text-align: center;
-}
-
-.moodle-dialogue-exception .moodle-exception-message {
-    text-align: center;
 }
 
 .moodle-dialogue-exception .moodle-exception-param label {
@@ -1947,38 +1884,6 @@ img#persona_signin {
 .breadcrumb-nav .breadcrumb {
     margin: 0;
 }
-/** Navbar */
-.navbar-brand {
-    .logo {
-        display: inline-block;
-        margin: -$navbar-brand-padding-y 0;
-    }
-
-    .site-name {
-        display: inline-block;
-    }
-
-    &.has-logo {
-        .site-name {
-            margin-left: $spacer / 2;
-        }
-    }
-}
-
-@include media-breakpoint-down(xs) {
-    .navbar {
-        .navbar-brand {
-            max-width: 80%;
-            margin-right: 0;
-
-            &.has-logo {
-                .site-name {
-                    display: none;
-                }
-            }
-        }
-    }
-}
 
 /** Page header */
 #page-header {
@@ -2097,7 +2002,6 @@ dd:after {
 
         input {
             width: 330px;
-            height: 16px;
             vertical-align: text-bottom;
             margin-bottom: 0;
         }
@@ -2232,5 +2136,38 @@ ul {
             visibility: visible;
             transition: opacity 0.15s 0.5s, visibility 0.15s 0.5s;
         }
+    }
+}
+
+#region-flat-nav {
+    padding-right: 0;
+    padding-left: 0;
+    .nav {
+        margin-right: $grid-gutter-width / 2;
+        background-color: $card-bg;
+    }
+    @include media-breakpoint-down(sm) {
+        .nav {
+            margin-top: $grid-gutter-width;
+            margin-right: 0;
+        }
+    }
+}
+
+$footer-link-color: $brand-primary !default;
+#page-footer a {
+    color: $footer-link-color;
+}
+
+// Make links in a menu clickable anywhere in the row.
+.dropdown-item a {
+    display: block;
+    width: 100%;
+    color: $body-color;
+}
+
+.competency-tree {
+    ul {
+        padding-left: 1.5rem;
     }
 }

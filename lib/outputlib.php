@@ -86,7 +86,8 @@ function theme_get_revision() {
 
     if (empty($CFG->themedesignermode)) {
         if (empty($CFG->themerev)) {
-            return -1;
+            // This only happens during install. It doesn't matter what themerev we use as long as it's positive.
+            return 1;
         } else {
             return $CFG->themerev;
         }
@@ -149,7 +150,7 @@ class theme_config {
     /**
      * @var string Default theme, used when requested theme not found.
      */
-    const DEFAULT_THEME = 'clean';
+    const DEFAULT_THEME = 'boost';
 
     /**
      * @var array You can base your theme on other themes by linking to the other theme as
@@ -344,6 +345,12 @@ class theme_config {
      */
     public $doctype = 'html5';
 
+    /**
+     * @var string undeletableblocktypes If set to a string, will list the block types that cannot be deleted. Defaults to
+     *                                   navigation and settings.
+     */
+    public $undeletableblocktypes = false;
+
     //==Following properties are not configurable from theme config.php==
 
     /**
@@ -444,10 +451,10 @@ class theme_config {
     public $lessvariablescallback = null;
 
     /**
-     * The name of the function to call to get extra SCSS variables.
+     * The name of the function to call to get SCSS to prepend.
      * @var string
      */
-    public $scssvariablescallback = null;
+    public $prescsscallback = null;
 
     /**
      * Sets the render method that should be used for rendering custom block regions by scripts such as my/index.php
@@ -524,11 +531,11 @@ class theme_config {
         $configurable = array(
             'parents', 'sheets', 'parents_exclude_sheets', 'plugins_exclude_sheets',
             'javascripts', 'javascripts_footer', 'parents_exclude_javascripts',
-            'layouts', 'enable_dock', 'enablecourseajax',
+            'layouts', 'enable_dock', 'enablecourseajax', 'undeletableblocktypes',
             'rendererfactory', 'csspostprocess', 'editor_sheets', 'rarrow', 'larrow', 'uarrow', 'darrow',
             'hidefromselector', 'doctype', 'yuicssmodules', 'blockrtlmanipulations',
             'lessfile', 'extralesscallback', 'lessvariablescallback', 'blockrendermethod',
-            'scssfile', 'extrascsscallback', 'scssvariablescallback', 'csstreepostprocessor');
+            'scssfile', 'extrascsscallback', 'prescsscallback', 'csstreepostprocessor');
 
         foreach ($config as $key=>$value) {
             if (in_array($key, $configurable)) {
@@ -1190,9 +1197,9 @@ class theme_config {
 
         // Set-up the compiler.
         $compiler = new core_scss();
+        $compiler->prepend_raw_scss($this->get_pre_scss_code());
         $compiler->set_file($themescssfile);
         $compiler->append_raw_scss($this->get_extra_scss_code());
-        $compiler->add_variables($this->get_scss_variables());
 
         try {
             // Compile!
@@ -1227,39 +1234,6 @@ class theme_config {
             $candidates[] = $parent_config->lessvariablescallback;
         }
         $candidates[] = $this->lessvariablescallback;
-
-        // Calling the functions.
-        foreach ($candidates as $function) {
-            if (function_exists($function)) {
-                $vars = $function($this);
-                if (!is_array($vars)) {
-                    debugging('Callback ' . $function . ' did not return an array() as expected', DEBUG_DEVELOPER);
-                    continue;
-                }
-                $variables = array_merge($variables, $vars);
-            }
-        }
-
-        return $variables;
-    }
-
-    /**
-     * Return extra SCSS variables to use when compiling.
-     *
-     * @return array Where keys are the variable names, and the values are the value.
-     */
-    protected function get_scss_variables() {
-        $variables = array();
-
-        // Getting all the candidate functions.
-        $candidates = array();
-        foreach ($this->parent_configs as $parent_config) {
-            if (!isset($parent_config->scssvariablescallback)) {
-                continue;
-            }
-            $candidates[] = $parent_config->scssvariablescallback;
-        }
-        $candidates[] = $this->scssvariablescallback;
 
         // Calling the functions.
         foreach ($candidates as $function) {
@@ -1334,6 +1308,36 @@ class theme_config {
         foreach ($candidates as $function) {
             if (function_exists($function)) {
                 $content .= "\n/** Extra SCSS from $function **/\n" . $function($this) . "\n";
+            }
+        }
+
+        return $content;
+    }
+
+    /**
+     * SCSS code to prepend when compiling.
+     *
+     * This is intended to be used by themes to inject SCSS code before it gets compiled.
+     *
+     * @return string The SCSS code to inject.
+     */
+    protected function get_pre_scss_code() {
+        $content = '';
+
+        // Getting all the candidate functions.
+        $candidates = array();
+        foreach ($this->parent_configs as $parent_config) {
+            if (!isset($parent_config->prescsscallback)) {
+                continue;
+            }
+            $candidates[] = $parent_config->prescsscallback;
+        }
+        $candidates[] = $this->prescsscallback;
+
+        // Calling the functions.
+        foreach ($candidates as $function) {
+            if (function_exists($function)) {
+                $content .= "\n/** Pre-SCSS from $function **/\n" . $function($this) . "\n";
             }
         }
 

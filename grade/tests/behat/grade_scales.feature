@@ -44,12 +44,12 @@ Feature: View gradebook when scales are used
     And I log in as "teacher1"
     And I follow "Course 1"
     And I follow "Test assignment one"
-    And I follow "Edit settings"
+    And I click on "Edit settings" "link" in the "Administration" "block"
     And I expand all fieldsets
     And I set the field "grade[modgrade_type]" to "Scale"
     And I set the field "grade[modgrade_scale]" to "Letterscale"
     And I press "Save and display"
-    And I follow "View all submissions"
+    And I click on "View all submissions" "link" in the "Administration" "block"
     And I click on "Grade" "link" in the "Student 1" "table_row"
     And I set the field "Grade" to "A"
     And I press "Save changes"
@@ -71,7 +71,7 @@ Feature: View gradebook when scales are used
     And I press "Save changes"
     And I press "Ok"
     And I follow "Course 1"
-    And I navigate to "Grades" node in "Course administration"
+    And I click on "Grades" "link" in the "Navigation" "block"
     And I navigate to "Course grade settings" node in "Grade administration > Setup"
     And I set the field "Show weightings" to "Show"
     And I set the field "Show contribution to course total" to "Show"
@@ -108,7 +108,7 @@ Feature: View gradebook when scales are used
     And I log out
     And I log in as "student2"
     And I follow "Grades" in the user menu
-    And I follow "Course 1"
+    And I click on "Course 1" "link" in the "region-main" "region"
     And the following should exist in the "user-grade" table:
       | Grade item          | Grade | Range | Percentage | Contribution to course total |
       | Test assignment one | B     | F–A   | 75.00 %    | 80.00 %                      |
@@ -154,7 +154,7 @@ Feature: View gradebook when scales are used
     And I log out
     And I log in as "student2"
     And I follow "Grades" in the user menu
-    And I follow "Course 1"
+    And I click on "Course 1" "link" in the "region-main" "region"
     And the following should exist in the "user-grade" table:
       | Grade item                   | Grade          | Range | Percentage    | Contribution to course total |
       | Test assignment one          | B              | F–A   | 75.00 %       | <contrib2>                   |
