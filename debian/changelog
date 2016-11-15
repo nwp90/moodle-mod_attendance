@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.2.0~dev.2016111100+0facmed1-1) jessie; urgency=medium
+
+  * Update to 3.2beta 2016111100 (security)
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 15 Nov 2016 14:37:23 +1300
+
 moodle-site-otagounifom (3.2.0~dev.2016101400+0facmed2-1) jessie; urgency=medium
 
   * Remove themes broken by unavailability of suitable base themes
