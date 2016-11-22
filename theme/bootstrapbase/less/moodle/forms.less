@@ -35,7 +35,7 @@ form {
 .mform fieldset.collapsible legend a.fheader {
     padding: 0 5px 0 20px;
     margin-left: -20px;
-    background: url([[pix:t/expanded]]) 2px center no-repeat;
+    background: url([[pix:t/expanded]]) left center no-repeat;
 }
 .mform fieldset.collapsed legend a.fheader {
     /*rtl:raw:
@@ -355,6 +355,11 @@ fieldset.coursesearchbox label {
     label {
         display: inline;
     }
+    br + .availability-group {
+        display: inline-block;
+        margin-top: 8px;
+        margin-bottom: 8px;
+    }
     .availability-group {
         margin-right: 8px;
     }
@@ -366,12 +371,17 @@ fieldset.coursesearchbox label {
         margin-bottom: 4px;
     }
     .availability-plugincontrols {
+        min-height: 40px;
         padding: 2px 0 0 4px;
         background: none repeat scroll 0% 0% @wellBackground;
         border: 1px solid @grayLighter;
         border-radius: 4px;
         display: inline-block;
         margin-right: 8px;
+        select {
+            width: auto;
+            max-width: 200px;
+        }
     }
     /* Eye icon in front of an item and delete icon after it. */
     .availability-eye,
@@ -519,4 +529,10 @@ input[size] {
 
 textarea[data-auto-rows] {
     overflow-x: hidden;
+}
+
+div[data-passwordunmask="wrapper"] {
+    height: 30px;
+    line-height: 30px;
+    margin-bottom: 10px;
 }

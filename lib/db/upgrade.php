@@ -2250,6 +2250,7 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2016101100.00);
     }
 
+
     if ($oldversion < 2016101101.00) {
         // Define field component to be added to message_read.
         $table = new xmldb_table('message_read');
@@ -2270,6 +2271,139 @@ function xmldb_main_upgrade($oldversion) {
 
         // Main savepoint reached.
         upgrade_main_savepoint(true, 2016101101.00);
+    }
+
+    if ($oldversion < 2016101401.00) {
+        // Clean up repository_alfresco config unless plugin has been manually installed.
+        if (!file_exists($CFG->dirroot . '/repository/alfresco/lib.php')) {
+            // Remove capabilities.
+            capabilities_cleanup('repository_alfresco');
+            // Clean config.
+            unset_all_config_for_plugin('repository_alfresco');
+        }
+
+        // Savepoint reached.
+        upgrade_main_savepoint(true, 2016101401.00);
+    }
+
+    if ($oldversion < 2016101401.02) {
+        $table = new xmldb_table('external_tokens');
+        $field = new xmldb_field('privatetoken', XMLDB_TYPE_CHAR, '64', null, null, null, null);
+
+        // Conditionally add privatetoken field to the external_tokens table.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2016101401.02);
+    }
+
+    if ($oldversion < 2016110202.00) {
+
+        // Force uninstall of deleted authentication plugin.
+        if (!file_exists("$CFG->dirroot/auth/radius")) {
+            // Leave settings inplace if there are radius users.
+            if (!$DB->record_exists('user', array('auth' => 'radius', 'deleted' => 0))) {
+                // Remove all other associated config.
+                unset_all_config_for_plugin('auth/radius');
+                // The version number for radius is in this format.
+                unset_all_config_for_plugin('auth_radius');
+            }
+        }
+        upgrade_main_savepoint(true, 2016110202.00);
+    }
+
+    if ($oldversion < 2016110300.00) {
+        // Remove unused admin email setting.
+        unset_config('emailonlyfromreplyaddress');
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2016110300.00);
+    }
+
+    if ($oldversion < 2016110500.00) {
+
+        $oldplayers = [
+            'vimeo' => null,
+            'mp3' => ['.mp3'],
+            'html5video' => ['.mov', '.mp4', '.m4v', '.mpeg', '.mpe', '.mpg', '.ogv', '.webm'],
+            'flv' => ['.flv', '.f4v'],
+            'html5audio' => ['.aac', '.flac', '.mp3', '.m4a', '.oga', '.ogg', '.wav'],
+            'youtube' => null,
+            'swf' => null,
+        ];
+
+        // Convert hardcoded media players to the settings of the new media player plugin type.
+        if (get_config('core', 'media_plugins_sortorder') === false) {
+            $enabledplugins = [];
+            $videoextensions = [];
+            $audioextensions = [];
+            foreach ($oldplayers as $oldplayer => $extensions) {
+                $settingname = 'core_media_enable_'.$oldplayer;
+                if (!empty($CFG->$settingname)) {
+                    if ($extensions) {
+                        // VideoJS will be used for all media files players that were used previously.
+                        $enabledplugins['videojs'] = 'videojs';
+                        if ($oldplayer === 'mp3' || $oldplayer === 'html5audio') {
+                            $audioextensions += array_combine($extensions, $extensions);
+                        } else {
+                            $videoextensions += array_combine($extensions, $extensions);
+                        }
+                    } else {
+                        // Enable youtube, vimeo and swf.
+                        $enabledplugins[$oldplayer] = $oldplayer;
+                    }
+                }
+            }
+
+            set_config('media_plugins_sortorder', join(',', $enabledplugins));
+
+            // Configure VideoJS to match the existing players set up.
+            if ($enabledplugins['videojs']) {
+                $enabledplugins[] = 'videojs';
+                set_config('audioextensions', join(',', $audioextensions), 'media_videojs');
+                set_config('videoextensions', join(',', $videoextensions), 'media_videojs');
+                $useflash = !empty($CFG->core_media_enable_flv) || !empty($CFG->core_media_enable_mp3);
+                set_config('useflash', $useflash, 'media_videojs');
+                if (empty($CFG->core_media_enable_youtube)) {
+                    // Normally YouTube is enabled in videojs, but if youtube converter was disabled before upgrade
+                    // disable it in videojs as well.
+                    set_config('youtube', false, 'media_videojs');
+                }
+            }
+        }
+
+        // Unset old settings.
+        foreach ($oldplayers as $oldplayer => $extensions) {
+            unset_config('core_media_enable_' . $oldplayer);
+        }
+
+        // Preset defaults if CORE_MEDIA_VIDEO_WIDTH and CORE_MEDIA_VIDEO_HEIGHT are specified in config.php .
+        // After this upgrade step these constants will not be used any more.
+        if (defined('CORE_MEDIA_VIDEO_WIDTH')) {
+            set_config('media_default_width', CORE_MEDIA_VIDEO_WIDTH);
+        }
+        if (defined('CORE_MEDIA_VIDEO_HEIGHT')) {
+            set_config('media_default_height', CORE_MEDIA_VIDEO_HEIGHT);
+        }
+
+        // Savepoint reached.
+        upgrade_main_savepoint(true, 2016110500.00);
+    }
+
+    if ($oldversion < 2016110600.00) {
+        // Define a field 'deletioninprogress' in the 'course_modules' table, to background deletion tasks.
+        $table = new xmldb_table('course_modules');
+        $field = new xmldb_field('deletioninprogress', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'availability');
+
+        // Conditionally launch add field 'deletioninprogress'.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2016110600.00);
     }
 
     return true;

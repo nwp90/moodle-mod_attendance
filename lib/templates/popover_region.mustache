@@ -36,7 +36,7 @@
 <div class="popover-region collapsed {{$classes}}{{/classes}}"
     {{$attributes}}{{/attributes}}
     data-region="popover-region">
-    <div class="popover-region-toggle"
+    <div class="popover-region-toggle nav-link"
         data-region="popover-region-toggle"
         aria-role="button"
         aria-controls="popover-region-container-{{uniqid}}"
@@ -63,5 +63,13 @@
             </div>
             {{> core/loading }}
         </div>
+        {{$anchor}}
+            <a class="see-all-link"
+                href="{{{urls.seeall}}}">
+                <div class="popover-region-footer-container">
+                    <div class="popover-region-seeall-text">{{#str}} seeall, message {{/str}}</div>
+                </div>
+            </a>
+        {{/anchor}}
     </div>
 </div>

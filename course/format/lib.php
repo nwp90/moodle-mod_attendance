@@ -96,6 +96,9 @@ abstract class format_base {
      * @return string
      */
     protected static final function get_format_or_default($format) {
+        global $CFG;
+        require_once($CFG->dirroot . '/course/lib.php');
+
         if (array_key_exists($format, self::$classesforformat)) {
             return self::$classesforformat[$format];
         }
@@ -482,7 +485,7 @@ abstract class format_base {
         }
         $blocknames = array(
             BLOCK_POS_LEFT => array(),
-            BLOCK_POS_RIGHT => array('search_forums', 'news_items', 'calendar_upcoming', 'recent_activity')
+            BLOCK_POS_RIGHT => array()
         );
         return $blocknames;
     }
@@ -1134,6 +1137,26 @@ abstract class format_base {
         }
 
         return $startdate + $courseduration;
+    }
+
+    /**
+     * Indicates whether the course format supports the creation of the Announcements forum.
+     *
+     * For course format plugin developers, please override this to return true if you want the Announcements forum
+     * to be created upon course creation.
+     *
+     * @return bool
+     */
+    public function supports_news() {
+        // For backwards compatibility, check if default blocks include the news_items block.
+        $defaultblocks = $this->get_default_blocks();
+        foreach ($defaultblocks as $blocks) {
+            if (in_array('news_items', $blocks)) {
+                return true;
+            }
+        }
+        // Return false by default.
+        return false;
     }
 
     /**

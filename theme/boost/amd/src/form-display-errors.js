@@ -29,17 +29,26 @@ define(['jquery', 'core/event'], function($, Event) {
                 event.preventDefault();
                 var parent = $(element).closest('.form-group');
                 var feedback = parent.find('.form-control-feedback');
+
+                // Sometimes (atto) we have a hidden textarea backed by a real contenteditable div.
+                if (($(element).prop("tagName") == 'TEXTAREA') && parent.find('[contenteditable]')) {
+                    element = parent.find('[contenteditable]');
+                }
                 if (msg !== '') {
                     parent.addClass('has-danger');
+                    parent.data('client-validation-error', true);
                     $(element).addClass('form-control-danger');
                     $(element).attr('aria-describedby', $(element).attr('id') + '-feedback');
                     feedback.html(msg);
                     feedback.show();
                 } else {
-                    parent.removeClass('has-danger');
-                    $(element).removeClass('form-control-danger');
-                    $(element).attr('aria-describedby', '');
-                    feedback.hide();
+                    if (parent.data('client-validation-error') === true) {
+                        parent.removeClass('has-danger');
+                        parent.data('client-validation-error', false);
+                        $(element).removeClass('form-control-danger');
+                        $(element).attr('aria-describedby', '');
+                        feedback.hide();
+                    }
                 }
             });
         }

@@ -108,11 +108,17 @@ class behat_util extends testing_util {
         set_config('debug', DEBUG_DEVELOPER);
         set_config('debugdisplay', 1);
 
+        // Force the navigation and settings blocks, even if the theme has made them optional.
+        set_config('undeletableblocktypes', 'navigation,settings');
+
         // Disable some settings that are not wanted on test sites.
         set_config('noemailever', 1);
 
         // Enable web cron.
         set_config('cronclionly', 0);
+
+        // Set editor autosave to high value, so as to avoid unwanted ajax.
+        set_config('autosavefrequency', '604800', 'editor_atto');
 
         // Keeps the current version of database and dataroot.
         self::store_versions_hash();
@@ -215,7 +221,7 @@ class behat_util extends testing_util {
      *
      * Stores a file in dataroot/behat to allow Moodle to switch
      * to the test environment when using cli-server.
-     * @param bool $themesuitewithallfeatures if only theme specific features need to be included in the suite.
+     * @param bool $themesuitewithallfeatures List themes to include core features.
      * @param string $tags comma separated tag, which will be given preference while distributing features in parallel run.
      * @param int $parallelruns number of parallel runs.
      * @param int $run current run.

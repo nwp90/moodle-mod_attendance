@@ -22,6 +22,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['activityisscheduledfordeletion'] = 'Activity deletion in progress...';
 $string['authnotexisting'] = 'The autorization plugin doesn\'t exist';
 $string['backupcontainexternal'] = 'This backup file contains external Moodle Network Hosts that are not configured locally';
 $string['backuptablefail'] = 'Backup tables could NOT be set up successfully!';
@@ -562,6 +563,7 @@ $string['usernotdeletedadmin'] = 'User not deleted - can not delete administrato
 $string['usernotdeletederror'] = 'User not deleted - error';
 $string['usernotdeletedmissing'] = 'User not deleted - could not find the username';
 $string['usernotdeletedoff'] = 'User not deleted - deleting not allowed';
+$string['usernotfullysetup'] = 'User not fully set-up';
 $string['usernotincourse'] = 'This user is not in this course!';
 $string['usernotrenamedadmin'] = 'Cannot rename admin accounts';
 $string['usernotrenamedexists'] = 'User not renamed - the new username is already in use';

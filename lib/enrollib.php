@@ -68,6 +68,26 @@ define('ENROL_EXT_REMOVED_SUSPEND', 2);
 define('ENROL_EXT_REMOVED_SUSPENDNOROLES', 3);
 
 /**
+ * Do not send email.
+ */
+define('ENROL_DO_NOT_SEND_EMAIL', 0);
+
+/**
+ * Send email from course contact.
+ */
+define('ENROL_SEND_EMAIL_FROM_COURSE_CONTACT', 1);
+
+/**
+ * Send email from enrolment key holder.
+ */
+define('ENROL_SEND_EMAIL_FROM_KEY_HOLDER', 2);
+
+/**
+ * Send email from no reply address.
+ */
+define('ENROL_SEND_EMAIL_FROM_NOREPLY', 3);
+
+/**
  * Returns instances of enrol plugins
  * @param bool $enabled return enabled only
  * @return array of enrol plugins name=>instance
@@ -1363,6 +1383,20 @@ function count_enrolled_users(context $context, $withcapability = '', $groupid =
 }
 
 /**
+ * Send welcome email "from" options.
+ *
+ * @return array list of from options
+ */
+function enrol_send_welcome_email_options() {
+    return [
+        ENROL_DO_NOT_SEND_EMAIL                 => get_string('no'),
+        ENROL_SEND_EMAIL_FROM_COURSE_CONTACT    => get_string('sendfromcoursecontact', 'enrol'),
+        ENROL_SEND_EMAIL_FROM_KEY_HOLDER        => get_string('sendfromkeyholder', 'enrol'),
+        ENROL_SEND_EMAIL_FROM_NOREPLY           => get_string('sendfromnoreply', 'enrol')
+    ];
+}
+
+/**
  * All enrol plugins should be based on this class,
  * this is also the main source of documentation.
  */
@@ -2621,7 +2655,8 @@ abstract class enrol_plugin {
         $subject = get_string('expirymessageenrolledsubject', 'enrol_'.$name, $a);
         $body = get_string('expirymessageenrolledbody', 'enrol_'.$name, $a);
 
-        $message = new stdClass();
+        $message = new \core\message\message();
+        $message->courseid          = $ue->courseid;
         $message->notification      = 1;
         $message->component         = 'enrol_'.$name;
         $message->name              = 'expiry_notification';
@@ -2682,7 +2717,8 @@ abstract class enrol_plugin {
         $subject = get_string('expirymessageenrollersubject', 'enrol_'.$name, $a);
         $body = get_string('expirymessageenrollerbody', 'enrol_'.$name, $a);
 
-        $message = new stdClass();
+        $message = new \core\message\message();
+        $message->courseid          = $course->id;
         $message->notification      = 1;
         $message->component         = 'enrol_'.$name;
         $message->name              = 'expiry_notification';

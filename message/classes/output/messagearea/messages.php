@@ -26,6 +26,7 @@ namespace core_message\output\messagearea;
 
 defined('MOODLE_INTERNAL') || die();
 
+use core_message\api;
 use renderable;
 use templatable;
 
@@ -82,12 +83,20 @@ class messages implements templatable, renderable {
         $data->currentuserid = $this->currentuserid;
         $data->otheruserid = $this->otheruserid;
         $data->otheruserfullname = fullname($this->otheruser);
-        $data->isonline = \core_message\helper::is_online($this->otheruser->lastaccess);
+
+        if (empty($this->otheruser)) {
+            $data->isonline = false;
+        } else {
+            $data->isonline = \core_message\helper::is_online($this->otheruser->lastaccess);
+        }
+
         $data->messages = array();
         foreach ($this->messages as $message) {
             $message = new message($message);
             $data->messages[] = $message->export_for_template($output);
         }
+
+        $data->isblocked = api::is_user_blocked($this->currentuserid, $this->otheruserid);
 
         return $data;
     }

@@ -24,31 +24,12 @@
 
 require_once($CFG->libdir.'/eventslib.php');
 
-define ('MESSAGE_SHORTLENGTH', 300);
+define('MESSAGE_SHORTLENGTH', 300);
 
-define ('MESSAGE_DISCUSSION_WIDTH',600);
-define ('MESSAGE_DISCUSSION_HEIGHT',500);
-
-define ('MESSAGE_SHORTVIEW_LIMIT', 8);//the maximum number of messages to show on the short message history
-
-define('MESSAGE_HISTORY_SHORT',0);
-define('MESSAGE_HISTORY_ALL',1);
-
-define('MESSAGE_VIEW_UNREAD_MESSAGES','unread');
-define('MESSAGE_VIEW_RECENT_CONVERSATIONS','recentconversations');
-define('MESSAGE_VIEW_RECENT_NOTIFICATIONS','recentnotifications');
-define('MESSAGE_VIEW_CONTACTS','contacts');
-define('MESSAGE_VIEW_BLOCKED','blockedusers');
-define('MESSAGE_VIEW_COURSE','course_');
-define('MESSAGE_VIEW_SEARCH','search');
+define('MESSAGE_HISTORY_ALL', 1);
 
 define('MESSAGE_SEARCH_MAX_RESULTS', 200);
 
-define('MESSAGE_CONTACTS_PER_PAGE',10);
-define('MESSAGE_MAX_COURSE_NAME_LENGTH', 30);
-
-define('MESSAGE_UNREAD', 'unread');
-define('MESSAGE_READ', 'read');
 define('MESSAGE_TYPE_NOTIFICATION', 'notification');
 define('MESSAGE_TYPE_MESSAGE', 'message');
 
@@ -75,6 +56,13 @@ define('MESSAGE_PERMITTED_MASK', 0x0c); // 1100
  * Set default value for default outputs permitted setting
  */
 define('MESSAGE_DEFAULT_PERMITTED', 'permitted');
+
+/**
+ * Set default values for polling.
+ */
+define('MESSAGE_DEFAULT_MIN_POLL_IN_SECONDS', 10);
+define('MESSAGE_DEFAULT_MAX_POLL_IN_SECONDS', 2 * MINSECS);
+define('MESSAGE_DEFAULT_TIMEOUT_POLL_IN_SECONDS', 5 * MINSECS);
 
 /**
  * Retrieve users blocked by $user1
@@ -830,7 +818,8 @@ function message_format_contexturl($message) {
 function message_post_message($userfrom, $userto, $message, $format) {
     global $SITE, $CFG, $USER;
 
-    $eventdata = new stdClass();
+    $eventdata = new \core\message\message();
+    $eventdata->courseid         = 1;
     $eventdata->component        = 'moodle';
     $eventdata->name             = 'instantmessage';
     $eventdata->userfrom         = $userfrom;
@@ -959,28 +948,7 @@ function get_message_processors($ready = false, $reset = false, $resetonly = fal
         // Get all processors, ensure the name column is the first so it will be the array key
         $processors = $DB->get_records('message_processors', null, 'name DESC', 'name, id, enabled');
         foreach ($processors as &$processor){
-            $processorfile = $CFG->dirroot. '/message/output/'.$processor->name.'/message_output_'.$processor->name.'.php';
-            if (is_readable($processorfile)) {
-                include_once($processorfile);
-                $processclass = 'message_output_' . $processor->name;
-                if (class_exists($processclass)) {
-                    $pclass = new $processclass();
-                    $processor->object = $pclass;
-                    $processor->configured = 0;
-                    if ($pclass->is_system_configured()) {
-                        $processor->configured = 1;
-                    }
-                    $processor->hassettings = 0;
-                    if (is_readable($CFG->dirroot.'/message/output/'.$processor->name.'/settings.php')) {
-                        $processor->hassettings = 1;
-                    }
-                    $processor->available = 1;
-                } else {
-                    print_error('errorcallingprocessor', 'message');
-                }
-            } else {
-                $processor->available = 0;
-            }
+            $processor = \core_message\api::get_processed_processor_object($processor);
         }
     }
     if ($ready) {

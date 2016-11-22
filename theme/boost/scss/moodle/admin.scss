@@ -138,6 +138,7 @@
     text-align: left;
     margin-left: auto;
     margin-right: auto;
+    margin-top: $spacer-y;
 }
 
 #page-admin-roles-define .topfields {
@@ -179,25 +180,14 @@
     text-align: left;
 }
 
-#notice {
-    width: 60%;
-    min-width: 220px;
-    margin: auto;
-    text-align: center;
-
-    .buttons {
-        padding: 0;
-    }
-}
-
 #page-admin-index .releasenoteslink,
 #page-admin-index .adminwarning,
 #page-admin-index .adminerror {
-    margin: auto;
     @extend .alert;
+}
+
+#page-admin-index .adminwarning {
     @extend .alert-warning;
-    width: 60%;
-    min-width: 220px;
 }
 
 #page-admin-index .adminerror {
@@ -785,8 +775,6 @@
 }
 
 .maintenancewarning {
-    padding: 3px 1em;
-    text-align: center;
     position: fixed;
     bottom: 0;
     right: 0;
@@ -804,4 +792,9 @@
 
 #adminsettings .form-overridden {
     @extend .form-control-feedback;
+    @extend .alert-info;
+}
+
+.modal.modal-in-page {
+    z-index: 0;
 }

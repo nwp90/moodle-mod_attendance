@@ -149,9 +149,10 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/cust
             this.messageArea.onDelegateEvent(CustomEvents.events.scrollBottom, SELECTORS.CONTACTS,
                 this._loadContacts.bind(this));
 
-            // Set the number of conversations. We set this to the number of conversations we asked to retrieve not by
-            // the number that was actually retrieved, see MDL-55870.
-            this._numConversationsDisplayed = 20;
+            if (!this.messageArea.showContactsFirst()) {
+                // Set the initial number of conversations to retrieve. Otherwise it will display no conversations.
+                this._numConversationsDisplayed = 20;
+            }
         };
 
         /**
@@ -535,8 +536,10 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/cust
         Contacts.prototype._setSelectedUser = function(selector) {
             // Remove the 'selected' class from any other contact.
             this.messageArea.find(SELECTORS.CONTACT).removeClass('selected');
+            this.messageArea.find(SELECTORS.CONTACT).removeAttr('tabindex');
             // Set the tab for the user to selected.
             this.messageArea.find(SELECTORS.CONTACT + selector).addClass('selected');
+            this.messageArea.find(SELECTORS.CONTACT + selector).attr('tabIndex', 0);
         };
 
         /**
@@ -546,6 +549,9 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/cust
          * @return {String} The altered text
          */
         Contacts.prototype._getContactText = function(text) {
+            // Remove the HTML tags to render the contact text.
+            text = $(document.createElement('div')).html(text).text();
+
             if (text.length > this._messageLength) {
                 text = text.substr(0, this._messageLength - 3);
                 text += '...';

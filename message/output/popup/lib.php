@@ -35,7 +35,8 @@ function message_popup_render_navbar_output(\renderer_base $renderer) {
 
     // Early bail out conditions.
     if (!isloggedin() || isguestuser() || user_not_fully_set_up($USER) ||
-        get_user_preferences('auth_forcepasswordchange')) {
+        get_user_preferences('auth_forcepasswordchange') ||
+        (!$USER->policyagreed && $CFG->sitepolicy)) {
         return '';
     }
 
@@ -46,6 +47,8 @@ function message_popup_render_navbar_output(\renderer_base $renderer) {
         $context = [
             'userid' => $USER->id,
             'urls' => [
+                'seeall' => (new moodle_url('/message/index.php'))->out(),
+                'writeamessage' => (new moodle_url('/message/index.php', ['contactsfirst' => 1]))->out(),
                 'preferences' => (new moodle_url('/message/edit.php', ['id' => $USER->id]))->out(),
             ],
         ];
@@ -53,8 +56,8 @@ function message_popup_render_navbar_output(\renderer_base $renderer) {
     }
 
     // Add the notifications popover.
-    $processor = $DB->get_record('message_processors', array('name' => 'popup'));
-    if ($processor && $processor->enabled) {
+    $enabled = \core_message\api::is_processor_enabled("popup");
+    if ($enabled) {
         $context = [
             'userid' => $USER->id,
             'urls' => [
