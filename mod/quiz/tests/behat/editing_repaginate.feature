@@ -21,7 +21,7 @@ Feature: Edit quiz page - pagination
     When I log in as "teacher1"
     And I follow "Course 1"
     And I follow "Quiz 1"
-    And I click on "Edit quiz" "link" in the "Administration" "block"
+    And I follow "Edit quiz"
 
   @javascript
   Scenario: Repaginate questions with N question(s) per page as well as clicking
@@ -30,7 +30,7 @@ Feature: Edit quiz page - pagination
     Then I should see "Editing quiz: Quiz 1"
 
     # Add the first Essay question.
-    And I click on "Add" "link" in the "region-main" "region"
+    And I follow "Add"
     And I follow "a new question"
     And I set the field "item_qtype_essay" to "1"
     And I press "submitbutton"
@@ -42,7 +42,7 @@ Feature: Edit quiz page - pagination
     And I should see "Essay 01 new" on quiz page "1"
 
     # Add the second Essay question.
-    And I click on "Add" "link" in the "region-main" "region"
+    And I follow "Add"
     And I follow "a new question"
     And I set the field "item_qtype_essay" to "1"
     And I press "submitbutton"
@@ -67,7 +67,7 @@ Feature: Edit quiz page - pagination
     And I should not see "Page 2"
 
     # Add the third Essay question.
-    And I click on "Add" "link" in the "region-main" "region"
+    And I follow "Add"
     And I follow "a new question"
     And I set the field "item_qtype_essay" to "1"
     And I press "submitbutton"

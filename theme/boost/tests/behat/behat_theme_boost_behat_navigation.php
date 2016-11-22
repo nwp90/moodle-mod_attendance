@@ -65,12 +65,24 @@ class behat_theme_boost_behat_navigation extends behat_navigation {
             "/li[contains(concat(' ', normalize-space(@class), ' '), ' contains_branch ')]" .
             "/ul/li[contains(concat(' ', normalize-space(@class), ' '), ' contains_branch ')]" .
             "[p[contains(concat(' ', normalize-space(@class), ' '), ' branch ')]" .
-            "/*[normalize-space(.)=" . $nodetextliteral ."]]" .
+            "/span[normalize-space(.)=" . $nodetextliteral ."]]" .
+            "|" .
+            "//div[contains(concat(' ', normalize-space(@class), ' '), ' card-text ')]/div" .
+            "/ul[contains(concat(' ', normalize-space(@class), ' '), ' block_tree ')]" .
+            "/li[contains(concat(' ', normalize-space(@class), ' '), ' contains_branch ')]" .
+            "/ul/li[contains(concat(' ', normalize-space(@class), ' '), ' contains_branch ')]" .
+            "[p[contains(concat(' ', normalize-space(@class), ' '), ' branch ')]" .
+            "/span[normalize-space(.)=" . $nodetextliteral ."]]" .
             "|" .
             "//div[contains(concat(' ', normalize-space(@class), ' '), ' card-text ')]/div" .
             "/ul[contains(concat(' ', normalize-space(@class), ' '), ' block_tree ')]" .
             "/li[p[contains(concat(' ', normalize-space(@class), ' '), ' branch ')]" .
-            "/*[normalize-space(.)=" . $nodetextliteral ."]]";
+            "/span[normalize-space(.)=" . $nodetextliteral ."]]" .
+            "|" .
+            "//div[contains(concat(' ', normalize-space(@class), ' '), ' card-text ')]/div" .
+            "/ul[contains(concat(' ', normalize-space(@class), ' '), ' block_tree ')]" .
+            "/li[p[contains(concat(' ', normalize-space(@class), ' '), ' branch ')]" .
+            "/a[normalize-space(.)=" . $nodetextliteral ."]]";
 
         $node = $this->find('xpath', $xpath, $exception);
 

@@ -49,17 +49,14 @@ class helper {
                                         $sort = 'timecreated ASC') {
         global $DB;
 
-        $messageid = $DB->sql_concat("'message_'", 'id');
-        $messagereadid = $DB->sql_concat("'messageread_'", 'id');
-
-        $sql = "SELECT {$messageid} AS fakeid, id, useridfrom, useridto, subject, fullmessage, fullmessagehtml, fullmessageformat,
+        $sql = "SELECT id, useridfrom, useridto, subject, fullmessage, fullmessagehtml, fullmessageformat,
                        smallmessage, notification, timecreated, 0 as timeread
                   FROM {message} m
                  WHERE ((useridto = ? AND useridfrom = ? AND timeusertodeleted = ?)
                     OR (useridto = ? AND useridfrom = ? AND timeuserfromdeleted = ?))
                    AND notification = 0
              UNION ALL
-                SELECT {$messagereadid} AS fakeid, id, useridfrom, useridto, subject, fullmessage, fullmessagehtml, fullmessageformat,
+                SELECT id, useridfrom, useridto, subject, fullmessage, fullmessagehtml, fullmessageformat,
                        smallmessage, notification, timecreated, timeread
                   FROM {message_read} mr
                  WHERE ((useridto = ? AND useridfrom = ? AND timeusertodeleted = ?)
@@ -150,8 +147,7 @@ class helper {
         $data->messageid = null;
         if (isset($contact->smallmessage)) {
             $data->ismessaging = true;
-            // Strip the HTML tags from the message for displaying in the contact area.
-            $data->lastmessage = clean_param($contact->smallmessage, PARAM_NOTAGS);
+            $data->lastmessage = $contact->smallmessage;
             $data->useridfrom = $contact->useridfrom;
             if (isset($contact->messageid)) {
                 $data->messageid = $contact->messageid;
@@ -159,8 +155,8 @@ class helper {
         }
         // Check if the user is online.
         $data->isonline = self::is_online($userfields->lastaccess);
-        $data->isblocked = isset($contact->blocked) ? (bool) $contact->blocked : false;
-        $data->isread = isset($contact->isread) ? (bool) $contact->isread : false;
+        $data->isblocked = isset($contact->blocked) ? $contact->blocked : 0;
+        $data->isread = isset($contact->isread) ? $contact->isread : 0;
         $data->unreadcount = isset($contact->unreadcount) ? $contact->unreadcount : null;
 
         return $data;

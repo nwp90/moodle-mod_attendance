@@ -188,8 +188,7 @@ function report_security_check_mediafilterswf($detailed=false) {
 
     $activefilters = filter_get_globally_enabled();
 
-    $enabledmediaplayers = \core\plugininfo\media::get_enabled_plugins();
-    if (array_search('mediaplugin', $activefilters) !== false and array_key_exists('swf', $enabledmediaplayers)) {
+    if (array_search('mediaplugin', $activefilters) !== false and !empty($CFG->filter_mediaplugin_enable_swf)) {
         $result->status = REPORT_SECURITY_CRITICAL;
         $result->info   = get_string('check_mediafilterswf_error', 'report_security');
     } else {

@@ -69,14 +69,7 @@ class manager {
     public static function scan_file($file, $filename, $deleteinfected) {
         $antiviruses = self::get_enabled();
         foreach ($antiviruses as $antivirus) {
-            $result = $antivirus->scan_file($file, $filename);
-            if ($result === $antivirus::SCAN_RESULT_FOUND) {
-                // Infection found.
-                if ($deleteinfected) {
-                    unlink($file);
-                }
-                throw new \core\antivirus\scanner_exception('virusfounduser', '', array('filename' => $filename));
-            }
+            $antivirus->scan_file($file, $filename, $deleteinfected);
         }
     }
 

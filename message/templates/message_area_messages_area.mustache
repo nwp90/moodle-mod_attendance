@@ -14,7 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
-{{#otheruserid}}
 <div class="messages-header">
     <div class="view-toggle btn-container">
         <button class="btn btn-link" data-action="show-contacts">&lt; {{#str}} messages, message {{/str}}</button>
@@ -24,7 +23,7 @@
     </div>
     <div class="name-container">
         <div class="name">
-            <button class="btn btn-link" data-action="view-contact-profile" data-userid="{{otheruserid}}">{{otheruserfullname}}</button>
+            {{otheruserfullname}}
         </div>
         <div class="status {{#isonline}}online{{/isonline}}">
             <span class="offline-text">{{#str}} offline, message {{/str}}</span>
@@ -39,11 +38,9 @@
         <button class="btn btn-link cancel-messages-delete" data-action="cancel-delete-messages">{{#str}}cancel{{/str}}</button>
     </div>
 </div>
-{{/otheruserid}}
 <div class="messages" data-region="messages" data-userid="{{otheruserid}}">
     {{> core_message/message_area_messages }}
 </div>
-{{#otheruserid}}
 <div class="response" data-region="response">
     {{#iscurrentuser}}
         <div class="message-box">
@@ -54,4 +51,3 @@
         <button class="btn btn-link confirm" data-action="delete-messages">{{#str}} deleteselectedmessages, message {{/str}}</button>
     </div>
 </div>
-{{/otheruserid}}

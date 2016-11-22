@@ -139,9 +139,6 @@ abstract class moodleform {
     /** @var object definition_after_data executed flag */
     protected $_definition_finalized = false;
 
-    /** @var bool|null stores the validation result of this form or null if not yet validated */
-    protected $_validated = null;
-
     /**
      * The constructor function calls the abstract function definition() and it will then
      * process and clean and attempt to validate incoming data.
@@ -542,10 +539,11 @@ abstract class moodleform {
      * @return bool true if form data valid
      */
     function validate_defined_fields($validateonnosubmit=false) {
+        static $validated = null; // one validation is enough
         $mform =& $this->_form;
         if ($this->no_submit_button_pressed() && empty($validateonnosubmit)){
             return false;
-        } elseif ($this->_validated === null) {
+        } elseif ($validated === null) {
             $internal_val = $mform->validate();
 
             $files = array();
@@ -583,9 +581,9 @@ abstract class moodleform {
                 $moodle_val = true;
             }
 
-            $this->_validated = ($internal_val and $moodle_val and $file_val);
+            $validated = ($internal_val and $moodle_val and $file_val);
         }
-        return $this->_validated;
+        return $validated;
     }
 
     /**
@@ -2752,6 +2750,8 @@ class MoodleQuickForm_Renderer extends HTML_QuickForm_Renderer_Tableless{
         $this->_collapseButtons = '';
         $formid = $form->getAttribute('id');
         parent::startForm($form);
+        // HACK to prevent browsers from automatically inserting the user's password into the wrong fields.
+        $this->_hiddenHtml .= prevent_form_autofill_password();
         if ($form->isFrozen()){
             $this->_formTemplate = "\n<div class=\"mform frozen\">\n{content}\n</div>";
         } else {

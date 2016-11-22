@@ -97,8 +97,7 @@ if ($action == 'sendmessage' AND has_capability('moodle/course:bulkmessaging', $
     if (is_array($messageuser)) {
         foreach ($messageuser as $userid) {
             $senduser = $DB->get_record('user', array('id'=>$userid));
-            $eventdata = new \core\message\message();
-            $eventdata->courseid         = $course->id;
+            $eventdata = new stdClass();
             $eventdata->name             = 'message';
             $eventdata->component        = 'mod_feedback';
             $eventdata->userfrom         = $USER;
@@ -108,9 +107,6 @@ if ($action == 'sendmessage' AND has_capability('moodle/course:bulkmessaging', $
             $eventdata->fullmessageformat = FORMAT_PLAIN;
             $eventdata->fullmessagehtml  = $htmlmessage;
             $eventdata->smallmessage     = '';
-            $eventdata->courseid         = $course->id;
-            $eventdata->contexturl       = $link3;
-            $eventdata->contexturlname   = $feedback->name;
             $good = $good && message_send($eventdata);
         }
         if (!empty($good)) {
@@ -237,7 +233,7 @@ if (!$students) {
         $profilelink = '<strong><a href="'.$profile_url.'">'.fullname($user).'</a></strong>';
         $data = array ($OUTPUT->user_picture($user, array('courseid'=>$course->id)), $profilelink);
 
-        if ($DB->record_exists('feedback_completedtmp', array('userid' => $user->id, 'feedback' => $feedback->id))) {
+        if ($DB->record_exists('feedback_completedtmp', array('userid'=>$user->id))) {
             $data[] = get_string('started', 'feedback');
         } else {
             $data[] = get_string('not_started', 'feedback');

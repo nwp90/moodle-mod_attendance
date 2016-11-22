@@ -31,19 +31,15 @@ define(['jquery', 'core/event'], function($, Event) {
                 var feedback = parent.find('.form-control-feedback');
                 if (msg !== '') {
                     parent.addClass('has-danger');
-                    parent.data('client-validation-error', true);
                     $(element).addClass('form-control-danger');
                     $(element).attr('aria-describedby', $(element).attr('id') + '-feedback');
                     feedback.html(msg);
                     feedback.show();
                 } else {
-                    if (parent.data('client-validation-error') === true) {
-                        parent.removeClass('has-danger');
-                        parent.data('client-validation-error', false);
-                        $(element).removeClass('form-control-danger');
-                        $(element).attr('aria-describedby', '');
-                        feedback.hide();
-                    }
+                    parent.removeClass('has-danger');
+                    $(element).removeClass('form-control-danger');
+                    $(element).attr('aria-describedby', '');
+                    feedback.hide();
                 }
             });
         }

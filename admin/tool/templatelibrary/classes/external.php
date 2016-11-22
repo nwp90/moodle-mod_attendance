@@ -59,13 +59,7 @@ class external extends external_api {
             VALUE_DEFAULT,
             ''
         );
-        $themename = new external_value(
-            PARAM_COMPONENT,
-            'The current theme',
-            VALUE_DEFAULT,
-            ''
-        );
-        $params = array('component' => $component, 'search' => $search, 'themename' => $themename);
+        $params = array('component' => $component, 'search' => $search);
         return new external_function_parameters($params);
     }
 
@@ -73,18 +67,16 @@ class external extends external_api {
      * Loads the list of templates.
      * @param string $component Limit the search to a component.
      * @param string $search The search string.
-     * @param string $themename The name of theme
      * @return array[string]
      */
-    public static function list_templates($component, $search, $themename = '') {
+    public static function list_templates($component, $search) {
         $params = self::validate_parameters(self::list_templates_parameters(),
                                             array(
                                                 'component' => $component,
                                                 'search' => $search,
-                                                'themename' => $themename,
                                             ));
 
-        return api::list_templates($component, $search, $themename);
+        return api::list_templates($component, $search);
     }
 
     /**
@@ -115,7 +107,7 @@ class external extends external_api {
      *
      * @param string $component The component that holds the template.
      * @param string $template The name of the template.
-     * @return string the template, false if template doesn't exist.
+     * @return string the template
      */
     public static function load_canonical_template($component, $template) {
         $params = self::validate_parameters(self::load_canonical_template_parameters(),

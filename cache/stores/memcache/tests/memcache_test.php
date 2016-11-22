@@ -57,13 +57,11 @@ class cachestore_memcache_test extends cachestore_tests {
         $this->resetAfterTest(true);
 
         $definition = cache_definition::load_adhoc(cache_store::MODE_APPLICATION, 'cachestore_memcache', 'phpunit_test');
-        $instance = new cachestore_memcache('Memcache Test', cachestore_memcache::unit_test_configuration());
+        $instance = cachestore_memcache::initialise_unit_test_instance($definition);
 
-        if (!$instance->is_ready()) {
-            // Something prevented memcache store to be inited (extension, TEST_CACHESTORE_MEMCACHE_TESTSERVERS...).
+        if (!$instance) { // Something prevented memcache store to be inited (extension, TEST_CACHESTORE_MEMCACHE_TESTSERVERS...).
             $this->markTestSkipped();
         }
-        $instance->initialise($definition);
 
         $keys = array(
             // Alphanumeric.

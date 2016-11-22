@@ -47,12 +47,7 @@ class api {
      * @return array[string] Where each template is in the form "component/templatename".
      */
     public static function list_templates($component = '', $search = '', $themename = '') {
-        global $CFG, $PAGE;
-
-        if (empty($themename)) {
-            $themename = $PAGE->theme->name;
-        }
-        $themeconfig = \theme_config::load($themename);
+        global $CFG;
 
         $templatedirs = array();
         $results = array();
@@ -82,9 +77,6 @@ class api {
             foreach ($plugintypes as $type => $dir) {
                 $plugins = core_component::get_plugin_list_with_file($type, 'templates', false);
                 foreach ($plugins as $plugin => $dir) {
-                    if ($type == 'theme' && $plugin != $themename && !in_array($plugin, $themeconfig->parents)) {
-                        continue;
-                    }
                     if (!empty($dir) && is_dir($dir)) {
                         $pluginname = $type . '_' . $plugin;
                         $dirs = mustache_template_finder::get_template_directories_for_component($pluginname, $themename);
@@ -119,7 +111,7 @@ class api {
      *
      * @param string $component The component that holds the template.
      * @param string $template The name of the template.
-     * @return string the template or false if template doesn't exist.
+     * @return string the template
      */
     public static function load_canonical_template($component, $template) {
         // Get the list of possible template directories.
@@ -141,8 +133,7 @@ class api {
         }
 
         if ($filename === false) {
-            // There are occasions where we don't have a core template.
-            return false;
+            throw new moodle_exception('filenotfound', 'error');
         }
 
         $templatestr = file_get_contents($filename);

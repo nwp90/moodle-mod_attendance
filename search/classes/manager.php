@@ -198,9 +198,12 @@ class manager {
      */
     public static function get_search_area($areaid) {
 
-        // We have them all here.
+        // Try both caches, it does not matter where it comes from.
         if (!empty(static::$allsearchareas[$areaid])) {
             return static::$allsearchareas[$areaid];
+        }
+        if (!empty(static::$enabledsearchareas[$areaid])) {
+            return static::$enabledsearchareas[$areaid];
         }
 
         $classname = static::get_area_classname($areaid);
@@ -221,16 +224,13 @@ class manager {
     public static function get_search_areas_list($enabled = false) {
 
         // Two different arrays, we don't expect these arrays to be big.
-        if (static::$allsearchareas !== null) {
-            if (!$enabled) {
-                return static::$allsearchareas;
-            } else {
-                return static::$enabledsearchareas;
-            }
+        if (!$enabled && static::$allsearchareas !== null) {
+            return static::$allsearchareas;
+        } else if ($enabled && static::$enabledsearchareas !== null) {
+            return static::$enabledsearchareas;
         }
 
-        static::$allsearchareas = array();
-        static::$enabledsearchareas = array();
+        $searchareas = array();
 
         $plugintypes = \core_component::get_plugin_types();
         foreach ($plugintypes as $plugintype => $unused) {
@@ -248,10 +248,8 @@ class manager {
 
                     $areaid = static::generate_areaid($componentname, $areaname);
                     $searchclass = new $classname();
-
-                    static::$allsearchareas[$areaid] = $searchclass;
-                    if ($searchclass->is_enabled()) {
-                        static::$enabledsearchareas[$areaid] = $searchclass;
+                    if (!$enabled || ($enabled && $searchclass->is_enabled())) {
+                        $searchareas[$areaid] = $searchclass;
                     }
                 }
             }
@@ -271,17 +269,20 @@ class manager {
 
                 $areaid = static::generate_areaid($componentname, $areaname);
                 $searchclass = new $classname();
-                static::$allsearchareas[$areaid] = $searchclass;
-                if ($searchclass->is_enabled()) {
-                    static::$enabledsearchareas[$areaid] = $searchclass;
+                if (!$enabled || ($enabled && $searchclass->is_enabled())) {
+                    $searchareas[$areaid] = $searchclass;
                 }
             }
         }
 
+        // Cache results.
         if ($enabled) {
-            return static::$enabledsearchareas;
+            static::$enabledsearchareas = $searchareas;
+        } else {
+            static::$allsearchareas = $searchareas;
         }
-        return static::$allsearchareas;
+
+        return $searchareas;
     }
 
     /**

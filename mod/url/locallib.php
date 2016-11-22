@@ -305,18 +305,18 @@ function url_display_embed($url, $cm, $course) {
 
     $extension = resourcelib_get_extension($url->externalurl);
 
-    $mediamanager = core_media_manager::instance();
+    $mediarenderer = $PAGE->get_renderer('core', 'media');
     $embedoptions = array(
-        core_media_manager::OPTION_TRUSTED => true,
-        core_media_manager::OPTION_BLOCK => true
+        core_media::OPTION_TRUSTED => true,
+        core_media::OPTION_BLOCK => true
     );
 
     if (in_array($mimetype, array('image/gif','image/jpeg','image/png'))) {  // It's an image
         $code = resourcelib_embed_image($fullurl, $title);
 
-    } else if ($mediamanager->can_embed_url($moodleurl, $embedoptions)) {
+    } else if ($mediarenderer->can_embed_url($moodleurl, $embedoptions)) {
         // Media (audio/video) file.
-        $code = $mediamanager->embed_url($moodleurl, $title, 0, 0, $embedoptions);
+        $code = $mediarenderer->embed_url($moodleurl, $title, 0, 0, $embedoptions);
 
     } else {
         // anything else - just try object tag enlarged as much as possible

@@ -49,13 +49,7 @@ class behat_grading extends behat_base {
 
         $this->execute('behat_general::click_link', $this->escape($activityname));
 
-        $this->execute('behat_general::i_click_on_in_the',
-            array(
-                get_string('gradingmanagement', 'grading'),
-                'link',
-                'Administration',
-                'block'
-            ));
+        $this->execute('behat_general::click_link', get_string('gradingmanagement', 'grading'));
     }
 
     /**
@@ -92,13 +86,7 @@ class behat_grading extends behat_base {
 
         $this->execute('behat_general::click_link', $this->escape($activityname));
 
-        $this->execute('behat_general::i_click_on_in_the',
-            array(
-                get_string('viewgrading', 'mod_assign'),
-                'link',
-                'Administration',
-                'block'
-            ));
+        $this->execute('behat_general::click_link', $this->escape(get_string('viewgrading', 'assign')));
 
         $this->execute('behat_general::i_click_on_in_the',
                        array(
@@ -169,13 +157,7 @@ class behat_grading extends behat_base {
         $this->execute('behat_forms::press_button', 'Ok');
         $this->execute('behat_general::i_click_on', array($this->escape(get_string('editsettings')), 'link'));
         $this->execute('behat_forms::press_button', get_string('cancel'));
-        $this->execute('behat_general::i_click_on_in_the',
-            array(
-                get_string('viewgrading', 'mod_assign'),
-                'link',
-                'Administration',
-                'block'
-            ));
+        $this->execute('behat_general::i_click_on', array($this->escape(get_string('viewgrading', 'mod_assign')), 'link'));
     }
 
     /**

@@ -53,8 +53,8 @@ function message_popup_render_navbar_output(\renderer_base $renderer) {
     }
 
     // Add the notifications popover.
-    $enabled = \core_message\api::is_processor_enabled("popup");
-    if ($enabled) {
+    $processor = $DB->get_record('message_processors', array('name' => 'popup'));
+    if ($processor && $processor->enabled) {
         $context = [
             'userid' => $USER->id,
             'urls' => [

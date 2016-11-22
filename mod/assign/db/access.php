@@ -178,15 +178,5 @@ $capabilities = array(
             'manager' => CAP_ALLOW
         )
     ),
-
-    // Edit the assign overrides.
-    'mod/assign:manageoverrides' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    ),
 );
 

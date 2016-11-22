@@ -135,13 +135,7 @@ function my_reset_page($userid, $private=MY_PAGE_PRIVATE, $pagetype='my-index') 
     }
 
     // Trigger dashboard has been reset event.
-    $eventparams = array(
-        'context' => context_user::instance($userid),
-        'other' => array(
-            'private' => $private,
-            'pagetype' => $pagetype,
-        ),
-    );
+    $eventparams = array('context' => context_user::instance($userid));
     $event = \core\event\dashboard_reset::create($eventparams);
     $event->trigger();
     return $systempage;
@@ -188,13 +182,7 @@ function my_reset_page_for_all_users($private = MY_PAGE_PRIVATE, $pagetype = 'my
     $transaction->allow_commit();
 
     // Trigger dashboard has been reset event.
-    $eventparams = array(
-        'context' => context_system::instance(),
-        'other' => array(
-            'private' => $private,
-            'pagetype' => $pagetype,
-        ),
-    );
+    $eventparams = array('context' => context_system::instance());
     $event = \core\event\dashboards_reset::create($eventparams);
     $event->trigger();
 }

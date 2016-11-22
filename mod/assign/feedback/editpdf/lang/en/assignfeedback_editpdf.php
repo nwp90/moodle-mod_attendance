@@ -42,7 +42,6 @@ $string['deletecomment'] = 'Delete comment';
 $string['deletefeedback'] = 'Delete feedback PDF';
 $string['downloadablefilename'] = 'feedback.pdf';
 $string['downloadfeedback'] = 'Download feedback PDF';
-$string['drag'] = 'Drag';
 $string['errorgenerateimage'] = 'Error generating image with ghostscript, debugging info: {$a}';
 $string['editpdf'] = 'Annotate PDF';
 $string['editpdf_help'] = 'Annotate students submissions directly in the browser and produce an edited downloadable PDF.';

@@ -229,11 +229,10 @@ $courseid = (empty($courseid)) ? SITEID : $courseid;
 
 $blogheaders = blog_get_headers();
 
-$rsscontext = null;
-$filtertype = null;
-$thingid = null;
-$rsstitle = '';
 if ($CFG->enablerssfeeds) {
+    $rsscontext = null;
+    $filtertype = null;
+    $thingid = null;
     list($thingid, $rsscontext, $filtertype) = blog_rss_get_params($blogheaders['filters']);
     if (empty($rsscontext)) {
         $rsscontext = context_system::instance();
@@ -275,10 +274,6 @@ echo $OUTPUT->heading($blogheaders['heading'], 2);
 
 $bloglisting = new blog_listing($blogheaders['filters']);
 $bloglisting->print_entries();
-
-if ($CFG->enablerssfeeds) {
-    blog_rss_print_link($rsscontext, $filtertype, $thingid, $tagid, get_string('rssfeed', 'blog'));
-}
 
 echo $OUTPUT->footer();
 $eventparams = array(

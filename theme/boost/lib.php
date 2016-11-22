@@ -36,6 +36,17 @@ function theme_boost_css_tree_post_processor($tree, $theme) {
 }
 
 /**
+ * Get the SCSS file to include.
+ *
+ * @param theme_config $theme The theme config object.
+ * @return string The name of the file without 'scss'.
+ */
+function theme_boost_get_scss_file($theme) {
+    $preset = !empty($theme->settings->preset) ? $theme->settings->preset : 'default';
+    return 'preset-' . $preset;
+}
+
+/**
  * Inject additional SCSS.
  *
  * @param theme_config $theme The theme config object.
@@ -46,51 +57,73 @@ function theme_boost_get_extra_scss($theme) {
 }
 
 /**
- * Get SCSS to prepend.
+ * Get additional SCSS variables.
  *
  * @param theme_config $theme The theme config object.
  * @return array
  */
-function theme_boost_get_pre_scss($theme) {
-    global $CFG;
-
-    $scss = '';
+function theme_boost_get_scss_variables($theme) {
+    $variables = [];
     $configurable = [
         // Config key => [variableName, ...].
         'brandcolor' => ['brand-primary'],
     ];
 
-    // Prepend variables first.
     foreach ($configurable as $configkey => $targets) {
         $value = $theme->settings->{$configkey};
         if (empty($value)) {
             continue;
         }
-        array_map(function($target) use (&$scss, $value) {
-            $scss .= '$' . $target . ': ' . $value . ";\n";
+        array_map(function($target) use (&$variables, $value) {
+            $variables[$target] = $value;
         }, (array) $targets);
     }
 
-    // Prepend pre-scss.
-    if (!empty($theme->settings->scsspre)) {
-        $scss .= $theme->settings->scsspre;
+    if (!empty($theme->settings->scss_variables)) {
+        $variables = array_merge($variables, theme_boost_parse_scss_variables($theme->settings->scss_variables));
     }
 
-    // Now append the preset.
-    $filename = $theme->settings->preset;
-    $fs = get_file_storage();
+    return $variables;
+}
 
-    $context = context_system::instance();
-    if ($filename == 'default.scss') {
-        $scss .= file_get_contents($CFG->dirroot . '/theme/boost/scss/preset/default.scss');
-    } else if ($filename == 'plain.scss') {
-        $scss .= file_get_contents($CFG->dirroot . '/theme/boost/scss/preset/plain.scss');
-    } else if ($filename && ($presetfile = $fs->get_file($context->id, 'theme_boost', 'preset', 0, '/', $filename))) {
-        $scss .= $presetfile->get_content();
-    } else {
-        // Safety fallback - maybe new installs etc.
-        $scss .= file_get_contents($CFG->dirroot . '/theme/boost/scss/preset/default.scss');
+/**
+ * Parse a string into SCSS variables.
+ *
+ * - One variable definition per line,
+ * - The variable name is separated from the value by a colon,
+ * - The dollar sign is optional,
+ * - The trailing semi-colon is optional,
+ * - CSS comments (starting with //) are accepted
+ * - Variables names can only contain letters, numbers, hyphens and underscores.
+ *
+ * @param string $data The string to parse from.
+ * @param bool $lenient When non lenient, an exception will be thrown when a line cannot be parsed.
+ * @return array
+ */
+function theme_boost_parse_scss_variables($data, $lenient = true) {
+    $variables = [];
+    $lines = explode("\n", $data);
+    $i = 0;
+
+    foreach ($lines as $line) {
+        $i++;
+        if (preg_match('@^\s*//@', $line)) {
+            continue;
+        }
+
+        $parts = explode(':', trim($line));
+        $variable = ltrim($parts[0], '$ ');
+        $value = rtrim(ltrim(isset($parts[1]) ? $parts[1] : ''), "; ");
+
+        if (empty($variable) || !preg_match('/^[a-z0-9_-]+$/i', $variable) || (empty($value) && !is_numeric($value))) {
+            if ($lenient) {
+                continue;
+            }
+            throw new moodle_exception('errorparsingscssvariables', 'theme_boost', null, $i);
+        }
+
+        $variables[$variable] = $value;
     }
 
-    return $scss;
+    return $variables;
 }

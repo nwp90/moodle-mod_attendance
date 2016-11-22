@@ -41,10 +41,7 @@ require_once('templatable_form_element.php');
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class MoodleQuickForm_checkbox extends HTML_QuickForm_checkbox implements templatable {
-
-    use templatable_form_element {
-        export_for_template as export_for_template_base;
-    }
+    use templatable_form_element;
 
     /** @var string html for help button, if empty then no help */
     var $_helpbutton='';
@@ -143,11 +140,5 @@ class MoodleQuickForm_checkbox extends HTML_QuickForm_checkbox implements templa
             $output .= '/>';
         }
         return $output;
-    }
-
-    public function export_for_template(renderer_base $output) {
-        $context = $this->export_for_template_base($output);
-        $context['frozenvalue'] = $this->getValue();
-        return $context;
     }
 }

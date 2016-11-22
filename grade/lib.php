@@ -970,13 +970,6 @@ function print_grade_page_head($courseid, $active_type, $active_plugin=null,
                                $user = null) {
     global $CFG, $OUTPUT, $PAGE;
 
-    // Put a warning on all gradebook pages if the course has modules currently scheduled for background deletion.
-    require_once($CFG->dirroot . '/course/lib.php');
-    if (course_modules_pending_deletion($courseid)) {
-        \core\notification::add(get_string('gradesmoduledeletionpendingwarning', 'grades'),
-            \core\output\notification::NOTIFY_WARNING);
-    }
-
     if ($active_type === 'preferences') {
         // In Moodle 2.8 report preferences were moved under 'settings'. Allow backward compatibility for 3rd party grade reports.
         $active_type = 'settings';
@@ -1549,8 +1542,7 @@ class grade_structure {
             $header .= $this->get_element_icon($element, $spacerifnone);
         }
 
-        $title = $element['object']->get_name($fulltotal);
-        $header .= $title;
+        $header .= $element['object']->get_name($fulltotal);
 
         if ($element['type'] != 'item' and $element['type'] != 'categoryitem' and
             $element['type'] != 'courseitem') {
@@ -1560,12 +1552,11 @@ class grade_structure {
         if ($withlink && $url = $this->get_activity_link($element)) {
             $a = new stdClass();
             $a->name = get_string('modulename', $element['object']->itemmodule);
-            $a->title = $title;
             $title = get_string('linktoactivity', 'grades', $a);
 
-            $header = html_writer::link($url, $header, array('title' => $title, 'class' => 'gradeitemheader'));
+            $header = html_writer::link($url, $header, array('title' => $title));
         } else {
-            $header = html_writer::span($header, 'gradeitemheader', array('title' => $title, 'tabindex' => '0'));
+            $header = html_writer::span($header);
         }
 
         if ($withdescription) {

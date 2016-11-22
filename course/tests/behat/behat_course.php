@@ -48,11 +48,7 @@ class behat_course extends behat_base {
      */
     public function i_turn_editing_mode_on() {
 
-        try {
-            $this->execute("behat_forms::press_button", get_string('turneditingon'));
-        } catch (Exception $e) {
-            $this->execute("behat_general::i_click_on_in_the", [get_string('turneditingon'), 'link', 'Administration', 'block']);
-        }
+        $this->execute("behat_forms::press_button", get_string('turneditingon'));
     }
 
     /**
@@ -61,11 +57,7 @@ class behat_course extends behat_base {
      */
     public function i_turn_editing_mode_off() {
 
-        try {
-            $this->execute("behat_forms::press_button", get_string('turneditingoff'));
-        } catch (Exception $e) {
-            $this->execute("behat_general::i_click_on_in_the", [get_string('turneditingoff'), 'link', 'Administration', 'block']);
-        }
+        $this->execute("behat_forms::press_button", get_string('turneditingoff'));
     }
 
     /**
@@ -658,7 +650,7 @@ class behat_course extends behat_base {
             // It should not exist at all.
             try {
                 $this->find_link($activityname);
-                throw new ExpectationException('The "' . $activityname . '" should not appear', $this->getSession());
+                throw new ExpectationException('The "' . $activityname . '" should not appear');
             } catch (ElementNotFoundException $e) {
                 // This is good, the activity should not be there.
             }

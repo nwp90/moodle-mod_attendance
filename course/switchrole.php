@@ -46,11 +46,9 @@ if (strpos($returnurl, '?') === false) {
     $returnurl  = clean_param($returnurl, PARAM_URL);
 }
 
-$PAGE->set_url('/course/switchrole.php', array('id'=>$id, 'switchrole'=>$switchrole));
+$PAGE->set_url('/course/switchrole.php', array('id'=>$id));
 
-if ($switchrole >= 0) {
-    require_sesskey();
-}
+require_sesskey();
 
 if (!$course = $DB->get_record('course', array('id'=>$id))) {
     redirect(new moodle_url('/'));
@@ -72,21 +70,6 @@ if ($switchrole > 0 && has_capability('moodle/role:switchroles', $context)) {
     if (is_array($aroles) && isset($aroles[$switchrole])) {
         role_switch($switchrole, $context);
     }
-} else if ($switchrole < 0) {
-
-    $PAGE->set_title(get_string('switchroleto'));
-    $PAGE->set_heading($course->fullname);
-    $PAGE->set_pagelayout('incourse');
-
-    echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string('switchroleto'));
-
-    require_once($CFG->dirroot.'/course/switchrole_form.php');
-    $form = new switchrole_form(null, ['course' => $course]);
-    $form->display();
-
-    echo $OUTPUT->footer();
-    exit;
 }
 
 redirect($returnurl);

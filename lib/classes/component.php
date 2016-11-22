@@ -82,7 +82,6 @@ class core_component {
         'Box\\Spout' => 'lib/spout/src/Spout',
         'MatthiasMullie\\Minify' => 'lib/minify/matthiasmullie-minify/src/',
         'MatthiasMullie\\PathConverter' => 'lib/minify/matthiasmullie-pathconverter/src/',
-        'IMSGlobal\LTI' => 'lib/ltiprovider/src',
     );
 
     /**
@@ -454,7 +453,7 @@ $cache = '.var_export($cache, true).';
             'langconfig'  => null,
             'license'     => null,
             'mathslib'    => null,
-            'media'       => $CFG->dirroot.'/media',
+            'media'       => null,
             'message'     => $CFG->dirroot.'/message',
             'mimetypes'   => null,
             'mnet'        => $CFG->dirroot.'/mnet',
@@ -502,7 +501,6 @@ $cache = '.var_export($cache, true).';
             'enrol'         => $CFG->dirroot.'/enrol',
             'message'       => $CFG->dirroot.'/message/output',
             'block'         => $CFG->dirroot.'/blocks',
-            'media'         => $CFG->dirroot.'/media/player',
             'filter'        => $CFG->dirroot.'/filter',
             'editor'        => $CFG->dirroot.'/lib/editor',
             'format'        => $CFG->dirroot.'/course/format',

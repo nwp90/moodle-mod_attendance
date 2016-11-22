@@ -1487,8 +1487,7 @@ function quiz_send_confirmation($recipient, $a) {
     $a->userusername = $recipient->username;
 
     // Prepare the message.
-    $eventdata = new \core\message\message();
-    $eventdata->courseid          = $a->courseid;
+    $eventdata = new stdClass();
     $eventdata->component         = 'mod_quiz';
     $eventdata->name              = 'confirmation';
     $eventdata->notification      = 1;
@@ -1524,8 +1523,7 @@ function quiz_send_notification($recipient, $submitter, $a) {
     $a->userusername = $recipient->username;
 
     // Prepare the message.
-    $eventdata = new \core\message\message();
-    $eventdata->courseid          = $a->courseid;
+    $eventdata = new stdClass();
     $eventdata->component         = 'mod_quiz';
     $eventdata->name              = 'submission';
     $eventdata->notification      = 1;
@@ -1598,7 +1596,6 @@ function quiz_send_notification_messages($course, $quiz, $attempt, $context, $cm
 
     $a = new stdClass();
     // Course info.
-    $a->courseid        = $course->id;
     $a->coursename      = $course->fullname;
     $a->courseshortname = $course->shortname;
     // Quiz info.
@@ -1673,7 +1670,6 @@ function quiz_send_overdue_message($attemptobj) {
 
     $a = new stdClass();
     // Course info.
-    $a->courseid           = $attemptobj->get_course()->id;
     $a->coursename         = format_string($attemptobj->get_course()->fullname);
     $a->courseshortname    = format_string($attemptobj->get_course()->shortname);
     // Quiz info.
@@ -1691,8 +1687,7 @@ function quiz_send_overdue_message($attemptobj) {
     $a->studentusername    = $submitter->username;
 
     // Prepare the message.
-    $eventdata = new \core\message\message();
-    $eventdata->courseid          = $a->courseid;
+    $eventdata = new stdClass();
     $eventdata->component         = 'mod_quiz';
     $eventdata->name              = 'attempt_overdue';
     $eventdata->notification      = 1;

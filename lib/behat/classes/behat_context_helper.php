@@ -44,15 +44,11 @@ class behat_context_helper {
      */
     protected static $environment = null;
 
+
     /**
      * @var Escaper::escapeLiteral
      */
     protected static $escaper;
-
-    /**
-     * @var array keep track of nonexisting contexts, to avoid exception tracking.
-     */
-    protected static $nonexistingcontexts = array();
 
     /**
      * Sets the browser session.
@@ -92,21 +88,15 @@ class behat_context_helper {
     public static function get($classname) {
 
         $suitename = self::$environment->getSuite()->getName();
-        // If default suite, then get the default theme name.
-        if ($suitename == 'default') {
-            $suitename = theme_config::DEFAULT_THEME;
-        }
         $overridencontextname = 'behat_theme_'.$suitename.'_'.$classname;
 
-        // If contexts has not been checked before and doesn't exist then just use core one.
-        if (!isset(self::$nonexistingcontexts[$overridencontextname])) {
+        // Check if overridden context class exists.
+        if ($suitename !== 'default') {
             try {
                 $subcontext = self::$environment->getContext($overridencontextname);
-
                 return $subcontext;
             } catch (Behat\Behat\Context\Exception\ContextNotFoundException $e) {
                 // If context not found then it's not overridden.
-                self::$nonexistingcontexts[$overridencontextname] = 1;
             }
         }
 

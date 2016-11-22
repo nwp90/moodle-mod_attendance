@@ -37,8 +37,7 @@ class core_messagelib_testcase extends advanced_testcase {
         $preferences = get_message_output_default_preferences();
         $this->assertTrue($preferences->$disableprovidersetting == 1);
 
-        $message = new \core\message\message();
-        $message->courseid          = 1;
+        $message = new stdClass();
         $message->component         = 'moodle';
         $message->name              = 'instantmessage';
         $message->userfrom          = get_admin();
@@ -190,8 +189,7 @@ class core_messagelib_testcase extends advanced_testcase {
         $user2 = $this->getDataGenerator()->create_user();
 
         // Test basic message redirection.
-        $message = new \core\message\message();
-        $message->courseid = 1;
+        $message = new stdClass();
         $message->component = 'moodle';
         $message->name = 'instantmessage';
         $message->userfrom = $user1;
@@ -227,8 +225,7 @@ class core_messagelib_testcase extends advanced_testcase {
         $this->assertFalse($DB->record_exists('message', array()));
         $DB->delete_records('message_read', array());
 
-        $message = new \core\message\message();
-        $message->courseid = 1;
+        $message = new stdClass();
         $message->component = 'moodle';
         $message->name = 'instantmessage';
         $message->userfrom = $user1->id;
@@ -266,8 +263,7 @@ class core_messagelib_testcase extends advanced_testcase {
 
         // Test phpunit problem detection.
 
-        $message = new \core\message\message();
-        $message->courseid = 1;
+        $message = new stdClass();
         $message->component = 'xxxxx';
         $message->name = 'instantmessage';
         $message->userfrom = $user1;
@@ -302,8 +298,7 @@ class core_messagelib_testcase extends advanced_testcase {
 
         // Invalid users.
 
-        $message = new \core\message\message();
-        $message->courseid = 1;
+        $message = new stdClass();
         $message->component = 'moodle';
         $message->name = 'instantmessage';
         $message->userfrom = $user1;
@@ -319,8 +314,7 @@ class core_messagelib_testcase extends advanced_testcase {
         $this->assertFalse($messageid);
         $this->assertDebuggingCalled('Attempt to send msg to unknown user');
 
-        $message = new \core\message\message();
-        $message->courseid = 1;
+        $message = new stdClass();
         $message->component = 'moodle';
         $message->name = 'instantmessage';
         $message->userfrom = -1;
@@ -336,8 +330,7 @@ class core_messagelib_testcase extends advanced_testcase {
         $this->assertFalse($messageid);
         $this->assertDebuggingCalled('Attempt to send msg from unknown user');
 
-        $message = new \core\message\message();
-        $message->courseid = 1;
+        $message = new stdClass();
         $message->component = 'moodle';
         $message->name = 'instantmessage';
         $message->userfrom = $user1;
@@ -356,8 +349,7 @@ class core_messagelib_testcase extends advanced_testcase {
         // Some debugging hints for devs.
 
         unset($user2->emailstop);
-        $message = new \core\message\message();
-        $message->courseid = 1;
+        $message = new stdClass();
         $message->component = 'moodle';
         $message->name = 'instantmessage';
         $message->userfrom = $user1;
@@ -387,9 +379,8 @@ class core_messagelib_testcase extends advanced_testcase {
         $this->preventResetByRollback();
         $this->resetAfterTest();
 
-        $user1 = $this->getDataGenerator()->create_user(array('maildisplay' => 1));
+        $user1 = $this->getDataGenerator()->create_user();
         $user2 = $this->getDataGenerator()->create_user();
-        set_config('allowedemaildomains', 'example.com');
 
         // Test basic email redirection.
         $this->assertFileExists("$CFG->dirroot/message/output/email/version.php");
@@ -402,8 +393,7 @@ class core_messagelib_testcase extends advanced_testcase {
 
         set_user_preference('message_provider_moodle_instantmessage_loggedoff', 'none', $user2);
 
-        $message = new \core\message\message();
-        $message->courseid          = 1;
+        $message = new stdClass();
         $message->component         = 'moodle';
         $message->name              = 'instantmessage';
         $message->userfrom          = $user1;
@@ -430,8 +420,7 @@ class core_messagelib_testcase extends advanced_testcase {
 
         $CFG->messaging = 0;
 
-        $message = new \core\message\message();
-        $message->courseid          = 1;
+        $message = new stdClass();
         $message->component         = 'moodle';
         $message->name              = 'instantmessage';
         $message->userfrom          = $user1;
@@ -458,8 +447,7 @@ class core_messagelib_testcase extends advanced_testcase {
 
         $CFG->messaging = 1;
 
-        $message = new \core\message\message();
-        $message->courseid          = 1;
+        $message = new stdClass();
         $message->component         = 'moodle';
         $message->name              = 'instantmessage';
         $message->userfrom          = $user1;
@@ -486,8 +474,7 @@ class core_messagelib_testcase extends advanced_testcase {
 
         set_user_preference('message_provider_moodle_instantmessage_loggedoff', 'email', $user2);
 
-        $message = new \core\message\message();
-        $message->courseid          = 1;
+        $message = new stdClass();
         $message->component         = 'moodle';
         $message->name              = 'instantmessage';
         $message->userfrom          = $user1;
@@ -517,8 +504,7 @@ class core_messagelib_testcase extends advanced_testcase {
 
         set_user_preference('message_provider_moodle_instantmessage_loggedoff', 'email', $user2);
 
-        $message = new \core\message\message();
-        $message->courseid          = 1;
+        $message = new stdClass();
         $message->component         = 'moodle';
         $message->name              = 'instantmessage';
         $message->userfrom          = $user1;
@@ -551,8 +537,7 @@ class core_messagelib_testcase extends advanced_testcase {
 
         set_user_preference('message_provider_moodle_instantmessage_loggedoff', 'email,popup', $user2);
 
-        $message = new \core\message\message();
-        $message->courseid          = 1;
+        $message = new stdClass();
         $message->component         = 'moodle';
         $message->name              = 'instantmessage';
         $message->userfrom          = $user1;
@@ -585,8 +570,7 @@ class core_messagelib_testcase extends advanced_testcase {
 
         set_user_preference('message_provider_moodle_instantmessage_loggedoff', 'popup', $user2);
 
-        $message = new \core\message\message();
-        $message->courseid          = 1;
+        $message = new stdClass();
         $message->component         = 'moodle';
         $message->name              = 'instantmessage';
         $message->userfrom          = $user1;
@@ -620,8 +604,7 @@ class core_messagelib_testcase extends advanced_testcase {
 
         set_user_preference('message_provider_moodle_instantmessage_loggedoff', 'none', $user2);
 
-        $message = new \core\message\message();
-        $message->courseid          = 1;
+        $message = new stdClass();
         $message->component         = 'moodle';
         $message->name              = 'instantmessage';
         $message->userfrom          = $user1;
@@ -652,8 +635,7 @@ class core_messagelib_testcase extends advanced_testcase {
 
         set_user_preference('message_provider_moodle_instantmessage_loggedoff', 'email', $user2);
 
-        $message = new \core\message\message();
-        $message->courseid          = 1;
+        $message = new stdClass();
         $message->component         = 'moodle';
         $message->name              = 'instantmessage';
         $message->userfrom          = $user1;
@@ -734,8 +716,7 @@ class core_messagelib_testcase extends advanced_testcase {
         $user1 = $this->getDataGenerator()->create_user();
         $user2 = $this->getDataGenerator()->create_user();
 
-        $message = new \core\message\message();
-        $message->courseid          = 1;
+        $message = new stdClass();
         $message->component         = 'moodle';
         $message->name              = 'instantmessage';
         $message->userfrom          = $user1;
@@ -797,8 +778,7 @@ class core_messagelib_testcase extends advanced_testcase {
         $user1 = $this->getDataGenerator()->create_user();
         $user2 = $this->getDataGenerator()->create_user();
 
-        $message = new \core\message\message();
-        $message->courseid          = 1;
+        $message = new stdClass();
         $message->component         = 'moodle';
         $message->name              = 'instantmessage';
         $message->userfrom          = $user1;
@@ -855,8 +835,7 @@ class core_messagelib_testcase extends advanced_testcase {
         );
         $file = $fs->create_file_from_string($filerecord, 'Test content');
 
-        $message = new \core\message\message();
-        $message->courseid          = 1;
+        $message = new stdClass();
         $message->component         = 'moodle';
         $message->name              = 'instantmessage';
         $message->userfrom          = get_admin();

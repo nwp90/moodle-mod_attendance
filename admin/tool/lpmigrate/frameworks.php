@@ -36,16 +36,16 @@ $PAGE->set_url($url);
 $PAGE->set_title($title);
 $PAGE->set_heading(get_string('pluginname', 'tool_lpmigrate'));
 
-$form = new \tool_lpmigrate\form\migrate_framework($context);
-if ($form->is_cancelled()) {
-    redirect($url);
-}
-
 $output = $PAGE->get_renderer('tool_lpmigrate');
+
 echo $output->header();
 echo $output->heading($title);
 
-if ($data = $form->get_data()) {
+$form = new \tool_lpmigrate\form\migrate_framework($context);
+if ($form->is_cancelled()) {
+    redirect($url);
+
+} else if ($data = $form->get_data()) {
 
     // Map competencies from both framework.
     $mapper = new \tool_lpmigrate\framework_mapper($data->from, $data->to);

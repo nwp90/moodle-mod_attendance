@@ -326,7 +326,6 @@
         $PAGE->navbar->add(get_string('search'));
     }
 
-    $PAGE->force_settings_menu();
     $PAGE->set_title($title);
     $PAGE->set_heading($course->fullname);
 
@@ -824,19 +823,16 @@ if ($showactivity) {
                         'type' => 'button',
                         'id' => 'checkall',
                         'value' => get_string('selectall'),
-                        'class' => 'btn btn-secondary m-r-1'
                     ));
                 echo html_writer::empty_tag('input', array(
                         'type' => 'button',
                         'id' => 'checknone',
                         'value' => get_string('deselectall'),
-                        'class' => 'btn btn-secondary m-r-1'
                     ));
                 echo html_writer::empty_tag('input', array(
                         'class' => 'form-submit',
                         'type' => 'submit',
                         'value' => get_string('deleteselected'),
-                        'class' => 'btn btn-secondary m-r-1'
                     ));
 
                 $module = array('name' => 'mod_data', 'fullpath' => '/mod/data/module.js');

@@ -35,8 +35,6 @@ class core_scss extends \Leafo\ScssPhp\Compiler {
 
     /** @var string The path to the SCSS file. */
     protected $scssfile;
-    /** @var array Bits of SCSS content to prepend. */
-    protected $scssprepend = array();
     /** @var array Bits of SCSS content. */
     protected $scsscontent = array();
 
@@ -61,16 +59,6 @@ class core_scss extends \Leafo\ScssPhp\Compiler {
     }
 
     /**
-     * Prepend raw SCSS to what's to compile.
-     *
-     * @param string $scss SCSS code.
-     * @return void
-     */
-    public function prepend_raw_scss($scss) {
-        $this->scssprepend[] = $scss;
-    }
-
-    /**
      * Set the file to compile from.
      *
      * The purpose of this method is to provide a way to import the
@@ -90,7 +78,7 @@ class core_scss extends \Leafo\ScssPhp\Compiler {
      * @return string
      */
     public function to_css() {
-        $content = implode(';', $this->scssprepend);
+        $content = '';
         if (!empty($this->scssfile)) {
             $content .= file_get_contents($this->scssfile);
         }

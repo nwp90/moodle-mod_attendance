@@ -200,8 +200,6 @@ class MoodleQuickForm_select extends HTML_QuickForm_select implements templatabl
         $context = $this->export_for_template_base($output);
 
         $options = [];
-        // Standard option attributes.
-        $standardoptionattributes = ['text', 'value', 'selected', 'disabled'];
         foreach ($this->_options as $option) {
             if (is_array($this->_values) && in_array( (string) $option['attr']['value'], $this->_values)) {
                 $this->_updateAttrArray($option['attr'], ['selected' => 'selected']);
@@ -209,20 +207,15 @@ class MoodleQuickForm_select extends HTML_QuickForm_select implements templatabl
             $o = [
                 'text' => $option['text'],
                 'value' => $option['attr']['value'],
-                'selected' => !empty($option['attr']['selected']),
-                'disabled' => !empty($option['attr']['disabled']),
+                'selected' => !empty($option['attr']['selected'])
             ];
-            // Set other attributes.
-            $otheroptionattributes = [];
-            foreach ($option['attr'] as $attr => $value) {
-                if (!in_array($attr, $standardoptionattributes) && $attr != 'class' && !is_object($value)) {
-                    $otheroptionattributes[] = $attr . '="' . s($value) . '"';
-                }
-            }
-            $o['optionattributes'] = implode(' ', $otheroptionattributes);
             $options[] = $o;
         }
         $context['options'] = $options;
+
+        if ($this->getAttribute('multiple')) {
+            $context['name'] = $context['name'] . '[]';
+        }
 
         return $context;
     }

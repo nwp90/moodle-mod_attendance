@@ -87,11 +87,10 @@ $login      = get_string('login');
 $PAGE->navbar->add($login);
 $PAGE->navbar->add($newaccount);
 
-$PAGE->set_pagelayout('login');
 $PAGE->set_title($newaccount);
 $PAGE->set_heading($SITE->fullname);
 
 echo $OUTPUT->header();
-
-echo $OUTPUT->render($mform_signup);
+echo $OUTPUT->heading($newaccount);
+$mform_signup->display();
 echo $OUTPUT->footer();

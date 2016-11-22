@@ -73,11 +73,7 @@ class core_badges_assertion {
             WHERE ' . $DB->sql_compare_text('bi.uniquehash', 40) . ' = ' . $DB->sql_compare_text(':hash', 40),
             array('hash' => $hash), IGNORE_MISSING);
 
-        if ($this->_data) {
-            $this->_url = new moodle_url('/badges/badge.php', array('hash' => $this->_data->uniquehash));
-        } else {
-            $this->_url = new moodle_url('/badges/badge.php');
-        }
+        $this->_url = new moodle_url('/badges/badge.php', array('hash' => $this->_data->uniquehash));
     }
 
     /**

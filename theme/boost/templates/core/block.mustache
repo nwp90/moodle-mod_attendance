@@ -1,18 +1,3 @@
-{{!
-    @template theme_boost/block
-
-    Example context (json):
-    {
-        "id": "block0",
-        "showskiplink": true,
-        "type": "html",
-        "ariarole": "complementary",
-        "title": "Test block",
-        "blockinstanceid": 1,
-        "content": "<p>Hello block world!</p>"
-    }
-
-}}
 {{! Block Skip Link }}
 {{#showskiplink}}
   <a href="#sb-{{skipid}}" class="sr-only sr-only-focusable">{{#str}}skipa, access, {{title}}{{/str}}</a>
@@ -36,7 +21,7 @@
     <div class="card-block">
 
         {{#hascontrols}}
-            <div class="block-controls pull-xs-right header">
+            <div class="pull-xs-right block-controls">
                 {{{controls}}}
             </div>
         {{/hascontrols}}
@@ -46,12 +31,11 @@
             <h3 id="instance-{{blockinstanceid}}-header" class="card-title">{{{title}}}</h3>
         {{/title}}
 
-        <div class="card-text content">
+        <div class="card-text">
             {{{content}}}
-            <div class="footer">{{{footer}}}</div>
+            {{{footer}}}
             {{{annotation}}}
         </div>
-
     </div>
 
 {{! End Block Container }}

@@ -1,4 +1,4 @@
-@mod @mod_lesson @javascript
+@mod @mod_lesson
 Feature: Lesson user override
   In order to grant a student special access to a lesson
   As a teacher
@@ -43,7 +43,6 @@ Feature: Lesson user override
       | id_jumpto_1          | This page |
     And I press "Save page"
 
-  @javascript
   Scenario: Add, modify then delete a user override
     When I follow "Test lesson name"
     And I navigate to "User overrides" node in "Lesson administration"
@@ -58,7 +57,7 @@ Feature: Lesson user override
       | deadline[minute]    | 00 |
     And I press "Save"
     And I should see "Wednesday, 1 January 2020, 8:00"
-    Then I click on "Edit" "link" in the "Sam1 Student1" "table_row"
+    Then I click on "Edit" "link"
     And I set the following fields to these values:
       | deadline[year] | 2030 |
     And I press "Save"

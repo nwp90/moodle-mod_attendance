@@ -93,9 +93,7 @@ if ($action == 'choosebackupfile') {
             // If it's some weird other kind of file then use old code.
             $filename = restore_controller::get_tempdir_name($courseid, $USER->id);
             $pathname = $tmpdir . '/' . $filename;
-            if (!$fileinfo->copy_to_pathname($pathname)) {
-                throw new restore_ui_exception('errorcopyingbackupfile', null, $pathname);
-            }
+            $fileinfo->copy_to_pathname($pathname);
             $restore_url = new moodle_url('/backup/restore.php', array(
                     'contextid' => $contextid, 'filename' => $filename));
         }
@@ -117,9 +115,7 @@ $data = $form->get_data();
 if ($data && has_capability('moodle/restore:uploadfile', $context)) {
     $filename = restore_controller::get_tempdir_name($courseid, $USER->id);
     $pathname = $tmpdir . '/' . $filename;
-    if (!$form->save_file('backupfile', $pathname)) {
-        throw new restore_ui_exception('errorcopyingbackupfile', null, $pathname);
-    }
+    $form->save_file('backupfile', $pathname);
     $restore_url = new moodle_url('/backup/restore.php', array('contextid'=>$contextid, 'filename'=>$filename));
     redirect($restore_url);
     die;

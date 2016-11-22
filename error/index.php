@@ -11,8 +11,7 @@
         }
 
         // Send the message and redirect.
-        $eventdata = new \core\message\message();
-        $eventdata->courseid         = SITEID;
+        $eventdata = new stdClass();
         $eventdata->component        = 'moodle';
         $eventdata->name             = 'errors';
         $eventdata->userfrom          = $USER;

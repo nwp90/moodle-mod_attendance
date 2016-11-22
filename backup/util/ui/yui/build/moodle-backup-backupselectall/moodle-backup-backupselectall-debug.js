@@ -65,7 +65,7 @@ M.core_backup.backupselectall = function(modnames) {
         // This is not a relevant page.
         return;
     }
-    if (!firstsection.one('input[type="checkbox"]')) {
+    if (!firstsection.one('.felement.fcheckbox')) {
         // No checkboxes.
         return;
     }
@@ -168,8 +168,7 @@ M.core_backup.backupselectall = function(modnames) {
         }
 
     };
-    Y.one('#backup-bytype').on('click', function(e) {
-        e.preventDefault();
+    Y.one('#backup-bytype').on('click', function() {
         toggletypes();
     });
 

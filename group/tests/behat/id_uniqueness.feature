@@ -19,6 +19,7 @@ Feature: Uniqueness of Group ID number
     And I expand "Users" node
     And I follow "Groups"
 
+  @javascript
   Scenario: Group ID number uniqueness
     Given I press "Create group"
     And I set the following fields to these values:
@@ -42,6 +43,7 @@ Feature: Uniqueness of Group ID number
     And I should see "This ID number is already taken"
     And I press "Cancel"
 
+  @javascript
   Scenario: Grouping ID number uniqueness
     Given I follow "Groupings"
     And I press "Create grouping"

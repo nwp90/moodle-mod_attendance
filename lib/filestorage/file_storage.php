@@ -794,34 +794,21 @@ class file_storage {
      *
      * @param int $contextid context ID
      * @param string $component component
-     * @param mixed $filearea file area/s, you cannot specify multiple fileareas as well as an itemid
+     * @param string $filearea file area
      * @param int $itemid item ID or all files if not specified
      * @param string $sort A fragment of SQL to use for sorting
      * @param bool $includedirs whether or not include directories
-     * @param int $updatedsince return files updated since this time
      * @return stored_file[] array of stored_files indexed by pathanmehash
      */
-    public function get_area_files($contextid, $component, $filearea, $itemid = false, $sort = "itemid, filepath, filename",
-                                    $includedirs = true, $updatedsince = 0) {
+    public function get_area_files($contextid, $component, $filearea, $itemid = false, $sort = "itemid, filepath, filename", $includedirs = true) {
         global $DB;
 
-        list($areasql, $conditions) = $DB->get_in_or_equal($filearea, SQL_PARAMS_NAMED);
-        $conditions['contextid'] = $contextid;
-        $conditions['component'] = $component;
-
-        if ($itemid !== false && is_array($filearea)) {
-            throw new coding_exception('You cannot specify multiple fileareas as well as an itemid.');
-        } else if ($itemid !== false) {
+        $conditions = array('contextid'=>$contextid, 'component'=>$component, 'filearea'=>$filearea);
+        if ($itemid !== false) {
             $itemidsql = ' AND f.itemid = :itemid ';
             $conditions['itemid'] = $itemid;
         } else {
             $itemidsql = '';
-        }
-
-        $updatedsincesql = '';
-        if (!empty($updatedsince)) {
-            $conditions['time'] = $updatedsince;
-            $updatedsincesql = 'AND f.timemodified > :time';
         }
 
         $sql = "SELECT ".self::instance_sql_fields('f', 'r')."
@@ -830,8 +817,7 @@ class file_storage {
                        ON f.referencefileid = r.id
                  WHERE f.contextid = :contextid
                        AND f.component = :component
-                       AND f.filearea $areasql
-                       $updatedsincesql
+                       AND f.filearea = :filearea
                        $itemidsql";
         if (!empty($sort)) {
             $sql .= " ORDER BY {$sort}";
@@ -2215,12 +2201,7 @@ class file_storage {
             mkdir($trashpath, $this->dirpermissions, true);
         }
         rename($contentfile, $trashfile);
-
-        // Fix permissions, only if needed.
-        $currentperms = octdec(substr(decoct(fileperms($trashfile)), -4));
-        if ((int)$this->filepermissions !== $currentperms) {
-            chmod($trashfile, $this->filepermissions);
-        }
+        chmod($trashfile, $this->filepermissions); // fix permissions if needed
     }
 
     /**

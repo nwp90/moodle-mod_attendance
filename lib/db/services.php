@@ -335,15 +335,6 @@ $functions = array(
         'type' => 'read',
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
     ),
-    'core_course_check_updates' => array(
-        'classname' => 'core_course_external',
-        'methodname' => 'check_updates',
-        'classpath' => 'course/externallib.php',
-        'description' => 'Check if there is updates affecting the user for the given course and contexts.',
-        'type' => 'read',
-        'ajax' => true,
-        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
-    ),
     'core_enrol_get_course_enrolment_methods' => array(
         'classname' => 'core_enrol_external',
         'methodname' => 'get_course_enrolment_methods',
@@ -832,15 +823,6 @@ $functions = array(
         'capabilities' => 'moodle/user:editownmessageprofile',
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
     ),
-    'core_message_get_user_message_preferences' => array(
-        'classname' => 'core_message_external',
-        'methodname' => 'get_user_message_preferences',
-        'classpath' => 'message/externallib.php',
-        'description' => 'Get the message preferences for a given user.',
-        'type' => 'read',
-        'capabilities' => 'moodle/user:editownmessageprofile',
-        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
-    ),
     'core_notes_create_notes' => array(
         'classname' => 'core_notes_external',
         'methodname' => 'create_notes',
@@ -1059,7 +1041,6 @@ $functions = array(
         'type' => 'write',
         'capabilities' => 'moodle/user:editownmessageprofile, moodle/user:editmessageprofile',
         'ajax' => true,
-        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
     ),
     'core_user_view_user_list' => array(
         'classname' => 'core_user_external',

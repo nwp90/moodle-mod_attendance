@@ -770,7 +770,7 @@ class manager {
                 foreach ($authplugins as $authplugin) {
                     /** @var \auth_plugin_base $authplugin*/
                     if ($authplugin->ignore_timeout_hook($user, $user->sid, $user->s_timecreated, $user->s_timemodified)) {
-                        continue 2;
+                        continue;
                     }
                 }
                 self::kill_session($user->sid);
@@ -830,10 +830,9 @@ class manager {
      * Login as another user - no security checks here.
      * @param int $userid
      * @param \context $context
-     * @param bool $generateevent Set to false to prevent the loginas event to be generated
      * @return void
      */
-    public static function loginas($userid, \context $context, $generateevent = true) {
+    public static function loginas($userid, \context $context) {
         global $USER;
 
         if (self::is_loggedinas()) {
@@ -855,27 +854,21 @@ class manager {
         // Let enrol plugins deal with new enrolments if necessary.
         enrol_check_plugins($user);
 
-        if ($generateevent) {
-            // Create event before $USER is updated.
-            $event = \core\event\user_loggedinas::create(
-                array(
-                    'objectid' => $USER->id,
-                    'context' => $context,
-                    'relateduserid' => $userid,
-                    'other' => array(
-                        'originalusername' => fullname($USER, true),
-                        'loggedinasusername' => fullname($user, true)
-                    )
+        // Create event before $USER is updated.
+        $event = \core\event\user_loggedinas::create(
+            array(
+                'objectid' => $USER->id,
+                'context' => $context,
+                'relateduserid' => $userid,
+                'other' => array(
+                    'originalusername' => fullname($USER, true),
+                    'loggedinasusername' => fullname($user, true)
                 )
-            );
-        }
-
+            )
+        );
         // Set up global $USER.
         \core\session\manager::set_user($user);
-
-        if ($generateevent) {
-            $event->trigger();
-        }
+        $event->trigger();
     }
 
     /**

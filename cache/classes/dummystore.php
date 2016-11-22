@@ -258,19 +258,8 @@ class cachestore_dummy extends cache_store {
      */
     public static function initialise_test_instance(cache_definition $definition) {
         $cache = new cachestore_dummy('Dummy store test');
-        if ($cache->is_ready()) {
-            $cache->initialise($definition);
-        }
+        $cache->initialise($definition);
         return $cache;
-    }
-
-    /**
-     * Generates the appropriate configuration required for unit testing.
-     *
-     * @return array Array of unit test configuration data to be used by initialise().
-     */
-    public static function unit_test_configuration() {
-        return [];
     }
 
     /**

@@ -156,6 +156,15 @@ class cachestore_apcu extends cache_store implements cache_is_key_aware, cache_i
     }
 
     /**
+     * Returns true if this cache store instance is ready to use.
+     * @return bool
+     */
+    public function is_ready() {
+        // No set up is actually required, providing apc is installed and enabled.
+        return true;
+    }
+
+    /**
      * Prepares the given key for use.
      *
      * Should be called before all interaction.
@@ -316,7 +325,6 @@ class cachestore_apcu extends cache_store implements cache_is_key_aware, cache_i
         }
         $name = 'APCu test';
         $cache = new cachestore_apcu($name);
-        // No need to check if is_ready() as this has already being done by requirement check.
         $cache->initialise($definition);
         return $cache;
     }
@@ -361,12 +369,23 @@ class cachestore_apcu extends cache_store implements cache_is_key_aware, cache_i
     }
 
     /**
-     * Generates the appropriate configuration required for unit testing.
+     * Generates an instance of the cache store that can be used for testing.
      *
-     * @return array Array of unit test configuration data to be used by initialise().
+     * @param cache_definition $definition
+     * @return cachestore_apcu|false
      */
-    public static function unit_test_configuration() {
-        return array('prefix' => 'phpunit');
+    public static function initialise_unit_test_instance(cache_definition $definition) {
+        if (!self::are_requirements_met()) {
+            return false;
+        }
+
+        $store = new cachestore_apcu('Test APCu', array('prefix' => 'phpunit'));
+        if (!$store->is_ready()) {
+            return false;
+        }
+        $store->initialise($definition);
+
+        return $store;
     }
 
     /**
@@ -396,17 +415,5 @@ class cachestore_apcu extends cache_store implements cache_is_key_aware, cache_i
             $data['prefix'] = '';
         }
         $editform->set_data($data);
-    }
-
-    /**
-     * Returns true if this cache store instance is both suitable for testing, and ready for testing.
-     *
-     * Cache stores that support being used as the default store for unit and acceptance testing should
-     * override this function and return true if there requirements have been met.
-     *
-     * @return bool
-     */
-    public static function ready_to_be_used_for_testing() {
-        return true;
     }
 }

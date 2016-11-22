@@ -47,15 +47,13 @@ list($options, $unrecognized) = cli_get_params(
         'help'     => false,
         'fromrun'  => 1,
         'torun'    => 0,
+        'run-with-theme' => false,
         'optimize-runs' => '',
-        'add-core-features-to-theme' => false,
     ),
     array(
         'j' => 'parallel',
         'm' => 'maxruns',
         'h' => 'help',
-        'o' => 'optimize-runs',
-        'a' => 'add-core-features-to-theme',
     )
 );
 
@@ -71,9 +69,8 @@ Options:
 -m, --maxruns    Max parallel processes to be executed at one time.
 --fromrun        Execute run starting from (Used for parallel runs on different vms)
 --torun          Execute run till (Used for parallel runs on different vms)
-
--o, --optimize-runs Split features with specified tags in all parallel runs.
--a, --add-core-features-to-theme Add all core features to specified theme's
+--optimize-runs  Split features with specified tags in all parallel runs.
+--run-with-theme Run all core features with specified theme.
 
 -h, --help     Print out this help
 
@@ -102,7 +99,7 @@ if ($options['parallel'] && $options['parallel'] > 1) {
     }
 } else {
     // Only sanitize options for single run.
-    $cmdoptionsforsinglerun = array('add-core-features-to-theme');
+    $cmdoptionsforsinglerun = array('run-with-theme');
 
     foreach ($cmdoptionsforsinglerun as $option) {
         if (!empty($options[$option])) {

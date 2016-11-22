@@ -798,8 +798,7 @@ class checker {
             array('style' => 'font-size:smaller; color:#333;')));
 
         foreach ($admins as $admin) {
-            $message = new \core\message\message();
-            $message->courseid          = SITEID;
+            $message = new \stdClass();
             $message->component         = 'moodle';
             $message->name              = 'availableupdate';
             $message->userfrom          = get_admin();

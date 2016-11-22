@@ -213,8 +213,7 @@ class cache_factory_disabled extends cache_factory {
      */
     public function create_cache_from_definition($component, $area, array $identifiers = array(), $unused = null) {
         $definition = $this->create_definition($component, $area);
-        $definition->set_identifiers($identifiers);
-        $cache = $this->create_cache($definition);
+        $cache = $this->create_cache($definition, $identifiers);
         return $cache;
     }
 
@@ -234,8 +233,7 @@ class cache_factory_disabled extends cache_factory {
      */
     public function create_cache_from_params($mode, $component, $area, array $identifiers = array(), array $options = array()) {
         $definition = cache_definition::load_adhoc($mode, $component, $area);
-        $definition->set_identifiers($identifiers);
-        $cache = $this->create_cache($definition);
+        $cache = $this->create_cache($definition, $identifiers);
         return $cache;
     }
 

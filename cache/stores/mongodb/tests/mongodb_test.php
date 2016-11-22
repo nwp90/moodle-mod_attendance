@@ -56,12 +56,11 @@ class cachestore_mongodb_test extends cachestore_tests {
     public function test_collection_name() {
         // This generates a definition that has a hash starting with a number. MDL-46208.
         $definition = cache_definition::load_adhoc(cache_store::MODE_APPLICATION, 'cachestore_mongodb', 'abc');
-        $instance = new cachestore_mongodb('MongoDB_Test', cachestore_mongodb::unit_test_configuration());
+        $instance = cachestore_mongodb::initialise_unit_test_instance($definition);
 
-        if (!$instance->is_ready()) {
+        if (!$instance) {
             $this->markTestSkipped();
         }
-        $instance->initialise($definition);
 
         $this->assertTrue($instance->set(1, 'alpha'));
         $this->assertTrue($instance->set(2, 'beta'));

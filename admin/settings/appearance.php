@@ -172,6 +172,7 @@ preferences,moodle|/user/preferences.php|preferences',
     $temp->add(new admin_setting_configcheckbox('navshowcategories', new lang_string('navshowcategories', 'admin'), new lang_string('confignavshowcategories', 'admin'), 1));
     $temp->add(new admin_setting_configcheckbox('navshowmycoursecategories', new lang_string('navshowmycoursecategories', 'admin'), new lang_string('navshowmycoursecategories_help', 'admin'), 0));
     $temp->add(new admin_setting_configcheckbox('navshowallcourses', new lang_string('navshowallcourses', 'admin'), new lang_string('confignavshowallcourses', 'admin'), 0));
+    $temp->add(new admin_setting_configcheckbox('navexpandmycourses', new lang_string('navexpandmycourses', 'admin'), new lang_string('navexpandmycourses_desc', 'admin'), 1));
     $sortoptions = array(
         'sortorder' => new lang_string('sort_sortorder', 'admin'),
         'fullname' => new lang_string('sort_fullname', 'admin'),
@@ -195,6 +196,49 @@ preferences,moodle|/user/preferences.php|preferences',
     $ADMIN->add('appearance', $temp);
     $ADMIN->add('appearance', new admin_externalpage('resetemoticons', new lang_string('emoticonsreset', 'admin'),
         new moodle_url('/admin/resetemoticons.php'), 'moodle/site:config', true));
+
+
+    // The "media" subpage.
+    $temp = new admin_settingpage('mediasettings', get_string('mediasettings', 'core_media'));
+
+    $temp->add(new admin_setting_heading('mediaformats', get_string('mediaformats', 'core_media'),
+            format_text(get_string('mediaformats_desc', 'core_media'), FORMAT_MARKDOWN)));
+
+    // External services.
+    $temp->add(new admin_setting_configcheckbox('core_media_enable_youtube',
+            get_string('siteyoutube', 'core_media'), get_string('siteyoutube_desc', 'core_media'), 1));
+    $temp->add(new admin_setting_configcheckbox('core_media_enable_vimeo',
+            get_string('sitevimeo', 'core_media'), get_string('sitevimeo_desc', 'core_media'), 0));
+
+    // Options which require Flash.
+    $temp->add(new admin_setting_configcheckbox('core_media_enable_mp3',
+            get_string('mp3audio', 'core_media'), get_string('mp3audio_desc', 'core_media'), 1));
+    $temp->add(new admin_setting_configcheckbox('core_media_enable_flv',
+            get_string('flashvideo', 'core_media'), get_string('flashvideo_desc', 'core_media'), 1));
+    $temp->add(new admin_setting_configcheckbox('core_media_enable_swf',
+            get_string('flashanimation', 'core_media'), get_string('flashanimation_desc', 'core_media'), 1));
+
+    // HTML 5 media.
+    // Audio now enabled by default so that it can provide a fallback for mp3 on devices without flash.
+    $temp->add(new admin_setting_configcheckbox('core_media_enable_html5audio',
+            get_string('html5audio', 'core_media'), get_string('html5audio_desc', 'core_media'), 1));
+    // Video now enabled by default so it can provide mp4 support.
+    $temp->add(new admin_setting_configcheckbox('core_media_enable_html5video',
+            get_string('html5video', 'core_media'), get_string('html5video_desc', 'core_media'), 1));
+
+    // Legacy players.
+    $temp->add(new admin_setting_heading('legacymediaformats',
+            get_string('legacyheading', 'core_media'), get_string('legacyheading_desc', 'core_media')));
+
+    $temp->add(new admin_setting_configcheckbox('core_media_enable_qt',
+            get_string('legacyquicktime', 'core_media'), get_string('legacyquicktime_desc', 'core_media'), 1));
+    $temp->add(new admin_setting_configcheckbox('core_media_enable_wmp',
+            get_string('legacywmp', 'core_media'), get_string('legacywmp_desc', 'core_media'), 1));
+    $temp->add(new admin_setting_configcheckbox('core_media_enable_rm',
+            get_string('legacyreal', 'core_media'), get_string('legacyreal_desc', 'core_media'), 1));
+
+    $ADMIN->add('appearance', $temp);
+
 
     // "documentation" settingpage
     $temp = new admin_settingpage('documentation', new lang_string('moodledocs'));
@@ -236,11 +280,8 @@ preferences,moodle|/user/preferences.php|preferences',
     $temp->add(new admin_setting_configcheckbox('modchooserdefault', new lang_string('modchooserdefault', 'admin'), new lang_string('configmodchooserdefault', 'admin'), 1));
     $ADMIN->add('appearance', $temp);
 
-    // Link to tag management interface.
-    $url = new moodle_url('/tag/manage.php');
-    $hidden = empty($CFG->usetags);
-    $page = new admin_externalpage('managetags', new lang_string('managetags', 'tag'), $url, 'moodle/tag:manage', $hidden);
-    $ADMIN->add('appearance', $page);
+    // link to tag management interface
+    $ADMIN->add('appearance', new admin_externalpage('managetags', new lang_string('managetags', 'tag'), $CFG->wwwroot.'/tag/manage.php', 'moodle/tag:manage'));
 
     $temp = new admin_settingpage('additionalhtml', new lang_string('additionalhtml', 'admin'));
     $temp->add(new admin_setting_heading('additionalhtml_heading', new lang_string('additionalhtml_heading', 'admin'), new lang_string('additionalhtml_desc', 'admin')));

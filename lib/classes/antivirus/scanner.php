@@ -35,17 +35,8 @@ defined('MOODLE_INTERNAL') || die();
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class scanner {
-    /** Scanning result indicating no virus found. */
-    const SCAN_RESULT_OK = 0;
-    /** Scanning result indicating that virus is found. */
-    const SCAN_RESULT_FOUND = 1;
-    /** Scanning result indicating the error. */
-    const SCAN_RESULT_ERROR = 2;
-
     /** @var stdClass the config for antivirus */
     protected $config;
-    /** @var string scanning notice */
-    protected $scanningnotice = '';
 
     /**
      * Class constructor.
@@ -64,6 +55,7 @@ abstract class scanner {
      * Config get method.
      *
      * @param string $property config property to get.
+     *
      * @return mixed
      * @throws \coding_exception
      */
@@ -75,25 +67,6 @@ abstract class scanner {
     }
 
     /**
-     * Get scanning notice.
-     *
-     * @return string
-     */
-    public function get_scanning_notice() {
-        return $this->scanningnotice;
-    }
-
-    /**
-     * Set scanning notice.
-     *
-     * @param string $notice notice to set.
-     * @return void
-     */
-    protected function set_scanning_notice($notice) {
-        $this->scanningnotice = $notice;
-    }
-
-    /**
      * Are the antivirus settings configured?
      *
      * @return bool True if plugin has been configured.
@@ -101,13 +74,15 @@ abstract class scanner {
     public abstract function is_configured();
 
     /**
-     * Scan file.
+     * Scan file, throws exception in case of infected file.
      *
      * @param string $file Full path to the file.
      * @param string $filename Name of the file (could be different from physical file if temp file is used).
-     * @return int Scanning result constants.
+     * @param bool $deleteinfected whether infected file needs to be deleted.
+     * @throws \core\antivirus\scanner_exception If file is infected.
+     * @return void
      */
-    public abstract function scan_file($file, $filename);
+    public abstract function scan_file($file, $filename, $deleteinfected);
 
     /**
      * Email admins about antivirus scan outcomes.
@@ -122,8 +97,7 @@ abstract class scanner {
         $subject = get_string('emailsubject', 'antivirus', format_string($site->fullname));
         $admins = get_admins();
         foreach ($admins as $admin) {
-            $eventdata = new \core\message\message();
-            $eventdata->courseid          = SITEID;
+            $eventdata = new \stdClass();
             $eventdata->component         = 'moodle';
             $eventdata->name              = 'errors';
             $eventdata->userfrom          = get_admin();

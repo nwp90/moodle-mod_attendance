@@ -16,14 +16,12 @@
 }}
 {{!
     Course competencies template.
-
-    For a full list of the context for this template see the course_competencies_page renderable.
 }}
 <div data-region="coursecompetenciespage">
     <div data-region="actions" class="clearfix">
-        <div class="pull-xs-left">
+        <div class="pull-left">
             {{#canmanagecoursecompetencies}}
-                <button class="btn btn-secondary" disabled>{{#str}}addcoursecompetencies, tool_lp{{/str}}</button>
+                <button disabled>{{#str}}addcoursecompetencies, tool_lp{{/str}}</button>
             {{/canmanagecoursecompetencies}}
         </div>
     </div>
@@ -57,13 +55,12 @@
     <tr class="drag-samenode" data-id="{{competency.id}}">
     <td>
         {{#canmanagecoursecompetencies}}
-        <span class="drag-handlecontainer pull-xs-left"></span>
-        <div class="pull-xs-right">
+        <span class="drag-handlecontainer pull-left"></span>
+        <div class="pull-right">
             <a href="#" data-action="delete-competency-link" data-id="{{competency.id}}">
                 {{#pix}}t/delete, core, {{#str}}delete{{/str}}{{/pix}}
             </a>
         </div>
-        <div class="clearfix"></div>
         {{/canmanagecoursecompetencies}}
         {{#competency}}
             <a href="{{pluginbaseurl}}user_competency_in_course.php?courseid={{courseid}}&competencyid={{competency.id}}&userid={{gradableuserid}}"
@@ -74,7 +71,7 @@
             <p>{{{competency.description}}}</p>
         {{/competency}}
         {{#comppath}}
-            <span class="pull-xs-left">{{#str}}path, tool_lp{{/str}}&nbsp;</span>{{> tool_lp/competency_path }}
+            <span class="pull-left">{{#str}}path, tool_lp{{/str}}&nbsp;</span>{{> tool_lp/competency_path }}
         {{/comppath}}
         {{#usercompetencycourse}}
             {{#grade}}
@@ -95,12 +92,12 @@
         {{/canmanagecoursecompetencies}}
         <div data-region="coursecompetencyactivities">
         <p>
-        <ul class="inline list-inline">
+        <ul class="inline">
         {{#coursemodules}}
-            <li class="list-inline-item"><a href="{{url}}"><img src="{{iconurl}}"> {{name}} </a></li>
+            <li><a href="{{url}}"><img src="{{iconurl}}"> {{name}} </a></li>
         {{/coursemodules}}
         {{^coursemodules}}
-            <li class="list-inline-item"><span class="alert">{{#str}}noactivities, tool_lp{{/str}}</span></li>
+            <li><span class="alert">{{#str}}noactivities, tool_lp{{/str}}</span></li>
         {{/coursemodules}}
         </ul>
         </p>

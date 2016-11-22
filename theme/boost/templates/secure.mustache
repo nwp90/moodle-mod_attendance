@@ -45,13 +45,15 @@
     {{{ output.full_header }}}
 
     <div id="page-content" class="row">
-        <div id="region-main-box" class="col-xs-12">
+        <div id="region-main-box" class="col-md-9">
             <div class="row">
-                <section id="region-main" class="col-xs-12">
+                <section id="region-main" class="col-md-8 push-md-4 col-lg-9 push-lg-3">
                     {{{ output.main_content }}}
                 </section>
+                {{{ sidepreblocks }}}
             </div>
         </div>
+        {{{ sidepostblocks }}}
     </div>
 
     {{{ output.standard_end_of_body_html }}}
@@ -62,3 +64,4 @@
 {{#js}}
 require(['theme_boost/loader'], function() {});
 {{/js}}
+

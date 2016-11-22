@@ -140,8 +140,7 @@ function badge_assemble_notification(stdClass $badge) {
         }
 
         // Create a message object.
-        $eventdata = new \core\message\message();
-        $eventdata->courseid          = SITEID;
+        $eventdata = new stdClass();
         $eventdata->component         = 'moodle';
         $eventdata->name              = 'badgecreatornotice';
         $eventdata->userfrom          = $userfrom;

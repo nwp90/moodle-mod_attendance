@@ -47,9 +47,6 @@ $PAGE->set_url($url);
 // Update module completion status.
 $assign->set_module_viewed();
 
-// Apply overrides.
-$assign->update_effective_access($USER->id);
-
 // Get the assign class to
 // render the page.
 echo $assign->view(optional_param('action', '', PARAM_TEXT));
