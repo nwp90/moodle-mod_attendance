@@ -1,0 +1,176 @@
+#page-mod-studentquiz-view .createnewquestion .singlebutton {
+    display: inline;
+}
+
+#page-mod-studentquiz-view .createnewquestion input[type="submit"] {
+    color: #fff;
+    text-shadow: 0 -1px 0 rgba(0,0,0,0.25);
+    background-color: #005aa8;
+    background-image: linear-gradient(to bottom, #0070a8, #0038a8);
+    background-repeat: repeat-x;
+    border-color: rgba(0,0,0,0.1) rgba(0,0,0,0.1) rgba(0,0,0,0.25);
+}
+
+#page-mod-studentquiz-view .createnewquestion input[type="submit"]:hover {
+    color:#fff;
+    background-color: #0038a8;
+}
+
+#page-mod-studentquiz-view .createnewquestion .singlebutton div,
+#page-mod-studentquiz-view .createnewquestion .singlebutton form {
+    display: inline;
+    margin-right: 0;
+}
+
+#page-mod-studentquiz-view #filterform {
+    min-height: 20px;
+    margin-bottom: 20px;
+    padding: 9px;
+    background-color: #f5f5f5;
+    border: 1px solid #e3e3e3;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,0.05);
+    -moz-box-shadow: inset 0 1px 1px rgba(0,0,0,0.05);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.05);
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+#page-mod-studentquiz-view #filterform blockquote {
+    border-color: #ddd;
+    border-color: rgba(0,0,0,0.15);
+}
+
+#page-mod-studentquiz-view #filterform .fitem{
+    display: inline-block;
+    line-height: 40px;
+    margin-right: .3em;
+    white-space: nowrap;
+}
+
+#page-mod-studentquiz-view #filterform .fitem label {
+    display: inline;
+    line-height: 20px;
+    padding-right: .3em;
+}
+
+#page-mod-studentquiz-view #filterform .fitem:before,
+#page-mod-studentquiz-view #filterform .fitem:after {
+    display: inline;
+}
+
+#page-mod-studentquiz-view #filterform div,
+#page-mod-studentquiz-view #filterform fieldset {
+    display: inline;
+    float: none;
+    clear: none;
+    width: auto;
+    margin: 0;
+}
+
+#page-mod-studentquiz-view #page .quizattemptsummary td p {
+    margin-top: 0;
+}
+#page-mod-studentquiz-view table.quizattemptsummary tr.bestrow td {
+    border-color: #bce8f1;
+    background-color: #d9edf7;
+}
+table.quizattemptsummary .noreviewmessage {
+    color: gray;
+}
+
+#page-mod-studentquiz-view .generaltable.quizattemptsummary {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.statedetails {
+    display: block;
+    font-size: 0.7em;
+}
+
+/** report rank view **/
+#page-mod-studentquiz-reportquiz .quizinfo,
+#page-mod-studentquiz-reportquiz #page .quizgradefeedback,
+#ppage-mod-studentquiz-reportquiz #page .quizattempt {
+    text-align: center;
+}
+#page-mod-studentquiz-reportquiz #page .quizattemptsummary td p {
+    margin-top: 0;
+}
+#page-mod-studentquiz-reportquiz .quizattemptsummary tr.bestrow td {
+    border-color: #bce8f1;
+    background-color: #d9edf7;
+}
+table.quizattemptsummary .noreviewmessage {
+    color: gray;
+}
+#page-mod-studentquiz-reportquiz .generaltable.quizattemptsummary {
+    margin-left: auto;
+    margin-right: auto;
+}
+#page-mod-studentquiz-reportquiz .generalbox#feedback {
+    width: 70%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-bottom: 15px;
+}
+#page-mod-studentquiz-reportquiz .generalbox#feedback h2 {
+    margin: 0;
+}
+#page-mod-studentquiz-reportquiz .generalbox#feedback h3 {
+    text-align: left;
+}
+#page-mod-studentquiz-reportquiz.dir-rtl .generalbox#feedback h3 {
+    text-align: center;
+}
+#page-mod-studentquiz-reportquiz .generalbox#feedback .overriddennotice {
+    text-align: center;
+    font-size: 0.7em;
+}
+.quizstartbuttondiv.quizsecuremoderequired input {
+    display: none;
+}
+.jsenabled .quizstartbuttondiv.quizsecuremoderequired input {
+    display: inline;
+}
+
+body.page-mod-studentquiz-reportquiz .gradedattempt,
+body.page-mod-studentquiz-reportquiz table tbody tr.gradedattempt > td {
+    border-color: #bce8f1;
+    background-color: #d9edf7;
+}
+
+.quizattemptcounts {
+    clear: left;
+    text-align: center;
+    display:inline;
+    margin-left:20%;
+}
+.dir-rtl .quizattemptcounts {
+    margin-left:0;
+    margin-right: 20%;
+}
+#page-mod-studentquiz-reportquiz .quizattemptcounts,
+.dir-rtl #page-mod-studentquiz-reportquiz.quizattemptcounts {
+    display: block;
+    margin-left: 0;
+    margin-right: 0;
+}
+#page-mod-studentquiz-reportquiz .reportquiz_total_label {
+    font-weight: bold;
+}
+
+.error {
+    color: #ff0000;
+}
+.mod-studentquiz-summary-highlight {
+    background-color: #d9edf7;
+}
+.reportquiz_total_heading {
+    border-bottom: 1px solid #e5e5e5;
+}
+#page-mod-studentquiz-view .mod_quiz_edit_forms  {
+    display:none
+}
