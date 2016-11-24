@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.2.0~dev.2016112400+0facmed2-2) jessie; urgency=medium
+
+  * Add media dir to debian/install
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 24 Nov 2016 17:00:10 +1300
+
 moodle-site-otagounifom (3.2.0~dev.2016112400+0facmed1-1) jessie; urgency=medium
 
   * Update upstream
