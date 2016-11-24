@@ -1,3 +1,12 @@
+moodle-site-otagounifom (3.2.0~dev.2016112400+0facmed1-1) jessie; urgency=medium
+
+  * Update upstream
+  * Add mod icontent
+  * Add mod/qbehaviour studentquiz
+  * Add qformat glossary
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 24 Nov 2016 15:56:21 +1300
+
 moodle-site-otagounifom (3.2.0~dev.2016111100+0facmed1-1) jessie; urgency=medium
 
   * Update to 3.2beta 2016111100 (security)
