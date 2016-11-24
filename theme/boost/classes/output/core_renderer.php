@@ -558,13 +558,14 @@ class core_renderer extends \core_renderer {
 
                     // We only add a list to the full settings menu if we didn't include every node in the short menu.
                     if ($skipped) {
-                        $text = get_string('frontpagesettings');
+                        $text = get_string('morenavigationlinks');
                         $url = new moodle_url('/course/admin.php', array('courseid' => $this->page->course->id));
                         $link = new action_link($url, $text, null, null, new pix_icon('t/edit', $text));
                         $menu->add_secondary_action($link);
                     }
                 }
-            } else if (!empty($node) && $node->type == navigation_node::TYPE_COURSE) {
+            } else if (!empty($node) &&
+                ($node->type == navigation_node::TYPE_COURSE || $node->type == navigation_node::TYPE_SECTION)) {
                 $settingsnode = $this->page->settingsnav->find('courseadmin', navigation_node::TYPE_COURSE);
                 if ($settingsnode) {
                     // Build an action menu based on the visible nodes from this navigation tree.
@@ -572,7 +573,7 @@ class core_renderer extends \core_renderer {
 
                     // We only add a list to the full settings menu if we didn't include every node in the short menu.
                     if ($skipped) {
-                        $text = get_string('courseadministration');
+                        $text = get_string('morenavigationlinks');
                         $url = new moodle_url('/course/admin.php', array('courseid' => $this->page->course->id));
                         $link = new action_link($url, $text, null, null, new pix_icon('t/edit', $text));
                         $menu->add_secondary_action($link);
@@ -619,7 +620,7 @@ class core_renderer extends \core_renderer {
                 $navbarnode = end($items);
                 // We only want to show the menu on the first page of the activity. This means
                 // the breadcrumb has no additional nodes.
-                if ($navbarnode->key == $node->key && $navbarnode->type == $node->type) {
+                if ($navbarnode && ($navbarnode->key == $node->key && $navbarnode->type == $node->type)) {
                     $buildmenu = true;
                 }
             }
@@ -630,6 +631,18 @@ class core_renderer extends \core_renderer {
                     // Build an action menu based on the visible nodes from this navigation tree.
                     $this->build_action_menu_from_navigation($menu, $node);
                 }
+            }
+        } else {
+            $items = $this->page->navbar->get_items();
+            $navbarnode = end($items);
+
+            if ($navbarnode && ($navbarnode->key == 'participants')) {
+                $node = $this->page->settingsnav->find('users', navigation_node::TYPE_CONTAINER);
+                if ($node) {
+                    // Build an action menu based on the visible nodes from this navigation tree.
+                    $this->build_action_menu_from_navigation($menu, $node);
+                }
+
             }
         }
         return $this->render($menu);
@@ -681,4 +694,12 @@ class core_renderer extends \core_renderer {
         return $skipped;
     }
 
+    /**
+     * Secure login info.
+     *
+     * @return string
+     */
+    public function secure_login_info() {
+        return $this->login_info(false);
+    }
 }

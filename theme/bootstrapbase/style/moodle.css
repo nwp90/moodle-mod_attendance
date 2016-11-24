@@ -162,7 +162,7 @@ a.autolink.glossary:hover {
 }
 /*rtl:raw:
 .collapsible-actions .collapseexpand {
-    background: url([[pix:t/collapsed_rtl]]);
+    background: url([[pix:t/collapsed_rtl]]) right center no-repeat;
 }
 */
 .collapsible-actions .collapse-all {
@@ -2786,10 +2786,10 @@ img.iconsmall {
   margin: 1em 10% 2em 10%;
   text-align: left;
 }
-#notice {
-  width: 60%;
-  min-width: 220px;
-  margin: auto;
+.modal.modal-in-page {
+  position: static;
+  z-index: 0;
+  margin: 0;
 }
 #page-admin-index .releasenoteslink,
 #page-admin-index .adminwarning,
@@ -5838,6 +5838,9 @@ a.ygtvspacer:hover {
   clear: both;
   border-radius: 4px;
 }
+.messaging-area-container .messaging-area img {
+  max-width: 100%;
+}
 .messaging-area-container .messaging-area .contacts-area {
   border-right: 1px solid #e3e3e3;
   height: 600px;
@@ -7796,6 +7799,15 @@ body.path-question-type .mform fieldset.hidden {
   border-bottom: 1px solid #ddd;
   box-sizing: border-box;
 }
+.popover-region-footer-container {
+  height: 30px;
+  text-align: center;
+  border-top: 1px solid #ddd;
+  background-color: #fff;
+}
+.popover-region-footer-container .popover-region-seeall-text {
+  padding-top: 4px;
+}
 .popover-region-header-text {
   float: left;
   margin: 0;
@@ -7815,13 +7827,16 @@ body.path-question-type .mform fieldset.hidden {
   height: 12px;
   width: 12px;
 }
+.popover-region-header-actions .newmessage-link {
+  margin-right: 10px;
+}
 .popover-region-header-actions label {
   display: inline-block;
   text-align: center;
   margin-bottom: 0;
 }
 .popover-region-content-container {
-  height: calc(100% - 25px);
+  height: calc(100% - 56px);
   width: 100%;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -8059,6 +8074,9 @@ body.path-question-type .mform fieldset.hidden {
 }
 .dir-rtl .popover-region .popover-region-header-actions {
   float: left;
+}
+.dir-rtl .popover-region .popover-region-header-actions .newmessage-link {
+  margin-left: 10px;
 }
 .dir-rtl .navbar .popover-region {
   float: left;
@@ -13506,33 +13524,6 @@ fieldset.hidden {
   display: inherit;
   visibility: inherit;
 }
-/* .controls vs .controls
- *
- * in expanding course list, can be fixed in renderer though
- */
-/* .btn vs .btn
- *
- * links, inputs and buttons are commonly styled with .btn in
- * bootstrap but it seems that some buttons in Moodle are
- * wrapped in div.btn e.g. the login block's "login" button
- */
-div.c1.btn {
-  display: block;
-  padding: 0;
-  margin-bottom: 0;
-  font-size: inherit;
-  line-height: inherit;
-  text-align: inherit;
-  cursor: default;
-  color: inherit;
-  text-shadow: inherit;
-  background-color: inherit;
-  background-image: none;
-  background-repeat: no-repeat;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-}
 /* .container vs .container
  *
  * bootstrap uses .container to set the width of the layout at 960px or so, Moodle uses it
@@ -13833,7 +13824,7 @@ form {
 .mform fieldset.collapsible legend a.fheader {
   padding: 0 5px 0 20px;
   margin-left: -20px;
-  background: url([[pix:t/expanded]]) 2px center no-repeat;
+  background: url([[pix:t/expanded]]) left center no-repeat;
 }
 .mform fieldset.collapsed legend a.fheader {
   /*rtl:raw:
@@ -14468,6 +14459,13 @@ body.modal-open {
 select {
   width: auto;
 }
+.path-mod-assign #page-content [data-region="grade-panel"] .mform:not(.unresponsive) #id_attemptsettings .fitem .fitemtitle,
+.path-mod-assign #page-content [data-region="grade-panel"] .mform:not(.unresponsive) #id_attemptsettings .fitem .felement {
+  display: table-cell;
+  float: none;
+  border-top: 1px solid #ddd;
+  padding: 8px 0;
+}
 .path-mod-feedback .mform.feedback_form .fitem .fitemtitle {
   display: block;
   margin-top: 4px;
@@ -14704,15 +14702,9 @@ canvas {
 div#dock {
   display: none;
 }
-.path-mod-choice .horizontal .choices {
-  margin: 0;
-}
-.path-mod-choice .horizontal .choices .option {
-  display: inline-block;
-  padding: 10px;
-}
-.path-mod-choice .results .data {
-  white-space: normal;
+.path-mod-choice .media-left {
+  float: left;
+  padding-right: 1em;
 }
 .path-mod-lesson .firstpageoptions {
   margin: auto;
@@ -15208,6 +15200,15 @@ div#dock {
 .path-mod-quiz #mod_quiz_navblock .qnbutton.answersaved .trafficlight,
 .path-mod-quiz #mod_quiz_navblock .qnbutton.requiresgrading .trafficlight {
   background-color: #999;
+}
+.path-mod-scorm .scorm-center {
+  text-align: center;
+}
+.path-mod-scorm.forcejavascript .scorm-center {
+  display: none;
+}
+.path-mod-scorm.jsenabled .scorm-center {
+  display: block;
 }
 .yui-skin-sam .yui-layout.path-mod-chat-gui_ajax {
   background-color: #fff;
@@ -15871,7 +15872,6 @@ form.search-cohort input[type="text"],
 form.search-cohort input[type="submit"],
 form.search-cohort label {
   margin-top: 14px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 form.search-cohort label {
   margin-bottom: 0;
@@ -15886,27 +15886,6 @@ button.yui3-button.closebutton {
 }
 button.yui3-button.closebutton:hover {
   background-position: 0 0;
-}
-input.fp-btn-choose {
-  padding: 2px 10px;
-  font-size: 11.9px;
-  -webkit-border-radius: 3px;
-  -moz-border-radius: 3px;
-  border-radius: 3px;
-}
-.user-enroller-panel .uep-search-results .user .options .enrol,
-.user-enroller-panel .uep-search-results .cohort .options .enrol {
-  padding: 0 6px;
-  font-size: 10.5px;
-  -webkit-border-radius: 3px;
-  -moz-border-radius: 3px;
-  border-radius: 3px;
-}
-.user-enroller-panel .uep-search-results .user .options .enrol .label,
-.user-enroller-panel .uep-search-results .cohort .options .enrol .label,
-.user-enroller-panel .uep-search-results .user .options .enrol .badge,
-.user-enroller-panel .uep-search-results .cohort .options .enrol .badge {
-  top: 0;
 }
 .gradetreebox h4 {
   font-size: 14px;
@@ -19024,224 +19003,157 @@ input[type="reset"] .caret {
 ul.indented-list {
   margin-left: 20px;
 }
-.card {
-  /* stylelint-disable-line no-empty-source */
-}
+/* stylelint-disable declaration-no-important, block-no-empty */
 .p-l-1 {
   padding-left: 14px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-r-1 {
   padding-right: 14px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-t-1 {
   padding-top: 14px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-b-1 {
   padding-bottom: 14px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-x-1 {
   padding-left: 14px !important;
-  /* stylelint-disable-line declaration-no-important */
   padding-right: 14px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-y-1 {
   padding-top: 14px !important;
-  /* stylelint-disable-line declaration-no-important */
   padding-bottom: 14px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-a-1 {
   padding: 14px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-l-1 {
   margin-left: 14px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-r-1 {
   margin-right: 14px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-t-1 {
   margin-top: 14px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-b-1 {
   margin-bottom: 14px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-x-1 {
   margin-left: 14px !important;
-  /* stylelint-disable-line declaration-no-important */
   margin-right: 14px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-y-1 {
   margin-top: 14px !important;
-  /* stylelint-disable-line declaration-no-important */
   margin-bottom: 14px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-a-1 {
   margin: 14px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-l-2 {
   padding-left: 28px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-r-2 {
   padding-right: 28px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-t-2 {
   padding-top: 28px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-b-2 {
   padding-bottom: 28px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-x-2 {
   padding-left: 28px !important;
-  /* stylelint-disable-line declaration-no-important */
   padding-right: 28px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-y-2 {
   padding-top: 28px !important;
-  /* stylelint-disable-line declaration-no-important */
   padding-bottom: 28px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-a-2 {
   padding: 28px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-l-2 {
   margin-left: 28px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-r-2 {
   margin-right: 28px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-t-2 {
   margin-top: 28px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-b-2 {
   margin-bottom: 28px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-x-2 {
   margin-left: 28px !important;
-  /* stylelint-disable-line declaration-no-important */
   margin-right: 28px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-y-2 {
   margin-top: 28px !important;
-  /* stylelint-disable-line declaration-no-important */
   margin-bottom: 28px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-a-2 {
   margin: 28px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-l-3 {
   padding-left: 42px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-r-3 {
   padding-right: 42px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-t-3 {
   padding-top: 42px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-b-3 {
   padding-bottom: 42px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-x-3 {
   padding-left: 42px !important;
-  /* stylelint-disable-line declaration-no-important */
   padding-right: 42px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-y-3 {
   padding-top: 42px !important;
-  /* stylelint-disable-line declaration-no-important */
   padding-bottom: 42px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .p-a-3 {
   padding: 42px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-l-3 {
   margin-left: 42px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-r-3 {
   margin-right: 42px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-t-3 {
   margin-top: 42px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-b-3 {
   margin-bottom: 42px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-x-3 {
   margin-left: 42px !important;
-  /* stylelint-disable-line declaration-no-important */
   margin-right: 42px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-y-3 {
   margin-top: 42px !important;
-  /* stylelint-disable-line declaration-no-important */
   margin-bottom: 42px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-a-3 {
   margin: 42px !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .d-inline {
   display: inline !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .d-block {
   display: block !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .d-inline-block {
   display: inline-block !important;
-  /* stylelint-disable-line declaration-no-important */
 }
 .m-x-auto {
   margin-left: auto !important;
-  /* stylelint-disable-line declaration-no-important */
   margin-right: auto !important;
-  /* stylelint-disable-line declaration-no-important */
-}
-.img-fluid {
-  /* stylelint-disable-line no-empty-source */
-}
-.text-danger {
-  /* stylelint-disable-line no-empty-source */
 }
 .btn-secondary {
   background-color: #fff;
@@ -19278,13 +19190,6 @@ ul.indented-list {
 .tag-primary[href] {
   background-color: #0378a9;
 }
-.pull-xs-left {
-  /* stylelint-disable-line no-empty-source */
-}
-.pull-xs-right {
-  /* stylelint-disable-line no-empty-source */
-}
 .text-nowrap {
   white-space: nowrap !important;
-  /* stylelint-disable-line declaration-no-important */
 }

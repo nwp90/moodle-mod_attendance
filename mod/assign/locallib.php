@@ -4872,7 +4872,7 @@ class assign {
 
         if ($this->can_view_submission($user->id)) {
 
-            if (has_capability('mod/assign:submit', $this->get_context(), $user)) {
+            if (has_capability('mod/assign:submit', $this->get_context(), $user, false)) {
                 $submissionstatus = $this->get_assign_submission_status_renderable($user, $showlinks);
                 $o .= $this->get_renderer()->render($submissionstatus);
             }
@@ -6260,7 +6260,7 @@ class assign {
             if ($current->grade !== null) {
                 $current->grade = floatval($current->grade);
             }
-            $gradechanged = $gradecolpresent && $current->grade !== $modified->grade;
+            $gradechanged = $gradecolpresent && grade_floats_different($current->grade, $modified->grade);
             $markingallocationchanged = $this->get_instance()->markingworkflow &&
                                         $this->get_instance()->markingallocation &&
                                             ($modified->allocatedmarker !== false) &&
@@ -7046,14 +7046,13 @@ class assign {
         if (!empty($CFG->enableoutcomes)) {
             foreach ($gradinginfo->outcomes as $index => $outcome) {
                 $options = make_grades_menu(-$outcome->scaleid);
+                $options[0] = get_string('nooutcome', 'grades');
                 if ($outcome->grades[$userid]->locked) {
-                    $options[0] = get_string('nooutcome', 'grades');
                     $mform->addElement('static',
                                        'outcome_' . $index . '[' . $userid . ']',
                                        $outcome->name . ':',
                                        $options[$outcome->grades[$userid]->grade]);
                 } else {
-                    $options[''] = get_string('nooutcome', 'grades');
                     $attributes = array('id' => 'menuoutcome_' . $index );
                     $mform->addElement('select',
                                        'outcome_' . $index . '[' . $userid . ']',

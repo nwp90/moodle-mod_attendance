@@ -1,4 +1,4 @@
-/**
+<?php
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -14,16 +14,25 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-
- Airnotifier (message output plugin) CSS
-
- package    message_airnotifier
- category   css
- copyright  2012/2014 Jerome Mouneyrac / Juan Leyva
- license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+/**
+ * Version information for the calculated question type.
+ *
+ * @package    qformat_glossary
+ * @copyright  2016 Daniel Thies <dthies@ccal.edu>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-ul#airnotifierdevices {
-    list-style: none;
-    margin: 0;
-}
+defined('MOODLE_INTERNAL') || die();
+
+$plugin->component = 'qformat_glossary';
+$plugin->version   = 2016072800;
+$plugin->release   = '1.0 Buuild(20160728)';
+
+$plugin->requires  = 2013051400;
+
+$plugin->maturity  = MATURITY_STABLE;
+
+$plugin->dependencies = array(
+    'mod_glossary' => 2013110500,
+    'qformat_xml' => 2013110500,
+);

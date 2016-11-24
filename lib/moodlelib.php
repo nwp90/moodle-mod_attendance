@@ -2517,6 +2517,7 @@ function get_login_url() {
  * @return mixed Void, exit, and die depending on path
  * @throws coding_exception
  * @throws require_login_exception
+ * @throws moodle_exception
  */
 function require_login($courseorid = null, $autologinguest = true, $cm = null, $setwantsurltome = true, $preventredirect = false) {
     global $CFG, $SESSION, $USER, $PAGE, $SITE, $DB, $OUTPUT;
@@ -2684,8 +2685,8 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
     // Make sure the USER has a sesskey set up. Used for CSRF protection.
     sesskey();
 
-    // Do not bother admins with any formalities.
-    if (is_siteadmin()) {
+    // Do not bother admins with any formalities, except for activities pending deletion.
+    if (is_siteadmin() && !($cm && $cm->deletioninprogress)) {
         // Set the global $COURSE.
         if ($cm) {
             $PAGE->set_cm($cm, $course);
@@ -2871,6 +2872,15 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
             }
             redirect($CFG->wwwroot .'/enrol/index.php?id='. $course->id);
         }
+    }
+
+    // Check whether the activity has been scheduled for deletion. If so, then deny access, even for admins.
+    if ($cm && $cm->deletioninprogress) {
+        if ($preventredirect) {
+            throw new moodle_exception('activityisscheduledfordeletion');
+        }
+        require_once($CFG->dirroot . '/course/lib.php');
+        redirect(course_get_url($course), get_string('activityisscheduledfordeletion', 'error'));
     }
 
     // Check visibility of activity to current user; includes visible flag, conditional availability, etc.
@@ -4438,6 +4448,7 @@ function complete_user_login($user) {
             if ($changeurl = $userauth->change_password_url()) {
                 redirect($changeurl);
             } else {
+                require_once($CFG->dirroot . '/login/lib.php');
                 $SESSION->wantsurl = core_login_get_return_url();
                 redirect($CFG->httpswwwroot.'/login/change_password.php');
             }
@@ -6134,9 +6145,10 @@ function reset_password_and_mail($user) {
  * Send email to specified user with confirmation text and activation link.
  *
  * @param stdClass $user A {@link $USER} object
+ * @param string $confirmationurl user confirmation URL
  * @return bool Returns true if mail was sent OK and false if there was an error.
  */
-function send_confirmation_email($user) {
+function send_confirmation_email($user, $confirmationurl = null) {
     global $CFG;
 
     $site = get_site();
@@ -6151,7 +6163,12 @@ function send_confirmation_email($user) {
 
     $username = urlencode($user->username);
     $username = str_replace('.', '%2E', $username); // Prevent problems with trailing dots.
-    $data->link  = $CFG->wwwroot .'/login/confirm.php?data='. $user->secret .'/'. $username;
+    if (empty($confirmationurl)) {
+        $confirmationurl = '/login/confirm.php';
+    }
+    $confirmationurl = new moodle_url($confirmationurl, array('data' => $user->secret .'/'. $username));
+    $data->link = $confirmationurl->out(false);
+
     $message     = get_string('emailconfirmation', '', $data);
     $messagehtml = text_to_html(get_string('emailconfirmation', '', $data), false, false, true);
 

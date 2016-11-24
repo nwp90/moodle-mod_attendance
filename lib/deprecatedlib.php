@@ -214,7 +214,7 @@ function get_plugin_directory($plugintype, $name) {
  * @deprecated since 2.6, use core_component::normalize_component()
  *
  * @param string $component
- * @return array as (string)$type => (string)$plugin
+ * @return array two-items list of [(string)type, (string|null)name]
  */
 function normalize_component($component) {
 
@@ -5616,7 +5616,11 @@ function message_is_user_blocked($recipient, $sender = null) {
     debugging('message_is_user_blocked() is deprecated and is no longer used, please use
         \core_message\api::is_user_blocked() instead.', DEBUG_DEVELOPER);
 
-    return \core_message\api::is_user_blocked($recipient, $sender);
+    $senderid = null;
+    if ($sender !== null && isset($sender->id)) {
+        $senderid = $sender->id;
+    }
+    return \core_message\api::is_user_blocked($recipient->id, $senderid);
 }
 
 /**

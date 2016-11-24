@@ -170,15 +170,14 @@ $string['configcronremotepassword'] = 'This means that the cron.php script canno
     http://site.example.com/admin/cron.php?password=opensesame
 </pre>If this is left empty, no password is required.';
 $string['configcurlcache'] = 'Time-to-live for cURL cache, in seconds.';
-$string['configcustommenuitems'] = 'You can configure a custom menu here to be shown by themes. Each line consists of some menu text, a link URL (optional), a tooltip title (optional) and a language code or comma-separated list of codes (optional, for displaying the line to users of the specified language only), separated by pipe characters. You can specify a structure using hyphens, and dividers can be used by adding a line of one or more # characters where desired. For example:
+$string['configcustommenuitems'] = 'You can configure a custom menu here to be shown by themes. Each line consists of some menu text, a link URL (optional), a tooltip title (optional) and a language code or comma-separated list of codes (optional, for displaying the line to users of the specified language only), separated by pipe characters. Lines starting with a hyphen will appear as menu items in the previous top level menu, and dividers can be used by adding a line of one or more # characters where desired. For example:
 <pre>
 Moodle community|https://moodle.org
 -Moodle free support|https://moodle.org/support
+-Moodle Docs|http://docs.moodle.org|Moodle Docs
+-German Moodle Docs|http://docs.moodle.org/de|Documentation in German|de
 -###
 -Moodle development|https://moodle.org/development
---Moodle Docs|http://docs.moodle.org|Moodle Docs
---German Moodle Docs|http://docs.moodle.org/de|Documentation in German|de
-#####
 Moodle.com|http://moodle.com/
 </pre>';
 $string['configcustomusermenuitems'] = 'You can configure the contents of the user menu (with the exception of the log out link, which is automatically added). Each line is separated by | characters and consists of 1) a string in "langstringname, componentname" form or as plain text, 2) a URL, and 3) an icon either as a pix icon or as a URL. Dividers can be used by adding a line of one or more # characters where desired.';
@@ -396,7 +395,7 @@ $string['ctyperequired'] = 'The ctype PHP extension is now required by Moodle, i
 $string['curlsecurityallowedport'] = 'cURL allowed ports list';
 $string['curlsecurityallowedportsyntax'] = 'Put every entry on one line. Valid entries are integer numbers only.';
 $string['curlsecurityblockedhosts'] = 'cURL blocked hosts list';
-$string['curlsecurityblockedhostssyntax'] = 'Put each entry on a new line. Valid entries are either full IPv4 or IPv6 addresses (such as <b>192.168.10.1, 0:0:0:0:0:0:0:1, ::1, fe80::</b>) which match a single host; or CIDR notation (such as <b>231.54.211.0/20 or fe80::/64</b>); or a range of IP addresses (such as <b>231.3.56.10-20 or fe80::1111-bbbb</b>) where the range applies to the last group of the address; or domain names (such as <b>localhost or example.com</b>); or wildcard domain names (such as <b>*.example.com or *.sub.example.com</b>). Blank lines are not allowed.';
+$string['curlsecurityblockedhostssyntax'] = 'Put each entry on a new line. Valid entries are either full IPv4 or IPv6 addresses (such as 192.168.10.1, 0:0:0:0:0:0:0:1, ::1, fe80::) which match a single host; or CIDR notation (such as 231.54.211.0/20 or fe80::/64); or a range of IP addresses (such as 231.3.56.10-20 or fe80::1111-bbbb) where the range applies to the last group of the address; or domain names (such as localhost or example.com); or wildcard domain names (such as *.example.com or *.sub.example.com). Blank lines are not allowed.';
 $string['curlsecurityurlblocked'] = 'The URL is blocked.';
 $string['curlcache'] = 'cURL cache TTL';
 $string['curlrequired'] = 'The cURL PHP extension is now required by Moodle, in order to communicate with Moodle repositories.';
@@ -635,7 +634,7 @@ $string['legacyfilesaddallowed'] = 'Allow adding to legacy course files';
 $string['legacyfilesaddallowed_help'] = 'If a course has legacy course files, allow new files and folders to be added to it.';
 $string['legacyfilesinnewcourses'] = 'Legacy course files in new courses';
 $string['legacyfilesinnewcourses_help'] = 'By default, legacy course files areas are available in upgraded courses only. Please note that some features such as activity backup and restore are not compatible with this setting.';
-$string['libcurlwarning'] = 'Libcurl with CURLOPT_PROTOCOL support has not been detected. It is recommended to have an up to date libcurl installation for security reasons.';
+$string['libcurlwarning'] = 'It has been detected that libcurl doesn\'t have CURLOPT_PROTOCOL support. An up-to-date libcurl installation is recommended for security reasons.';
 $string['licensesettings'] = 'Licence settings';
 $string['linkadmincategories'] = 'Link admin categories';
 $string['linkadmincategories_help'] = 'If enabled admin setting categories will be displayed as links in the navigation and will lead to the admin category pages.';
