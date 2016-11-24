@@ -42,6 +42,7 @@ lang                           /srv/moodle/otagounifom/moodle/
 lib                            /srv/moodle/otagounifom/moodle/
 local                          /srv/moodle/otagounifom/moodle/
 login                          /srv/moodle/otagounifom/moodle/
+media                          /srv/moodle/otagounifom/moodle/
 message                        /srv/moodle/otagounifom/moodle/
 mnet                           /srv/moodle/otagounifom/moodle/
 mod                            /srv/moodle/otagounifom/moodle/
