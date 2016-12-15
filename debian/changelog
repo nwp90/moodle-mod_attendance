@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.2.0.2016121500+0facmed1-1) jessie; urgency=medium
+
+  * New upstream version, 3.2 stable.
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 16 Dec 2016 10:26:43 +1300
+
 moodle-site-otagounifom (3.2.0~dev.2016112400+0facmed2-1) jessie; urgency=medium
 
   * Add media dir to debian/install
