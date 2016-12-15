@@ -349,10 +349,10 @@ class theme_config {
     public $doctype = 'html5';
 
     /**
-     * @var string undeletableblocktypes If set to a string, will list the block types that cannot be deleted. Defaults to
+     * @var string requiredblocks If set to a string, will list the block types that cannot be deleted. Defaults to
      *                                   navigation and settings.
      */
-    public $undeletableblocktypes = false;
+    public $requiredblocks = false;
 
     //==Following properties are not configurable from theme config.php==
 
@@ -542,11 +542,11 @@ class theme_config {
         $configurable = array(
             'parents', 'sheets', 'parents_exclude_sheets', 'plugins_exclude_sheets',
             'javascripts', 'javascripts_footer', 'parents_exclude_javascripts',
-            'layouts', 'enable_dock', 'enablecourseajax', 'undeletableblocktypes',
+            'layouts', 'enable_dock', 'enablecourseajax', 'requiredblocks',
             'rendererfactory', 'csspostprocess', 'editor_sheets', 'rarrow', 'larrow', 'uarrow', 'darrow',
             'hidefromselector', 'doctype', 'yuicssmodules', 'blockrtlmanipulations',
             'lessfile', 'extralesscallback', 'lessvariablescallback', 'blockrendermethod',
-            'scss', 'extrascsscallback', 'prescsscallback', 'csstreepostprocessor');
+            'scss', 'extrascsscallback', 'prescsscallback', 'csstreepostprocessor', 'addblockposition');
 
         foreach ($config as $key=>$value) {
             if (in_array($key, $configurable)) {
@@ -1130,8 +1130,9 @@ class theme_config {
             throw new coding_exception('The theme did not define a LESS file, or it is not readable.');
         }
 
-        // We might need more memory to do this, so let's play safe.
+        // We might need more memory/time to do this, so let's play safe.
         raise_memory_limit(MEMORY_EXTRA);
+        core_php_time_limit::raise(300);
 
         // Files list.
         $files = $this->get_css_files($themedesigner);
@@ -1195,8 +1196,9 @@ class theme_config {
             throw new coding_exception('The theme did not define a SCSS file, or it is not readable.');
         }
 
-        // We might need more memory to do this, so let's play safe.
+        // We might need more memory/time to do this, so let's play safe.
         raise_memory_limit(MEMORY_EXTRA);
+        core_php_time_limit::raise(300);
 
         // Set-up the compiler.
         $compiler = new core_scss();
@@ -1573,6 +1575,11 @@ class theme_config {
         $treeprocessor = $this->get_css_tree_post_processor();
         $needsparsing = !empty($treeprocessor) || !empty($this->rtlmode);
         if ($needsparsing) {
+
+            // We might need more memory/time to do this, so let's play safe.
+            raise_memory_limit(MEMORY_EXTRA);
+            core_php_time_limit::raise(300);
+
             $parser = new core_cssparser($css);
             $csstree = $parser->parse();
             unset($parser);

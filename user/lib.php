@@ -384,18 +384,18 @@ function user_get_user_details($user, $course = null, array $userfields = array(
         $hiddenfields = array();
         // Address, phone1 and phone2 not appears in hidden fields list but require viewhiddenfields capability
         // according to user/profile.php.
-        if ($user->address && in_array('address', $userfields)) {
+        if (!empty($user->address) && in_array('address', $userfields)) {
             $userdetails['address'] = $user->address;
         }
     } else {
         $hiddenfields = array_flip(explode(',', $CFG->hiddenuserfields));
     }
 
-    if ($user->phone1 && in_array('phone1', $userfields) &&
+    if (!empty($user->phone1) && in_array('phone1', $userfields) &&
             (in_array('phone1', $showuseridentityfields) or $canviewhiddenuserfields)) {
         $userdetails['phone1'] = $user->phone1;
     }
-    if ($user->phone2 && in_array('phone2', $userfields) &&
+    if (!empty($user->phone2) && in_array('phone2', $userfields) &&
             (in_array('phone2', $showuseridentityfields) or $canviewhiddenuserfields)) {
         $userdetails['phone2'] = $user->phone2;
     }
@@ -831,8 +831,8 @@ function user_get_user_navigation_info($user, $page, $options = array()) {
     if (isset($SESSION->justloggedin)) {
         // Don't unset this flag as login_info still needs it.
         if (!empty($CFG->displayloginfailures)) {
-            // We're already in /user/lib.php, so we don't need to include.
-            if ($count = user_count_login_failures($user)) {
+            // Don't reset the count either, as login_info() still needs it too.
+            if ($count = user_count_login_failures($user, false)) {
 
                 // Get login failures string.
                 $a = new stdClass();
@@ -862,32 +862,15 @@ function user_get_user_navigation_info($user, $page, $options = array()) {
     $myprofile->pix = "i/user";
     $returnobject->navitems[] = $myprofile;
 
-    // Links: Role-return or logout link.
-    $lastobj = null;
-    $buildlogout = true;
     $returnobject->metadata['asotherrole'] = false;
-    if (is_role_switched($course->id)) {
-        if ($role = $DB->get_record('role', array('id' => $user->access['rsw'][$context->path]))) {
-            // Build role-return link instead of logout link.
-            $rolereturn = new stdClass();
-            $rolereturn->itemtype = 'link';
-            $rolereturn->url = new moodle_url('/course/switchrole.php', array(
-                'id' => $course->id,
-                'sesskey' => sesskey(),
-                'switchrole' => 0,
-                'returnurl' => $page->url->out_as_local_url(false)
-            ));
-            $rolereturn->pix = "a/logout";
-            $rolereturn->title = get_string('switchrolereturn');
-            $rolereturn->titleidentifier = 'switchrolereturn,moodle';
-            $lastobj = $rolereturn;
 
-            $returnobject->metadata['asotherrole'] = true;
-            $returnobject->metadata['rolename'] = role_get_name($role, $context);
-
-            $buildlogout = false;
-        }
+    // Before we add the last items (usually a logout + switch role link), add any
+    // custom-defined items.
+    $customitems = user_convert_text_to_menu_items($CFG->customusermenuitems, $page);
+    foreach ($customitems as $item) {
+        $returnobject->navitems[] = $item;
     }
+
 
     if ($returnobject->metadata['asotheruser'] = \core\session\manager::is_loggedinas()) {
         $realuser = \core\session\manager::get_realuser();
@@ -911,12 +894,10 @@ function user_get_user_navigation_info($user, $page, $options = array()) {
         $userrevert->pix = "a/logout";
         $userrevert->title = get_string('logout');
         $userrevert->titleidentifier = 'logout,moodle';
-        $lastobj = $userrevert;
+        $returnobject->navitems[] = $userrevert;
 
-        $buildlogout = false;
-    }
+    } else {
 
-    if ($buildlogout) {
         // Build a logout link.
         $logout = new stdClass();
         $logout->itemtype = 'link';
@@ -924,19 +905,45 @@ function user_get_user_navigation_info($user, $page, $options = array()) {
         $logout->pix = "a/logout";
         $logout->title = get_string('logout');
         $logout->titleidentifier = 'logout,moodle';
-        $lastobj = $logout;
+        $returnobject->navitems[] = $logout;
     }
 
-    // Before we add the last item (usually a logout link), add any
-    // custom-defined items.
-    $customitems = user_convert_text_to_menu_items($CFG->customusermenuitems, $page);
-    foreach ($customitems as $item) {
-        $returnobject->navitems[] = $item;
-    }
+    if (is_role_switched($course->id)) {
+        if ($role = $DB->get_record('role', array('id' => $user->access['rsw'][$context->path]))) {
+            // Build role-return link instead of logout link.
+            $rolereturn = new stdClass();
+            $rolereturn->itemtype = 'link';
+            $rolereturn->url = new moodle_url('/course/switchrole.php', array(
+                'id' => $course->id,
+                'sesskey' => sesskey(),
+                'switchrole' => 0,
+                'returnurl' => $page->url->out_as_local_url(false)
+            ));
+            $rolereturn->pix = "a/logout";
+            $rolereturn->title = get_string('switchrolereturn');
+            $rolereturn->titleidentifier = 'switchrolereturn,moodle';
+            $returnobject->navitems[] = $rolereturn;
 
-    // Add the last item to the list.
-    if (!is_null($lastobj)) {
-        $returnobject->navitems[] = $lastobj;
+            $returnobject->metadata['asotherrole'] = true;
+            $returnobject->metadata['rolename'] = role_get_name($role, $context);
+
+        }
+    } else {
+        // Build switch role link.
+        $roles = get_switchable_roles($context);
+        if (is_array($roles) && (count($roles) > 0)) {
+            $switchrole = new stdClass();
+            $switchrole->itemtype = 'link';
+            $switchrole->url = new moodle_url('/course/switchrole.php', array(
+                'id' => $course->id,
+                'switchrole' => -1,
+                'returnurl' => $page->url->out_as_local_url(false)
+            ));
+            $switchrole->pix = "i/switchrole";
+            $switchrole->title = get_string('switchroleto');
+            $switchrole->titleidentifier = 'switchroleto,moodle';
+            $returnobject->navitems[] = $switchrole;
+        }
     }
 
     return $returnobject;

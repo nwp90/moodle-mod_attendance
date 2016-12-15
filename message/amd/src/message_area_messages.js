@@ -50,7 +50,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/cust
             SENDMESSAGE: "[data-action='send-message']",
             SENDMESSAGETEXT: "[data-region='send-message-txt']",
             SHOWCONTACTS: "[data-action='show-contacts']",
-            STARTDELETEMESSAGES: "[data-action='start-delete-messages']"
+            STARTDELETEMESSAGES: "[data-action='start-delete-messages']",
         };
 
         /** @type {int} The number of milliseconds in a second. */
@@ -81,8 +81,8 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/cust
         /** @type {Modal} the confirmation modal */
         Messages.prototype._confirmationModal = null;
 
-        /** @type {int} the timestamp for the earliest visible message */
-        Messages.prototype._earliestMessageTimestamp = 0;
+        /** @type {int} the timestamp for the most recent visible message */
+        Messages.prototype._latestMessageTimestamp = 0;
 
         /** @type {BackOffTimer} the backoff timer */
         Messages.prototype._backoffTimer = null;
@@ -146,6 +146,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/cust
             var messages = this.messageArea.find(SELECTORS.MESSAGES);
             if (messages.length) {
                 this._addScrollEventListener(messages.find(SELECTORS.MESSAGE).length);
+                this._latestMessageTimestamp = messages.find(SELECTORS.MESSAGE + ':last').data('timecreated');
             }
 
             // Create a timer to poll the server for new messages.
@@ -170,8 +171,8 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/cust
             this._numMessagesDisplayed = 0;
             // Stop the existing timer so we can set up the new user's messages.
             this._backoffTimer.stop();
-            // Reset the earliest timestamp when we change the messages view.
-            this._earliestMessageTimestamp = 0;
+            // Reset the latest timestamp when we change the messages view.
+            this._latestMessageTimestamp = 0;
 
             // Mark all the messages as read.
             var markMessagesAsRead = Ajax.call([{
@@ -207,6 +208,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/cust
                 this._addScrollEventListener(numberreceived);
                 // Restart the poll timer.
                 this._backoffTimer.restart();
+                this.messageArea.find(SELECTORS.SENDMESSAGETEXT).focus();
             }.bind(this)).fail(Notification.exception);
         };
 
@@ -240,13 +242,9 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/cust
                     SELECTORS.LOADINGICON).remove();
                 // Check if we got something to do.
                 if (numberreceived > 0) {
-                    // Let's check if we can remove the block time.
-                    // First, get the block time that is currently being displayed.
-                    var blocktime = this.messageArea.node.find(SELECTORS.BLOCKTIME + ":first");
-                    var newblocktime = $(html).find(SELECTORS.BLOCKTIME + ":first").addBack();
-                    if (blocktime.html() == newblocktime.html()) {
-                        // Remove the block time as it's present above.
-                        blocktime.remove();
+                    var newHtml = $('<div>' + html + '</div>');
+                    if (this._hasMatchingBlockTime(this.messageArea.node, newHtml, true)) {
+                        this.messageArea.node.find(SELECTORS.BLOCKTIME + ':first').remove();
                     }
                     // Get height before we add the messages.
                     var oldheight = this.messageArea.find(SELECTORS.MESSAGES)[0].scrollHeight;
@@ -305,18 +303,18 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/cust
                     var result = messagesArea.find(SELECTORS.MESSAGE + '[data-id="' + id + '"]');
                     return !result.length;
                 });
-
                 numberreceived = data.messages.length;
                 // We have the data - lets render the template with it.
                 return Templates.render('core_message/message_area_messages', data);
             }.bind(this)).then(function(html, js) {
                 // Check if we got something to do.
                 if (numberreceived > 0) {
-                    html = $(html);
-                    // Remove the new block time as it's present above.
-                    html.find(SELECTORS.BLOCKTIME).remove();
+                    var newHtml = $('<div>' + html + '</div>');
+                    if (this._hasMatchingBlockTime(this.messageArea.node, newHtml, false)) {
+                        newHtml.find(SELECTORS.BLOCKTIME + ':first').remove();
+                    }
                     // Show the new content.
-                    Templates.appendNodeContents(this.messageArea.find(SELECTORS.MESSAGES), html, js);
+                    Templates.appendNodeContents(this.messageArea.find(SELECTORS.MESSAGES), newHtml, js);
                     // Scroll the new message into view.
                     if (shouldScrollBottom) {
                         this._scrollBottom();
@@ -336,7 +334,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/cust
          * Handles returning a list of messages to display.
          *
          * @param {int} userid
-         * @param {bool} fromTimestamp Load messages from the earliest known timestamp
+         * @param {bool} fromTimestamp Load messages from the latest known timestamp
          * @return {Promise} The promise resolved when the contact area has been rendered
          * @private
          */
@@ -352,7 +350,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/cust
             // If we're trying to load new messages since the message UI was
             // rendered. Used for ajax polling while user is on the message UI.
             if (fromTimestamp) {
-                args.timefrom = this._earliestMessageTimestamp;
+                args.timefrom = this._latestMessageTimestamp;
                 // Remove limit and offset. We want all new messages.
                 args.limitfrom = 0;
                 args.limitnum = 0;
@@ -370,16 +368,12 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/cust
 
                 // Did we get any new messages?
                 if (messages && messages.length) {
-                    var earliestMessage = messages[messages.length - 1];
+                    var latestMessage = messages[messages.length - 1];
 
-                    // If we haven't set the timestamp yet then just use the earliest message.
-                    if (!this._earliestMessageTimestamp) {
+                    // Update our record of the latest known message for future requests.
+                    if (latestMessage.timecreated > this._latestMessageTimestamp) {
                         // Next request should be for the second after the most recent message we've seen.
-                        this._earliestMessageTimestamp = earliestMessage.timecreated + 1;
-                    // Update our record of the earliest known message for future requests.
-                    } else if (earliestMessage.timecreated < this._earliestMessageTimestamp) {
-                        // Next request should be for the second after the most recent message we've seen.
-                        this._earliestMessageTimestamp = earliestMessage.timecreated + 1;
+                        this._latestMessageTimestamp = latestMessage.timecreated + 1;
                     }
                 }
 
@@ -447,6 +441,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/cust
                 this._isSendingMessage = false;
             }.bind(this)).always(function() {
                 element.prop('disabled', false);
+                element.focus();
             }).fail(Notification.exception);
         };
 
@@ -812,11 +807,47 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/cust
 
         /**
          * Hide the messaging area. This only applies on smaller screen resolutions.
+         *
+         * @private
          */
         Messages.prototype._hideMessagingArea = function() {
             this.messageArea.find(SELECTORS.MESSAGINGAREA)
                 .removeClass('show-messages')
                 .addClass('hide-messages');
+        };
+
+        /**
+         * Checks if a day separator needs to be removed.
+         *
+         * Example - scrolling up and loading previous messages that belong to the
+         * same day as the last message that was previously shown, meaning we can
+         * remove the original separator.
+         *
+         * @param {jQuery} domHtml The HTML in the DOM.
+         * @param {jQuery} newHtml The HTML to compare to the DOM
+         * @param {boolean} loadingPreviousMessages Are we loading previous messages?
+         * @return {boolean}
+         * @private
+         */
+        Messages.prototype._hasMatchingBlockTime = function(domHtml, newHtml, loadingPreviousMessages) {
+            var blockTime, blockTimePos, newBlockTime, newBlockTimePos;
+
+            if (loadingPreviousMessages) {
+                blockTimePos = ':first';
+                newBlockTimePos = ':last';
+            } else {
+                blockTimePos = ':last';
+                newBlockTimePos = ':first';
+            }
+
+            blockTime = domHtml.find(SELECTORS.BLOCKTIME + blockTimePos);
+            newBlockTime = newHtml.find(SELECTORS.BLOCKTIME + newBlockTimePos);
+
+            if (blockTime.length && newBlockTime.length) {
+                return blockTime.data('blocktime') == newBlockTime.data('blocktime');
+            }
+
+            return false;
         };
 
         return Messages;
