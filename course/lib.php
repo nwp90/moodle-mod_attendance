@@ -3707,7 +3707,19 @@ function course_get_user_navigation_options($context, $course = null) {
         $sitecontext = context_system::instance();
     }
 
-    $options = new stdClass;
+    // Sets defaults for all options.
+    $options = (object) [
+        'badges' => false,
+        'blogs' => false,
+        'calendar' => false,
+        'competencies' => false,
+        'grades' => false,
+        'notes' => false,
+        'participants' => false,
+        'search' => false,
+        'tags' => false,
+    ];
+
     $options->blogs = !empty($CFG->enableblogs) &&
                         ($CFG->bloglevel == BLOG_GLOBAL_LEVEL ||
                         ($CFG->bloglevel == BLOG_SITE_LEVEL and ($isloggedin and !$isguestuser)))
@@ -3779,7 +3791,7 @@ function course_get_user_administration_options($course, $context) {
     $options->reports = has_capability('moodle/site:viewreports', $context);
     $options->backup = has_capability('moodle/backup:backupcourse', $context);
     $options->restore = has_capability('moodle/restore:restorecourse', $context);
-    $options->files = $course->legacyfiles == 2 and has_capability('moodle/course:managefiles', $context);
+    $options->files = ($course->legacyfiles == 2 && has_capability('moodle/course:managefiles', $context));
 
     if (!$isfrontpage) {
         $options->tags = has_capability('moodle/course:tag', $context);

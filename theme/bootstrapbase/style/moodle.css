@@ -1896,31 +1896,30 @@ table.collection tbody > tr:nth-child(odd) > td,
 table.collection tbody > tr:nth-child(odd) > th {
   background-color: #f9f9f9;
 }
-table.collection .name {
+table.collection td.name {
   text-align: left;
   vertical-align: middle;
 }
-table.collection .awards {
-  width: 10%;
-  text-align: center;
-  vertical-align: middle;
-}
-table.collection .criteria {
-  width: 40%;
-  text-align: left;
-  vertical-align: top;
-}
-table.collection .badgeimage,
-table.collection .status {
+table.collection td.awards {
   width: 15%;
   text-align: center;
   vertical-align: middle;
 }
-table.collection .description {
+table.collection td.criteria {
+  width: 40%;
+  text-align: left;
+  vertical-align: top;
+}
+table.collection td.status {
+  width: 15%;
+  text-align: center;
+  vertical-align: middle;
+}
+table.collection td.description {
   width: 25%;
   text-align: left;
 }
-table.collection .actions {
+table.collection td.actions {
   width: 11em;
   text-align: center;
   vertical-align: middle;
@@ -2435,6 +2434,7 @@ h3.sectionname .inplaceeditable.inplaceeditingon .editinstructions {
   opacity: 0;
   visibility: hidden;
   position: absolute;
+  /*rtl:ignore*/
   left: 50%;
   top: calc(-50% - 5px);
   transform: translate(-50%, -50%);
@@ -2486,90 +2486,17 @@ h3.sectionname .inplaceeditable.inplaceeditingon .editinstructions {
 .path-admin .admintable .leftalign {
   text-align: left;
 }
-.environmenttable p.warn {
+.environmenttable .warn {
   background-color: #fcf8e3;
   color: #8a6d3b;
 }
-.environmenttable .error,
-.environmenttable span.warn,
-.environmenttable .ok {
-  display: inline-block;
-  padding: 2px 4px;
-  font-size: 11.844px;
-  font-weight: bold;
-  line-height: 14px;
-  color: #fff;
-  vertical-align: baseline;
-  white-space: nowrap;
-  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
-  background-color: #999;
-  -webkit-border-radius: 3px;
-  -moz-border-radius: 3px;
-  border-radius: 3px;
-}
-.environmenttable .error:empty,
-.environmenttable span.warn:empty,
-.environmenttable .ok:empty {
-  display: none;
-}
-.environmenttable .error-important,
-.environmenttable span.warn-important,
-.environmenttable .ok-important {
-  background-color: #b94a48;
-}
-.environmenttable .error-important[href],
-.environmenttable span.warn-important[href],
-.environmenttable .ok-important[href] {
-  background-color: #953b39;
-}
-.environmenttable .error-warning,
-.environmenttable span.warn-warning,
-.environmenttable .ok-warning {
-  background-color: #f89406;
-}
-.environmenttable .error-warning[href],
-.environmenttable span.warn-warning[href],
-.environmenttable .ok-warning[href] {
-  background-color: #c67605;
-}
-.environmenttable .error-success,
-.environmenttable span.warn-success,
-.environmenttable .ok-success {
-  background-color: #468847;
-}
-.environmenttable .error-success[href],
-.environmenttable span.warn-success[href],
-.environmenttable .ok-success[href] {
-  background-color: #356635;
-}
-.environmenttable .error-info,
-.environmenttable span.warn-info,
-.environmenttable .ok-info {
-  background-color: #3a87ad;
-}
-.environmenttable .error-info[href],
-.environmenttable span.warn-info[href],
-.environmenttable .ok-info[href] {
-  background-color: #2d6987;
-}
-.environmenttable .error-inverse,
-.environmenttable span.warn-inverse,
-.environmenttable .ok-inverse {
-  background-color: #333;
-}
-.environmenttable .error-inverse[href],
-.environmenttable span.warn-inverse[href],
-.environmenttable .ok-inverse[href] {
-  background-color: #1a1a1a;
-}
 .environmenttable .error {
-  background-color: #b94a48;
-}
-.environmenttable span.warn {
-  background-color: #f89406;
+  background-color: #f2dede;
+  color: #b94a48;
 }
 .environmenttable .ok {
-  background-color: #468847;
+  background-color: #dff0d8;
+  color: #468847;
 }
 .path-admin .admintable.environmenttable .name,
 .path-admin .admintable.environmenttable .info,
@@ -2751,6 +2678,9 @@ img.iconsmall {
   margin-left: auto;
   margin-right: auto;
 }
+#page-admin-tool-spamcleaner-index .spamcleanerform input[type="submit"] {
+  margin-bottom: 0;
+}
 .path-admin-roles .capabilitysearchui input[type="button"] {
   margin-bottom: 0;
 }
@@ -2789,7 +2719,17 @@ img.iconsmall {
 .modal.modal-in-page {
   position: static;
   z-index: 0;
-  margin: 0;
+  margin: 0 auto 0 auto;
+}
+#page-admin-index #notice {
+  width: 60%;
+  min-width: 220px;
+  margin: auto;
+}
+#page-admin-index #notice .buttons {
+  padding-left: 0;
+  padding-right: 0;
+  text-align: center;
 }
 #page-admin-index .releasenoteslink,
 #page-admin-index .adminwarning,
@@ -3441,20 +3381,10 @@ img.iconsmall {
   margin: 0;
 }
 .path-calendar .maincalendar .eventlist .event {
-  width: 92%;
   border-spacing: 0;
   border-collapse: separate;
   position: relative;
-  padding: 20px 4%;
   margin-bottom: 20px;
-  background-color: #fdfdfd;
-  border: 1px solid #e3e3e3;
-  -webkit-border-radius: 4px;
-  -moz-border-radius: 4px;
-  border-radius: 4px;
-  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
-  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
   list-style-type: none;
 }
 .path-calendar .maincalendar .eventlist .event > img {
@@ -3467,6 +3397,7 @@ img.iconsmall {
   line-height: 24px;
   float: left;
   margin: 0;
+  margin-right: 0.5rem;
 }
 .path-calendar .maincalendar .eventlist .event .name,
 .path-calendar .maincalendar .eventlist .event .course {
@@ -3487,17 +3418,6 @@ img.iconsmall {
   background-color: #fff;
   padding: 5px;
   clear: both;
-}
-.path-calendar .maincalendar .eventlist .event .description .commands {
-  position: absolute;
-  right: 0;
-  top: 0;
-  margin: 3px;
-}
-.path-calendar .maincalendar .eventlist .event .commands {
-  position: absolute;
-  top: 2px;
-  right: 2px;
 }
 .path-calendar .maincalendar .eventlist .event .commands a {
   margin: 0 3px;
@@ -5522,10 +5442,18 @@ a.ygtvspacer:hover {
 }
 .fp-iconview .fp-file.fp-hasreferences .fp-reficons1 {
   background: url('[[pix:theme|fp/link]]') no-repeat;
+  /*rtl:raw:
+    transform: scaleX(-1);
+    */
+  /*rtl:ignore*/
   background-position: bottom right;
 }
 .fp-iconview .fp-file.fp-isreference .fp-reficons2 {
   background: url('[[pix:theme|fp/alias]]') no-repeat;
+  /*rtl:raw:
+    transform: scaleX(-1);
+    */
+  /*rtl:ignore*/
   background-position: bottom left;
 }
 .filemanager .fp-iconview .fp-file.fp-originalmissing .fp-thumbnail img {
@@ -5557,6 +5485,9 @@ a.ygtvspacer:hover {
   background: url('[[pix:theme|fp/link_sm]]') no-repeat 0 0;
   height: 100%;
   width: 100%;
+  /*rtl:raw:
+    transform: scaleX(-1);
+    */
   position: absolute;
   top: 8px;
   left: 17px;
@@ -5566,6 +5497,9 @@ a.ygtvspacer:hover {
   background: url('[[pix:theme|fp/alias_sm]]') no-repeat 0 0;
   height: 100%;
   width: 100%;
+  /*rtl:raw:
+    transform: scaleX(-1);
+    */
   position: absolute;
   top: 9px;
   left: -6px;
@@ -5888,6 +5822,7 @@ a.ygtvspacer:hover {
 }
 .messaging-area-container .messaging-area .contacts-area .searchtextarea .searchfilterarea {
   line-height: 20px;
+  cursor: pointer;
 }
 .messaging-area-container .messaging-area .contacts-area .searchtextarea .searchfilterarea .searchfilter {
   float: left;
@@ -5895,7 +5830,6 @@ a.ygtvspacer:hover {
 .messaging-area-container .messaging-area .contacts-area .searchtextarea .searchfilterarea .searchfilterdelete {
   float: left;
   margin-left: 5px;
-  cursor: pointer;
 }
 .messaging-area-container .messaging-area .contacts-area .searcharea .heading {
   text-align: center;
@@ -6567,7 +6501,7 @@ a.ygtvspacer:hover {
 .notification-area .content-area .header:empty {
   display: none;
 }
-.notification-area .content-area .content {
+.notification-area .content-area > .content {
   height: 500px;
   box-sizing: border-box;
   overflow: auto;
@@ -6575,14 +6509,14 @@ a.ygtvspacer:hover {
   padding: 15px;
 }
 @media (max-height: 670px) {
-  .notification-area .content-area .content {
+  .notification-area .content-area > .content {
     height: 400px;
   }
 }
-.notification-area .content-area .content:empty {
+.notification-area .content-area > .content:empty {
   display: none;
 }
-.notification-area .content-area .content:empty + .empty-text {
+.notification-area .content-area > .content:empty + .empty-text {
   display: block;
   text-align: center;
   padding-top: 100px;
@@ -7679,6 +7613,7 @@ body.path-question-type .mform fieldset.hidden {
 #groupeditform .groups select,
 #groupeditform .members select {
   min-width: 175px;
+  max-width: 90%;
 }
 /** Preferences page */
 .preferences-group ul {

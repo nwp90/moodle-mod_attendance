@@ -1599,6 +1599,11 @@ class moodle_page {
             $OUTPUT = $this->get_renderer('core', null, $target);
         }
 
+        if (!during_initial_install()) {
+            $filtermanager = filter_manager::instance();
+            $filtermanager->setup_page_for_globally_available_filters($this);
+        }
+
         $this->_wherethemewasinitialised = debug_backtrace();
     }
 

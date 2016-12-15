@@ -121,6 +121,10 @@ a.dimmed_text:visited,
     @extend .text-info;
 }
 
+.fitem.advanced .text-info {
+    font-weight: bold;
+}
+
 .reportlink {
     text-align: right;
 }
@@ -982,12 +986,7 @@ tr.flagged-tag a {
 .smartselect.compactmenu .smartselect_submenuitem:hover > .smartselect_menuitem_label {
     font-weight: bold;
 }
-/**
-* Registration
-*/
-#page-admin-registration-register .registration_textfield {
-    width: 300px;
-}
+
 /**
 * Enrol
 */
@@ -1261,6 +1260,10 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
 }
 
 .moodle-dialogue-base .moodle-dialogue-wrap .moodle-dialogue-hd .yui3-widget-buttons {
+    /*rtl:raw:
+        left: 0;
+        right: auto;
+    */
     padding: $spacer;
 }
 
@@ -1643,41 +1646,6 @@ table.collection {
     @extend .table-striped;
 }
 
-table.collection .name {
-    text-align: left;
-    vertical-align: middle;
-}
-
-table.collection .awards {
-    width: 10%;
-    text-align: center;
-    vertical-align: middle;
-}
-
-table.collection .criteria {
-    width: 40%;
-    text-align: left;
-    vertical-align: top;
-}
-
-table.collection .badgeimage,
-table.collection .status {
-    width: 15%;
-    text-align: center;
-    vertical-align: middle;
-}
-
-table.collection .description {
-    width: 25%;
-    text-align: left;
-}
-
-table.collection .actions {
-    width: 11em;
-    text-align: center;
-    vertical-align: middle;
-}
-
 a.criteria-action {
     padding: 0 3px;
     float: right;
@@ -1886,11 +1854,17 @@ img#persona_signin {
 #page-header {
     .logo {
         margin: $spacer 0;
+        img {
+            max-height: 75px;
+        }
     }
 }
 
 /** Header. */
 header {
+    .logo img {
+        max-height: 35px;
+    }
     .collapse.in,
     .collapsing {
         display: block;
@@ -2091,6 +2065,7 @@ ul {
         opacity: 0;
         visibility: hidden;
         position: absolute;
+        /*rtl:ignore*/
         left: 50%;
         top: calc(-50% - 5px);
         transform: translate(-50%, -50%);
@@ -2166,5 +2141,17 @@ $footer-link-color: $brand-primary !default;
 .competency-tree {
     ul {
         padding-left: 1.5rem;
+    }
+}
+
+.sr-only-focusable {
+    &:active,
+    &:focus {
+        z-index: $zindex-navbar-fixed + 1;
+        position: fixed;
+        background: #fff;
+        padding: 7px;
+        left: 0;
+        top: 0;
     }
 }

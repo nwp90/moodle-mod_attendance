@@ -1590,7 +1590,6 @@ class assign {
 
         static $scalegrades = array();
 
-        $decimals = $this->get_grade_item()->get_decimals();
         $o = '';
 
         if ($this->get_instance()->grade >= 0) {
@@ -1599,7 +1598,7 @@ class assign {
                 if ($grade < 0) {
                     $displaygrade = '';
                 } else {
-                    $displaygrade = format_float($grade, $decimals);
+                    $displaygrade = format_float($grade, $this->get_grade_item()->get_decimals());
                 }
                 $o .= '<label class="accesshide" for="quickgrade_' . $userid . '">' .
                        get_string('usergrade', 'assign') .
@@ -1611,7 +1610,7 @@ class assign {
                               size="6"
                               maxlength="10"
                               class="quickgrade"/>';
-                $o .= '&nbsp;/&nbsp;' . format_float($this->get_instance()->grade, $decimals);
+                $o .= '&nbsp;/&nbsp;' . format_float($this->get_instance()->grade, $this->get_grade_item()->get_decimals());
                 return $o;
             } else {
                 if ($grade == -1 || $grade === null) {
@@ -1621,7 +1620,7 @@ class assign {
                     $o .= grade_format_gradevalue($grade, $item);
                     if ($item->get_displaytype() == GRADE_DISPLAY_TYPE_REAL) {
                         // If displaying the raw grade, also display the total value.
-                        $o .= '&nbsp;/&nbsp;' . format_float($this->get_instance()->grade, $decimals);
+                        $o .= '&nbsp;/&nbsp;' . format_float($this->get_instance()->grade, $item->get_decimals());
                     }
                 }
                 return $o;
@@ -4794,7 +4793,7 @@ class assign {
 
         $cangrade = has_capability('mod/assign:grade', $this->get_context());
         // If there is a visible grade, show the summary.
-        if ((!is_null($gradebookgrade->grade) || !$emptyplugins)
+        if (!is_null($gradebookgrade) && (!is_null($gradebookgrade->grade) || !$emptyplugins)
                 && ($cangrade || !$gradebookgrade->hidden)) {
 
             $gradefordisplay = null;
@@ -7185,7 +7184,9 @@ class assign {
             $mform->freeze('sendstudentnotifications');
         } else if ($this->get_instance()->markingworkflow) {
             $mform->setDefault('sendstudentnotifications', 0);
-            $mform->disabledIf('sendstudentnotifications', 'workflowstate', 'neq', ASSIGN_MARKING_WORKFLOW_STATE_RELEASED);
+            if (!$gradingpanel) {
+                $mform->disabledIf('sendstudentnotifications', 'workflowstate', 'neq', ASSIGN_MARKING_WORKFLOW_STATE_RELEASED);
+            }
         } else {
             $mform->setDefault('sendstudentnotifications', $this->get_instance()->sendstudentnotifications);
         }
