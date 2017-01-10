@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.2.1.2017010900+0facmed1-1) jessie; urgency=medium
+
+  * New upstream version, 3.2.1
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 11 Jan 2017 12:05:12 +1300
+
 moodle-site-otagounifom (3.2.0.2016121500+0facmed1-1) jessie; urgency=medium
 
   * New upstream version, 3.2 stable.
