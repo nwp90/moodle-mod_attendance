@@ -21,6 +21,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 require_once(dirname(__FILE__).'/../../../calendar/lib.php');
 
 /**
@@ -84,7 +86,7 @@ function attendance_create_calendar_events($sessionsids) {
  * @param $timestart int start time of the event
  * @return bool result of updating
  */
-function attendance_update_calendar_event($caleventid, $timeduration, $timestart = null) {
+function attendance_update_calendar_event($caleventid, $timeduration, $timestart) {
     $caleventdata = new stdClass();
     $caleventdata->timeduration   = $timeduration;
     $caleventdata->timestart      = $timestart;
