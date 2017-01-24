@@ -8,24 +8,24 @@ If you find an issue with the format, please see the 'Reporting Issues' section 
 
 Required version of Moodle
 ==========================
-This version works with Moodle 3.1 version 2016052300.00 (Build: 20160523) and above within the 3.1 branch until the
+This version works with Moodle 3.2 version 2016120500.00 (Build: 20161205) and above within the 3.2 branch until the
 next release.
 
 Please ensure that your hardware and software complies with 'Requirements' in 'Installing Moodle' on
-'docs.moodle.org/31/en/Installing_Moodle'.
+'docs.moodle.org/32/en/Installing_Moodle'.
 
 Downloads and documentation
 ===========================
 The primary source for downloading this branch of the format is https://moodle.org/plugins/view.php?plugin=format_topcoll
-with 'Select Moodle version:' set at 'Moodle 3.1'.
+with 'Select Moodle version:' set at 'Moodle 3.2'.
 
-The secondary source is a tagged version with the v3.1 prefix on https://github.com/gjb2048/moodle-format_topcoll/tags
+The secondary source is a tagged version with the v3.2 prefix on https://github.com/gjb2048/moodle-format_topcoll/tags
 
 If you download from the development area - https://github.com/gjb2048/moodle-format_topcoll/ - consider that
 the code is unstable and not for use in production environments.  This is because I develop the next version in stages
 and use GitHub as a means of backup.  Therefore the code is not finished, subject to alteration and requires testing.
 
-Documented on http://docs.moodle.org/31/en/Collapsed_Topics_course_format
+Documented on http://docs.moodle.org/32/en/Collapsed_Topics_course_format
 
 Bespoke changes
 ===============
@@ -46,6 +46,12 @@ If you make improvements or bug fixes then I would appreciate if you would send 
 https://github.com/gjb2048/moodle-format_topcoll and doing a 'Pull Request' so that the rest of the
 Moodle community benefits.
 
+Support
+=======
+Collapsed Topics comes with NO support.  If you would like support from me (Gareth) then I'm happy to provide it
+for a fee (please see my contact details below).  Otherwise, the 'Courses and course formats' forum:
+moodle.org/mod/forum/view.php?id=47 is an excellent place to ask questions.
+
 Sponsorships
 ============
 Collapsed Topics is provided to you for free, and if you want to express your gratitude for using this format, please consider
@@ -63,9 +69,9 @@ Sponsors
 Sponsorships gratefully received with thanks from:
 Emerogork: Central Connecticut State University, USA
 
-New features for this Moodle 3.1 version
+New features for this Moodle 3.2 version
 ========================================
- 1. Features as version 3.0.2.2 in Moodle 3.0 and section name editing as implemented in core by MDL-51802.
+ 1. Features as version 3.1.1.3 in Moodle 3.1.
 
 Installation
 ============
