@@ -7,20 +7,7 @@ Moodle Atto plugin which lets the administrator provide custom CSS classes which
 Requirements
 ------------
 
-This plugin requires Moodle 3.1+
-
-
-Changes
--------
-
-* 2016-07-19 - Check compatibility for Moodle 3.1, no functionality change
-* 2016-05-26 - Adding behat feature testing block and inline styles, no functionality change - Credits to Janek Lasocki-Biczysko
-* 2016-03-03 - Bugfix: Adding 2 classes for inline styling failed on Moodle 3.0.x - Credits to clementpr and Davo Smith
-* 2016-02-10 - Change plugin version and release scheme to the scheme promoted by moodle.org, no functionality change
-* 2016-01-01 - Check compatibility for Moodle 3.0, no functionality change
-* 2015-08-18 - Check compatibility for Moodle 2.9, no functionality change
-* 2015-05-22 - Include bootstrap classes into configuration example - Credits to David Mudrák
-* 2015-05-21 - Initial version
+This plugin requires Moodle 3.2+
 
 
 Installation
@@ -46,7 +33,7 @@ The CSS class definitions which are applied to text within Atto can't be made wi
 
 atto_styles will have to know which CSS classes you want to provide in the Atto styles widget and how they should be called in the widget.
 
-Please visit Administration -> Site administration -> Plugins -> Text editors -> Atto HTML editor -> Styles settings.
+Please visit Site administration -> Plugins -> Text editors -> Atto HTML editor -> Styles settings.
 
 There, simply follow the instructions and configure the widget according to your needs.
 
@@ -54,7 +41,7 @@ There, simply follow the instructions and configure the widget according to your
 
 atto_styles has to be added to the Atto toolbar before it can be used by users.
 
-Please visit Administration -> Site administration -> Plugins -> Text editors -> Atto HTML editor -> Atto toolbar settings.
+Please visit Site administration -> Plugins -> Text editors -> Atto HTML editor -> Atto toolbar settings.
 
 There, please add the "styles" keyword to one of the lines in the "editor_atto | toolbar" setting according to your needs.
 
@@ -67,7 +54,9 @@ Multilangugae filter support
 Within the styles configuration, a title can support the Moodle multilang filter (if enabled), but additonal double-quotes will need to be escaped with a backslash.
 
 For example:
+```
 "title": <span class=\"multilang\" lang=\"en\">Blue box</span><span class=\"multilang\" lang=\"de\">Blaue Box</span>"
+```
 
 
 Themes
@@ -96,8 +85,16 @@ Right-to-left support
 ---------------------
 
 This plugin has not been tested with Moodle's support for right-to-left (RTL) languages.
-If you want to use this plugin with a RTL language and it doesn't work as-is, you are free to send me a pull request on
+If you want to use this plugin with a RTL language and it doesn't work as-is, you are free to send us a pull request on
 github with modifications.
+
+
+PHP7 Support
+------------
+
+Since Moodle 3.0, Moodle core basically supports PHP7.
+Please note that PHP7 support is on our roadmap for this plugin, but it has not yet been thoroughly tested for PHP7 support and we are still running it in production on PHP5.
+If you encounter any success or failure with this plugin and PHP7, please let us know.
 
 
 Copyright
@@ -109,7 +106,7 @@ www.synergy-learning.com
 
 on behalf of
 
-University of Ulm
+Ulm University
 kiz - Media Department
 Team Web & Teaching Support
 Alexander Bias
