@@ -24,6 +24,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 if (empty($CFG->enablerssfeeds)) {
     $options = array(0 => get_string('rssglobaldisabled', 'admin'));
     $str = get_string('configenablerssfeeds', 'pcast').'<br />'.get_string('configenablerssfeedsdisabled2', 'admin');
@@ -43,11 +45,6 @@ if (empty($CFG->enablerssfeeds)) {
 }
 $settings->add(new admin_setting_configselect('pcast_enablerssitunes', get_string('configenablerssitunes2', 'pcast'),
                    get_string('configenablerssitunes', 'pcast'), 0, $options));
-
-unset($options);
-$options = array(0 => get_string('no'), 1 => get_string('yes'));
-$settings->add(new admin_setting_configselect('pcast_usemediafilter', get_string('configusemediafilter2', 'pcast'),
-                   get_string('configusemediafilter', 'pcast'), 0, $options));
 
 unset($options);
 $options = array(0 => get_string('no'), 1 => get_string('yes'));
