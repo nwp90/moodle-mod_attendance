@@ -85,7 +85,7 @@ class single extends base {
         }
     }
 
-    protected function get_results($rids=false) {
+    protected function get_results($rids=false, $anonymous=false) {
         global $DB;
 
         $rsql = '';
@@ -125,8 +125,8 @@ class single extends base {
         return $rows;
     }
 
-    public function display_results($rids=false, $sort='') {
-        $this->display_response_choice_results($this->get_results($rids), $rids, $sort);
+    public function display_results($rids=false, $sort='', $anonymous=false) {
+        return $this->display_response_choice_results($this->get_results($rids, $anonymous), $rids, $sort);
     }
 
     /**
@@ -187,7 +187,7 @@ class single extends base {
         global $DB;
 
         $userfields = $this->user_fields_sql();
-        $extraselect = 'qrs.choice_id, qro.response, 0 AS rank';
+        $extraselect = 'qrs.choice_id, ' . $DB->sql_order_by_text('qro.response', 1000) . ', 0 AS rank';
         $alias = 'qrs';
 
         return "

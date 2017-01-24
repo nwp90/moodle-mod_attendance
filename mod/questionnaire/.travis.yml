@@ -1,18 +1,19 @@
 language: php
 
-sudo: false
+sudo: required
 
 cache:
   directories:
     - $HOME/.composer/cache
 
 php:
-# For 3.1 forward, only test PHP7.
+# Temporarily turing off 5.6 checking as it is causing a Behat error not reproducable locally.
+# - 5.6
  - 7.0
 
 env:
  global:
-  - MOODLE_BRANCH=MOODLE_31_STABLE
+  - MOODLE_BRANCH=master
 # Temporarily turn off checking for this file. It will be replaced.
   - IGNORE_PATHS=module.js,tests
  matrix:

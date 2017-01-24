@@ -1,6 +1,7 @@
 <?php
 
 $string['action'] = 'Action';
+
 $string['assigngroup'] = 'Assign non-editing teachers to groups';
 $string['assigngroup_confirm'] = 'This will assign non-editing teachers to groups, overriding possible previous assignment irreversibly. Are you sure?';
 $string['assigngroup_help'] = 'If set, enables a button which assigns non-editing teachers to groups (if course has non-editing teachers). Assigned non-editing teachers are not group members, but they show up in export file and in the main view (if set). Useful if course uses assistants to handle groups.';
@@ -15,6 +16,8 @@ $string['deleteemptygroups'] = 'Delete group when last student leaves';
 $string['deleteemptygroups_help'] = 'If set, automatically deletes group when last student leaves from it';
 $string['description'] = 'Group description';
 $string['edittooltip'] = 'Click to edit';
+$string['eventgroupteacheradded'] = 'Non-editing teacher added';
+$string['eventexportlinkcreated'] = 'Export link created';
 $string['export'] = 'Create a download link for group data file (CSV)';
 $string['export_download'] = 'Download CSV-file';
 $string['fromallgroups'] = 'All groups';
@@ -23,9 +26,9 @@ $string['groupid'] = 'Group ID';
 $string['groupselect:addinstance'] = 'Add a new group self-selection';
 $string['groupselect:assign'] = 'Allow to assign teachers to groups';
 $string['groupselect:create'] = 'Allow creating of group';
+$string['groupselect:export'] = 'Allow export of group members';
 $string['groupselect:select'] = 'Allow becoming of group member';
 $string['groupselect:unselect'] = 'Allow leaving of group';
-$string['groupselect:export'] = 'Allow export of group user data (id, username, idnumber, firstname, lastname, email, group id)';
 $string['hidefullgroups'] = 'Hide full groups from the main view';
 $string['hidefullgroups_help'] = 'If set, hides all groups, which have reached max member count, from the main list view (excluding user\'s own group). May be useful if the activity has lots of groups.';
 $string['incorrectpassword'] = 'Incorrect password';
@@ -43,11 +46,13 @@ $string['minmembers_help'] = 'Minimum number of members per group. Adds notifica
 $string['minmembers_icon'] = 'Group has less members than required';
 $string['minmembers_notification'] = 'Your group has less members than required! Minimum is {$a}.';
 $string['modulename'] = 'Group self-selection';
-$string['modulename_help'] = '<p>Lets students create and select groups. Features: </p><ul><li>Students can create groups, give them a description and set them password protected, if wanted</li><li>Students can select and join groups</li><li>Non-editing teachers may be assigned to groups</li><li>Teacher can export course group list as a csv-file</li><li>Full compatibility with basic Moodle groups: groups may be created by other means if needed, supports group assignment submissions etc.</li></ul><p>Currently in beta stage, any feedback would be appreciated! (pirkka.pyykkonen@tut.fi)</p>';
+$string['modulename_help'] = '<p>Lets students create and select groups. Features: </p><ul><li>Students can create groups, give them a description and set them password protected, if wanted</li><li>Students can select and join groups</li><li>Non-editing teachers may be assigned to groups</li><li>Teacher can export course group list as a csv-file</li><li>Full compatibility with basic Moodle groups: groups may be created by other means if needed, supports group assignment submissions etc.</li></ul>';
 $string['modulenameplural'] = 'Group self-selections';
 $string['nogroups'] = 'No groups available to select from, sorry.';
 $string['notavailableanymore'] = 'Group selection is not available anymore, sorry (since {$a}).';
 $string['notavailableyet'] = 'Group selection will be available on {$a}.';
+$string['notifyexpiredselection'] = 'Show message, if the open until date ist reached';
+$string['notifyexpiredselection_help'] = 'If set, a message will appear if the open until date is reached';
 $string['ok'] = 'OK';
 $string['password'] = 'Requires password';
 $string['pluginadministration'] = 'Module administration';
@@ -60,9 +65,14 @@ $string['studentcancreate'] = 'Students can create groups';
 $string['studentcancreate_help'] = 'If set, students without group (in selected grouping) can create groups';
 $string['studentcansetdesc'] = 'Students can set and edit group description';
 $string['studentcansetdesc_help'] = 'If set, student can set a a group description when creating one and group members can edit it';
+$string['studentcansetenrolmentkey'] = 'Students can set passwords for joining groups';
+$string['studentcansetenrolmentkey_help'] = 'If set, students can set an enrolment key for joining groups';
+$string['studentcansetgroupname'] = 'Students can set the name of new groups';
+$string['studentcansetgroupname_help'] = 'If set, students can set the group names';
 $string['unselectconfirm'] = 'Do you really want to leave the group <em>{$a}</em>?';
 $string['unselect'] = 'Leave group {$a}';
 $string['select'] = 'Become member of {$a}';
 $string['targetgrouping'] = 'Select groups from grouping';
 $string['timeavailable'] = 'Open from';
 $string['timedue'] = 'Open until';
+

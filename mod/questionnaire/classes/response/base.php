@@ -62,20 +62,23 @@ abstract class base {
      * Provide the result information for the specified result records.
      *
      * @param int|array $rids - A single response id, or array.
+     * @param boolean $anonymous - Whether or not responses are anonymous.
      * @return array - Array of data records.
      */
-    abstract protected function get_results($rids=false);
+    abstract protected function get_results($rids=false, $anonymous=false);
 
     /**
      * Provide the result information for the specified result records.
      *
      * @param int|array $rids - A single response id, or array.
      * @param string $sort - Optional display sort.
+     * @param boolean $anonymous - Whether or not responses are anonymous.
      * @return string - Display output.
      */
-    abstract public function display_results($rids=false, $sort='');
+    abstract public function display_results($rids=false, $sort='', $anonymous=false);
 
     protected function display_response_choice_results($rows, $rids, $sort) {
+        $output = '';
         if (is_array($rids)) {
             $prtotal = 1;
         } else if (is_int($rids)) {
@@ -98,11 +101,12 @@ abstract class base {
                     $this->counts[$textidx] = !empty($this->counts[$textidx]) ? ($this->counts[$textidx] + 1) : 1;
                 }
             }
-            \mod_questionnaire\response\display_support::mkrespercent($this->counts, count($rids),
+            $output .= \mod_questionnaire\response\display_support::mkrespercent($this->counts, count($rids),
                 $this->question->precise, $prtotal, $sort);
         } else {
-            echo '<p class="generaltable">&nbsp;'.get_string('noresponsedata', 'questionnaire').'</p>';
+            $output .= '<p class="generaltable">&nbsp;'.get_string('noresponsedata', 'questionnaire').'</p>';
         }
+        return $output;
     }
 
     /**
@@ -178,7 +182,13 @@ abstract class base {
         foreach ($extraselectfields as $field => $include) {
             $extraselect .= $extraselect === '' ? '' : ', ';
             if ($include) {
-                $extraselect .= $alias . '.' . $field;
+                // The 'response' field can be varchar or text, which doesn't work for all DB's (Oracle).
+                // So convert the text if needed.
+                if ($field === 'response') {
+                    $extraselect .= $DB->sql_order_by_text($alias . '.' . $field, 1000).' AS '.$field;
+                } else {
+                    $extraselect .= $alias . '.' . $field;
+                }
             } else {
                 $default = $field === 'response' ? 'null' : 0;
                 $extraselect .= $default.' AS ' . $field;

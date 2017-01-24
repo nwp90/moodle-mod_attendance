@@ -43,10 +43,9 @@ class qtype_gapfill_renderer extends qtype_with_combined_feedback_renderer {
         $this->allanswers = unserialize($seranswers);
         $output = '';
         if ($question->answerdisplay == "dragdrop") {
-            $ddclass = " draggable answers ";
             foreach ($this->allanswers as $potentialanswer) {
                 if (!preg_match($question->blankregex, trim($potentialanswer))) {
-                    $output .= '<span class= "' . $ddclass . '">' . $potentialanswer . "</span>&nbsp;";
+                    $output .= '<span class= " draggable answers ">' . $potentialanswer . "</span>&nbsp;";
                 }
             }
             $output .= "<br/><br/>";
@@ -64,8 +63,8 @@ class qtype_gapfill_renderer extends qtype_with_combined_feedback_renderer {
         $output .= "<br/>";
 
         if ($qa->get_state() == question_state::$invalid) {
-            $output .= html_writer::nonempty_tag('div', $question->get_validation_error(array('answer' =>
-                                $output)), array('class' => 'validationerror'));
+            $output .= html_writer::nonempty_tag('div', $question->get_validation_error(array('answer' => $output)),
+                    array('class' => 'validationerror'));
         }
         return $output;
     }
@@ -149,7 +148,7 @@ class qtype_gapfill_renderer extends qtype_with_combined_feedback_renderer {
 
     public function get_aftergap_text(question_attempt $qa, $fraction, $rightanswer = "") {
         $aftergaptext = "";
-        if (($fraction == 0)&& ($rightanswer <> "")) {
+        if (($fraction == 0)&& ($rightanswer <> "")&& ($rightanswer <> ".+")) {
             /* replace | operator with the word or */
             $rightanswerdisplay = preg_replace("/\|/", get_string("or", "qtype_gapfill"), $rightanswer);
             /* replace !! with the 'blank' */
