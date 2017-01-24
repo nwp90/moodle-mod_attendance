@@ -16,14 +16,16 @@
 
 /**
 /**
- * The language strings for component 'qtype_gapfill', language 'en' 
- *    
+ * The language strings for component 'qtype_gapfill', language 'en'
+ *
  * @copyright &copy; 2012 Marcus Green
  * @author marcusavgreen@gmail.com
  * @license http://www.gnu.org/copyleft/gpl.html GNU Public License
  * @package qtype
  * @subpackage gapfill
  */
+defined('MOODLE_INTERNAL') || die();
+
 $string['casesensitive'] = 'Case Sensitive';
 $string['casesensitive_help'] = 'When this is checked, if the correct answer is CAT, cat will be flagged as a wrong answer';
 $string['casesensitive_text'] = 'An answer of CAT will will be treated as different to cat';
@@ -74,6 +76,5 @@ $string['cannotimport'] = 'cannotimport';
 $string['course'] = 'Import help';
 $string['courseshortname'] = 'Course Shortname';
 $string['visitquestions'] = 'Click <a href={$a}>here</a> to visit the questions';
-$string['courseshortname_help'] = 'Enter the shortname of the course to import question to. This does a standard xml question import from the '
-        . 'file example_questions.xml in the gapfill question type folder.';
+$string['courseshortname_help'] = 'Enter the shortname of the course to import question to. This does a standard xml question import from the file example_questions.xml in the gapfill question type folder.';
 $string['importexamples'] = "Import Examples";
