@@ -28,10 +28,9 @@
  * @copyright 2010 Stephen Bourget
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/completionlib.php');
-
-defined('MOODLE_INTERNAL') || die();
 
 define("PCAST_SHOW_ALL_CATEGORIES", 0);
 define("PCAST_SHOW_NOT_CATEGORISED", -1);
@@ -840,19 +839,19 @@ function pcast_get_itunes_categories($item, $pcast) {
 
 
  /**
-+ * File browsing support for pcast module.
-+ *
-+ * @param file_browser $browser
-+ * @param array $areas
-+ * @param stdClass $course
-+ * @param cm_info $cm
-+ * @param context $context
-+ * @param string $filearea
-+ * @param int $itemid
-+ * @param string $filepath
-+ * @param string $filename
-+ * @return file_info_stored file_info_stored instance or null if not found
-+ */
+  * File browsing support for pcast module.
+  *
+  * @param file_browser $browser
+  * @param array $areas
+  * @param stdClass $course
+  * @param cm_info $cm
+  * @param context $context
+  * @param string $filearea
+  * @param int $itemid
+  * @param string $filepath
+  * @param string $filename
+  * @return file_info_stored file_info_stored instance or null if not found
+  */
 function mod_pcast_get_file_info($browser, $areas, $course, $cm, $context, $filearea, $itemid, $filepath, $filename) {
     global $CFG, $DB;
 
