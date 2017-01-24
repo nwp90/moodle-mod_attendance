@@ -112,14 +112,19 @@ M.format_grid.init = function(Y, the_editing_on, the_section_redirect, the_num_s
             node.setAttribute("href", "#");
         });
 
-        M.format_grid.shadebox.initialize_shadebox();
-        M.format_grid.shadebox.update_shadebox();
-        window.onresize = function() {
+        M.format_grid.shadebox_overlay = document.getElementById('gridshadebox_overlay');
+        if (M.format_grid.shadebox_overlay) {
+            M.format_grid.shadebox.initialize_shadebox();
             M.format_grid.shadebox.update_shadebox();
-        };
+            window.onresize = function() {
+                M.format_grid.shadebox.update_shadebox();
+            };
+        }
     }
     this.shadebox_content = Y.one("#gridshadebox_content");
-    this.shadebox_content.removeClass('hide_content'); // Content 'flash' prevention.
+    if (this.shadebox_content) {
+        this.shadebox_content.removeClass('hide_content'); // Content 'flash' prevention.
+    }
     // Show the shadebox of a named anchor in the URL where it is expected to be of the form:
     // #section-X.
     if ((window.location.hash) && (!the_editing_on)) {
@@ -172,7 +177,6 @@ M.format_grid.icon_toggle = function(e) {
     e.preventDefault();
     this.grid_toggle();
 };
-
 
 M.format_grid.grid_toggle = function() {
     if (this.selected_section_no != -1) { // Then a valid shown section has been selected.
@@ -347,15 +351,36 @@ M.format_grid.shadebox.initialize_shadebox = function() {
 
     this.hide_shadebox();
 
-    var top = 50;
-    var mainregion = M.format_grid.ourYUI.one('#region-main');
-    if (mainregion) {
-        var mainregionDOM = mainregion.getDOMNode();
-        top = mainregionDOM.offsetTop + mainregionDOM.clientTop + 15;
-    }
-
     var gridshadebox_content = M.format_grid.ourYUI.one('#gridshadebox_content');
     if (gridshadebox_content.hasClass('absolute')) {
+        var top = 50;
+        var pageelement = M.format_grid.ourYUI.one('#page-header'); // Boost theme.
+        if (!pageelement) {
+            pageelement = M.format_grid.ourYUI.one('#region-main');
+        }
+        if (pageelement) {
+            var pageelementDOM = pageelement.getDOMNode();
+            top = pageelementDOM.offsetTop + pageelementDOM.clientTop;
+            if (top === 0) {
+                // Use the parent.  This can happen with the Boost theme where region-main is floated.
+                top = pageelementDOM.offsetParent.offsetTop + pageelementDOM.offsetParent.clientTop;
+            }
+            top = top + 15;
+        }
+
+        var navdrawer = M.format_grid.ourYUI.one('#nav-drawer'); // Boost theme.
+        if (navdrawer) {
+            var navdrawerDOM = navdrawer.getDOMNode();
+            var navdrawerStyle = window.getComputedStyle(navdrawerDOM);
+            var zindex = parseInt(navdrawerStyle.getPropertyValue("z-index"));
+            if (zindex) {
+                zindex = zindex + 1;
+                this.shadebox_overlay.style.zIndex = '' + zindex;
+                zindex = zindex + 1;
+                gridshadebox_content.setStyle('zIndex', '' + zindex);
+            }
+        }
+
         gridshadebox_content.setStyle('top', '' + top + 'px');
     }
 };
