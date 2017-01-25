@@ -2,7 +2,7 @@
 
 function xmldb_local_presentation_install() {
     global $DB, $CFG;
-    $systemcontext = context_system::instance();
+    $systemcontext = get_system_context();
 
     // Admin has just installed our module.
     // To be at all useful, we need webservices, and rest in particular.

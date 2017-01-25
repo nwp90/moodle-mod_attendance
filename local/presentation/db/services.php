@@ -26,6 +26,83 @@
 defined('MOODLE_INTERNAL') or die();
 
 $functions = array(
+    'local_presentation_get_tagged_resources_by_course' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_tagged_resources_by_course',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of resources tagged with at least one tag, from a specified course.',
+        'type' => 'read',
+    ),
+    'local_presentation_get_tagged_lessons_by_course' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_tagged_lessons_by_course',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of lessons tagged with at least one tag, from a specified course.',
+        'type' => 'read',
+    ),
+    'local_presentation_get_tagged_quizzes_by_course' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_tagged_quizzes_by_course',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of quizzes tagged with at least one tag, from a specified course.',
+        'type' => 'read',
+    ),
+    'local_presentation_get_tagged_urls_by_course' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_tagged_urls_by_course',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of urls tagged with at least one tag, from a specified course.',
+        'type' => 'read',
+    ),
+    'local_presentation_get_tagged_workshops_by_course' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_tagged_workshops_by_course',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of workshops tagged with at least one tag, from a specified course.',
+        'type' => 'read',
+    ),
+    'local_presentation_get_tagged_assignments_by_course' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_tagged_assignments_by_course',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of new-style assignments (mod_assign) tagged with at least one tag, from a specified course.',
+        'type' => 'read',
+    ),
+    'local_presentation_get_tagged_pages_by_course' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_tagged_pages_by_course',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of pages tagged with at least one tag, from a specified course.',
+        'type' => 'read',
+    ),
+    'local_presentation_get_tagged_books_by_course' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_tagged_books_by_course',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of books tagged with at least one tag, from a specified course.',
+        'type' => 'read',
+    ),
+    'local_presentation_get_tagged_scorms_by_course' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_tagged_scorms_by_course',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of scorms tagged with at least one tag, from a specified course.',
+        'type' => 'read',
+    ),
+    'local_presentation_get_tagged_glossaries_by_course' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_tagged_glossaries_by_course',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of glossaries tagged with at least one tag, from a specified course.',
+        'type' => 'read',
+    ),
+    'local_presentation_get_tagged_ltis_by_course' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_tagged_ltis_by_course',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of ltis tagged with at least one tag, from a specified course.',
+        'type' => 'read',
+    ),
     'local_presentation_get_resources_by_tag' => array(
         'classname' => 'local_presentation_external',
         'methodname' => 'get_resources_by_tag',
@@ -107,6 +184,17 @@ $functions = array(
 $services = array(
     'presentation' => array( //the name of the web service
         'functions' => array (
+            'local_presentation_get_tagged_resources_by_course',
+            'local_presentation_get_tagged_lessons_by_course',
+            'local_presentation_get_tagged_quizzes_by_course',
+            'local_presentation_get_tagged_urls_by_course',
+            'local_presentation_get_tagged_workshops_by_course',
+            'local_presentation_get_tagged_assignments_by_course',
+            'local_presentation_get_tagged_pages_by_course',
+            'local_presentation_get_tagged_books_by_course',
+            'local_presentation_get_tagged_scorms_by_course',
+            'local_presentation_get_tagged_glossaries_by_course',
+            'local_presentation_get_tagged_ltis_by_course',
             'local_presentation_get_resources_by_tag',
             'local_presentation_get_lessons_by_tag',
             'local_presentation_get_quizzes_by_tag',
