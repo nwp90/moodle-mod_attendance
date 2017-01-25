@@ -1,3 +1,10 @@
+moodle-site-otagounifom (3.2.1.2017010900+0facmed3-1) jessie; urgency=medium
+
+  * Add 'block_oms_grade' plugin, local workaround to add gradebook
+    link to course.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 25 Jan 2017 14:54:31 +1300
+
 moodle-site-otagounifom (3.2.1.2017010900+0facmed2-1) jessie; urgency=medium
 
   * Plugin updates:
