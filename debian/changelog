@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.2.1.2017010900+0facmed5-1) jessie; urgency=medium
+
+  * Add block_oms_grade plugin properly :-/
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 26 Jan 2017 09:45:40 +1300
+
 moodle-site-otagounifom (3.2.1.2017010900+0facmed4-1) jessie; urgency=medium
 
   * Update format_board to be higher than currently-in-use version on
