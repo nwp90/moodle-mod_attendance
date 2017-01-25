@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.2.1.2017010900+0facmed6-1) jessie; urgency=medium
+
+  * Upgrade local_presentation to version currently in use on 3.0
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 26 Jan 2017 10:32:29 +1300
+
 moodle-site-otagounifom (3.2.1.2017010900+0facmed5-1) jessie; urgency=medium
 
   * Add block_oms_grade plugin properly :-/
