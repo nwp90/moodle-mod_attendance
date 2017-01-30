@@ -1,3 +1,10 @@
+moodle-site-otagounifom (3.2.1.2017010900+0facmed7-1) jessie; urgency=medium
+
+  * Get rid of realbootstrapbase & rerun "grunt js --force" to rebuild.
+    Hoping it will fix js problems... :-/
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 31 Jan 2017 09:12:41 +1300
+
 moodle-site-otagounifom (3.2.1.2017010900+0facmed6-1) jessie; urgency=medium
 
   * Upgrade local_presentation to version currently in use on 3.0
