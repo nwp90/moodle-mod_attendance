@@ -1,3 +1,10 @@
+moodle-site-otagounifom (3.2.1.2017020200+0facmed1-1) jessie; urgency=medium
+
+  * Update to 3.2.1+ weekly for 20170202
+  * Fix href="#" bug in bootstrap.js in bootstrapbase theme
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 08 Feb 2017 10:56:34 +1300
+
 moodle-site-otagounifom (3.2.1.2017010900+0facmed7-1) jessie; urgency=medium
 
   * Get rid of realbootstrapbase & rerun "grunt js --force" to rebuild.
