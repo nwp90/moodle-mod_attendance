@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.2.1.2017021600+0facmed2-1) jessie; urgency=medium
+
+  * Remove usertours (admin/tool and local) - it's broken.
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 20 Feb 2017 10:33:34 +1300
+
 moodle-site-otagounifom (3.2.1.2017021600+0facmed1-1) jessie; urgency=medium
 
   * Add restjson webservice plugin
