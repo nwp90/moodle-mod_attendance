@@ -43,7 +43,7 @@ function attendance_supports($feature) {
         case FEATURE_GROUPMEMBERSONLY:
             return true;
         case FEATURE_MOD_INTRO:
-            return false;
+            return true;
         case FEATURE_BACKUP_MOODLE2:
             return true;
         // Artem Andreev: AFAIK it's not tested.
@@ -116,26 +116,6 @@ function attendance_delete_instance($id) {
     $DB->delete_records('attendance', array('id' => $id));
 
     attendance_grade_item_delete($attendance);
-
-    return true;
-}
-
-function attendance_delete_course($course, $feedback=true) {
-    global $DB;
-
-    $attids = array_keys($DB->get_records('attendance', array('course' => $course->id), '', 'id'));
-    $sessids = array_keys($DB->get_records_list('attendance_sessions', 'attendanceid', $attids, '', 'id'));
-    if (attendance_existing_calendar_events_ids($sessids)) {
-        attendance_delete_calendar_events($sessids);
-    }
-    if ($sessids) {
-        $DB->delete_records_list('attendance_log', 'sessionid', $sessids);
-    }
-    if ($attids) {
-        $DB->delete_records_list('attendance_statuses', 'attendanceid', $attids);
-        $DB->delete_records_list('attendance_sessions', 'attendanceid', $attids);
-    }
-    $DB->delete_records('attendance', array('course' => $course->id));
 
     return true;
 }
@@ -295,7 +275,7 @@ function attendance_grade_item_update($attendance, $grades=null) {
         $params = array('itemname' => $attendance->name, 'idnumber' => $attendance->cmidnumber);
     } else {
         // MDL-14303.
-        $params = array('itemname' => $attendance->name/*, 'idnumber'=>$attendance->id*/);
+        $params = array('itemname' => $attendance->name);
     }
 
     if ($attendance->grade > 0) {
@@ -404,4 +384,28 @@ function attendance_pluginfile($course, $cm, $context, $filearea, $args, $forced
         return false;
     }
     send_stored_file($file, 0, 0, true);
+}
+
+/**
+ * Print tabs on attendance settings page.
+ *
+ * @param string $selected - current selected tab.
+ *
+ */
+function attendance_print_settings_tabs($selected = 'settings') {
+    global $CFG;
+    // Print tabs for different settings pages.
+    $tabs = array();
+    $tabs[] = new tabobject('settings', $CFG->wwwroot.'/admin/settings.php?section=modsettingattendance',
+        get_string('settings', 'attendance'), get_string('settings'), false);
+
+    $tabs[] = new tabobject('defaultstatus', $CFG->wwwroot.'/mod/attendance/defaultstatus.php',
+        get_string('defaultstatus', 'attendance'), get_string('defaultstatus', 'attendance'), false);
+
+    ob_start();
+    print_tabs(array($tabs), $selected);
+    $tabmenu = ob_get_contents();
+    ob_end_clean();
+
+    return $tabmenu;
 }

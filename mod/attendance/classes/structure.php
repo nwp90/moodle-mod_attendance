@@ -56,10 +56,22 @@ class mod_attendance_structure {
     /** @var int last time attendance was modified - used for global search */
     public $timemodified;
 
+    /** @var string required field for activity modules and searching */
+    public $intro;
+
+    /** @var int format of the intro (see above) */
+    public $introformat;
+
     /** current page parameters */
     public $pageparams;
 
     public $subnet;
+
+    /** Define if session details should be shown in reports */
+    public $showsessiondetails;
+
+    /** Position for the session detail columns related to summary columns.*/
+    public $sessiondetailspos;
 
     private $groupmode;
 
@@ -81,6 +93,8 @@ class mod_attendance_structure {
      * @param stdClass $context  The context of the workshop instance
      */
     public function __construct(stdclass $dbrecord, stdclass $cm, stdclass $course, stdclass $context=null, $pageparams=null) {
+        global $DB;
+
         foreach ($dbrecord as $field => $value) {
             if (property_exists('mod_attendance_structure', $field)) {
                 $this->{$field} = $value;
@@ -97,6 +111,13 @@ class mod_attendance_structure {
         }
 
         $this->pageparams = $pageparams;
+
+        if (isset($pageparams->showsessiondetails) && $pageparams->showsessiondetails != $this->showsessiondetails) {
+            $DB->set_field('attendance', 'showsessiondetails', $pageparams->showsessiondetails, array('id' => $this->id));
+        }
+        if (isset($pageparams->sessiondetailspos) && $pageparams->sessiondetailspos != $this->sessiondetailspos) {
+            $DB->set_field('attendance', 'sessiondetailspos', $pageparams->sessiondetailspos, array('id' => $this->id));
+        }
     }
 
     public function get_group_mode() {
@@ -477,24 +498,25 @@ class mod_attendance_structure {
     public function take_from_form_data($formdata) {
         global $DB, $USER;
         // TODO: WARNING - $formdata is unclean - comes from direct $_POST - ideally needs a rewrite but we do some cleaning below.
+        // This whole function could do with a nice clean up.
         $statuses = implode(',', array_keys( (array)$this->get_statuses() ));
         $now = time();
         $sesslog = array();
         $formdata = (array)$formdata;
         foreach ($formdata as $key => $value) {
-            if (substr($key, 0, 4) == 'user') {
-                $sid = substr($key, 4);
-                if (!(is_numeric($sid) && is_numeric($value))) { // Sanity check on $sid and $value.
+            // Look at Remarks field because the user options may not be passed if empty.
+            if (substr($key, 0, 7) == 'remarks') {
+                $sid = substr($key, 7);
+                if (!(is_numeric($sid))) { // Sanity check on $sid.
                     print_error('nonnumericid', 'attendance');
                 }
                 $sesslog[$sid] = new stdClass();
                 $sesslog[$sid]->studentid = $sid; // We check is_numeric on this above.
-                $sesslog[$sid]->statusid = $value; // We check is_numeric on this above.
-                $sesslog[$sid]->statusset = $statuses;
-                $sesslog[$sid]->remarks = '';
-                if (array_key_exists('remarks'.$sid, $formdata)) {
-                    $sesslog[$sid]->remarks = clean_param($formdata['remarks' . $sid], PARAM_TEXT);
+                if (array_key_exists('user'.$sid, $formdata) && is_numeric($formdata['user' . $sid])) {
+                    $sesslog[$sid]->statusid = $formdata['user' . $sid];
                 }
+                $sesslog[$sid]->statusset = $statuses;
+                $sesslog[$sid]->remarks = $value;
                 $sesslog[$sid]->sessionid = $this->pageparams->sessionid;
                 $sesslog[$sid]->timetaken = $now;
                 $sesslog[$sid]->takenby = $USER->id;
@@ -503,7 +525,8 @@ class mod_attendance_structure {
 
         $dbsesslog = $this->get_session_log($this->pageparams->sessionid);
         foreach ($sesslog as $log) {
-            if ($log->statusid) {
+            // Don't save a record if no statusid or remark.
+            if (!empty($log->statusid) || !empty($log->remarks)) {
                 if (array_key_exists($log->studentid, $dbsesslog)) {
                     $log->id = $dbsesslog[$log->studentid]->id;
                     $DB->update_record('attendance_log', $log);
@@ -563,8 +586,12 @@ class mod_attendance_structure {
     public function get_users($groupid = 0, $page = 1) {
         global $DB, $CFG;
 
-        // Fields we need from the user table.
-        $userfields = user_picture::fields('u', array('username' , 'idnumber' , 'institution' , 'department'));
+        $fields = array('username' , 'idnumber' , 'institution' , 'department');
+        // Get user identity fields if required - doesn't return original $fields array.
+        $extrafields = get_extra_user_fields($this->context, $fields);
+        $fields = array_merge($fields, $extrafields);
+
+        $userfields = user_picture::fields('u', $fields);
 
         if (empty($this->pageparams->sort)) {
             $this->pageparams->sort = ATT_SORT_DEFAULT;
@@ -651,6 +678,8 @@ class mod_attendance_structure {
 
     // Convert a tempuser record into a user object.
     protected static function tempuser_to_user($tempuser) {
+        global $CFG;
+
         $ret = (object)array(
             'id' => $tempuser->studentid,
             'firstname' => $tempuser->fullname,
@@ -662,11 +691,17 @@ class mod_attendance_structure {
             'picture' => 0,
             'type' => 'temporary',
         );
-        foreach (get_all_user_name_fields() as $namefield) {
+        $allfields = get_all_user_name_fields();
+        if (!empty($CFG->showuseridentity)) {
+            $allfields = array_merge($allfields, explode(',', $CFG->showuseridentity));
+        }
+
+        foreach ($allfields as $namefield) {
             if (!isset($ret->$namefield)) {
                 $ret->$namefield = '';
             }
         }
+
         return $ret;
     }
 
@@ -937,107 +972,6 @@ class mod_attendance_structure {
             $event->trigger();
         }
         $sessions->close();
-    }
-
-    /**
-     * Remove a status variable from an attendance instance
-     *
-     * @param stdClass $status
-     */
-    public function remove_status($status) {
-        global $DB;
-
-        $DB->set_field('attendance_statuses', 'deleted', 1, array('id' => $status->id));
-        $event = \mod_attendance\event\status_removed::create(array(
-            'objectid' => $status->id,
-            'context' => $this->context,
-            'other' => array(
-                'acronym' => $status->acronym,
-                'description' => $status->description
-            )));
-        $event->add_record_snapshot('course_modules', $this->cm);
-        $event->add_record_snapshot('attendance_statuses', $status);
-        $event->trigger();
-    }
-
-    /**
-     * Add an attendance status variable
-     *
-     * @param string $acronym
-     * @param string $description
-     * @param int $grade
-     */
-    public function add_status($acronym, $description, $grade) {
-        global $DB;
-
-        if ($acronym && $description) {
-            $rec = new stdClass();
-            $rec->courseid = $this->course->id;
-            $rec->attendanceid = $this->id;
-            $rec->acronym = $acronym;
-            $rec->description = $description;
-            $rec->grade = $grade;
-            $rec->setnumber = $this->pageparams->statusset; // Save which set it is part of.
-            $rec->deleted = 0;
-            $rec->visible = 1;
-            $id = $DB->insert_record('attendance_statuses', $rec);
-            $rec->id = $id;
-
-            $event = \mod_attendance\event\status_added::create(array(
-                'objectid' => $this->id,
-                'context' => $this->context,
-                'other' => array('acronym' => $acronym, 'description' => $description, 'grade' => $grade)));
-            $event->add_record_snapshot('course_modules', $this->cm);
-            $event->add_record_snapshot('attendance_statuses', $rec);
-            $event->trigger();
-        } else {
-            print_error('cantaddstatus', 'attendance', $this->url_preferences());
-        }
-    }
-
-    /**
-     * Update status variable for a particular Attendance module instance
-     *
-     * @param stdClass $status
-     * @param string $acronym
-     * @param string $description
-     * @param int $grade
-     * @param bool $visible
-     */
-    public function update_status($status, $acronym, $description, $grade, $visible) {
-        global $DB;
-
-        if (isset($visible)) {
-            $status->visible = $visible;
-            $updated[] = $visible ? get_string('show') : get_string('hide');
-        } else if (empty($acronym) || empty($description)) {
-            return array('acronym' => $acronym, 'description' => $description);
-        }
-
-        $updated = array();
-
-        if ($acronym) {
-            $status->acronym = $acronym;
-            $updated[] = $acronym;
-        }
-        if ($description) {
-            $status->description = $description;
-            $updated[] = $description;
-        }
-        if (isset($grade)) {
-            $status->grade = $grade;
-            $updated[] = $grade;
-        }
-        $DB->update_record('attendance_statuses', $status);
-
-        $event = \mod_attendance\event\status_updated::create(array(
-            'objectid' => $this->id,
-            'context' => $this->context,
-            'other' => array('acronym' => $acronym, 'description' => $description, 'grade' => $grade,
-                'updated' => implode(' ', $updated))));
-        $event->add_record_snapshot('course_modules', $this->cm);
-        $event->add_record_snapshot('attendance_statuses', $status);
-        $event->trigger();
     }
 
     /**
