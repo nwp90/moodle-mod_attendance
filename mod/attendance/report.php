@@ -46,6 +46,9 @@ $context = context_module::instance($cm->id);
 require_capability('mod/attendance:viewreports', $context);
 
 $pageparams->init($cm);
+$pageparams->showsessiondetails = optional_param('showsessiondetails', $attrecord->showsessiondetails, PARAM_INT);
+$pageparams->sessiondetailspos = optional_param('sessiondetailspos', $attrecord->sessiondetailspos, PARAM_TEXT);
+
 $att = new mod_attendance_structure($attrecord, $cm, $course, $context, $pageparams);
 
 $PAGE->set_url($att->url_report());
@@ -70,13 +73,14 @@ $event->add_record_snapshot('course_modules', $cm);
 $event->add_record_snapshot('attendance', $attrecord);
 $event->trigger();
 
-// Output starts here.
+$title = get_string('attendanceforthecourse', 'attendance').' :: ' .format_string($course->fullname);
+$header = new mod_attendance_header($att, $title);
 
+// Output starts here.
 echo $output->header();
-echo $output->heading(get_string('attendanceforthecourse', 'attendance').' :: ' .format_string($course->fullname));
+echo $output->render($header);
 echo $output->render($tabs);
 echo $output->render($filtercontrols);
 echo $output->render($reportdata);
-
 echo $output->footer();
 
