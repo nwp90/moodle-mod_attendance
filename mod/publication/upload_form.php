@@ -15,16 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * upload_form.php
+ * File containing upload form class.
  *
  * @package       mod_publication
- * @author        Andreas Hruska (andreas.hruska@tuwien.ac.at)
- * @author        Katarzyna Potocka (katarzyna.potocka@tuwien.ac.at)
- * @author        Philipp Hager (office@phager.at)
+ * @author        Philipp Hager
  * @author        Andreas Windbichler
  * @copyright     2014 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/formslib.php'); // Putting this is as a safety as i got a class not found error.
 
@@ -32,9 +31,7 @@ require_once($CFG->libdir.'/formslib.php'); // Putting this is as a safety as i 
  * Form to upload files for mod_publication
  *
  * @package       mod_publication
- * @author        Andreas Hruska (andreas.hruska@tuwien.ac.at)
- * @author        Katarzyna Potocka (katarzyna.potocka@tuwien.ac.at)
- * @author        Philipp Hager (office@phager.at)
+ * @author        Philipp Hager
  * @author        Andreas Windbichler
  * @copyright     2014 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -49,10 +46,7 @@ class mod_publication_upload_form extends moodleform {
 
         $currententry       = $this->_customdata['current'];
         $publication        = $this->_customdata['publication'];
-        $cm                = $this->_customdata['cm'];
         $attachmentoptions = $this->_customdata['attachmentoptions'];
-
-        $context  = context_module::instance($cm->id);
 
         if ($publication->get_instance()->obtainteacherapproval) {
             $text = get_string('published_aftercheck', 'publication');

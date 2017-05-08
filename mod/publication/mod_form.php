@@ -15,12 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * mod_form.php
+ * Instance settings form.
  *
  * @package       mod_publication
- * @author        Andreas Hruska (andreas.hruska@tuwien.ac.at)
- * @author        Katarzyna Potocka (katarzyna.potocka@tuwien.ac.at)
- * @author        Philipp Hager (office@phager.at)
+ * @author        Philipp Hager
  * @author        Andreas Windbichler
  * @copyright     2014 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -32,12 +30,10 @@ require_once($CFG->dirroot.'/course/moodleform_mod.php');
 require_once($CFG->dirroot.'/mod/publication/locallib.php');
 
 /**
- * Form for creating and editing rssplayer instances
+ * Form for creating and editing mod_publication instances
  *
  * @package       mod_publication
- * @author        Andreas Hruska (andreas.hruska@tuwien.ac.at)
- * @author        Katarzyna Potocka (katarzyna.potocka@tuwien.ac.at)
- * @author        Philipp Hager (office@phager.at)
+ * @author        Philipp Hager
  * @author        Andreas Windbichler
  * @copyright     2014 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -49,8 +45,6 @@ class mod_publication_mod_form extends moodleform_mod{
      */
     public function definition() {
         global $DB, $CFG, $COURSE, $PAGE;
-
-        $PAGE->requires->js_call_amd('mod_publication/modform', 'initializer', array());
 
         $mform = $this->_form;
         $mform->addElement('header', 'general', get_string('general', 'form'));
@@ -99,24 +93,15 @@ class mod_publication_mod_form extends moodleform_mod{
         $assigninstances = $DB->get_records('assign', array('course' => $COURSE->id));
         $select = $mform->createElement('select', 'importfrom', get_string('assignment', 'publication'), $choices, $disabled);
         foreach ($assigninstances as $assigninstance) {
-            // Disable option if teamsubmission is enabled! TODO: make teamsubmissions work with mod_publication!
-            if ($assigninstance->teamsubmission) {
-                $options = array('disabled' => 'disabled');
-            } else {
-                $options = array();
-            }
-            $select->addOption($assigninstance->name, $assigninstance->id, $options);
+            $attributes = array('data-teamsubmission' => $assigninstance->teamsubmission);
+            $select->addOption($assigninstance->name, $assigninstance->id, $attributes);
         }
         $mform->addElement($select);
         $mform->addHelpButton('importfrom', 'assignment', 'publication');
-        if (count($disabled) == 0) {
-            $mform->disabledif ('importfrom', 'mode', 'neq', PUBLICATION_MODE_IMPORT);
-        }
 
         $mform->addElement('advcheckbox', 'autoimport', get_string('autoimport', 'publication'));
         $mform->setDefault('autoimport', get_config('publication', 'autoimport'));
         $mform->addHelpButton('autoimport', 'autoimport', 'publication');
-        $mform->disabledIf('autoimport', 'mode', 'neq', PUBLICATION_MODE_IMPORT);
 
         $attributes = array();
         if (isset($this->current->id) && isset($this->current->obtainstudentapproval)) {
@@ -133,11 +118,19 @@ class mod_publication_mod_form extends moodleform_mod{
             $attributes['onChange'] = "if (this.value==".$showwhen.") {alert('" . $message .  "')}";
         }
 
-        $mform->addElement('selectyesno', 'obtainstudentapproval',
-                get_string('obtainstudentapproval', 'publication'), $attributes);
+        $mform->addElement('selectyesno', 'obtainstudentapproval', get_string('obtainstudentapproval', 'publication'), $attributes);
         $mform->setDefault('obtainstudentapproval', get_config('publication', 'obtainstudentapproval'));
         $mform->addHelpButton('obtainstudentapproval', 'obtainstudentapproval', 'publication');
-        $mform->disabledIf('obtainstudentapproval', 'mode', 'neq', PUBLICATION_MODE_IMPORT);
+
+        $radioarray = array();
+        $radioarray[] = $mform->createElement('radio', 'groupapproval', '', get_string('groupapprovalmode_all', 'publication'),
+                                              PUBLICATION_APPROVAL_ALL, $attributes);
+        $radioarray[] = $mform->createElement('radio', 'groupapproval', '', get_string('groupapprovalmode_single', 'publication'),
+                                              PUBLICATION_APPROVAL_SINGLE, $attributes);
+        $mform->addGroup($radioarray, 'groupapprovalarray', get_string('groupapprovalmode', 'publication'),
+                         array(html_writer::empty_tag('br')), false);
+        $mform->addHelpButton('groupapprovalarray', 'groupapprovalmode', 'publication');
+        $mform->setDefault('groupapproval', PUBLICATION_APPROVAL_ALL);
 
         // Publication mode upload specific elements.
         $maxfiles = array();
@@ -147,20 +140,17 @@ class mod_publication_mod_form extends moodleform_mod{
 
         $mform->addElement('select', 'maxfiles', get_string('maxfiles', 'publication'), $maxfiles);
         $mform->setDefault('maxfiles', get_config('publication', 'maxfiles'));
-        $mform->disabledIf('maxfiles', 'mode', 'neq', PUBLICATION_MODE_UPLOAD);
 
         $choices = get_max_upload_sizes($CFG->maxbytes, $COURSE->maxbytes);
         $choices[0] = get_string('courseuploadlimit', 'publication') . ' ('.display_size($COURSE->maxbytes).')';
         $mform->addElement('select', 'maxbytes', get_string('maxbytes', 'publication'), $choices);
         $mform->setDefault('maxbytes', get_config('publication', 'maxbytes'));
-        $mform->disabledIf('maxbytes', 'mode', 'neq', PUBLICATION_MODE_UPLOAD);
 
         $mform->addElement('text', 'allowedfiletypes', get_string('allowedfiletypes', 'publication'), array('size' => '45'));
         $mform->setType('allowedfiletypes', PARAM_RAW);
         $mform->addHelpButton('allowedfiletypes', 'allowedfiletypes', 'publication');
         $mform->addRule('allowedfiletypes', get_string('allowedfiletypes_err', 'publication'), 'regex',
                 '/^([A-Za-z0-9]+([ ]*[,][ ]*[A-Za-z0-9]+)*)$/', 'client', false, false);
-        $mform->disabledIf('allowedfiletypes', 'mode', 'neq', PUBLICATION_MODE_UPLOAD);
 
         $attributes = array();
         if (isset($this->current->id) && isset($this->current->obtainteacherapproval)) {
@@ -180,7 +170,6 @@ class mod_publication_mod_form extends moodleform_mod{
                 get_string('obtainteacherapproval', 'publication'), $attributes);
         $mform->setDefault('obtainteacherapproval', get_config('publication', 'obtainteacherapproval'));
         $mform->addHelpButton('obtainteacherapproval', 'obtainteacherapproval', 'publication');
-        $mform->disabledIf('obtainteacherapproval', 'mode', 'neq', PUBLICATION_MODE_UPLOAD);
 
         // Availability.
         $mform->addElement('header', 'availability', get_string('availability', 'publication'));
@@ -208,6 +197,8 @@ class mod_publication_mod_form extends moodleform_mod{
 
         // Buttons.
         $this->add_action_buttons();
+
+        $PAGE->requires->js_call_amd('mod_publication/modform', 'initializer', array());
     }
 
     /**

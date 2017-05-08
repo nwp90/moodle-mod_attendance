@@ -15,19 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * version.php
+ * Version information
  *
  * @package       mod_publication
- * @author        Andreas Hruska (andreas.hruska@tuwien.ac.at)
- * @author        Katarzyna Potocka (katarzyna.potocka@tuwien.ac.at)
- * @author        Philipp Hager (office@phager.at)
+ * @author        Philipp Hager
  * @author        Andreas Windbichler
  * @copyright     2014 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$plugin->version   = 2016062200;
-$plugin->release   = "v3.1.0";          // User-friendly version number.
+defined('MOODLE_INTERNAL') || die();
+
+$plugin->version   = 2016120502;
+$plugin->requires  = 2016120500;
+$plugin->component = 'mod_publication';
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->requires  = 2016052300;         // Requires this Moodle version.
-$plugin->component = 'mod_publication'; // Full name of the plugin (used for diagnostics).
+$plugin->release   = "v3.2.2";
