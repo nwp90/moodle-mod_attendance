@@ -93,8 +93,7 @@ abstract class qtype_multichoice_renderer_base extends qtype_with_combined_feedb
             }
             $radiobuttons[] = $hidden . html_writer::empty_tag('input', $inputattributes) .
                     html_writer::tag('label',
-                        html_writer::tag('span', $this->number_in_style($value, $question->answernumbering),
-                            array('class' => 'answernumber')) .
+                        html_writer::span($this->number_in_style($value, $question->answernumbering), 'answernumber') .
                         $question->make_html_inline($question->format_text(
                                 $ans->answer, $ans->answerformat,
                                 $qa, 'question', 'answer', $ansid)),
