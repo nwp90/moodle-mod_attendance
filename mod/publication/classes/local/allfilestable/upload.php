@@ -15,34 +15,44 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Contains event class for a single mod_publication being viewed
+ * Contains class for files table listing all files in upload mode
  *
  * @package       mod_publication
  * @author        Philipp Hager
- * @author        Andreas Windbichler
  * @copyright     2014 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+namespace mod_publication\local\allfilestable;
 
-namespace mod_publication\event;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Course module has been viewed for this event
+ * Table showing all uploaded files
  *
  * @package       mod_publication
  * @author        Philipp Hager
- * @author        Andreas Windbichler
  * @copyright     2014 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class course_module_viewed extends \core\event\course_module_viewed {
+class upload extends base {
     /**
-     * Init event objecttable
+     * Return all columns, column-headers and helpicons for this table
+     *
+     * @return array Array with column names, column headers and help icons
      */
-    protected function init() {
-        $this->data['objecttable'] = 'publication';
-        parent::init();
+    public function get_columns() {
+        list($columns, $headers, $helpicons) = parent::get_columns();
+
+        if (has_capability('mod/publication:approve', $this->context)) {
+            $columns[] = 'teacherapproval';
+            $headers[] = get_string('teacherapproval', 'publication');
+            $helpicons[] = null;
+
+            $columns[] = 'visibleforstudents';
+            $headers[] = get_string('visibleforstudents', 'publication');
+            $helpicons[] = null;
+        }
+
+        return array($columns, $headers, $helpicons);
     }
-    // You might need to override get_url() and get_legacy_log_data() if view mode needs to be stored as well.
 }
