@@ -1,7 +1,34 @@
 Release Notes
 
-Version 3.2.0
+Version 3.2.4 (Build - 2017042700)
+New Features:
+CONTRIB-6136 - Added submission notifications by capability.
 
+Version 3.2.3
+Bug Fixes:
+CONTRIB-6813 - Remove notification from "non-respondents" screen.
+CONTRIB-6815 - Fixed more alignment issues on rate response display.
+CONTRIB-6816 - Added a space after the group selector on "all responses" screen.
+
+Version 3.2.2
+Bug Fixes:
+CONTRIB-6787 - Restore doesn't recreate question dependencies properly in some cases.
+CONTRIB-6800 - Timing of questionnaire open/close doesn't update when course is restored.
+CONTRIB-6809 - Response display for rate questions using named degrees can display incorrectly.
+
+
+Version 3.2.1
+Improvements/features:
+CONTRIB-5575 - Added renderers and templates to all output code.
+CONTRIB-6430 - Added global search functions.
+
+Bug fixes:
+CONTRIB-6642 - Fixed non-respondents screen.
+CONTRIB-6729 - Fixed group selection on CSV export.
+CONTRIB-6730 - Fixed printing of individual response.
+
+
+Version 3.2.0
 Improvements/features:
 CONTRIB-6093 - Upated Behat tests to work with 3.2.
 CONTRIB-5575 - Refactored code to use renderers and templates.

@@ -247,6 +247,7 @@ $string['maxtextlength'] = 'Max. text length';
 $string['maxtextlength_help'] = 'For the Text Box question type, enter the Input Box length and the Maximum text length of text to be entered by respondent.
 Default values are 20 characters for the Input Box width and 25 characters for the maximum length of text entered.';
 $string['messageprovider:message'] = 'Questionnaire reminder';
+$string['messageprovider:notification'] = 'Questionnaire submission';
 $string['minforcedresponses'] = 'Min. forced responses';
 $string['minforcedresponses_help'] = 'Use these parameters to force respondent to tick a minimum of **Min.** boxes and a maximum of **Max.** check boxes. To
 force an exact number of check boxes to be ticked, set **Min.** and **Max.** to the same value. If only a min or a max value is desired, just leave the other
@@ -288,6 +289,9 @@ $string['notapplicablecolumn'] = 'N/A column';
 $string['notavail'] = 'This questionnaire is no longer available. Ask your teacher to delete it.';
 $string['noteligible'] = 'You are not eligible to take this questionnaire.';
 $string['notemplatesurveys'] = 'No template questionnaires.';
+$string['notifications'] = 'Send submission notifications';
+$string['notifications_help'] = 'Notify roles with the "mod/questionnaire:submissionnotification" capability when a submission is made.';
+$string['notifications_link'] = 'mod/questionnaire/mod#Submission_Notifications';
 $string['notopen'] = 'This questionnaire will not open until {$a}.';
 $string['notrequired'] = 'Response is not required';
 $string['not_started'] = 'not started';
@@ -407,8 +411,8 @@ $string['realm_help'] = '* **There are  three types of questionnaires:**
 $string['realm_link'] = 'mod/questionnaire/qsettings#Questionnaire_Type';
 $string['redirecturl'] = 'The URL to which a user is redirected after completing this questionnaire.';
 $string['remove'] = 'Delete';
-$string['removenotinuse'] = 'This questionnaire used to depend on a Public questionnaire which has been deleted. '.
-    'It can no longer be used and should be deleted.';
+$string['removenotinuse'] = 'This questionnaire used to depend on a Public questionnaire which has been deleted.
+It can no longer be used and should be deleted.';
 $string['required'] = 'Response is required';
 $string['required_help'] = 'If you select ***Yes***, response to this question will be required, i.e.
 the respondent will not be able to submit the questionnaire
@@ -454,6 +458,8 @@ $string['savedbutnotsubmitted'] = 'This questionnaire has been saved but not yet
 $string['savedprogress'] = 'Your progress has been saved.  You may return at any time to complete this questionnaire.';
 $string['saveeditedquestion'] = 'Save question {$a}';
 $string['savesettings'] = 'Save settings';
+$string['search:activity'] = 'Questionnaire - activity information';
+$string['search:question'] = 'Questionnaire - questions';
 $string['section'] = 'Description';
 $string['sectionbreak'] = '----- Page Break -----';
 $string['sectionbreak_help'] = '----- Page Break -----';
@@ -474,6 +480,11 @@ $string['show_nonrespondents'] = 'Non-respondents';
 $string['started'] = 'started';
 $string['strfdate'] = '%d/%m/%Y';
 $string['strfdateformatcsv'] = 'd/m/Y H:i:s';
+$string['submissionnotificationhtmlanon'] = 'There is a new <a href="{$a->submissionurl}">submission</a> to the "{$a->name}" questionnaire.';
+$string['submissionnotificationhtmluser'] = 'There is a new <a href="{$a->submissionurl}">submission</a> to the "{$a->name}" questionnaire from "<a href="{$a->profileurl}">{$a->username}</a>".';
+$string['submissionnotificationsubject'] = 'New questionnaire submission';
+$string['submissionnotificationtextanon'] = 'There is a new submission ({$a->submissionurl}) to the "{$a->name}" questionnaire.';
+$string['submissionnotificationtextuser'] = 'There is a new submission ({$a->submissionurl}) to the "{$a->name}" questionnaire from "{$a->username}" ({$a->profileurl}).';
 $string['submitoptions'] = 'Submission options';
 $string['submitpreview'] = 'Submit preview';
 $string['submitpreviewcorrect'] = 'This submission would be accepted as correctly filled in.';
