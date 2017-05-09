@@ -329,6 +329,7 @@ class format_grid_renderer extends format_section_renderer_base {
         echo html_writer::end_tag('ul');
         echo html_writer::end_tag('div');
 
+        $rtl = right_to_left();
         if (!(($course->coursedisplay == COURSE_DISPLAY_MULTIPAGE) && (!$editing))) {
             echo html_writer::start_tag('div', array('id' => 'gridshadebox'));
             echo html_writer::tag('div', '', array('id' => 'gridshadebox_overlay', 'style' => 'display: none;'));
@@ -366,22 +367,37 @@ class format_grid_renderer extends format_section_renderer_base {
 
             // Only show the arrows if there is more than one box shown.
             if (($course->numsections > 1) || (($course->numsections == 1) && (!$this->topic0attop))) {
-                echo html_writer::start_tag('div', array('id' => 'gridshadebox_left',
-                    'class' => 'gridshadebox_area gridshadebox_left_area',
+                if ($rtl) {
+                    $previcon = 'right';
+                    $nexticon = 'left';
+                    $areadir = 'rtl';
+                } else {
+                    $previcon = 'left';
+                    $nexticon = 'right';
+                    $areadir = 'ltr';
+                }
+                $prev = html_writer::start_tag('div', array('id' => 'gridshadebox_previous',
+                    'class' => 'gridshadebox_area gridshadebox_previous_area '.$areadir,
                     'style' => 'display: none;',
                     'role' => 'link',
                     'aria-label' => get_string('previoussection', 'format_grid')));
-                echo html_writer::tag('img', '', array('class' => 'gridshadebox_arrow gridshadebox_left'.$deviceextra,
-                    'src' => $this->output->pix_url('fa-arrow-circle-left-w', 'format_grid')));
-                echo html_writer::end_tag('div');
-                echo html_writer::start_tag('div', array('id' => 'gridshadebox_right',
-                    'class' => 'gridshadebox_area gridshadebox_right_area',
+                $prev .= html_writer::tag('img', '', array('class' => 'gridshadebox_arrow gridshadebox_previous'.$deviceextra,
+                    'src' => $this->output->pix_url('fa-arrow-circle-'.$previcon.'-w', 'format_grid')));
+                $prev .= html_writer::end_tag('div');
+                $next = html_writer::start_tag('div', array('id' => 'gridshadebox_next',
+                    'class' => 'gridshadebox_area gridshadebox_next_area '.$areadir,
                     'style' => 'display: none;',
                     'role' => 'link',
                     'aria-label' => get_string('nextsection', 'format_grid')));
-                echo html_writer::tag('img', '', array('class' => 'gridshadebox_arrow gridshadebox_right'.$deviceextra,
-                    'src' => $this->output->pix_url('fa-arrow-circle-right-w', 'format_grid')));
-                echo html_writer::end_tag('div');
+                $next .= html_writer::tag('img', '', array('class' => 'gridshadebox_arrow gridshadebox_next'.$deviceextra,
+                    'src' => $this->output->pix_url('fa-arrow-circle-'.$nexticon.'-w', 'format_grid')));
+                $next .= html_writer::end_tag('div');
+
+                if ($rtl) {
+                    echo $next.$prev;
+                } else {
+                    echo $prev.$next;
+                }
             }
 
             echo $this->start_section_list();
@@ -401,8 +417,8 @@ class format_grid_renderer extends format_section_renderer_base {
             echo html_writer::end_tag('div');
             echo html_writer::end_tag('div');
             echo html_writer::tag('div', '&nbsp;', array('class' => 'clearer'));
-            echo html_writer::end_tag('div');
         }
+        echo html_writer::end_tag('div');
 
         $sectionredirect = null;
         if ($course->coursedisplay == COURSE_DISPLAY_MULTIPAGE) {
@@ -415,11 +431,12 @@ class format_grid_renderer extends format_section_renderer_base {
             $PAGE->user_is_editing(),
             $sectionredirect,
             $course->numsections,
-            json_encode($this->shadeboxshownarray),
-            right_to_left()));
-        // Initialise the key control functionality...
-        $PAGE->requires->yui_module('moodle-format_grid-gridkeys', 'M.format_grid.gridkeys.init',
-            array(array('editing' => $PAGE->user_is_editing())), null, true);
+            json_encode($this->shadeboxshownarray)));
+        if (!$PAGE->user_is_editing()) {
+            // Initialise the key control functionality...
+            $PAGE->requires->yui_module('moodle-format_grid-gridkeys', 'M.format_grid.gridkeys.init',
+                array(array('rtl' => $rtl)), null, true);
+        }
     }
 
     /**
