@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Defines the renderer studentquiz class for question behaviours.
+ * Defines the renderer StudentQuiz class for question behaviours.
  *
  * @package    qbehaviour_studentquiz
  * @copyright  2016 HSR (http://www.hsr.ch)
@@ -24,6 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once(dirname(__FILE__) . '/../../../config.php');
 require_once(dirname(__FILE__) . '/lib.php');
 
 /**
@@ -38,13 +39,13 @@ require_once(dirname(__FILE__) . '/lib.php');
 class qbehaviour_studentquiz_renderer extends qbehaviour_renderer {
 
     /**
-     *  Generate some HTML to display comment list
+     * Generate some HTML to display comment list
      *
      * @param  int $questionid Question id
      * @return string HTML fragment
      */
     public function comment_list($questionid) {
-        return comment_renderer($questionid);
+        return qbehaviour_studentquiz_comment_renderer($questionid);
     }
 
     /**
@@ -147,7 +148,7 @@ class qbehaviour_studentquiz_renderer extends qbehaviour_renderer {
     }
 
     /**
-     *  Generate some HTML to display rating
+     * Generate some HTML to display rating
      *
      * @param  int $questionid Question id
      * @return string HTML fragment
@@ -166,7 +167,7 @@ class qbehaviour_studentquiz_renderer extends qbehaviour_renderer {
     }
 
     /**
-     *  Generate some HTML to display the complete comment fragment
+     * Generate some HTML to display the complete comment fragment
      *
      * @param  int $questionid Question id
      * @return string HTML fragment

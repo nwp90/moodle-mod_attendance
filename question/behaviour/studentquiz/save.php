@@ -32,69 +32,60 @@ define('AJAX_SCRIPT', true);
 
 require_once(dirname(__FILE__) . '/../../../config.php');
 
+require_login();
+
 $data = new \stdClass();
 if (!isset($USER->id) || empty($USER->id)) {
     return;
 }
 $data->userid = $USER->id;
 
-if (!isset($_POST['questionid']) || empty($_POST['questionid'])) {
-    return;
-}
-$data->questionid = intval($_POST['questionid']);
+$questionid = required_param('questionid', PARAM_INT);
+$data->questionid = $questionid;
 
-if (!isset($_POST['save']) || empty($_POST['save'])) {
-    return;
-}
+$save = required_param('save', PARAM_NOTAGS);
+require_sesskey();
 
-switch($_POST['save']) {
-    case 'vote': save_vote($data);
+switch($save) {
+    case 'vote': qbehaviour_studentquiz_save_vote($data);
         break;
-    case 'comment': save_comment($data);
+    case 'comment': qbehaviour_studentquiz_save_comment($data);
         break;
 }
 
 header('Content-Type: text/html; charset=utf-8');
 
 /**
- * saves question rating
+ * Saves question rating
  *
  * @param  stdClass $data requires userid, questionid
  */
-function save_vote($data) {
+function qbehaviour_studentquiz_save_vote($data) {
     global $DB, $USER;
 
-    if (!isset($_POST['rate']) || empty($_POST['rate'])) {
-        return;
-    }
-    $data->vote = intval($_POST['rate']);
+    $data->vote = required_param('rate', PARAM_INT);
 
     $row = $DB->get_record('studentquiz_vote', array('userid' => $USER->id, 'questionid' => $data->questionid));
     if ($row === false) {
         $DB->insert_record('studentquiz_vote', $data);
     } else {
         $row->vote = $data->vote;
-        $var = $DB->update_record('studentquiz_vote', $row);
+        $DB->update_record('studentquiz_vote', $row);
     }
 }
 
 /**
- * saves question comment
+ * Saves question comment
  *
  * @param  stdClass $data requires userid, questionid
  */
-function save_comment($data) {
+function qbehaviour_studentquiz_save_comment($data) {
     global $DB;
 
-    if (!isset($_POST['text']) || empty($_POST['text'])) {
-        return;
-    }
+    $text = required_param('text', PARAM_TEXT);
 
-    // Prevent XSS.
-    $data->comment = htmlspecialchars($_POST['text'], ENT_QUOTES, 'UTF-8');
+    $data->comment = $text;
     $data->created = usertime(time(), usertimezone());
 
     $DB->insert_record('studentquiz_comment', $data);
 }
-
-

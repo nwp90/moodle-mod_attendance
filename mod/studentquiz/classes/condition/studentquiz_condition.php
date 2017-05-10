@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-
 /**
  * The mod_studentquiz instance viewed event class
  *
@@ -31,12 +30,12 @@ defined('MOODLE_INTERNAL') || die();
 
 
 /**
- *  This class controls from which category questions are listed.
+ * This class controls from which category questions are listed.
  *
  * @copyright  2016 HSR (http://www.hsr.ch)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class student_quiz_condition extends \core_question\bank\search\category_condition {
+class studentquiz_condition extends \core_question\bank\search\category_condition {
 
     /**
      * Called by question_bank_view to display the GUI for selecting a category
@@ -63,5 +62,6 @@ class student_quiz_condition extends \core_question\bank\search\category_conditi
      * @param string $current 'categoryID,contextID'.
      */
     protected function display_category_form($contexts, $pageurl, $current) {
+
     }
 }

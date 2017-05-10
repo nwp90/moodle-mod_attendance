@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file keeps track of upgrades to the studentquiz module
+ * This file keeps track of upgrades to the StudentQuiz module
  *
  * Sometimes, changes between versions involve alterations to database
  * structures and other major things that may break installations. The upgrade
@@ -32,7 +32,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Execute studentquiz upgrade from the given old version
+ * Execute StudentQuiz upgrade from the given old version
  *
  * @param int $oldversion
  * @return bool
@@ -41,6 +41,29 @@ function xmldb_studentquiz_upgrade($oldversion) {
     global $DB;
 
     $dbman = $DB->get_manager(); // Loads ddl manager and xmldb classes.
+
+    if ($oldversion < 2017021601) {
+
+        // Define table studentquiz_question to be created.
+        $table = new xmldb_table('studentquiz_question');
+
+        // Adding fields to table studentquiz_question.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('questionid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('approved', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
+
+        // Adding keys to table studentquiz_question.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->add_key('questionid', XMLDB_KEY_FOREIGN, array('questionid'), 'question', array('id'));
+
+        // Conditionally launch create table for studentquiz_question.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Studentquiz savepoint reached.
+        upgrade_mod_savepoint(true, 2017021601, 'studentquiz');
+    }
 
     /*
      * And upgrade begins here. For each one, you'll need one
@@ -53,8 +76,8 @@ function xmldb_studentquiz_upgrade($oldversion) {
      *
      * Lines below (this included)  MUST BE DELETED once you get the first version
      * of your module ready to be installed. They are here only
-     * for demonstrative purposes and to show how the studentquiz
-     * iself has been upgraded.
+     * for demonstrative purposes and to show how the StudentQuiz
+     * itself has been upgraded.
      *
      * For each upgrade block, the file studentquiz/version.php
      * needs to be updated . Such change allows Moodle to know
@@ -64,7 +87,7 @@ function xmldb_studentquiz_upgrade($oldversion) {
      * highly recommended to read information available at:
      *   http://docs.moodle.org/en/Development:XMLDB_Documentation
      * and to play with the XMLDB Editor (in the admin menu) and its
-     * PHP generation posibilities.
+     * PHP generation possibilities.
      *
      * First example, some fields were added to install.xml on 2007/04/01
      */
@@ -109,7 +132,7 @@ function xmldb_studentquiz_upgrade($oldversion) {
     if ($oldversion < 2007040101) {
 
         // Define field timecreated to be added to studentquiz.
-        $table = new xmldb_table('studentquiz');
+        $table = new xmldb_table('studentquiz_question');
         $field = new xmldb_field('timecreated', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '0',
             'introformat');
 
@@ -157,7 +180,7 @@ function xmldb_studentquiz_upgrade($oldversion) {
      * when the module version (version.php) is updated.
      *
      * Lines above (this included) MUST BE DELETED once you get the first version of
-     * yout module working. Each time you need to modify something in the module (DB
+     * your module working. Each time you need to modify something in the module (DB
      * related, you'll raise the version and add one upgrade block here.
      *
      * Finally, return of upgrade result (true, all went good) to Moodle.
