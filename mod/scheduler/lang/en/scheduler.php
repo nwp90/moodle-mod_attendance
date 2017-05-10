@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * Strings for component 'mod_scheduler', language 'en'
+ *
+ * @package    mod_scheduler
+ * @copyright  2017 Henning Bostelmann and others (see README.txt)
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 $string['pluginname'] = 'Scheduler';
 $string['pluginadministration'] = 'Scheduler administration';
 $string['modulename'] = 'Scheduler';
@@ -85,7 +93,11 @@ $string['availableslots'] = 'Available slots';
 $string['availableslotsall'] = 'All slots';
 $string['availableslotsnotowned'] = 'Not owned';
 $string['availableslotsowned'] = 'Owned';
+$string['bookingformoptions'] = 'Booking form and student-supplied data';
+$string['bookinginstructions'] = 'Booking instructions';
 $string['bookslot'] = 'Book slot';
+$string['bookaslot'] = 'Book a slot';
+$string['bookingdetails'] = 'Booking details';
 $string['bookwithteacher'] = 'Teacher';
 $string['break'] = 'Break between slots';
 $string['breaknotnegative'] = 'Length of the break must not be negative';
@@ -123,6 +135,7 @@ $string['contentformat_help'] = '<p>There are three basic choices for the export
     </dl>
     You can explore the effect of these options using the "Preview" button.</p>';
 $string['complete'] = 'Booked';
+$string['confirmbooking'] = "Confirm booking";
 $string['confirmdelete-all'] = 'This will delete <b>all</b> slots in this scheduler. Deletion cannot be undone. Continue anyway?';
 $string['confirmdelete-mine'] = 'This will delete all your slots in this scheduler. Deletion cannot be undone. Continue anyway?';
 $string['confirmdelete-myunused'] = 'This will delete all your unused slots in this scheduler. Deletion cannot be undone. Continue anyway?';
@@ -149,6 +162,7 @@ $string['deletemyslots'] = 'Delete all my slots';
 $string['deleteselection'] = 'Delete selected slots';
 $string['deletetheseslots'] = 'Delete these slots';
 $string['deleteunusedslots'] = 'Delete my unused slots';
+$string['deleteonsave'] = 'Delete this appointment (when saving the form)';
 $string['deletedconflictingslots'] = 'For the slot on {$a}, conflicting slots have been deleted:';
 $string['department'] = 'From where?';
 $string['disengage'] = 'Drop my appointments';
@@ -157,6 +171,7 @@ $string['distributetoslot'] = 'Distribute to the whole group';
 $string['divide'] = 'Divide into slots?';
 $string['duration'] = 'Duration';
 $string['durationrange'] = 'Slot duration must be between {$a->min} and {$a->max} minutes.';
+$string['editbooking'] = 'Edit booking';
 $string['emailreminder'] = 'Email a reminder';
 $string['emailreminderondate'] = 'Email a reminder on';
 $string['end'] = 'End';
@@ -185,6 +200,8 @@ $string['field-attended'] = 'Attended';
 $string['field-slotnotes'] = 'Slot notes';
 $string['field-appointmentnote'] = 'Appointment note (to student)';
 $string['field-teachernote'] = 'Confidential note (teacher only)';
+$string['field-studentnote'] = 'Message by student';
+$string['field-filecount'] = 'Number of uploaded files';
 $string['field-grade'] = 'Grade';
 $string['fileformat'] = 'File format';
 $string['fileformat_help'] = 'The following file formats are available:
@@ -231,6 +248,8 @@ $string['ignoreconflicts_link'] = 'mod/scheduler/conflict';
 $string['includeemptyslots'] = 'Include empty slots';
 $string['includeslotsfor'] = 'Include slots for';
 $string['incourse'] = ' in course ';
+$string['mixindivgroup'] = 'Mix individual and group bookings';
+$string['mixindivgroup_desc'] = 'Where group scheduling is enabled, allow individual bookings as well.';
 $string['introduction'] = 'Introduction';
 $string['isnonexclusive'] = 'Non-exclusive';
 $string['landscape'] = 'Landscape';
@@ -247,6 +266,7 @@ $string['maxstudentlistsize_desc'] = 'The maximum length of the list of students
 $string['meangrade'] = 'Take the mean grade';
 $string['meetingwith'] = 'Meeting with your';
 $string['meetingwithplural'] = 'Meeting with your';
+$string['message'] = 'Message';
 $string['messagesent'] = 'Message sent to {$a} recipients';
 $string['messagesubject'] = 'Subject';
 $string['messagebody'] = 'Message body';
@@ -267,6 +287,7 @@ $string['name'] = 'Scheduler name';
 $string['needteachers'] = 'Slots cannot be added as this course has no teachers';
 $string['negativerange'] = 'Range is negative. This can\'t be.';
 $string['never'] = 'Never';
+$string['nfiles'] = '{$a} files';
 $string['noappointments'] = 'No appointments';
 $string['noexistingstudents'] = 'No students available for scheduling';
 $string['nogroups'] = 'No group available for scheduling.';
@@ -281,6 +302,7 @@ $string['note'] = 'Grade';
 $string['noteacherforslot'] = 'No teacher for the slots';
 $string['noteachershere'] = 'No teacher available';
 $string['notenoughplaces'] = 'Sorry, there are not enough free appointments in this slot.';
+$string['notesrequired'] = 'You must enter text into this field before booking the slot.';
 $string['notifications'] = 'Notifications';
 $string['notseen'] = 'Not seen';
 $string['now'] = 'Now';
@@ -311,6 +333,7 @@ $string['purgeunusedslots'] = 'Purge unused slots in the past';
 $string['recipients'] = 'Recipients';
 $string['registeredlbl'] = 'Student appointed';
 $string['reminder'] = 'Reminder';
+$string['requireupload'] = 'File upload required';
 $string['resetslots'] = 'Delete scheduler slots';
 $string['resetappointments'] = 'Delete appointments and grades';
 $string['return'] = 'Back to course';
@@ -344,6 +367,8 @@ $string['showemailplain_desc'] = 'In the teacher\'s view of the scheduler, show 
 $string['showparticipants'] = 'Show participants';
 $string['slot_is_just_in_use'] = 'Sorry, the appointment has just been chosen by another student! Please try again.';
 $string['slotdatetime'] = '{$a->shortdatetime} for {$a->duration} minutes';
+$string['slotdatetimelong'] = '{$a->date}, {$a->starttime} &ndash; {$a->endtime}';
+$string['slotdatetimelabel'] = 'Date and time';
 $string['slotdescription'] = '{$a->status} on {$a->startdate} from {$a->starttime} to {$a->endtime} at {$a->location} with {$a->facilitator}.';
 $string['slot'] = 'Slot';
 $string['slots'] = 'Slots';
@@ -359,11 +384,13 @@ $string['startpast'] = 'You can\'t start an empty appointment slot in the past';
 $string['statistics'] = 'Statistics';
 $string['student'] = 'Student';
 $string['studentbreakdown'] = 'By student';
-$string['studentcomments'] = 'Student\'s notes';
+$string['studentcomments'] = 'Student\'s message';
 $string['studentdetails'] = 'Student details';
+$string['studentfiles'] = 'Uploaded files';
 $string['studentmultiselect'] = 'Each student can be selected only once in this slot';
-$string['studentnotes'] = 'Your notes about the appointment ';
+$string['studentnote'] = 'Message by student';
 $string['students'] = 'Students';
+$string['studentprovided'] = 'Student provided: {$a}';
 $string['sunday'] = 'Sunday';
 $string['tab-thisappointment'] = 'This appointment';
 $string['tab-otherappointments'] = 'All appointments of this student';
@@ -386,11 +413,20 @@ $string['unregisteredlbl'] = 'Unappointed students';
 $string['upcomingslots'] = 'Upcoming slots';
 $string['updategrades'] = 'Update grades';
 $string['updatesingleslot'] = '';
+$string['uploadrequired'] = 'You must upload files here before booking the slot.';
+$string['uploadstudentfiles'] = 'Upload files';
+$string['uploadmaxfiles'] = 'Maximum number of uploaded files';
+$string['uploadmaxfiles_desc'] = 'The maximum number of files that a student can upload in a booking form';
+$string['uploadmaxsize'] = 'Maximum file size';
+$string['usebookingform'] = 'Use booking form';
+$string['usecaptcha'] = 'Use CAPTCHA for new bookings';
 $string['usenotes'] = 'Use notes for appointments';
 $string['usenotesnone'] = 'none';
 $string['usenotesstudent'] = 'Appointment note, visible to teacher and student';
 $string['usenotesteacher'] = 'Confidential note, visible to teachers only';
 $string['usenotesboth'] = 'Both types of notes';
+$string['usestudentnotes'] = 'Let students enter a message';
+$string['viewbooking'] = 'See details';
 $string['wednesday'] = 'Wednesday';
 $string['welcomebackstudent'] = 'You can book additional slots by clicking on the corresponding "Book slot" button below.';
 $string['welcomenewstudent'] = 'The table below shows all available slots for an appointment. Make your choice by clicking on the corresponding "Book slot" button. If you need to make a change later you can revisit this page.';
@@ -406,8 +442,11 @@ $string['xdaysbefore'] = '{$a} days before slot';
 $string['xweeksbefore'] = '{$a} weeks before slot';
 $string['yesallgroups'] = 'Yes, for all groups';
 $string['yesingrouping'] = 'Yes, in grouping {$a}';
+$string['yesoptional'] = 'Yes, optional for student';
+$string['yesrequired'] = 'Yes, student must enter a message';
 $string['yourappointmentnote'] = 'Comments for your eyes';
 $string['yourslotnotes'] = 'Comments on the meeting';
+$string['yourstudentnote'] = 'Your message';
 $string['yourtotalgrade'] = 'Your total grade in this activity is <strong>{$a}</strong>.';
 
 
