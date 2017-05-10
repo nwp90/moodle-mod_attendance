@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This page lists all the instances of studentquiz in a given course.
+ * This page lists all the instances of StudentQuiz in a given course.
  *
  * @package    mod_studentquiz
  * @copyright  2016 HSR (http://www.hsr.ch)
@@ -25,11 +25,11 @@
 require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
 require_once(dirname(__FILE__).'/lib.php');
 
-$id = required_param('id', PARAM_INT); // Course.
+$cmid = required_param('id', PARAM_INT);
+$cm = get_coursemodule_from_id('studentquiz', $cmid, 0, false, MUST_EXIST);
+$course = $DB->get_record('course', array('id' => $cm->id), '*', MUST_EXIST);
 
-$course = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
-
-require_course_login($course);
+require_login($course, true, $cm);
 
 $params = array(
     'context' => context_course::instance($course->id)
@@ -39,7 +39,7 @@ $event->add_record_snapshot('course', $course);
 $event->trigger();
 
 $strname = get_string('modulenameplural', 'mod_studentquiz');
-$PAGE->set_url('/mod/studentquiz/index.php', array('id' => $id));
+$PAGE->set_url('/mod/studentquiz/index.php', array('id' => $cmid));
 $PAGE->navbar->add($strname);
 $PAGE->set_title("$course->shortname: $strname");
 $PAGE->set_heading($course->fullname);

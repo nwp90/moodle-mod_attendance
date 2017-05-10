@@ -15,12 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Library of interface functions and constants for module studentquiz
+ * Library of interface functions and constants for module StudentQuiz
  *
  * All the core Moodle functions, neeeded to allow the module to work
  * integrated in Moodle should be placed here.
  *
- * All the studentquiz specific functions, needed to implement all the module
+ * All the StudentQuiz specific functions, needed to implement all the module
  * logic, should go to locallib.php. This will help to save some memory when
  * Moodle is performing actions across all modules.
  *
@@ -34,12 +34,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/lib/questionlib.php');
 require_once(dirname(__FILE__) . '/locallib.php');
 
-/**
- * Example constant, you probably want to remove this :-)
- */
-define('STUDENTQUIZ_ULTIMATE_ANSWER', 42);
-
-/* Moodle core API */
+/* Core API */
 
 /**
  * Returns the information on whether the module supports a feature
@@ -66,7 +61,7 @@ function studentquiz_supports($feature) {
 }
 
 /**
- * Saves a new instance of the studentquiz into the database
+ * Saves a new instance of the StudentQuiz into the database
  *
  * Given an object containing all the necessary data,
  * (defined by the form in mod_form.php) this function
@@ -78,7 +73,7 @@ function studentquiz_supports($feature) {
  * @return int The id of the newly inserted studentquiz record
  */
 function studentquiz_add_instance(stdClass $studentquiz, mod_studentquiz_mod_form $mform = null) {
-    global $DB, $COURSE;
+    global $DB;
 
     $studentquiz->timecreated = time();
 
@@ -123,7 +118,7 @@ function studentquiz_add_instance(stdClass $studentquiz, mod_studentquiz_mod_for
 }
 
 /**
- * Updates an instance of the studentquiz in the database
+ * Updates an instance of the StudentQuiz in the database
  *
  * Given an object containing all the necessary data,
  * (defined by the form in mod_form.php) this function
@@ -153,7 +148,7 @@ function studentquiz_update_instance(stdClass $studentquiz, mod_studentquiz_mod_
 }
 
 /**
- * Removes an instance of the studentquiz from the database
+ * Removes an instance of the StudentQuiz from the database
  *
  * Given an ID of an instance of this module,
  * this function will permanently delete the instance
@@ -191,7 +186,7 @@ function studentquiz_delete_instance($id) {
  * @param stdClass $course The course record
  * @param stdClass $user The user record
  * @param cm_info|stdClass $mod The course module info object or record
- * @param stdClass $studentquiz The studentquiz instance record
+ * @param stdClass $studentquiz The StudentQuiz instance record
  * @return stdClass|null
  */
 function studentquiz_user_outline($course, $user, $mod, $studentquiz) {
@@ -217,7 +212,7 @@ function studentquiz_user_complete($course, $user, $mod, $studentquiz) {
 
 /**
  * Given a course and a time, this module should find recent activity
- * that has occurred in studentquiz activities and print it out.
+ * that has occurred in StudentQuiz activities and print it out.
  *
  * @param stdClass $course The course record
  * @param bool $viewfullnames Should we display full names
@@ -289,14 +284,14 @@ function studentquiz_get_extra_capabilities() {
 /* Gradebook API */
 
 /**
- * Is a given scale used by the instance of studentquiz?
+ * Is a given scale used by the instance of StudentQuiz?
  *
- * This function returns if a scale is being used by one studentquiz
+ * This function returns if a scale is being used by one StudentQuiz
  * if it has support for grading and scales.
  *
  * @param int $studentquizid ID of an instance of this module
  * @param int $scaleid ID of the scale
- * @return bool true if the scale is used by the given studentquiz instance
+ * @return bool true if the scale is used by the given StudentQuiz instance
  */
 function studentquiz_scale_used($studentquizid, $scaleid) {
     global $DB;
@@ -309,12 +304,12 @@ function studentquiz_scale_used($studentquizid, $scaleid) {
 }
 
 /**
- * Checks if scale is being used by any instance of studentquiz.
+ * Checks if scale is being used by any instance of StudentQuiz.
  *
  * This is used to find out if scale used anywhere.
  *
  * @param int $scaleid ID of the scale
- * @return boolean true if the scale is used by any studentquiz instance
+ * @return boolean true if the scale is used by any StudentQuiz instance
  */
 function studentquiz_scale_used_anywhere($scaleid) {
     global $DB;
@@ -327,15 +322,15 @@ function studentquiz_scale_used_anywhere($scaleid) {
 }
 
 /**
- * Creates or updates grade item for the given studentquiz instance
+ * Creates or updates grade item for the given StudentQuiz instance
  *
  * Needed by {@link grade_update_mod_grades()}.
  *
  * @param stdClass $studentquiz instance object with extra cmidnumber and modname property
- * @param bool $reset reset grades in the gradebook
- * @return void
+ * @param array or string $grades 'reset' grades in the gradebook
+ * @return int Returns GRADE_UPDATE_OK, GRADE_UPDATE_FAILED, GRADE_UPDATE_MULTIPLE or GRADE_UPDATE_ITEM_LOCKED
  */
-function studentquiz_grade_item_update(stdClass $studentquiz, $reset=false) {
+function studentquiz_grade_item_update(stdClass $studentquiz, $grades=null) {
     global $CFG;
     require_once($CFG->libdir.'/gradelib.php');
 
@@ -354,16 +349,16 @@ function studentquiz_grade_item_update(stdClass $studentquiz, $reset=false) {
         $item['gradetype'] = GRADE_TYPE_NONE;
     }
 
-    if ($reset) {
+    if ($grades === 'reset') {
         $item['reset'] = true;
     }
 
-    grade_update('mod/studentquiz', $studentquiz->course, 'mod', 'studentquiz',
-            $studentquiz->id, 0, null, $item);
+    return grade_update('mod/studentquiz', $studentquiz->course, 'mod', 'studentquiz',
+            $studentquiz->id, 0, $grades, $item);
 }
 
 /**
- * Delete grade item for given studentquiz instance
+ * Delete grade item for given StudentQuiz instance
  *
  * @param stdClass $studentquiz instance object
  * @return grade_item
@@ -377,7 +372,7 @@ function studentquiz_grade_item_delete($studentquiz) {
 }
 
 /**
- * Update studentquiz grades in the gradebook
+ * Update StudentQuiz grades in the gradebook
  *
  * Needed by {@link grade_update_mod_grades()}.
  *
@@ -385,7 +380,7 @@ function studentquiz_grade_item_delete($studentquiz) {
  * @param int $userid update grade of specific user only, 0 means all participants
  */
 function studentquiz_update_grades(stdClass $studentquiz, $userid = 0) {
-    global $CFG, $DB;
+    global $CFG;
     require_once($CFG->libdir.'/gradelib.php');
 
     // Populate array of grade objects indexed by userid.
@@ -412,7 +407,7 @@ function studentquiz_get_file_areas($course, $cm, $context) {
 }
 
 /**
- * File browsing support for studentquiz file areas
+ * File browsing support for StudentQuiz file areas
  *
  * @package mod_studentquiz
  * @category files
@@ -433,22 +428,20 @@ function studentquiz_get_file_info($browser, $areas, $course, $cm, $context, $fi
 }
 
 /**
- * Serves the files from the studentquiz file areas
+ * Serves the files from the StudentQuiz file areas
  *
  * @package mod_studentquiz
  * @category files
  *
  * @param stdClass $course the course object
  * @param stdClass $cm the course module object
- * @param stdClass $context the studentquiz's context
+ * @param stdClass $context the StudentQuiz's context
  * @param string $filearea the name of the file area
  * @param array $args extra arguments (itemid, path)
  * @param bool $forcedownload whether or not force download
  * @param array $options additional options affecting the file serving
  */
 function studentquiz_pluginfile($course, $cm, $context, $filearea, array $args, $forcedownload, array $options=array()) {
-    global $DB, $CFG;
-
     if ($context->contextlevel != CONTEXT_MODULE) {
         send_file_not_found();
     }
@@ -461,25 +454,24 @@ function studentquiz_pluginfile($course, $cm, $context, $filearea, array $args, 
 /* Navigation API */
 
 /**
- * Extends the global navigation tree by adding studentquiz nodes if there is a relevant content
+ * Extends the global navigation tree by adding StudentQuiz nodes if there is a relevant content
  *
  * This can be called by an AJAX request so do not rely on $PAGE as it might not be set up properly.
  *
- * @param navigation_node $navref An object representing the navigation tree node of the studentquiz module instance
+ * @param navigation_node $navref An object representing the navigation tree node of the StudentQuiz module instance
  * @param stdClass $course current course record
- * @param stdClass $module current studentquiz instance record
+ * @param stdClass $module current StudentQuiz instance record
  * @param cm_info $cm course module information
  */
 function studentquiz_extend_navigation(navigation_node $navref, stdClass $course, stdClass $module, cm_info $cm) {
-    $navref->add(get_string('nav_question_and_quiz', 'studentquiz')
-        , new moodle_url('/mod/studentquiz/view.php?id=' . $cm->id));
-    $reportnode = $navref->add(get_string('nav_report', 'studentquiz'));
-    $reportnode->add(get_string('nav_report_rank', 'studentquiz')
-        , new moodle_url('/mod/studentquiz/reportrank.php?id=' . $cm->id));
-    $reportnode->add(get_string('nav_report_quiz', 'studentquiz')
+    $navref->showinflatnavigation = true;
+    $stats = $navref->add(get_string('reportquiz_dashboard_title', 'studentquiz')
         , new moodle_url('/mod/studentquiz/reportquiz.php?id=' . $cm->id));
-
-    if (mod_check_created_permission()) {
+    $stats->showinflatnavigation = true;
+    $rank = $navref->add(get_string('nav_report_rank', 'studentquiz')
+        , new moodle_url('/mod/studentquiz/reportrank.php?id=' . $cm->id));
+    $rank->showinflatnavigation = true;
+    if (mod_studentquiz_check_created_permission($cm->id)) {
         $context = context_module::instance($cm->id);
         $category = question_get_default_category($context->id);
         $cat = 'cat=' . $category->id . ',' . $context->id;
@@ -494,13 +486,28 @@ function studentquiz_extend_navigation(navigation_node $navref, stdClass $course
 }
 
 /**
- * Extends the settings navigation with the studentquiz settings
+ * Extends the settings navigation with the StudentQuiz settings
  *
- * This function is called when the context for the page is a studentquiz module. This is not called by AJAX
+ * This function is called when the context for the page is a StudentQuiz module. This is not called by AJAX
  * so it is safe to rely on the $PAGE.
  *
  * @param settings_navigation $settingsnav complete settings navigation tree
- * @param navigation_node $studentquiznode studentquiz administration node
+ * @param navigation_node $studentquiznode StudentQuiz administration node
  */
 function studentquiz_extend_settings_navigation(settings_navigation $settingsnav, navigation_node $studentquiznode=null) {
+    global $PAGE, $CFG;
+    $cm = $PAGE->cm;
+    if (mod_studentquiz_check_created_permission($cm->id)) {
+        $course = new stdClass;
+        $course->id = $cm->course;
+        $context = context_module::instance($cm->id);
+        $category = question_get_default_category($context->id);
+        $cat = 'cat=' . $category->id . ',' . $context->id;
+        $studentquiznode->add(get_string('nav_export', 'studentquiz')
+            , new moodle_url('/mod/studentquiz/export.php?' . $cat . '&cmid=' . $cm->id));
+        $studentquiznode->add(get_string('nav_import', 'studentquiz')
+            , new moodle_url('/mod/studentquiz/import.php?' . $cat . '&cmid=' . $cm->id));
+        $studentquiznode->add(get_string('nav_questionbank', 'studentquiz')
+            , new moodle_url('/question/edit.php?courseid' . $course->id . '&' . $cat . '&cmid=' . $cm->id));
+    }
 }
