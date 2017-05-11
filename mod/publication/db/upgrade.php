@@ -15,16 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * db/upgrade.php
+ * Keeps track of all DB(-structure) changes and other upgrade steps for mod_publication
  *
  * @package       mod_publication
- * @author        Andreas Hruska (andreas.hruska@tuwien.ac.at)
- * @author        Katarzyna Potocka (katarzyna.potocka@tuwien.ac.at)
- * @author        Philipp Hager (office@phager.at)
+ * @author        Philipp Hager
  * @author        Andreas Windbichler
  * @copyright     2014 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Handles all the upgrade steps for mod_publication
@@ -77,6 +76,60 @@ function xmldb_publication_upgrade($oldversion) {
         // Assign savepoint reached.
         upgrade_mod_savepoint(true, 2016051200, 'publication');
     }
+
+    if ($oldversion < 2016062201) {
+
+        // Define field groupapproval to be added to publication.
+        $table = new xmldb_table('publication');
+        $field = new xmldb_field('groupapproval', XMLDB_TYPE_INTEGER, '4', null, XMLDB_NOTNULL, null, '0', 'autoimport');
+
+        // Conditionally launch add field groupapproval.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define table publication_groupapproval to be created.
+        $table = new xmldb_table('publication_groupapproval');
+
+        // Adding fields to table publication_groupapproval.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('fileid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('approval', XMLDB_TYPE_INTEGER, '4', null, null, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+
+        // Adding keys to table publication_groupapproval.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->add_key('fileid', XMLDB_KEY_FOREIGN, array('fileid'), 'publication_files', array('id'));
+        $table->add_key('userid', XMLDB_KEY_FOREIGN, array('userid'), 'user', array('id'));
+
+        // Conditionally launch create table for publication_groupapproval.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Define field groupapproval to be added to publication.
+        $table = new xmldb_table('publication_groupapproval');
+
+        $field = new xmldb_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'approval');
+        // Conditionally launch add field groupapproval.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'timecreated');
+        // Conditionally launch add field groupapproval.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Publication savepoint reached.
+        upgrade_mod_savepoint(true, 2016062201, 'publication');
+    }
+
+    // Moodle v3.2.0 release upgrade line.
+    // Put any upgrade step following this!
 
     return true;
 }

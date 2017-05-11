@@ -18,10 +18,8 @@
  * observer.php
  *
  * @package       mod_publication
- * @author        Andreas Hruska (andreas.hruska@tuwien.ac.at)
- * @author        Katarzyna Potocka (katarzyna.potocka@tuwien.ac.at)
  * @author        Philipp Hager
- * @copyright     2016 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
+ * @copyright     2014 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 namespace mod_publication;
@@ -31,13 +29,9 @@ defined('MOODLE_INTERNAL') || die;
 /**
  * mod_grouptool\observer handles events due to changes in moodle core which affect grouptool
  *
- * @package       mod_grouptool
- * @author        Andreas Hruska (andreas.hruska@tuwien.ac.at)
- * @author        Katarzyna Potocka (katarzyna.potocka@tuwien.ac.at)
+ * @package       mod_publication
  * @author        Philipp Hager
- * @since         Moodle 2.8+
- * @copyright     2015 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
- * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright     2014 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class observer {
@@ -57,6 +51,13 @@ class observer {
         $assign = $e->get_assign();
         $assignid = $assign->get_course_module()->instance;
         $submission = $DB->get_record($e->objecttable, array('id' => $e->objectid));
+
+        if (!empty($assign->get_instance()->teamsubmission) && !empty($submission->userid)) {
+            /* If the userid is set, we can skip here... the files and texts are in the submission with groupid set
+               or groupid 0 for users without group! */
+            return;
+        }
+
         $assignmoduleid = $DB->get_field('modules', 'id', array('name' => 'assign'));
         $assigncm = $DB->get_record('course_modules', array('course'   => $assign->get_course()->id,
                                                             'module'   => $assignmoduleid,
@@ -77,6 +78,7 @@ class observer {
 
         $assignfileids = array();
         $assignfiles = array();
+        $itemid = empty($assign->get_instance()->teamsubmission) ? $submission->userid : $submission->groupid;
 
         foreach ($publications as $curpub) {
             $cm = get_coursemodule_from_instance('publication', $curpub->id, 0, false, MUST_EXIST);
@@ -98,7 +100,9 @@ class observer {
 
                 $conditions = array();
                 $conditions['publication'] = $curpub->id;
-                $conditions['userid'] = $submission->userid;
+                $conditions['userid'] = $itemid;
+                // We look for regular imported files here!
+                $conditions['type'] = PUBLICATION_MODE_IMPORT;
 
                 $oldpubfiles = $DB->get_records('publication_file', $conditions);
 
@@ -111,8 +115,9 @@ class observer {
                     } else {
                         // File has been removed from assign.
                         // Remove from publication (file and db entry).
-                        $file = $fs->get_file_by_id($oldpubfile->fileid);
-                        $file->delete();
+                        if ($file = $fs->get_file_by_id($oldpubfile->fileid)) {
+                            $file->delete();
+                        }
 
                         $conditions['id'] = $oldpubfile->id;
 
@@ -126,7 +131,7 @@ class observer {
                     $newfilerecord->contextid = $context->id;
                     $newfilerecord->component = 'mod_publication';
                     $newfilerecord->filearea = 'attachment';
-                    $newfilerecord->itemid = $submission->userid;
+                    $newfilerecord->itemid = $itemid;
 
                     try {
                         if ($fs->file_exists($newfilerecord->contextid,
@@ -148,7 +153,7 @@ class observer {
 
                         $dataobject = new \stdClass();
                         $dataobject->publication = $curpub->id;
-                        $dataobject->userid = $submission->userid;
+                        $dataobject->userid = $itemid;
                         $dataobject->timecreated = time();
                         $dataobject->fileid = $newfile->get_id();
                         $dataobject->filesourceid = $assignfileid;
@@ -163,7 +168,12 @@ class observer {
                         \core\notification::error($OUTPUT->box($e->message, 'generalbox'));
                     }
                 }
+
             }
+
+            // And now the same for online texts!
+            \publication::update_assign_onlinetext($assigncm, $assigncontext, $curpub->id, $context->id, $submission->id);
+
         }
 
         return true;

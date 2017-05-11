@@ -44,9 +44,7 @@ M.format_grid = M.format_grid || {
        helps to work out the next / previous section in 'find_next_shown_section'. */
     shadebox_shown_array: null,
     // DOM reference to the #gridshadebox_content element.
-    shadebox_content: null,
-    // Right to left languages.
-    rtl: false
+    shadebox_content: null
 };
 
 /**
@@ -58,9 +56,8 @@ M.format_grid = M.format_grid || {
  * @param {Integer} the_num_sections the number of sections in the course.
  * @param {Array}   the_shadebox_shown_array States what sections are not shown (value of 1) and which are (value of 2)
  *                  index is the section no.
- * @param {Boolean} the_rtl True if a right to left language.
  */
-M.format_grid.init = function(Y, the_editing_on, the_section_redirect, the_num_sections, the_shadebox_shown_array, the_rtl) {
+M.format_grid.init = function(Y, the_editing_on, the_section_redirect, the_num_sections, the_shadebox_shown_array) {
     "use strict";
     this.ourYUI = Y;
     this.editing_on = the_editing_on;
@@ -68,7 +65,6 @@ M.format_grid.init = function(Y, the_editing_on, the_section_redirect, the_num_s
     this.selected_section = null;
     this.num_sections = parseInt(the_num_sections);
     this.shadebox_shown_array = the_shadebox_shown_array;
-    this.rtl = the_rtl;
     Y.use('json-parse', function (Y) {
         M.format_grid.shadebox_shown_array = Y.JSON.parse(M.format_grid.shadebox_shown_array);
     });
@@ -95,15 +91,15 @@ M.format_grid.init = function(Y, the_editing_on, the_section_redirect, the_num_s
             shadeboxtoggletwo.on('click', this.icon_toggle, this);
             document.getElementById("gridshadebox_close").style.display = "";
         }
-        var shadeboxarrowleft = Y.one("#gridshadebox_left");
-        if (shadeboxarrowleft) {
-            shadeboxarrowleft.on('click', this.arrow_left, this);
-            document.getElementById("gridshadebox_left").style.display = "";
+        var shadeboxprevious = Y.one("#gridshadebox_previous");
+        if (shadeboxprevious) {
+            shadeboxprevious.on('click', this.previous_section, this);
+            document.getElementById("gridshadebox_previous").style.display = "";
         }
-        var shadeboxarrowright = Y.one("#gridshadebox_right");
-        if (shadeboxarrowright) {
-            shadeboxarrowright.on('click', this.arrow_right, this);
-            document.getElementById("gridshadebox_right").style.display = "";
+        var shadeboxnext = Y.one("#gridshadebox_next");
+        if (shadeboxnext) {
+            shadeboxnext.on('click', this.next_section, this);
+            document.getElementById("gridshadebox_next").style.display = "";
         }
         // Remove href link from icon anchors so they don't compete with JavaScript onlick calls.
         var gridiconcontainer = Y.one("#gridiconcontainer");
@@ -201,13 +197,9 @@ M.format_grid.grid_toggle = function() {
  * Moves to the previous visible section - looping to the last if the current is the first.
  * @param {Object} e Event object.
  */
-M.format_grid.arrow_left = function() {
+M.format_grid.previous_section = function() {
     "use strict";
-    if (this.rtl) {
-        this.change_selected_section(true);
-    } else {
-        this.change_selected_section(false);
-    }
+    this.change_selected_section(false);
 };
 
 /**
@@ -216,13 +208,8 @@ M.format_grid.arrow_left = function() {
  * Moves to the next visible section - looping to the first if the current is the last.
  * @param {Object} e Event object.
  */
-M.format_grid.arrow_right = function() {
-    "use strict";
-    if (this.rtl) {
-        this.change_selected_section(false);
-    } else {
-        this.change_selected_section(true);
-    }
+M.format_grid.next_section = function() {
+    this.change_selected_section(true);
 };
 
 /**
@@ -354,7 +341,7 @@ M.format_grid.shadebox.initialize_shadebox = function() {
     var gridshadebox_content = M.format_grid.ourYUI.one('#gridshadebox_content');
     if (gridshadebox_content.hasClass('absolute')) {
         var top = 50;
-        var pageelement = M.format_grid.ourYUI.one('#page-header'); // Boost theme.
+        var pageelement = M.format_grid.ourYUI.one('#page'); // Boost theme.
         if (!pageelement) {
             pageelement = M.format_grid.ourYUI.one('#region-main');
         }

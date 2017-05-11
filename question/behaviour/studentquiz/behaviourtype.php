@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- *  Defines the question behaviour type studentquiz class
+ *  Defines the question behaviour type StudentQuiz class
  *
  * @package    qbehaviour_studentquiz
  * @copyright  2016 HSR (http://www.hsr.ch)
@@ -32,7 +32,7 @@ defined('MOODLE_INTERNAL') || die();
  */
 class qbehaviour_studentquiz_type extends question_behaviour_type  {
     /**
-     * is archetypal
+     * Is archetypal
      * @return bool
      */
     public function is_archetypal() {
@@ -40,7 +40,7 @@ class qbehaviour_studentquiz_type extends question_behaviour_type  {
     }
 
     /**
-     * can question finish during the attempt
+     * Can question finish during the attempt
      * @return bool
      */
     public function can_questions_finish_during_the_attempt() {
