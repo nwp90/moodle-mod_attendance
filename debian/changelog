@@ -1,3 +1,25 @@
+moodle-site-otagounifom (3.2.3.2017051100+0facmed1-1) jessie; urgency=medium
+
+  * Upstream security update, includes fixes for CVE-2017-7489/MDL-58635,
+    CVE-2017-7490/MDL-58670, CVE-2017-7491/MDL-58740, MDL-58259.
+  * Plugin updates:
+    - mod_studentquiz and qbehaviour_studentquiz to r2.0, 2017040600/1
+    - mod_scheduler to git 20170510 to get fix for CONTRIB-6891
+    - Fix multigrader tree build, indicate hidden courses/categories, ignore max depth.
+    - atto_styles to r3.2-r3
+    - format_grid to 20170509-git (r3.2.1.1 plus one fix)
+    - atto_morebackcolors to r1.2.4
+    - qtype_gapfill to r1.94
+    - block_people to r3.2-r3
+    - mod_questionnaire to 20170509-git (r3.2.4 plus one fix)
+    - mod_publication (student folders) to r3.2.2
+    - mod_lightboxgallery to r2.8.0.10
+    - mod_groupselect to 20170509-git (3.12 plus one fix)
+    - mod_attendance to 20170509-git
+  * Upstream update, 3.2.2 to 3.2.3.
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 11 May 2017 14:26:21 +1200
+
 moodle-site-otagounifom (3.2.2.2017031300+0facmed1-1) jessie; urgency=high
 
   * Upstream security update, including SQLI for all users.
