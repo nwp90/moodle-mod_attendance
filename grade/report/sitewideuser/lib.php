@@ -359,9 +359,9 @@ class grade_report_sitewideuser extends grade_report {
                 $instances = $this->gtree->modinfo->get_instances_of($grade_object->itemmodule);
                 if (!empty($instances[$grade_object->iteminstance])) {
                     $cm = $instances[$grade_object->iteminstance];
-                        if (!$cm->uservisible) {
                         // Further checks are required to determine whether the activity is entirely hidden or just greyed out.
-                        if ($cm->is_user_access_restricted_by_group() || $cm->is_user_access_restricted_by_conditional_access()) {
+                        // cm->availableinfo true means greyed out (value is explanation, which == true).
+                        if (!$cm->uservisible && !$cm->availableinfo) {
                             $hide = true;
                         }
                     }
