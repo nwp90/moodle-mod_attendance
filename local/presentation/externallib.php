@@ -96,32 +96,58 @@ class local_presentation_external extends external_api {
         if ($course != '') {
             $sql = "select
                         ti.id as taginstanceid,
-                        r.id as id, r.name as name,
+                        u.id as id, u.name as name,
                         f.id as fileid, f.filename, f.filesize as size, f.itemid, f.filearea, f.filepath,
                         f.mimetype, f.author, f.license,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as resourcecontext,
+                        cx.id as context,
                         t.id as tagid, t.name as tag
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
-                        join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {resource} r
-                            on r.id = cm.instance
-                        join {course} c
-                            on r.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = r.id and ti.itemtype = 'resource'
+                    from (
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {resource} obj
+                                on obj.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = obj.id
+                                and ti.itemtype = 'resource'
+                        union
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {resource} obj
+                                on obj.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'resource'
+                    ) u
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
+                        join {context} cx
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
+                        join {course} c
+                            on u.course = c.id
                         join {files} f
-                            on f.contextid=cx.id
+                            on f.contextid = cx.id
                     where
                         c.shortname = ?
-                        and m.name = 'resource'
-                        and f.filename not like '.'";
+                        and f.filename not like '.'
+                    ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $files = array();
             foreach ($taginstances as $ti) {
@@ -131,7 +157,7 @@ class local_presentation_external extends external_api {
                     foreach ($keys as $key) {
                         $returnfile->$key = $ti->$key;
                     }
-                    $returnfile->link = "$CFG->wwwroot/pluginfile.php/$ti->resourcecontext/mod_resource/" .
+                    $returnfile->link = "$CFG->wwwroot/pluginfile.php/$ti->context/mod_resource/" .
                             "$ti->filearea/$ti->itemid/$ti->filepath$ti->filename";
                     $returnfile->tags = array();
                     $returnfiles[] = $returnfile;
@@ -195,27 +221,52 @@ class local_presentation_external extends external_api {
         if ($course != '') {
             $sql = "select
                         ti.id as taginstanceid,
-                        l.id as id, l.name as name,
+                        u.id as id, u.name as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as lessoncontext, cm.id as cmid,
+                        cx.id as context, u.cmid as cmid,
                         t.id as tagid, t.name as tag
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+                    from (
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {lesson} obj
+                                on obj.id = cm.instance and m.name = 'lesson'
+                            join {tag_instance} ti
+                                on ti.itemid = obj.id and ti.itemtype = 'lesson'
+                        union
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {lesson} obj
+                                on obj.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'lesson'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {lesson} l
-                            on l.id = cm.instance
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
-                            on l.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = l.id and ti.itemtype = 'lesson'
+                            on u.course = c.id
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                     where
                         c.shortname = ?
-                        and m.name='lesson'";
+                    ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $lessons = array();
             foreach ($taginstances as $ti) {
@@ -283,27 +334,53 @@ class local_presentation_external extends external_api {
         if ($course != '') {
             $sql = "select
                         ti.id as taginstanceid,
-                        q.id as id, q.name as name,
+                        u.id as id, u.name as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as quizcontext, cm.id as cmid,
+                        cx.id as quizcontext, u.cmid as cmid,
                         t.id as tagid, t.name as tag
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+
+                    from (
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {quiz} obj
+                                on obj.id = cm.instance and m.name = 'quiz'
+                            join {tag_instance} ti
+                                on ti.itemid = obj.id and ti.itemtype = 'quiz'
+                        union
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {quiz} obj
+                                on obj.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'quiz'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {quiz} q
-                            on q.id = cm.instance
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
-                            on q.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = q.id and ti.itemtype = 'quiz'
+                            on u.course = c.id
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                     where
                         c.shortname = ?
-                        and m.name='quiz'";
+                    ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $quizzes = array();
             foreach ($taginstances as $ti) {
@@ -373,25 +450,52 @@ class local_presentation_external extends external_api {
                         ti.id as taginstanceid,
                         u.id as id, u.name as name, u.externalurl as url,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as urlcontext, cm.id as cmid,
+                        cx.id as context, u.cmid as cmid,
                         t.id as tagid, t.name as tag
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+                    from (
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            obj.externalurl as externalurl,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {url} obj
+                                on obj.id = cm.instance and m.name = 'url'
+                            join {tag_instance} ti
+                                on ti.itemid = obj.id and ti.itemtype = 'url'
+                        union
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            obj.externalurl as externalurl,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {url} obj
+                                on obj.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'url'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {url} u
-                            on u.id = cm.instance
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
                             on u.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = u.id and ti.itemtype = 'url'
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                     where
                         c.shortname = ?
-                        and m.name='url'";
+                    ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $urls = array();
             foreach ($taginstances as $ti) {
@@ -460,27 +564,52 @@ class local_presentation_external extends external_api {
         if ($course != '') {
             $sql = "select
                         ti.id as taginstanceid,
-                        w.id as id, w.name as name,
+                        u.id as id, u.name as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as workshopcontext, cm.id as cmid,
+                        cx.id as context, u.cmid as cmid,
                         t.id as tagid, t.name as tag
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+                    from (
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {workshop} obj
+                                on obj.id = cm.instance and m.name = 'workshop'
+                            join {tag_instance} ti
+                                on ti.itemid = obj.id and ti.itemtype = 'workshop'
+                        union
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {workshop} obj
+                                on obj.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'workshop'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {workshop} w
-                            on w.id = cm.instance
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
-                            on w.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = w.id and ti.itemtype = 'workshop'
+                            on u.course = c.id
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                     where
                         c.shortname = ?
-                        and m.name='workshop'";
+                    ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $workshops = array();
             foreach ($taginstances as $ti) {
@@ -548,27 +677,52 @@ class local_presentation_external extends external_api {
         if ($course != '') {
             $sql = "select
                         ti.id as taginstanceid,
-                        a.id as id, a.name as name,
+                        u.id as id, u.name as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as assignmentcontext, cm.id as cmid,
+                        cx.id as context, u.cmid as cmid,
                         t.id as tagid, t.name as tag
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+                    from (
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {assign} obj
+                                on obj.id = cm.instance and m.name = 'assign'
+                            join {tag_instance} ti
+                                on ti.itemid = obj.id and ti.itemtype = 'assign'
+                        union
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {assign} obj
+                                on obj.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'assign'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {assign} a
-                            on a.id = cm.instance
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
-                            on a.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = a.id and ti.itemtype = 'assign'
+                            on u.course = c.id
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                     where
                         c.shortname = ?
-                        and m.name='assign'";
+                    ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $assignments = array();
             foreach ($taginstances as $ti) {
@@ -636,27 +790,52 @@ class local_presentation_external extends external_api {
         if ($course != '') {
             $sql = "select
                         ti.id as taginstanceid,
-                        p.id as id, p.name as name,
+                        u.id as id, u.name as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as pagecontext, cm.id as cmid,
+                        cx.id as context, u.cmid as cmid,
                         t.id as tagid, t.name as tag
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+                    from (
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {page} obj
+                                on obj.id = cm.instance and m.name = 'page'
+                            join {tag_instance} ti
+                                on ti.itemid = obj.id and ti.itemtype = 'page'
+                        union
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {page} obj
+                                on obj.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'page'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {page} p
-                            on p.id = cm.instance
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
-                            on p.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = p.id and ti.itemtype = 'page'
+                            on u.course = c.id
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                     where
                         c.shortname = ?
-                        and m.name='page'";
+                    ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $pages = array();
             foreach ($taginstances as $ti) {
@@ -724,27 +903,52 @@ class local_presentation_external extends external_api {
         if ($course != '') {
             $sql = "select
                         ti.id as taginstanceid,
-                        b.id as id, b.name as name,
+                        u.id as id, u.name as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as bookcontext, cm.id as cmid,
+                        cx.id as context, u.cmid as cmid,
                         t.id as tagid, t.name as tag
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+                    from (
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {book} obj
+                                on obj.id = cm.instance and m.name = 'book'
+                            join {tag_instance} ti
+                                on ti.itemid = obj.id and ti.itemtype = 'book'
+                        union
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {book} obj
+                                on obj.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'book'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {book} b
-                            on b.id = cm.instance
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
-                            on b.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = b.id and ti.itemtype = 'book'
+                            on u.course = c.id
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                     where
                         c.shortname = ?
-                        and m.name='book'";
+                    ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $books = array();
             foreach ($taginstances as $ti) {
@@ -812,33 +1016,58 @@ class local_presentation_external extends external_api {
         if ($course != '') {
             $sql = "select
                         ti.id as taginstanceid,
-                        s.id as id, s.name as name,
+                        u.id as id, u.name as name,
                         f.id as fileid, f.filename, f.filesize as size, f.itemid, f.filearea, f.filepath,
                         f.mimetype, f.author, f.license,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as scormcontext, cm.id as cmid,
+                        cx.id as context, u.cmid as cmid,
                         t.id as tagid, t.name as tag
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+                    from (
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {scorm} obj
+                                on obj.id = cm.instance and m.name = 'scorm'
+                            join {tag_instance} ti
+                                on ti.itemid = obj.id and ti.itemtype = 'scorm'
+                        union
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {scorm} obj
+                                on obj.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'scorm'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {scorm} s
-                            on s.id = cm.instance
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
-                            on s.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = s.id and ti.itemtype = 'scorm'
+                            on u.course = c.id
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                         join {files} f
-                            on f.contextid=cx.id
+                            on f.contextid = cx.id
                     where
                         c.shortname = ?
-                        and m.name='scorm'
                         and f.filearea = 'package'
-                        and f.filename not like '.'";
+                        and f.filename not like '.'
+                    ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $scorms = array();
             foreach ($taginstances as $ti) {
@@ -911,27 +1140,52 @@ class local_presentation_external extends external_api {
         if ($course != '') {
             $sql = "select
                         ti.id as taginstanceid,
-                        g.id as id, g.name as name,
+                        u.id as id, u.name as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as glossarycontext, cm.id as cmid,
+                        cx.id as context, u.cmid as cmid,
                         t.id as tagid, t.name as tag
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+                    from (
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {glossary} obj
+                                on obj.id = cm.instance and m.name = 'glossary'
+                            join {tag_instance} ti
+                                on ti.itemid = obj.id and ti.itemtype = 'glossary'
+                        union
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {glossary} obj
+                                on obj.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'glossary'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {glossary} g
-                            on g.id = cm.instance
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
-                            on g.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = g.id and ti.itemtype = 'glossary'
+                            on u.course = c.id
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                     where
                         c.shortname = ?
-                        and m.name='glossary'";
+                    ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $glossaries = array();
             foreach ($taginstances as $ti) {
@@ -999,30 +1253,57 @@ class local_presentation_external extends external_api {
         if ($course != '') {
             $sql = "select
                         ti.id as taginstanceid,
-                        l.id as id, l.name as name, l.typeid,
+                        u.id as id, u.name as name, u.typeid,
                         lt.name as ltitype,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as lticontext, cm.id as cmid,
+                        cx.id as context, u.cmid as cmid,
                         t.id as tagid, t.name as tag
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+                    from (
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            obj.typeid as typeid,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {glossary} obj
+                                on obj.id = cm.instance and m.name = 'glossary'
+                            join {tag_instance} ti
+                                on ti.itemid = obj.id and ti.itemtype = 'glossary'
+                        union
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            obj.typeid as typeid,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {glossary} obj
+                                on obj.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'glossary'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {lti} l
-                            on l.id = cm.instance
-                        join {lti_types} lt
-                            on l.typeid = lt.id
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
-                            on l.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = l.id and ti.itemtype = 'lti'
+                            on u.course = c.id
+                        join {lti_types} lt
+                            on u.typeid = lt.id
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                     where
                         c.shortname = ?
-                        and m.name='lti'";
+                    ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $ltis = array();
             foreach ($taginstances as $ti) {
@@ -1100,31 +1381,57 @@ class local_presentation_external extends external_api {
             }
             list($tagsql, $tagvalues) = $DB->get_in_or_equal($tags);
             $sql = "select
-                        r.id as id, r.name as name,
+                        u.rid as id, u.rname as name,
                         f.id as fileid, f.filename, f.filesize as size, f.itemid, f.filearea, f.filepath,
                         f.mimetype, f.author, f.license,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as resourcecontext
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
-                        join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {resource} r
-                            on r.id = cm.instance
-                        join {course} c
-                            on r.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = r.id and ti.itemtype = 'resource'
+                        cx.id as context
+                    from (
+                        select
+                            r.id as rid,
+                            r.name as rname,
+                            r.course as rcourse,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {resource} r
+                                on r.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = r.id
+                                and ti.itemtype = 'resource'
+                        union
+                        select
+                            r.id as rid,
+                            r.name as rname,
+                            r.course as rcourse,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {resource} r
+                                on r.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'resource'
+                    ) u
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
+                        join {context} cx
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
+                        join {course} c
+                            on u.rcourse = c.id
                         join {files} f
-                            on f.contextid=cx.id
+                            on f.contextid = cx.id
                     where
                         t.name $tagsql
-                        and m.name='resource'
-                        and f.filename not like '.'";
+                        and f.filename not like '.'
+                    ";
             $files = $DB->get_records_sql($sql, $tagvalues);
             foreach ($files as $file) {
                 $returnfile = new StdClass();
@@ -1132,7 +1439,7 @@ class local_presentation_external extends external_api {
                 foreach ($keys as $key) {
                     $returnfile->$key = $file->$key;
                 }
-                $returnfile->link = "$CFG->wwwroot/pluginfile.php/$file->resourcecontext/mod_resource/" .
+                $returnfile->link = "$CFG->wwwroot/pluginfile.php/$file->context/mod_resource/" .
                         "$file->filearea/$file->itemid/$file->filepath$file->filename";
                 $returnfiles[] = $returnfile;
             }
@@ -1195,26 +1502,51 @@ class local_presentation_external extends external_api {
             }
             list($tagsql, $tagvalues) = $DB->get_in_or_equal($tags);
             $sql = "select
-                        l.id as id, l.name as name,
+                        u.lid as id, u.lname as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as lessoncontext, cm.id as cmid
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+                        cx.id as context, u.cmid as cmid
+                    from (
+                        select
+                            l.id as lid,
+                            l.name as lname,
+                            l.course as lcourse,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {lesson} l
+                                on l.id = cm.instance and m.name = 'lesson'
+                            join {tag_instance} ti
+                                on ti.itemid = l.id and ti.itemtype = 'lesson'
+                        union
+                        select
+                            l.id as lid,
+                            l.name as lname,
+                            l.course as lcourse,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {lesson} l
+                                on l.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'lesson'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {lesson} l
-                            on l.id = cm.instance
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
-                            on l.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = l.id and ti.itemtype = 'lesson'
+                            on u.lcourse = c.id
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                     where
                         t.name $tagsql
-                        and m.name='lesson'";
+                    ";
             $lessons = $DB->get_records_sql($sql, $tagvalues);
             foreach ($lessons as $lesson) {
                 $returnlesson = new StdClass();
@@ -1279,26 +1611,51 @@ class local_presentation_external extends external_api {
             }
             list($tagsql, $tagvalues) = $DB->get_in_or_equal($tags);
             $sql = "select
-                        q.id as id, q.name as name,
+                        u.qid as id, u.qname as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as quizcontext, cm.id as cmid
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+                        cx.id as quizcontext, u.cmid as cmid
+                    from (
+                        select
+                            q.id as qid,
+                            q.name as qname,
+                            q.course as qcourse,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {quiz} q
+                                on q.id = cm.instance and m.name = 'quiz'
+                            join {tag_instance} ti
+                                on ti.itemid = q.id and ti.itemtype = 'quiz'
+                        union
+                        select
+                            q.id as qid,
+                            q.name as qname,
+                            q.course as qcourse,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {quiz} q
+                                on q.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'quiz'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {quiz} q
-                            on q.id = cm.instance
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
-                            on q.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = q.id and ti.itemtype = 'quiz'
+                            on u.qcourse = c.id
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                     where
                         t.name $tagsql
-                        and m.name='quiz'";
+                    ";
             $quizzes = $DB->get_records_sql($sql, $tagvalues);
             foreach ($quizzes as $quiz) {
                 $returnquiz = new StdClass();
@@ -1363,26 +1720,53 @@ class local_presentation_external extends external_api {
             }
             list($tagsql, $tagvalues) = $DB->get_in_or_equal($tags);
             $sql = "select
-                        u.id as id, u.name as name, u.externalurl as url,
+                        u.uid as id, u.uname as name, u.externalurl as url,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as urlcontext, cm.id as cmid
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+                        cx.id as context, u.cmid as cmid
+                    from (
+                        select
+                            url.id as uid,
+                            url.name as uname,
+                            url.course as ucourse,
+                            url.externalurl as externalurl,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {url} url
+                                on url.id = cm.instance and m.name = 'url'
+                            join {tag_instance} ti
+                                on ti.itemid = url.id and ti.itemtype = 'url'
+                        union
+                        select
+                            url.id as uid,
+                            url.name as uname,
+                            url.course as ucourse,
+                            url.externalurl as externalurl,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {url} url
+                                on url.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'url'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {url} u
-                            on u.id = cm.instance
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
-                            on u.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = u.id and ti.itemtype = 'url'
+                            on u.ucourse = c.id
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                     where
                         t.name $tagsql
-                        and m.name='url'";
+                    ";
             $urls = $DB->get_records_sql($sql, $tagvalues);
             foreach ($urls as $url) {
                 $returnurl = new StdClass();
@@ -1448,26 +1832,51 @@ class local_presentation_external extends external_api {
             }
             list($tagsql, $tagvalues) = $DB->get_in_or_equal($tags);
             $sql = "select
-                        w.id as id, w.name as name,
+                        u.wid as id, u.wname as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as workshopcontext, cm.id as cmid
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+                        cx.id as context, u.cmid as cmid
+                    from (
+                        select
+                            w.id as wid,
+                            w.name as wname,
+                            w.course as wcourse,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {workshop} w
+                                on w.id = cm.instance and m.name = 'workshop'
+                            join {tag_instance} ti
+                                on ti.itemid = w.id and ti.itemtype = 'workshop'
+                        union
+                        select
+                            w.id as wid,
+                            w.name as wname,
+                            w.course as wcourse,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {workshop} w
+                                on w.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'workshop'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {workshop} w
-                            on w.id = cm.instance
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
-                            on w.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = w.id and ti.itemtype = 'workshop'
+                            on u.wcourse = c.id
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                     where
                         t.name $tagsql
-                        and m.name='workshop'";
+                    ";
             $workshops = $DB->get_records_sql($sql, $tagvalues);
             foreach ($workshops as $workshop) {
                 $returnworkshop = new StdClass();
@@ -1532,26 +1941,51 @@ class local_presentation_external extends external_api {
             }
             list($tagsql, $tagvalues) = $DB->get_in_or_equal($tags);
             $sql = "select
-                        a.id as id, a.name as name,
+                        u.id as id, u.name as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as assignmentcontext, cm.id as cmid
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+                        cx.id as context, u.cmid as cmid
+                    from (
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {assign} obj
+                                on obj.id = cm.instance and m.name = 'assign'
+                            join {tag_instance} ti
+                                on ti.itemid = obj.id and ti.itemtype = 'assign'
+                        union
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {assign} obj
+                                on obj.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'assign'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {assign} a
-                            on a.id = cm.instance
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
-                            on a.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = a.id and ti.itemtype = 'assign'
+                            on u.course = c.id
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                     where
                         t.name $tagsql
-                        and m.name='assign'";
+                    ";
             $assignments = $DB->get_records_sql($sql, $tagvalues);
             foreach ($assignments as $assignment) {
                 $returnassignment = new StdClass();
@@ -1616,26 +2050,51 @@ class local_presentation_external extends external_api {
             }
             list($tagsql, $tagvalues) = $DB->get_in_or_equal($tags);
             $sql = "select
-                        p.id as id, p.name as name,
+                        u.id as id, u.name as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as pagecontext, cm.id as cmid
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+                        cx.id as context, u.cmid as cmid
+                    from (
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {page} obj
+                                on obj.id = cm.instance and m.name = 'page'
+                            join {tag_instance} ti
+                                on ti.itemid = obj.id and ti.itemtype = 'page'
+                        union
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {page} obj
+                                on obj.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'page'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {page} p
-                            on p.id = cm.instance
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
-                            on p.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = p.id and ti.itemtype = 'page'
+                            on u.course = c.id
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                     where
                         t.name $tagsql
-                        and m.name='page'";
+                    ";
             $pages = $DB->get_records_sql($sql, $tagvalues);
             foreach ($pages as $page) {
                 $returnpage = new StdClass();
@@ -1700,26 +2159,51 @@ class local_presentation_external extends external_api {
             }
             list($tagsql, $tagvalues) = $DB->get_in_or_equal($tags);
             $sql = "select
-                        b.id as id, b.name as name,
+                        u.id as id, u.name as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as bookcontext, cm.id as cmid
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+                        cx.id as context, u.cmid as cmid
+                    from (
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {book} obj
+                                on obj.id = cm.instance and m.name = 'book'
+                            join {tag_instance} ti
+                                on ti.itemid = obj.id and ti.itemtype = 'book'
+                        union
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {book} obj
+                                on obj.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'book'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {book} b
-                            on b.id = cm.instance
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
-                            on b.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = b.id and ti.itemtype = 'book'
+                            on u.course = c.id
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                     where
                         t.name $tagsql
-                        and m.name='book'";
+                    ";
             $books = $DB->get_records_sql($sql, $tagvalues);
             foreach ($books as $book) {
                 $returnbook = new StdClass();
@@ -1784,32 +2268,57 @@ class local_presentation_external extends external_api {
             }
             list($tagsql, $tagvalues) = $DB->get_in_or_equal($tags);
             $sql = "select
-                        s.id as id, s.name as name,
+                        u.id as id, u.name as name,
                         f.id as fileid, f.filename, f.filesize as size, f.itemid, f.filearea, f.filepath,
                         f.mimetype, f.author, f.license,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as scormcontext, cm.id as cmid
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+                        cx.id as context, u.cmid as cmid
+                    from (
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {scorm} obj
+                                on obj.id = cm.instance and m.name = 'scorm'
+                            join {tag_instance} ti
+                                on ti.itemid = obj.id and ti.itemtype = 'scorm'
+                        union
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {scorm} obj
+                                on obj.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'scorm'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {scorm} s
-                            on s.id = cm.instance
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
-                            on s.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = s.id and ti.itemtype = 'scorm'
+                            on u.course = c.id
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                         join {files} f
-                            on f.contextid=cx.id
+                            on f.contextid = cx.id
                     where
                         t.name $tagsql
-                        and m.name='scorm'
                         and f.filearea = 'package'
-                        and f.filename not like '.'";
+                        and f.filename not like '.'
+                    ";
             $scorms = $DB->get_records_sql($sql, $tagvalues);
             foreach ($scorms as $scorm) {
                 $returnscorm = new StdClass();
@@ -1879,26 +2388,51 @@ class local_presentation_external extends external_api {
             }
             list($tagsql, $tagvalues) = $DB->get_in_or_equal($tags);
             $sql = "select
-                        g.id as id, g.name as name,
+                        u.id as id, u.name as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as glossarycontext, cm.id as cmid
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+                        cx.id as context, u.cmid as cmid
+                    from (
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {glossary} obj
+                                on obj.id = cm.instance and m.name = 'glossary'
+                            join {tag_instance} ti
+                                on ti.itemid = obj.id and ti.itemtype = 'glossary'
+                        union
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {glossary} obj
+                                on obj.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'glossary'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {glossary} g
-                            on g.id = cm.instance
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
-                            on g.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = g.id and ti.itemtype = 'glossary'
+                            on u.course = c.id
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                     where
                         t.name $tagsql
-                        and m.name='glossary'";
+                    ";
             $glossaries = $DB->get_records_sql($sql, $tagvalues);
             foreach ($glossaries as $glossary) {
                 $returnglossary = new StdClass();
@@ -1963,29 +2497,56 @@ class local_presentation_external extends external_api {
             }
             list($tagsql, $tagvalues) = $DB->get_in_or_equal($tags);
             $sql = "select
-                        l.id as id, l.name as name, l.typeid,
+                        u.id as id, u.name as name, u.typeid,
                         lt.name as ltitype,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
-                        cx.id as lticontext, cm.id as cmid
-                    from
-                        {modules} m
-                        join {course_modules} cm
-                            on cm.module = m.id
+                        cx.id as context, u.cmid as cmid
+                    from (
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            obj.typeid as typeid,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {glossary} obj
+                                on obj.id = cm.instance and m.name = 'glossary'
+                            join {tag_instance} ti
+                                on ti.itemid = obj.id and ti.itemtype = 'glossary'
+                        union
+                        select
+                            obj.id as id,
+                            obj.name as name,
+                            obj.course as course,
+                            obj.typeid as typeid,
+                            ti.tagid as tagid,
+                            cm.id as cmid
+                        from
+                            {modules} m
+                            join {course_modules} cm
+                                on cm.module = m.id
+                            join {glossary} obj
+                                on obj.id = cm.instance
+                            join {tag_instance} ti
+                                on ti.itemid = cm.id
+                                and ti.itemtype = 'course_modules'
+                                and m.name = 'glossary'
+                    ) u
                         join {context} cx
-                            on cx.instanceid=cm.id and cx.contextlevel=70
-                        join {lti} l
-                            on l.id = cm.instance
-                        join {lti_types} lt
-                            on l.typeid = lt.id
+                            on cx.instanceid = u.cmid and cx.contextlevel = 70
                         join {course} c
-                            on l.course = c.id
-                        join {tag_instance} ti
-                            on ti.itemid = l.id and ti.itemtype = 'lti'
+                            on u.course = c.id
+                        join {lti_types} lt
+                            on u.typeid = lt.id
                         join {tag} t
-                            on t.id = ti.tagid
+                            on t.id = u.tagid
                     where
                         t.name $tagsql
-                        and m.name='lti'";
+                    ";
             $ltis = $DB->get_records_sql($sql, $tagvalues);
             foreach ($ltis as $lti) {
                 $returnlti = new StdClass();
