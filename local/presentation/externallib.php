@@ -1270,10 +1270,10 @@ class local_presentation_external extends external_api {
                             {modules} m
                             join {course_modules} cm
                                 on cm.module = m.id
-                            join {glossary} obj
-                                on obj.id = cm.instance and m.name = 'glossary'
+                            join {lti} obj
+                                on obj.id = cm.instance and m.name = 'lti'
                             join {tag_instance} ti
-                                on ti.itemid = obj.id and ti.itemtype = 'glossary'
+                                on ti.itemid = obj.id and ti.itemtype = 'lti'
                         union
                         select
                             obj.id as id,
@@ -1286,12 +1286,12 @@ class local_presentation_external extends external_api {
                             {modules} m
                             join {course_modules} cm
                                 on cm.module = m.id
-                            join {glossary} obj
+                            join {lti} obj
                                 on obj.id = cm.instance
                             join {tag_instance} ti
                                 on ti.itemid = cm.id
                                 and ti.itemtype = 'course_modules'
-                                and m.name = 'glossary'
+                                and m.name = 'lti'
                     ) u
                         join {context} cx
                             on cx.instanceid = u.cmid and cx.contextlevel = 70
@@ -2513,10 +2513,10 @@ class local_presentation_external extends external_api {
                             {modules} m
                             join {course_modules} cm
                                 on cm.module = m.id
-                            join {glossary} obj
-                                on obj.id = cm.instance and m.name = 'glossary'
+                            join {lti} obj
+                                on obj.id = cm.instance and m.name = 'lti'
                             join {tag_instance} ti
-                                on ti.itemid = obj.id and ti.itemtype = 'glossary'
+                                on ti.itemid = obj.id and ti.itemtype = 'lti'
                         union
                         select
                             obj.id as id,
@@ -2529,12 +2529,12 @@ class local_presentation_external extends external_api {
                             {modules} m
                             join {course_modules} cm
                                 on cm.module = m.id
-                            join {glossary} obj
+                            join {lti} obj
                                 on obj.id = cm.instance
                             join {tag_instance} ti
                                 on ti.itemid = cm.id
                                 and ti.itemtype = 'course_modules'
-                                and m.name = 'glossary'
+                                and m.name = 'lti'
                     ) u
                         join {context} cx
                             on cx.instanceid = u.cmid and cx.contextlevel = 70
