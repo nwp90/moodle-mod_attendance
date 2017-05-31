@@ -126,7 +126,6 @@ class studentquiz_bank_view extends \core_question\bank\view {
         $this->build_query();
 
         $this->questions = $this->load_questions();
-        $this->update_questions($this->load_questions());
         $this->questions = $this->filter_questions($this->questions);
         $this->totalnumber = count($this->questions);
 
@@ -175,7 +174,7 @@ class studentquiz_bank_view extends \core_question\bank\view {
                             $approved = $DB->get_field('studentquiz_question', 'approved', array('questionid' => $questionid));
                             $DB->set_field('studentquiz_question', 'approved', !$approved, array('questionid' => $questionid));
 
-                            mod_studentquiz_notify_approving($questionid, $this->course);
+                            mod_studentquiz_notify_approving($questionid, $this->course, $this->cm);
                         }
                     }
                     redirect($this->baseurl);
@@ -343,15 +342,22 @@ class studentquiz_bank_view extends \core_question\bank\view {
      */
     protected function build_query() {
         // Get the required tables and fields.
+        $this->sqlparams = array();
         $joins = array();
         $fields = array('q.hidden', 'q.category');
         foreach ($this->requiredcolumns as $column) {
+            if (method_exists($column, 'set_joinconditions')) {
+                $column->set_joinconditions($this->searchconditions);
+            }
             $extrajoins = $column->get_extra_joins();
             foreach ($extrajoins as $prefix => $join) {
                 if (isset($joins[$prefix]) && $joins[$prefix] != $join) {
                     throw new \coding_exception('Join ' . $join . ' conflicts with previous join ' . $joins[$prefix]);
                 }
                 $joins[$prefix] = $join;
+            }
+            if (method_exists($column, 'get_sqlparams')) {
+                $this->sqlparams = array_merge($this->sqlparams, $column->get_sqlparams());
             }
             $fields = array_merge($fields, $column->get_required_fields());
         }
@@ -366,7 +372,6 @@ class studentquiz_bank_view extends \core_question\bank\view {
 
         // Build the where clause.
         $tests = array('q.parent = 0');
-        $this->sqlparams = array();
         foreach ($this->searchconditions as $searchcondition) {
             if ($searchcondition->where()) {
                 $tests[] = '((' . $searchcondition->where() .'))';
@@ -760,7 +765,9 @@ class studentquiz_bank_view extends \core_question\bank\view {
         global $USER;
 
         $filteredquestions = array();
+        $questionids = array();
         foreach ($questions as $question) {
+            $questionids[] = $question->id;
             $question->tagname = '';
             if (
                 mod_studentquiz_is_anonym($this->cm->id) &&
@@ -789,28 +796,31 @@ class studentquiz_bank_view extends \core_question\bank\view {
                 }
             }
         }
+
+        $this->update_questions($questionids);
+
         return $filteredquestions;
     }
 
     /**
      * Update our studenquiz_question table with the question list.
      *
-     * @param stdClass $questions
+     * @param array $questionids
      */
-    private function update_questions($questions) {
+    private function update_questions($questionids) {
         global $DB;
         $sqlparams = array();
         $sql = 'SELECT questionid FROM {studentquiz_question} q';
         $studentquizquestions = $DB->get_recordset_sql($sql, $sqlparams);
 
-        $questionids = array();
+        $studentquizquestionids = array();
         foreach ($studentquizquestions as $studentquizquestion) {
-            array_push($questionids, $studentquizquestion->questionid);
+            array_push($studentquizquestionids, $studentquizquestion->questionid);
         }
 
-        foreach ($questions as $question) {
-            if (!in_array($question->id, $questionids)) {
-                $DB->insert_record('studentquiz_question', array('questionid' => $question->id, 'approved' => false));
+        foreach ($questionids as $id) {
+            if (!in_array($id, $studentquizquestionids)) {
+                $DB->insert_record('studentquiz_question', array('questionid' => $id, 'approved' => false));
             }
         }
     }
