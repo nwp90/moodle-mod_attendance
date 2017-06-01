@@ -1,3 +1,14 @@
+moodle-site-otagounifom (3.2.3.2017052500+0facmed1-1) jessie; urgency=medium
+
+  * Upgrade to latest upstream weekly stable.
+  * Update studentquiz to latest, with fix for speed issue
+  * Update local_presentation to work with new-style tagging (incomplete!)
+  * Add mod-hvp (H5P) plugin
+  * Attempt to fix MDL-55532 (export category names in grade reports)
+  * Attempt to fix gradereport-sitewideuser for new availabilty API
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 01 Jun 2017 14:41:49 +1200
+
 moodle-site-otagounifom (3.2.3.2017051100+0facmed1-1) jessie; urgency=medium
 
   * Upstream security update, includes fixes for CVE-2017-7489/MDL-58635,
