@@ -1,3 +1,25 @@
+moodle-site-otagounifom (3.2.3.2017060100+0facmed1-1) jessie; urgency=medium
+
+  * Fix sitewideuser fix from previous version
+  * Update qbehaviour_studentquiz to 2017053101
+  * Update mod_checklist to 2017060500
+  * Update gradeexport_checklist to 2017051200
+  * Update mod_hvp to 1.4 (2017060600)
+  * Update mod_poster to 5.0 (2017051200)
+  * Update mod_teambuilder to 2017051900
+  * Update mod_questionnaire to "2016111107" (actually 2017051800)
+  * Update mod_realtimequiz to 2017051201
+  * Update atto_morebackcolors to 2017050100 (version.php only change)
+  * Update atto_morefontcolors to 2017050100
+  * Update assignsubmission_gradereviews to local version 2017060600.
+    Parallel to upstream 2016042207 but with our names for capabilities,
+    which are known to be working.
+  * Update to Moodle 3.2.3+ 20170601, including fixes for: MDL-57313,
+    MDL-49040, MDL-58997, MDL-49988, MDL-54887, MDL-59093, MDL-59094.
+    Most important of these is 49040, truncation of feedback after '&' char.
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 08 Jun 2017 08:59:40 +1200
+
 moodle-site-otagounifom (3.2.3.2017052500+0facmed1-1) jessie; urgency=medium
 
   * Upgrade to latest upstream weekly stable.
