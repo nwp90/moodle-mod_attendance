@@ -95,7 +95,6 @@ class local_presentation_external extends external_api {
         $course = $params['course'];
         if ($course != '') {
             $sql = "select
-                        ti.id as taginstanceid,
                         u.id as id, u.name as name,
                         f.id as fileid, f.filename, f.filesize as size, f.itemid, f.filearea, f.filepath,
                         f.mimetype, f.author, f.license,
@@ -220,7 +219,6 @@ class local_presentation_external extends external_api {
         $course = $params['course'];
         if ($course != '') {
             $sql = "select
-                        ti.id as taginstanceid,
                         u.id as id, u.name as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
                         cx.id as context, u.cmid as cmid,
@@ -333,7 +331,6 @@ class local_presentation_external extends external_api {
         $course = $params['course'];
         if ($course != '') {
             $sql = "select
-                        ti.id as taginstanceid,
                         u.id as id, u.name as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
                         cx.id as quizcontext, u.cmid as cmid,
@@ -447,7 +444,6 @@ class local_presentation_external extends external_api {
         $course = $params['course'];
         if ($course != '') {
             $sql = "select
-                        ti.id as taginstanceid,
                         u.id as id, u.name as name, u.externalurl as url,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
                         cx.id as context, u.cmid as cmid,
@@ -563,7 +559,6 @@ class local_presentation_external extends external_api {
         $course = $params['course'];
         if ($course != '') {
             $sql = "select
-                        ti.id as taginstanceid,
                         u.id as id, u.name as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
                         cx.id as context, u.cmid as cmid,
@@ -676,7 +671,6 @@ class local_presentation_external extends external_api {
         $course = $params['course'];
         if ($course != '') {
             $sql = "select
-                        ti.id as taginstanceid,
                         u.id as id, u.name as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
                         cx.id as context, u.cmid as cmid,
@@ -789,7 +783,6 @@ class local_presentation_external extends external_api {
         $course = $params['course'];
         if ($course != '') {
             $sql = "select
-                        ti.id as taginstanceid,
                         u.id as id, u.name as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
                         cx.id as context, u.cmid as cmid,
@@ -902,7 +895,6 @@ class local_presentation_external extends external_api {
         $course = $params['course'];
         if ($course != '') {
             $sql = "select
-                        ti.id as taginstanceid,
                         u.id as id, u.name as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
                         cx.id as context, u.cmid as cmid,
@@ -1015,7 +1007,6 @@ class local_presentation_external extends external_api {
         $course = $params['course'];
         if ($course != '') {
             $sql = "select
-                        ti.id as taginstanceid,
                         u.id as id, u.name as name,
                         f.id as fileid, f.filename, f.filesize as size, f.itemid, f.filearea, f.filepath,
                         f.mimetype, f.author, f.license,
@@ -1139,7 +1130,6 @@ class local_presentation_external extends external_api {
         $course = $params['course'];
         if ($course != '') {
             $sql = "select
-                        ti.id as taginstanceid,
                         u.id as id, u.name as name,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
                         cx.id as context, u.cmid as cmid,
@@ -1252,7 +1242,6 @@ class local_presentation_external extends external_api {
         $course = $params['course'];
         if ($course != '') {
             $sql = "select
-                        ti.id as taginstanceid,
                         u.id as id, u.name as name, u.typeid,
                         lt.name as ltitype,
                         c.id as courseid, c.fullname as coursename, c.shortname as courseshortname,
