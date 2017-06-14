@@ -1,3 +1,11 @@
+moodle-site-otagounifom (3.2.3.2017060800+0facmed1-1) jessie; urgency=medium
+
+  * New upstream weekly
+  * Fix for local_presentation web services
+  * MDL-50011, default settings for new multichoice questions
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 15 Jun 2017 10:13:28 +1200
+
 moodle-site-otagounifom (3.2.3.2017060100+0facmed1-1) jessie; urgency=medium
 
   * Fix sitewideuser fix from previous version
