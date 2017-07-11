@@ -423,33 +423,25 @@ class completion_info {
             // Load criteria from database
             $records = (array)$DB->get_records('course_completion_criteria', $params);
 
-            $activitycriteria = array();
-            $othercriteria = array();
-            foreach ($records as $record) {
-                $criterion = completion_criteria::factory((array)$record);
-                if ($record->criteriatype == COMPLETION_CRITERIA_TYPE_ACTIVITY) {
-                    $activitycriteria[$record->moduleinstance] = $criterion;
-                }
-                else {
-                    $othercriteria[$record->id] = $criterion;
-                }
+            // Order records so activities are in the same order as they appear on the course view page.
+            if ($records) {
+                $activitiesorder = array_keys(get_fast_modinfo($this->course)->get_cms());
+                usort($records, function ($a, $b) use ($activitiesorder) {
+                    $aidx = ($a->criteriatype == COMPLETION_CRITERIA_TYPE_ACTIVITY) ?
+                        array_search($a->moduleinstance, $activitiesorder) : false;
+                    $bidx = ($b->criteriatype == COMPLETION_CRITERIA_TYPE_ACTIVITY) ?
+                        array_search($b->moduleinstance, $activitiesorder) : false;
+                    if ($aidx === false || $bidx === false || $aidx == $bidx) {
+                        return 0;
+                    }
+                    return ($aidx < $bidx) ? -1 : 1;
+                });
             }
 
             // Build array of criteria objects
             $this->criteria = array();
-
-            // Order activity criteria in the order they appear in the course (by section)
-            $modinfo = get_fast_modinfo($this->course);
-            foreach ($modinfo->get_cms() as $cm) {
-                if (array_key_exists($cm->id, $activitycriteria)) {
-                    $criterion = $activitycriteria[$cm->id];
-                    $this->criteria[$criterion->id] = $criterion;
-                }
-            }
-
-            // Leave other criteria types in arbitrary order for now
-            foreach ($othercriteria as $criterion) {
-                $this->criteria[$criterion->id] = $criterion;
+            foreach ($records as $record) {
+                $this->criteria[$record->id] = completion_criteria::factory((array)$record);
             }
         }
 
@@ -792,6 +784,7 @@ class completion_info {
 
         // Difficult to find affected users, just purge all completion cache.
         cache::make('core', 'completion')->purge();
+        cache::make('core', 'coursecompletion')->purge();
     }
 
     /**
@@ -843,6 +836,7 @@ class completion_info {
 
         // Difficult to find affected users, just purge all completion cache.
         cache::make('core', 'completion')->purge();
+        cache::make('core', 'coursecompletion')->purge();
     }
 
     /**
