@@ -71,7 +71,12 @@ class assign_submission_file extends assign_submission_plugin {
 
         $defaultmaxfilesubmissions = $this->get_config('maxfilesubmissions');
         $defaultmaxsubmissionsizebytes = $this->get_config('maxsubmissionsizebytes');
-        $defaultfiletypes = (string)$this->get_config('filetypeslist');
+        if ($this->assignment->has_instance()) {
+            $defaultfiletypes = $this->get_config('filetypeslist');
+        } else {
+            $defaultfiletypes = get_config('assignsubmission_file', 'filetypes');
+        }
+        $defaultfiletypes = (string)$defaultfiletypes;
 
         $settings = array();
         $options = array();
@@ -108,7 +113,7 @@ class assign_submission_file extends assign_submission_plugin {
                            'notchecked');
 
         $name = get_string('acceptedfiletypes', 'assignsubmission_file');
-        $mform->addElement('text', 'assignsubmission_file_filetypes', $name);
+        $mform->addElement('text', 'assignsubmission_file_filetypes', $name, array('size' => '60'));
         $mform->addHelpButton('assignsubmission_file_filetypes', 'acceptedfiletypes', 'assignsubmission_file');
         $mform->setType('assignsubmission_file_filetypes', PARAM_RAW);
         $mform->setDefault('assignsubmission_file_filetypes', $defaultfiletypes);
@@ -152,11 +157,11 @@ class assign_submission_file extends assign_submission_plugin {
      * @return array
      */
     private function get_file_options() {
-        $fileoptions = array('subdirs'=>1,
-                                'maxbytes'=>$this->get_config('maxsubmissionsizebytes'),
-                                'maxfiles'=>$this->get_config('maxfilesubmissions'),
+        $fileoptions = array('subdirs' => 1,
+                                'maxbytes' => $this->get_config('maxsubmissionsizebytes'),
+                                'maxfiles' => $this->get_config('maxfilesubmissions'),
                                 'accepted_types' => $this->get_accepted_types(),
-                                'return_types'=>FILE_INTERNAL);
+                                'return_types' => (FILE_INTERNAL | FILE_CONTROLLED_LINK));
         if ($fileoptions['maxbytes'] == 0) {
             // Use module default.
             $fileoptions['maxbytes'] = get_config('assignsubmission_file', 'maxbytes');
@@ -229,7 +234,6 @@ class assign_submission_file extends assign_submission_plugin {
      * @return int
      */
     private function count_files($submissionid, $area) {
-
         $fs = get_file_storage();
         $files = $fs->get_area_files($this->assignment->get_context()->id,
                                      'assignsubmission_file',
