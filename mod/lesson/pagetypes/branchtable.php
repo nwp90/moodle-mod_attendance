@@ -160,6 +160,8 @@ class lesson_page_type_branchtable extends lesson_page {
     public function check_answer() {
         global $USER, $DB, $PAGE, $CFG;
 
+        $result = parent::check_answer();
+
         require_sesskey();
         $newpageid = optional_param('jumpto', null, PARAM_INT);
         // going to insert into lesson_branch
@@ -214,7 +216,10 @@ class lesson_page_type_branchtable extends lesson_page {
         $branch->nextpageid = $newpageid;
         $DB->update_record("lesson_branch", $branch);
 
-        redirect(new moodle_url('/mod/lesson/view.php', array('id' => $PAGE->cm->id, 'pageid' => $newpageid)));
+        // This will force to redirect to the newpageid.
+        $result->inmediatejump = true;
+        $result->newpageid = $newpageid;
+        return $result;
     }
 
     public function display_answers(html_table $table) {
@@ -319,7 +324,11 @@ class lesson_add_page_form_branchtable extends lesson_add_page_form_base {
 
         $jumptooptions = lesson_page_type_branchtable::get_jumptooptions($firstpage, $lesson);
 
-        $mform->setDefault('qtypeheading', get_string('addabranchtable', 'lesson'));
+        if ($this->_customdata['edit']) {
+            $mform->setDefault('qtypeheading', get_string('editbranchtable', 'lesson'));
+        } else {
+            $mform->setDefault('qtypeheading', get_string('addabranchtable', 'lesson'));
+        }
 
         $mform->addElement('hidden', 'firstpage');
         $mform->setType('firstpage', PARAM_BOOL);
