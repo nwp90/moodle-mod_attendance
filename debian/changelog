@@ -1,3 +1,10 @@
+moodle-site-otagounifom (3.2.4.2017071400+0facmed1-1) jessie; urgency=medium
+
+  * New upstream, with security updates.
+  * Respect MDL-50011 answernumbering when importing GIFT questions.
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 17 Jul 2017 15:02:58 +1200
+
 moodle-site-otagounifom (3.2.3.2017060800+0facmed1-1) jessie; urgency=medium
 
   * New upstream weekly
