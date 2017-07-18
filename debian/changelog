@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.4.0~2017071400+0facmed1-1) jessie; urgency=medium
+
+  * 3.4 development version, for testing.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 18 Jul 2017 11:57:39 +1200
+
 moodle-site-otagounifom (3.2.3.2017060800+0facmed1-1) jessie; urgency=medium
 
   * New upstream weekly
