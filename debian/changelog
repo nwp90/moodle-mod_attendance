@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.4.0~2017090700+0facmed1-1) jessie; urgency=medium
+
+  * Update to latest 3.4dev
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 08 Sep 2017 11:55:15 +1200
+
 moodle-site-otagounifom (3.4.0~2017071400+0facmed1-1) jessie; urgency=medium
 
   * 3.4 development version, for testing.
