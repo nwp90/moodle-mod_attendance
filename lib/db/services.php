@@ -58,6 +58,25 @@ $functions = array(
         'capabilities'  => 'moodle/badges:viewotherbadges',
         'services'      => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
     ),
+    'core_calendar_get_calendar_monthly_view' => array(
+        'classname' => 'core_calendar_external',
+        'methodname' => 'get_calendar_monthly_view',
+        'description' => 'Fetch the monthly view data for a calendar',
+        'classpath' => 'calendar/externallib.php',
+        'type' => 'read',
+        'capabilities' => '',
+        'ajax' => true,
+        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
+    ),
+    'core_calendar_update_event_start_day' => array(
+        'classname' => 'core_calendar_external',
+        'methodname' => 'update_event_start_day',
+        'description' => 'Update the start day (but not time) for an event.',
+        'classpath' => 'calendar/externallib.php',
+        'type' => 'write',
+        'capabilities' => 'moodle/calendar:manageentries, moodle/calendar:manageownentries, moodle/calendar:managegroupentries',
+        'ajax' => true,
+    ),
     'core_calendar_create_calendar_events' => array(
         'classname' => 'core_calendar_external',
         'methodname' => 'create_calendar_events',
@@ -74,6 +93,7 @@ $functions = array(
         'classpath' => 'calendar/externallib.php',
         'type' => 'write',
         'capabilities' => 'moodle/calendar:manageentries, moodle/calendar:manageownentries, moodle/calendar:managegroupentries',
+        'ajax' => true,
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
     ),
     'core_calendar_get_calendar_events' => array(
@@ -115,6 +135,25 @@ $functions = array(
         'ajax' => true,
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
     ),
+    'core_calendar_get_calendar_event_by_id' => array(
+        'classname' => 'core_calendar_external',
+        'methodname' => 'get_calendar_event_by_id',
+        'description' => 'Get calendar event by id',
+        'classpath' => 'calendar/externallib.php',
+        'type' => 'read',
+        'capabilities' => 'moodle/calendar:manageentries, moodle/calendar:manageownentries, moodle/calendar:managegroupentries',
+        'ajax' => true,
+        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
+    ),
+    'core_calendar_submit_create_update_form' => array(
+        'classname' => 'core_calendar_external',
+        'methodname' => 'submit_create_update_form',
+        'description' => 'Submit form data for event form',
+        'classpath' => 'calendar/externallib.php',
+        'type' => 'write',
+        'capabilities' => 'moodle/calendar:manageentries, moodle/calendar:manageownentries, moodle/calendar:managegroupentries',
+        'ajax' => true,
+    ),
     'core_cohort_add_cohort_members' => array(
         'classname' => 'core_cohort_external',
         'methodname' => 'add_cohort_members',
@@ -153,6 +192,15 @@ $functions = array(
         'classpath' => 'cohort/externallib.php',
         'description' => 'Returns cohort members.',
         'type' => 'read',
+        'capabilities' => 'moodle/cohort:view'
+    ),
+    'core_cohort_search_cohorts' => array(
+        'classname' => 'core_cohort_external',
+        'methodname' => 'search_cohorts',
+        'classpath' => 'cohort/externallib.php',
+        'description' => 'Search for cohorts.',
+        'type' => 'read',
+        'ajax' => true,
         'capabilities' => 'moodle/cohort:view'
     ),
     'core_cohort_get_cohorts' => array(
@@ -444,6 +492,15 @@ $functions = array(
                                   and have that capability',
         'type' => 'read',
     ),
+    'core_enrol_get_potential_users' => array(
+        'classname' => 'core_enrol_external',
+        'methodname' => 'get_potential_users',
+        'classpath' => 'enrol/externallib.php',
+        'description' => 'Get the list of potential users to enrol',
+        'ajax' => true,
+        'type' => 'read',
+        'capabilities' => 'moodle/course:enrolreview'
+    ),
     'core_enrol_get_users_courses' => array(
         'classname' => 'core_enrol_external',
         'methodname' => 'get_users_courses',
@@ -452,6 +509,14 @@ $functions = array(
         'type' => 'read',
         'capabilities' => 'moodle/course:viewparticipants',
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
+    ),
+    'core_enrol_edit_user_enrolment' => array(
+        'classname' => 'core_enrol_external',
+        'methodname' => 'edit_user_enrolment',
+        'classpath' => 'enrol/externallib.php',
+        'description' => 'External function that updates a given user enrolment',
+        'type' => 'write',
+        'ajax' => true,
     ),
     'core_fetch_notifications' => array(
         'classname' => 'core_external',

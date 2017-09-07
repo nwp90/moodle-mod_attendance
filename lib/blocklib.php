@@ -728,6 +728,8 @@ class block_manager {
         $ccjoin = "LEFT JOIN {context} ctx ON (ctx.instanceid = bi.id AND ctx.contextlevel = :contextlevel)";
 
         $systemcontext = context_system::instance();
+        list($bpcontext, $bpcontextidparams) = $DB->get_in_or_equal(array($context->id, $systemcontext->id),
+                SQL_PARAMS_NAMED, 'bpcontextid');
         $params = array(
             'contextlevel' => CONTEXT_BLOCK,
             'subpage1' => $this->page->subpage,
@@ -761,7 +763,7 @@ class block_manager {
                 FROM {block_instances} bi
                 JOIN {block} b ON bi.blockname = b.name
                 LEFT JOIN {block_positions} bp ON bp.blockinstanceid = bi.id
-                                                  AND bp.contextid = :contextid1
+                                                  AND bp.contextid $bpcontext
                                                   AND bp.pagetype = :pagetype
                                                   AND bp.subpage = :subpage1
                 $ccjoin
@@ -779,7 +781,8 @@ class block_manager {
                     COALESCE(bp.weight, bi.defaultweight),
                     bi.id";
 
-        $allparams = $params + $parentcontextparams + $pagetypepatternparams + $requiredbythemeparams + $requiredbythemenotparams;
+        $allparams = $params + $parentcontextparams + $pagetypepatternparams + $requiredbythemeparams;
+        $allparams = $allparams + $requiredbythemenotparams + $bpcontextidparams;
         $blockinstances = $DB->get_recordset_sql($sql, $allparams);
 
         $this->birecordsbyregion = $this->prepare_per_region_arrays();
@@ -833,6 +836,8 @@ class block_manager {
         $blockinstance->defaultregion = $region;
         $blockinstance->defaultweight = $weight;
         $blockinstance->configdata = '';
+        $blockinstance->timecreated = time();
+        $blockinstance->timemodified = $blockinstance->timecreated;
         $blockinstance->id = $DB->insert_record('block_instances', $blockinstance);
 
         // Ensure the block context is created.
@@ -940,6 +945,7 @@ class block_manager {
             $newbi->id = $bi->id;
             $newbi->defaultregion = $newregion;
             $newbi->defaultweight = $newweight;
+            $newbi->timemodified = time();
             $DB->update_record('block_instances', $newbi);
 
             if ($bi->blockpositionid) {
@@ -1162,6 +1168,8 @@ class block_manager {
         $blockinstance->defaultregion = $defaultregion;
         $blockinstance->defaultweight = 0;
         $blockinstance->configdata = '';
+        $blockinstance->timecreated = time();
+        $blockinstance->timemodified = $blockinstance->timecreated;
         $blockinstance->id = $DB->insert_record('block_instances', $blockinstance);
 
         // Ensure the block context is created.
@@ -1723,6 +1731,7 @@ class block_manager {
 
             $bi->defaultregion = $data->bui_defaultregion;
             $bi->defaultweight = $data->bui_defaultweight;
+            $bi->timemodified = time();
             $DB->update_record('block_instances', $bi);
 
             if (!empty($block->config)) {

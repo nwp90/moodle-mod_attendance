@@ -126,12 +126,29 @@ class manager {
     }
 
     /**
+     * Checks if the task with the same classname, component and customdata is already scheduled
+     *
+     * @param adhoc_task $task
+     * @return bool
+     */
+    protected static function task_is_scheduled($task) {
+        global $DB;
+        $record = self::record_from_adhoc_task($task);
+        $params = [$record->classname, $record->component, $record->customdata];
+        $sql = 'classname = ? AND component = ? AND ' .
+            $DB->sql_compare_text('customdata', \core_text::strlen($record->customdata) + 1) . ' = ?';
+        return $DB->record_exists_select('task_adhoc', $sql, $params);
+    }
+
+    /**
      * Queue an adhoc task to run in the background.
      *
      * @param \core\task\adhoc_task $task - The new adhoc task information to store.
+     * @param bool $checkforexisting - If set to true and the task with the same classname, component and customdata
+     *     is already scheduled then it will not schedule a new task. Can be used only for ASAP tasks.
      * @return boolean - True if the config was saved.
      */
-    public static function queue_adhoc_task(adhoc_task $task) {
+    public static function queue_adhoc_task(adhoc_task $task, $checkforexisting = false) {
         global $DB;
 
         $record = self::record_from_adhoc_task($task);
@@ -139,6 +156,13 @@ class manager {
         if (!$task->get_next_run_time()) {
             $record->nextruntime = time() - 1;
         }
+
+        // Check if the same task is already scheduled.
+        if ($checkforexisting && self::task_is_scheduled($task)) {
+            return false;
+        }
+
+        // Queue the task.
         $result = $DB->insert_record('task_adhoc', $record);
 
         return $result;
@@ -351,6 +375,26 @@ class manager {
             return false;
         }
         return self::scheduled_task_from_record($record);
+    }
+
+    /**
+     * This function load the adhoc tasks for a given classname.
+     *
+     * @param string $classname
+     * @return \core\task\adhoc_task[]
+     */
+    public static function get_adhoc_tasks($classname) {
+        global $DB;
+
+        if (strpos($classname, '\\') !== 0) {
+            $classname = '\\' . $classname;
+        }
+        // We are just reading - so no locks required.
+        $records = $DB->get_records('task_adhoc', array('classname' => $classname));
+
+        return array_map(function($record) {
+            return self::adhoc_task_from_record($record);
+        }, $records);
     }
 
     /**

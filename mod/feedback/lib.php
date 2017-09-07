@@ -110,6 +110,11 @@ function feedback_add_instance($feedback) {
     }
     $context = context_module::instance($feedback->coursemodule);
 
+    if (!empty($feedback->completionexpected)) {
+        \core_completion\api::update_completion_date_event($feedback->coursemodule, 'feedback', $feedback->id,
+                $feedback->completionexpected);
+    }
+
     $editoroptions = feedback_get_editor_options();
 
     // process the custom wysiwyg editor in page_after_submit
@@ -148,6 +153,8 @@ function feedback_update_instance($feedback) {
 
     //create or update the new events
     feedback_set_events($feedback);
+    $completionexpected = (!empty($feedback->completionexpected)) ? $feedback->completionexpected : null;
+    \core_completion\api::update_completion_date_event($feedback->coursemodule, 'feedback', $feedback->id, $completionexpected);
 
     $context = context_module::instance($feedback->coursemodule);
 
@@ -688,6 +695,8 @@ function feedback_reset_userdata($data) {
 
     // Updating dates - shift may be negative too.
     if ($data->timeshift) {
+        // Any changes to the list of dates that needs to be rolled should be same during course restore and course reset.
+        // See MDL-9367.
         $shifterror = !shift_course_mod_dates('feedback', array('timeopen', 'timeclose'), $data->timeshift, $data->courseid);
         $status[] = array('component' => $componentstr, 'item' => get_string('datechanged'), 'error' => $shifterror);
     }
@@ -879,10 +888,21 @@ function feedback_set_events($feedback) {
  * This function is used, in its new format, by restore_refresh_events()
  *
  * @param int $courseid
+ * @param int|stdClass $instance Feedback module instance or ID.
+ * @param int|stdClass $cm Course module object or ID (not used in this module).
  * @return bool
  */
-function feedback_refresh_events($courseid = 0) {
+function feedback_refresh_events($courseid = 0, $instance = null, $cm = null) {
     global $DB;
+
+    // If we have instance information then we can just update the one event instead of updating all events.
+    if (isset($instance)) {
+        if (!is_object($instance)) {
+            $instance = $DB->get_record('feedback', array('id' => $instance), '*', MUST_EXIST);
+        }
+        feedback_set_events($instance);
+        return true;
+    }
 
     if ($courseid) {
         if (! $feedbacks = $DB->get_records("feedback", array("course" => $courseid))) {
