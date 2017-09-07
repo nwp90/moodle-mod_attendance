@@ -1901,6 +1901,52 @@ class core_course_courselib_testcase extends advanced_testcase {
     }
 
     /**
+     * Test that triggering a course_backup_created event works as expected.
+     */
+    public function test_course_backup_created_event() {
+        global $CFG;
+
+        // Get the necessary files to perform backup and restore.
+        require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
+        require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
+
+        $this->resetAfterTest();
+
+        // Set to admin user.
+        $this->setAdminUser();
+
+        // The user id is going to be 2 since we are the admin user.
+        $userid = 2;
+
+        // Create a course.
+        $course = $this->getDataGenerator()->create_course();
+
+        // Create backup file and save it to the backup location.
+        $bc = new backup_controller(backup::TYPE_1COURSE, $course->id, backup::FORMAT_MOODLE,
+            backup::INTERACTIVE_NO, backup::MODE_GENERAL, $userid);
+        $sink = $this->redirectEvents();
+        $bc->execute_plan();
+
+        // Capture the event.
+        $events = $sink->get_events();
+        $sink->close();
+
+        // Validate the event.
+        $event = array_pop($events);
+        $this->assertInstanceOf('\core\event\course_backup_created', $event);
+        $this->assertEquals('course', $event->objecttable);
+        $this->assertEquals($bc->get_courseid(), $event->objectid);
+        $this->assertEquals(context_course::instance($bc->get_courseid())->id, $event->contextid);
+
+        $url = new moodle_url('/course/view.php', array('id' => $event->objectid));
+        $this->assertEquals($url, $event->get_url());
+        $this->assertEventContextNotUsed($event);
+
+        // Destroy the resource controller since we are done using it.
+        $bc->destroy();
+    }
+
+    /**
      * Test that triggering a course_restored event works as expected.
      */
     public function test_course_restored_event() {
@@ -2978,23 +3024,6 @@ class core_course_courselib_testcase extends advanced_testcase {
         $this->assertTrue($navoptions->tags);
         $this->assertTrue($navoptions->search);
         $this->assertTrue($navoptions->calendar);
-
-        // Standar using viewing frontpage settings from a course where is enrolled.
-        $course = self::getDataGenerator()->create_course();
-        // Create a viewer user.
-        $viewer = self::getDataGenerator()->create_user();
-        $studentrole = $DB->get_record('role', array('shortname' => 'student'));
-        $this->getDataGenerator()->enrol_user($viewer->id, $course->id, $studentrole->id);
-        $this->setUser($viewer);
-
-        $navoptions = course_get_user_navigation_options($context, $course);
-        $this->assertTrue($navoptions->blogs);
-        $this->assertFalse($navoptions->notes);
-        $this->assertTrue($navoptions->participants);
-        $this->assertTrue($navoptions->badges);
-        $this->assertTrue($navoptions->tags);
-        $this->assertTrue($navoptions->search);
-        $this->assertTrue($navoptions->calendar);
     }
 
     /**
@@ -3236,6 +3265,8 @@ class core_course_courselib_testcase extends advanced_testcase {
         require_once($CFG->dirroot.'/completion/criteria/completion_criteria_date.php');
 
         $this->resetAfterTest(true);
+
+        $this->setAdminUser();
 
         $CFG->enablecompletion = true;
 
@@ -3754,5 +3785,123 @@ class core_course_courselib_testcase extends advanced_testcase {
         $this->assertEquals(COURSE_TIMELINE_FUTURE, course_classify_for_timeline($futurecourse));
         $this->assertEquals(COURSE_TIMELINE_PAST, course_classify_for_timeline($completedcourse));
         $this->assertEquals(COURSE_TIMELINE_INPROGRESS, course_classify_for_timeline($inprogresscourse));
+    }
+
+    /**
+     * Test the main function for updating all calendar events for a module.
+     */
+    public function test_course_module_calendar_event_update_process() {
+        global $DB;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $completionexpected = time();
+        $duedate = time();
+
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => COMPLETION_ENABLED]);
+        $assign = $this->getDataGenerator()->create_module('assign', [
+                    'course' => $course,
+                    'completionexpected' => $completionexpected,
+                    'duedate' => $duedate
+                ]);
+
+        $cm = get_coursemodule_from_instance('assign', $assign->id, $course->id);
+        $events = $DB->get_records('event', ['courseid' => $course->id, 'instance' => $assign->id]);
+        // Check that both events are using the expected dates.
+        foreach ($events as $event) {
+            if ($event->eventtype == \core_completion\api::COMPLETION_EVENT_TYPE_DATE_COMPLETION_EXPECTED) {
+                $this->assertEquals($completionexpected, $event->timestart);
+            }
+            if ($event->eventtype == ASSIGN_EVENT_TYPE_DUE) {
+                $this->assertEquals($duedate, $event->timestart);
+            }
+        }
+
+        // We have to manually update the module and the course module.
+        $newcompletionexpected = time() + DAYSECS * 60;
+        $newduedate = time() + DAYSECS * 45;
+        $newmodulename = 'Assign - new name';
+
+        $moduleobject = (object)array('id' => $assign->id, 'duedate' => $newduedate, 'name' => $newmodulename);
+        $DB->update_record('assign', $moduleobject);
+        $cmobject = (object)array('id' => $cm->id, 'completionexpected' => $newcompletionexpected);
+        $DB->update_record('course_modules', $cmobject);
+
+        $assign = $DB->get_record('assign', ['id' => $assign->id]);
+        $cm = get_coursemodule_from_instance('assign', $assign->id, $course->id);
+
+        course_module_calendar_event_update_process($assign, $cm);
+
+        $events = $DB->get_records('event', ['courseid' => $course->id, 'instance' => $assign->id]);
+        // Now check that the details have been updated properly from the function.
+        foreach ($events as $event) {
+            if ($event->eventtype == \core_completion\api::COMPLETION_EVENT_TYPE_DATE_COMPLETION_EXPECTED) {
+                $this->assertEquals($newcompletionexpected, $event->timestart);
+                $this->assertEquals(get_string('completionexpectedfor', 'completion', (object)['instancename' => $newmodulename]),
+                        $event->name);
+            }
+            if ($event->eventtype == ASSIGN_EVENT_TYPE_DUE) {
+                $this->assertEquals($newduedate, $event->timestart);
+                $this->assertEquals($newmodulename, $event->name);
+            }
+        }
+    }
+
+    /**
+     * Test the higher level checks for updating calendar events for an instance.
+     */
+    public function test_course_module_update_calendar_events() {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $completionexpected = time();
+        $duedate = time();
+
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => COMPLETION_ENABLED]);
+        $assign = $this->getDataGenerator()->create_module('assign', [
+                    'course' => $course,
+                    'completionexpected' => $completionexpected,
+                    'duedate' => $duedate
+                ]);
+
+        $cm = get_coursemodule_from_instance('assign', $assign->id, $course->id);
+
+        // Both the instance and cm objects are missing.
+        $this->assertFalse(course_module_update_calendar_events('assign'));
+        // Just using the assign instance.
+        $this->assertTrue(course_module_update_calendar_events('assign', $assign));
+        // Just using the course module object.
+        $this->assertTrue(course_module_update_calendar_events('assign', null, $cm));
+        // Using both the assign instance and the course module object.
+        $this->assertTrue(course_module_update_calendar_events('assign', $assign, $cm));
+    }
+
+    /**
+     * Test the higher level checks for updating calendar events for a module.
+     */
+    public function test_course_module_bulk_update_calendar_events() {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $completionexpected = time();
+        $duedate = time();
+
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => COMPLETION_ENABLED]);
+        $course2 = $this->getDataGenerator()->create_course(['enablecompletion' => COMPLETION_ENABLED]);
+        $assign = $this->getDataGenerator()->create_module('assign', [
+                    'course' => $course,
+                    'completionexpected' => $completionexpected,
+                    'duedate' => $duedate
+                ]);
+
+        // No assign instances in this course.
+        $this->assertFalse(course_module_bulk_update_calendar_events('assign', $course2->id));
+        // No book instances for the site.
+        $this->assertFalse(course_module_bulk_update_calendar_events('book'));
+        // Update all assign instances.
+        $this->assertTrue(course_module_bulk_update_calendar_events('assign'));
+        // Update the assign instances for this course.
+        $this->assertTrue(course_module_bulk_update_calendar_events('assign', $course->id));
     }
 }

@@ -87,7 +87,8 @@ class restore_assign_activity_structure_step extends restore_activity_structure_
         $oldid = $data->id;
         $data->course = $this->get_courseid();
 
-        $data->timemodified = $this->apply_date_offset($data->timemodified);
+        // Any changes to the list of dates that needs to be rolled should be same during course restore and course reset.
+        // See MDL-9367.
         $data->allowsubmissionsfromdate = $this->apply_date_offset($data->allowsubmissionsfromdate);
         $data->duedate = $this->apply_date_offset($data->duedate);
 
@@ -159,8 +160,6 @@ class restore_assign_activity_structure_step extends restore_activity_structure_
 
         $data->assignment = $this->get_new_parentid('assign');
 
-        $data->timemodified = $this->apply_date_offset($data->timemodified);
-        $data->timecreated = $this->apply_date_offset($data->timecreated);
         if ($data->userid > 0) {
             $data->userid = $this->get_mappingid('user', $data->userid);
         }
@@ -220,8 +219,6 @@ class restore_assign_activity_structure_step extends restore_activity_structure_
 
         $data->assignment = $this->get_new_parentid('assign');
 
-        $data->timemodified = $this->apply_date_offset($data->timemodified);
-        $data->timecreated = $this->apply_date_offset($data->timecreated);
         $data->userid = $this->get_mappingid('user', $data->userid);
         $data->grader = $this->get_mappingid('user', $data->grader);
 
@@ -243,7 +240,10 @@ class restore_assign_activity_structure_step extends restore_activity_structure_
             $flags->userid = $this->get_mappingid('user', $data->userid);
             $DB->insert_record('assign_user_flags', $flags);
         }
-
+        // Fix null grades that were rescaled.
+        if ($data->grade < 0 && $data->grade != ASSIGN_GRADE_NOT_SET) {
+            $data->grade = ASSIGN_GRADE_NOT_SET;
+        }
         $newitemid = $DB->insert_record('assign_grades', $data);
 
         // Note - the old contextid is required in order to be able to restore files stored in
@@ -282,6 +282,34 @@ class restore_assign_activity_structure_step extends restore_activity_structure_
         require_once($CFG->dirroot . '/mod/assign/locallib.php');
 
         $assignmentid = $this->get_new_parentid('assign');
+
+        // First check for records with a grade, but no submission record.
+        // This happens when a teacher marks a student before they have submitted anything.
+        $records = $DB->get_recordset_sql('SELECT g.id, g.userid, g.attemptnumber
+                                           FROM {assign_grades} g
+                                      LEFT JOIN {assign_submission} s
+                                             ON s.assignment = g.assignment
+                                            AND s.userid = g.userid
+                                          WHERE s.id IS NULL AND g.assignment = ?', array($assignmentid));
+
+        $submissions = array();
+        foreach ($records as $record) {
+            $submission = new stdClass();
+            $submission->assignment = $assignmentid;
+            $submission->userid = $record->userid;
+            $submission->attemptnumber = $record->attemptnumber;
+            $submission->status = ASSIGN_SUBMISSION_STATUS_NEW;
+            $submission->groupid = 0;
+            $submission->latest = 0;
+            $submission->timecreated = time();
+            $submission->timemodified = time();
+            array_push($submissions, $submission);
+        }
+
+        $records->close();
+
+        $DB->insert_records('assign_submission', $submissions);
+
         // This code could be rewritten as a monster SQL - but the point of adding this "latest" field
         // to the submissions table in the first place was to get away from those hard to maintain SQL queries.
 
@@ -319,32 +347,6 @@ class restore_assign_activity_structure_step extends restore_activity_structure_
                 $DB->update_record('assign_submission', $submission);
             }
         }
-
-        // Now check for records with a grade, but no submission record.
-        // This happens when a teacher marks a student before they have submitted anything.
-        $records = $DB->get_recordset_sql('SELECT g.id, g.userid
-                                           FROM {assign_grades} g
-                                      LEFT JOIN {assign_submission} s
-                                             ON s.assignment = g.assignment
-                                            AND s.userid = g.userid
-                                          WHERE s.id IS NULL AND g.assignment = ?', array($assignmentid));
-
-        $submissions = array();
-        foreach ($records as $record) {
-            $submission = new stdClass();
-            $submission->assignment = $assignmentid;
-            $submission->userid = $record->userid;
-            $submission->status = ASSIGN_SUBMISSION_STATUS_NEW;
-            $submission->groupid = 0;
-            $submission->latest = 1;
-            $submission->timecreated = time();
-            $submission->timemodified = time();
-            array_push($submissions, $submission);
-        }
-
-        $records->close();
-
-        $DB->insert_records('assign_submission', $submissions);
     }
 
     /**

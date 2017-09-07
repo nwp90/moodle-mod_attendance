@@ -386,6 +386,97 @@ class core_enrol_external extends external_api {
     }
 
     /**
+     * Returns description of method parameters value
+     *
+     * @return external_description
+     */
+    public static function get_potential_users_parameters() {
+        return new external_function_parameters(
+            array(
+                'courseid' => new external_value(PARAM_INT, 'course id'),
+                'enrolid' => new external_value(PARAM_INT, 'enrolment id'),
+                'search' => new external_value(PARAM_RAW, 'query'),
+                'searchanywhere' => new external_value(PARAM_BOOL, 'find a match anywhere, or only at the beginning'),
+                'page' => new external_value(PARAM_INT, 'Page number'),
+                'perpage' => new external_value(PARAM_INT, 'Number per page'),
+            )
+        );
+    }
+
+    /**
+     * Get potential users.
+     *
+     * @param int $courseid Course id
+     * @param int $enrolid Enrolment id
+     * @param string $search The query
+     * @param boolean $searchanywhere Match anywhere in the string
+     * @param int $page Page number
+     * @param int $perpage Max per page
+     * @return array An array of users
+     */
+    public static function get_potential_users($courseid, $enrolid, $search, $searchanywhere, $page, $perpage) {
+        global $PAGE, $DB, $CFG;
+
+        require_once($CFG->dirroot.'/enrol/locallib.php');
+        require_once($CFG->dirroot.'/user/lib.php');
+
+        $params = self::validate_parameters(
+            self::get_potential_users_parameters(),
+            array(
+                'courseid' => $courseid,
+                'enrolid' => $enrolid,
+                'search' => $search,
+                'searchanywhere' => $searchanywhere,
+                'page' => $page,
+                'perpage' => $perpage
+            )
+        );
+        $context = context_course::instance($params['courseid']);
+        try {
+            self::validate_context($context);
+        } catch (Exception $e) {
+            $exceptionparam = new stdClass();
+            $exceptionparam->message = $e->getMessage();
+            $exceptionparam->courseid = $params['courseid'];
+            throw new moodle_exception('errorcoursecontextnotvalid' , 'webservice', '', $exceptionparam);
+        }
+        require_capability('moodle/course:enrolreview', $context);
+
+        $course = $DB->get_record('course', array('id' => $params['courseid']));
+        $manager = new course_enrolment_manager($PAGE, $course);
+
+        $users = $manager->get_potential_users($params['enrolid'],
+                                               $params['search'],
+                                               $params['searchanywhere'],
+                                               $params['page'],
+                                               $params['perpage']);
+
+        $results = array();
+        $requiredfields = ['id', 'fullname', 'profileimageurl', 'profileimageurlsmall'];
+        foreach ($users['users'] as $id => $user) {
+            // Note: We pass the course here to validate that the current user can at least view user details in this course.
+            // The user we are looking at is not in this course yet though - but we only fetch the minimal set of
+            // user records, and the user has been validated to have course:enrolreview in this course. Otherwise
+            // there is no way to find users who aren't in the course in order to enrol them.
+            if ($userdetails = user_get_user_details($user, $course, $requiredfields)) {
+                $results[] = $userdetails;
+            }
+        }
+        return $results;
+    }
+
+    /**
+     * Returns description of method result value
+     *
+     * @return external_description
+     */
+    public static function get_potential_users_returns() {
+        global $CFG;
+        require_once($CFG->dirroot . '/user/externallib.php');
+        return new external_multiple_structure(core_user_external::user_description());
+    }
+
+    /**
      * Returns description of method parameters
      *
      * @return external_function_parameters
@@ -711,6 +802,107 @@ class core_enrol_external extends external_api {
                     'status' => new external_value(PARAM_RAW, 'status of enrolment plugin'),
                     'wsfunction' => new external_value(PARAM_ALPHANUMEXT, 'webservice function to get more information', VALUE_OPTIONAL),
                 )
+            )
+        );
+    }
+
+    /**
+     * Returns description of edit_user_enrolment() parameters
+     *
+     * @return external_function_parameters
+     */
+    public static function edit_user_enrolment_parameters() {
+        return new external_function_parameters(
+            array(
+                'courseid' => new external_value(PARAM_INT, 'User enrolment ID'),
+                'ueid' => new external_value(PARAM_INT, 'User enrolment ID'),
+                'status' => new external_value(PARAM_INT, 'Enrolment status'),
+                'timestart' => new external_value(PARAM_INT, 'Enrolment start timestamp', VALUE_DEFAULT, 0),
+                'timeend' => new external_value(PARAM_INT, 'Enrolment end timestamp', VALUE_DEFAULT, 0),
+            )
+        );
+    }
+
+    /**
+     * External function that updates a given user enrolment.
+     *
+     * @param int $courseid The course ID.
+     * @param int $ueid The user enrolment ID.
+     * @param int $status The enrolment status.
+     * @param int $timestart Enrolment start timestamp.
+     * @param int $timeend Enrolment end timestamp.
+     * @return array An array consisting of the processing result, errors and form output, if available.
+     */
+    public static function edit_user_enrolment($courseid, $ueid, $status, $timestart = 0, $timeend = 0) {
+        global $CFG, $DB, $PAGE;
+
+        $params = self::validate_parameters(self::edit_user_enrolment_parameters(), [
+            'courseid' => $courseid,
+            'ueid' => $ueid,
+            'status' => $status,
+            'timestart' => $timestart,
+            'timeend' => $timeend,
+        ]);
+
+        $course = get_course($courseid);
+        $context = context_course::instance($course->id);
+        self::validate_context($context);
+
+        $userenrolment = $DB->get_record('user_enrolments', ['id' => $params['ueid']], '*', MUST_EXIST);
+        $userenroldata = [
+            'status' => $params['status'],
+            'timestart' => $params['timestart'],
+            'timeend' => $params['timeend'],
+        ];
+
+        $result = false;
+        $errors = [];
+
+        // Validate data against the edit user enrolment form.
+        require_once("$CFG->dirroot/enrol/editenrolment_form.php");
+        $customformdata = [
+            'ue' => $userenrolment,
+            'modal' => true,
+        ];
+        $mform = new \enrol_user_enrolment_form(null, $customformdata, 'post', '', null, true, $userenroldata);
+        $mform->set_data($userenroldata);
+        $validationerrors = $mform->validation($userenroldata, null);
+        if (empty($validationerrors)) {
+            require_once($CFG->dirroot . '/enrol/locallib.php');
+            $manager = new course_enrolment_manager($PAGE, $course);
+            $result = $manager->edit_enrolment($userenrolment, (object)$userenroldata);
+        } else {
+            foreach ($validationerrors as $key => $errormessage) {
+                $errors[] = (object)[
+                    'key' => $key,
+                    'message' => $errormessage
+                ];
+            }
+        }
+
+        return [
+            'result' => $result,
+            'errors' => $errors,
+        ];
+    }
+
+    /**
+     * Returns description of edit_user_enrolment() result value
+     *
+     * @return external_description
+     */
+    public static function edit_user_enrolment_returns() {
+        return new external_single_structure(
+            array(
+                'result' => new external_value(PARAM_BOOL, 'True if the user\'s enrolment was successfully updated'),
+                'errors' => new external_multiple_structure(
+                    new external_single_structure(
+                        array(
+                            'key' => new external_value(PARAM_TEXT, 'The data that failed the validation'),
+                            'message' => new external_value(PARAM_TEXT, 'The error message'),
+                        )
+                    ), 'List of validation errors'
+                ),
             )
         );
     }

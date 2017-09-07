@@ -704,10 +704,12 @@ function lesson_get_overview_report_table_and_data(lesson $lesson, $currentgroup
         list($esql, $params) = get_enrolled_sql($context, '', $currentgroup, true);
         list($sort, $sortparams) = users_order_by_sql('u');
 
+        $extrafields = get_extra_user_fields($context);
+
         $params['a1lessonid'] = $lesson->id;
         $params['b1lessonid'] = $lesson->id;
         $params['c1lessonid'] = $lesson->id;
-        $ufields = user_picture::fields('u');
+        $ufields = user_picture::fields('u', $extrafields);
         $sql = "SELECT DISTINCT $ufields
                 FROM {user} u
                 JOIN (
@@ -895,16 +897,35 @@ function lesson_get_overview_report_table_and_data(lesson $lesson, $currentgroup
 
     $table = new html_table();
 
+    $headers = [get_string('name')];
+
+    foreach ($extrafields as $field) {
+        $headers[] = get_user_field_name($field);
+    }
+
+    $headers [] = get_string('attempts', 'lesson');
+
     // Set up the table object.
     if ($data->lessonscored) {
-        $table->head = array(get_string('name'), get_string('attempts', 'lesson'), get_string('highscore', 'lesson'));
-    } else {
-        $table->head = array(get_string('name'), get_string('attempts', 'lesson'));
+        $headers [] = get_string('highscore', 'lesson');
     }
-    $table->align = array('center', 'left', 'left');
-    $table->wrap = array('nowrap', 'nowrap', 'nowrap');
+
+    $colcount = count($headers);
+
+    $table->head = $headers;
+
+    $table->align = [];
+    $table->align = array_pad($table->align, $colcount, 'center');
+    $table->align[$colcount - 1] = 'left';
+
+    if ($data->lessonscored) {
+        $table->align[$colcount - 2] = 'left';
+    }
+
+    $table->wrap = [];
+    $table->wrap = array_pad($table->wrap, $colcount, 'nowrap');
+
     $table->attributes['class'] = 'standardtable generaltable';
-    $table->size = array(null, '70%', null);
 
     // print out the $studentdata array
     // going through each student that has attempted the lesson, so, each student should have something to be displayed
@@ -991,14 +1012,21 @@ function lesson_get_overview_report_table_and_data(lesson $lesson, $currentgroup
             }
             // get line breaks in after each attempt
             $attempts = implode("<br />\n", $attempts);
+            $row = [$studentname];
+
+            foreach ($extrafields as $field) {
+                $row[] = $student->$field;
+            }
+
+            $row[] = $attempts;
 
             if ($data->lessonscored) {
                 // Add the grade if the lesson is graded.
-                $table->data[] = array($studentname, $attempts, $bestgrade . "%");
-            } else {
-                // This lesson does not have a grade.
-                $table->data[] = array($studentname, $attempts);
+                $row[] = $bestgrade."%";
             }
+
+            $table->data[] = $row;
+
             // Add the student data.
             $dataforstudent->id = $student->id;
             $dataforstudent->fullname = $studentname;
@@ -3831,6 +3859,15 @@ abstract class lesson_page extends lesson_base {
         $DB->delete_records("lesson_attempts", array("pageid" => $this->properties->id));
 
         $DB->delete_records("lesson_branch", array("pageid" => $this->properties->id));
+
+        // Delete files related to answers and responses.
+        if ($answers = $DB->get_records("lesson_answers", array("pageid" => $this->properties->id))) {
+            foreach ($answers as $answer) {
+                $fs->delete_area_files($context->id, 'mod_lesson', 'page_answers', $answer->id);
+                $fs->delete_area_files($context->id, 'mod_lesson', 'page_responses', $answer->id);
+            }
+        }
+
         // ...now delete the answers...
         $DB->delete_records("lesson_answers", array("pageid" => $this->properties->id));
         // ..and the page itself
@@ -3850,8 +3887,6 @@ abstract class lesson_page extends lesson_base {
 
         // Delete files associated with this page.
         $fs->delete_area_files($context->id, 'mod_lesson', 'page_contents', $this->properties->id);
-        $fs->delete_area_files($context->id, 'mod_lesson', 'page_answers', $this->properties->id);
-        $fs->delete_area_files($context->id, 'mod_lesson', 'page_responses', $this->properties->id);
 
         // repair the hole in the linkage
         if (!$this->properties->prevpageid && !$this->properties->nextpageid) {
@@ -4084,13 +4119,8 @@ abstract class lesson_page extends lesson_base {
 
                 $result->feedback .= $OUTPUT->box(format_text($this->get_contents(), $this->properties->contentsformat, $options),
                         'generalbox boxaligncenter');
-                if (isset($result->studentanswerformat)) {
-                    // This is the student's answer so it should be cleaned.
-                    $studentanswer = format_text($result->studentanswer, $result->studentanswerformat,
-                            array('context' => $context, 'para' => true));
-                } else {
-                    $studentanswer = format_string($result->studentanswer);
-                }
+                $studentanswer = format_text($result->studentanswer, $result->studentanswerformat,
+                        array('context' => $context, 'para' => true));
                 $result->feedback .= '<div class="correctanswer generalbox"><em>'
                         . get_string("youranswer", "lesson").'</em> : ' . $studentanswer;
                 if (isset($result->responseformat)) {
@@ -4469,6 +4499,7 @@ abstract class lesson_page extends lesson_base {
         $result->response        = '';
         $result->newpageid       = 0;       // stay on the page
         $result->studentanswer   = '';      // use this to store student's answer(s) in order to display it on feedback page
+        $result->studentanswerformat = FORMAT_MOODLE;
         $result->userresponse    = null;
         $result->feedback        = '';
         $result->nodefaultresponse  = false; // Flag for redirecting when default feedback is turned off

@@ -57,6 +57,9 @@ class workshop {
     const EXAMPLES_BEFORE_SUBMISSION    = 1;
     const EXAMPLES_BEFORE_ASSESSMENT    = 2;
 
+    /** @var stdclass workshop record from database */
+    public $dbrecord;
+
     /** @var cm_info course module record */
     public $cm;
 
@@ -195,7 +198,8 @@ class workshop {
      * @param stdClass $context The context of the workshop instance
      */
     public function __construct(stdclass $dbrecord, $cm, $course, stdclass $context=null) {
-        foreach ($dbrecord as $field => $value) {
+        $this->dbrecord = $dbrecord;
+        foreach ($this->dbrecord as $field => $value) {
             if (property_exists('workshop', $field)) {
                 $this->{$field} = $value;
             }
@@ -424,10 +428,14 @@ class workshop {
      * Empty values are not returned. Values are converted to lowercase.
      * Duplicates are removed. Glob evaluation is not supported.
      *
+     * @deprecated since Moodle 3.4 MDL-56486 - please use the {@link core_form\filetypes_util}
      * @param string|array $extensions list of file extensions
      * @return array of strings
      */
     public static function normalize_file_extensions($extensions) {
+
+        debugging('The method workshop::normalize_file_extensions() is deprecated.
+            Please use the methods provided by the \core_form\filetypes_util class.', DEBUG_DEVELOPER);
 
         if ($extensions === '') {
             return array();
@@ -464,10 +472,14 @@ class workshop {
     /**
      * Cleans the user provided list of file extensions.
      *
+     * @deprecated since Moodle 3.4 MDL-56486 - please use the {@link core_form\filetypes_util}
      * @param string $extensions
      * @return string
      */
     public static function clean_file_extensions($extensions) {
+
+        debugging('The method workshop::clean_file_extensions() is deprecated.
+            Please use the methods provided by the \core_form\filetypes_util class.', DEBUG_DEVELOPER);
 
         $extensions = self::normalize_file_extensions($extensions);
 
@@ -483,11 +495,15 @@ class workshop {
      *
      * Empty whitelist is interpretted as "any extension is valid".
      *
+     * @deprecated since Moodle 3.4 MDL-56486 - please use the {@link core_form\filetypes_util}
      * @param string|array $extensions list of file extensions
      * @param string|array $whitelist list of valid extensions
      * @return array list of invalid extensions not found in the whitelist
      */
     public static function invalid_file_extensions($extensions, $whitelist) {
+
+        debugging('The method workshop::invalid_file_extensions() is deprecated.
+            Please use the methods provided by the \core_form\filetypes_util class.', DEBUG_DEVELOPER);
 
         $extensions = self::normalize_file_extensions($extensions);
         $whitelist = self::normalize_file_extensions($whitelist);
@@ -506,11 +522,15 @@ class workshop {
      * Empty whitelist is interpretted as "any file type is allowed" rather
      * than "no file can be uploaded".
      *
+     * @deprecated since Moodle 3.4 MDL-56486 - please use the {@link core_form\filetypes_util}
      * @param string $filename the file name
      * @param string|array $whitelist list of allowed file extensions
      * @return false
      */
     public static function is_allowed_file_type($filename, $whitelist) {
+
+        debugging('The method workshop::is_allowed_file_type() is deprecated.
+            Please use the methods provided by the \core_form\filetypes_util class.', DEBUG_DEVELOPER);
 
         $whitelist = self::normalize_file_extensions($whitelist);
 
@@ -2515,9 +2535,8 @@ class workshop {
             'return_types' => FILE_INTERNAL | FILE_CONTROLLED_LINK,
         );
 
-        if ($acceptedtypes = self::normalize_file_extensions($this->submissionfiletypes)) {
-            $options['accepted_types'] = $acceptedtypes;
-        }
+        $filetypesutil = new \core_form\filetypes_util();
+        $options['accepted_types'] = $filetypesutil->normalize_file_types($this->submissionfiletypes);
 
         return $options;
     }
@@ -2557,9 +2576,8 @@ class workshop {
             'return_types' => FILE_INTERNAL | FILE_CONTROLLED_LINK,
         );
 
-        if ($acceptedtypes = self::normalize_file_extensions($this->overallfeedbackfiletypes)) {
-            $options['accepted_types'] = $acceptedtypes;
-        }
+        $filetypesutil = new \core_form\filetypes_util();
+        $options['accepted_types'] = $filetypesutil->normalize_file_types($this->overallfeedbackfiletypes);
 
         return $options;
     }
@@ -2669,6 +2687,31 @@ class workshop {
                 return true;
             }
         }
+    }
+
+    /**
+     * Trigger module viewed event and set the module viewed for completion.
+     *
+     * @since  Moodle 3.4
+     */
+    public function set_module_viewed() {
+        global $CFG;
+        require_once($CFG->libdir . '/completionlib.php');
+
+        // Mark viewed.
+        $completion = new completion_info($this->course);
+        $completion->set_module_viewed($this->cm);
+
+        $eventdata = array();
+        $eventdata['objectid'] = $this->id;
+        $eventdata['context'] = $this->context;
+
+        // Trigger module viewed event.
+        $event = \mod_workshop\event\course_module_viewed::create($eventdata);
+        $event->add_record_snapshot('course', $this->course);
+        $event->add_record_snapshot('workshop', $this->dbrecord);
+        $event->add_record_snapshot('course_modules', $this->cm);
+        $event->trigger();
     }
 
     ////////////////////////////////////////////////////////////////////////////////
