@@ -1,3 +1,10 @@
+moodle-site-otagounifom (3.2.5.2017091100+0facmed1-1) jessie; urgency=medium
+
+  * Upstream update; security fixes CVE-2017-12156/MDL-59972, CVE-2017-12157/
+    MDL-58762, MDL-58953, CVE-2017-9841/MDL-59969
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 11 Sep 2017 16:23:59 +1200
+
 moodle-site-otagounifom (3.2.4.2017071400+0facmed2-1) jessie; urgency=medium
 
   * Actually respect MDL-50011 answernumbering when importing GIFT questions.
