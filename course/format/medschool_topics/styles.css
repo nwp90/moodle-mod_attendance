@@ -79,6 +79,7 @@
 	margin-left: -15px;
 */
 .medschool_topics #section-0 div.iconbar-solid {
+    clear: both;
     background-color: #363636;
     overflow: auto;
     margin-bottom: -1px;

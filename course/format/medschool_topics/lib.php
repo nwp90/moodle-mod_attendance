@@ -250,7 +250,15 @@ class format_medschool_topics extends format_base {
                     'default' => '1',
                     'type' => PARAM_INT,
                 ),
+                'coursebannerheight' => array(
+                    'default' => '0',
+                    'type' => PARAM_INT,
+                ),
                 'navigationbardisplay' => array(
+                    'default' => '1',
+                    'type' => PARAM_INT,
+                ),
+                'navigationsectionlink' => array(
                     'default' => '1',
                     'type' => PARAM_INT,
                 ),
@@ -308,6 +316,18 @@ class format_medschool_topics extends format_base {
                     'help' => 'coursebannerdisplay',
                     'help_component' => 'format_medschool_topics',
                 ),
+                'coursebannerheight' => array(
+                    'label' => new lang_string('coursebannerheight' , 'format_medschool_topics'),
+                    'element_type' => 'select',
+                    'element_attributes' => array(
+                        array(
+                            0 => new lang_string('wide', 'format_medschool_topics'),
+                            1 => new lang_string('narrow', 'format_medschool_topics')
+                        )
+                    ),
+                    'help' => 'coursebannerheight',
+                    'help_component' => 'format_medschool_topics',
+                ),
                  'navigationbardisplay' => array(
                     'label' => new lang_string('navigationbardisplay' , 'format_medschool_topics'),
                     'element_type' => 'select',
@@ -318,6 +338,18 @@ class format_medschool_topics extends format_base {
                         )
                     ),
                     'help' => 'navigationbardisplay',
+                    'help_component' => 'format_medschool_topics',
+                ),
+                 'navigationsectionlink' => array(
+                    'label' => new lang_string('navigationsectionlink' , 'format_medschool_topics'),
+                    'element_type' => 'select',
+                    'element_attributes' => array(
+                        array(
+                            0 => new lang_string('no'),
+                            1 => new lang_string('yes')
+                        )
+                    ),
+                    'help' => 'navigationsectionlink',
                     'help_component' => 'format_medschool_topics',
                 )
             );
