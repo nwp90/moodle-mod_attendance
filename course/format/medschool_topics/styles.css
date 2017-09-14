@@ -1,0 +1,190 @@
+.course-content ul.medschool_topics {
+    margin: 0;
+    list-style: none;
+    
+}
+
+/*
+.course-content ul.medschool_topics li.section .content {
+    margin: 0 15px;
+}
+*/
+
+.course-content ul.medschool_topics li.section .left,
+.course-content ul.medschool_topics li.section .right {
+    width: 20px;
+    padding: 0 6px;
+}
+
+.course-content ul.medschool_topics li.section#section-0 .left {
+    padding: 0;
+}
+
+.course-content ul.medschool_topics li.section#section-0 .left img {
+    display: none;
+}
+
+.course-content ul.medschool_topics li.section .right img.icon {
+    padding: 0 0 4px 0;
+}
+
+/*
+.course-content ul.medschool_topics li.section .left {
+    padding-top: 22px;
+    text-align: right;
+}
+*/
+
+.jsenabled .course-content ul.medschool_topics li.section .left,
+.jsenabled .course-content ul.medschool_topics li.section .right {
+    width: auto;
+}
+
+.course-content ul.medschool_topics li.section .section-handle {
+    margin: inherit;
+    position: inherit;
+    top: inherit;
+    vertical-align: middle;
+}
+
+.course-content ul.medschool_topics li.section .left .section-handle img.icon {
+    padding: 0;
+    vertical-align: middle;
+}
+
+.course-content ul.medschool_topics img.spacer {
+    display: block;
+}
+
+.course-content ul.medschool_topics li.section#section-0 .section_action_menu {
+    background-color: #fff;
+    opacity:0.9;
+    filter: alpha(opacity=90);
+}
+
+.course-content ul.medschool_topics li.section .section_action_menu .textmenu,
+.course-content ul.medschool_topics li.section .section_action_menu .menu-action-text {
+    white-space: nowrap;
+}
+
+/*end of KJ additions*/
+
+/*KJ testing course icons and banners*/
+
+
+/*icon-bar-solid styles*/
+
+/*
+	margin-right: -15px;
+	margin-left: -15px;
+*/
+.medschool_topics #section-0 div.iconbar-solid {
+    background-color: #363636;
+    overflow: auto;
+    margin-bottom: -1px;
+    padding-left: 15px;
+}
+
+.medschool_topics #section-0 div.iconbar-solid a {
+    color: white;
+    float: left; 
+    text-align: center; 
+    width: auto; 
+    padding: 12px 0;
+    padding-bottom:7px;
+    transition: all 0.3s ease;
+    height: auto;
+}
+
+.medschool_topics #section-0 div.iconbar-solid a span {
+    display: block; 
+    margin-left: auto; 
+    margin-right: auto;
+    margin-top: 5px;
+    padding-left: 2px;
+    padding-right: 2px;
+    width: 90px;	
+}
+
+.medschool_topics #section-0 div.iconbar-solid a span[class^="fa"] {
+    text-align: center;
+}
+
+.medschool_topics #section-0 div.iconbar-solid a:hover {
+    text-decoration: none;
+    background-color: #3FACE6;
+}
+
+/*banner work*/
+
+/*
+    margin-top: -11px;
+    margin-left: -21px;
+    padding: 10px;
+    padding-left: 20px;
+*/
+.medschool_topics #section-0 h3.sectionname {
+    float: left;
+    margin: 0;
+    padding: 0;
+    background: none;
+    display: inline-block;
+    line-height: normal;
+}
+
+.medschool_topics #section-0 div.summary {
+    margin: 0;
+    padding: 0;
+}
+
+/*
+	margin-right: -15px;
+	margin-left: -15px;
+	margin-top: -10px;
+*/
+.medschool_topics #section-0 span.header-image {
+    height: 120px;
+    display: block;
+}
+
+.medschool_topics #section-0 span.no-header-image {
+    display: block;
+    margin-top: -35px;
+    margin-right:-15px;
+    margin-left: -35px;
+    clear: both;
+}
+
+/*
+ was :first-child
+    margin-left: -16px;
+    padding-left: 20px;
+    padding-right: 20px;
+*/
+.medschool_topics #section-0 .sectionname a {
+    background-color: #fff;
+    opacity: 0.9;
+    filter: alpha(opacity=90);
+    margin: 0;
+    padding: 10px;
+    display: inline-block;
+    float: left;
+}
+
+.medschool_topics div.no-overflow {
+    overflow: initial !important;
+}
+
+.course-content ul.medschool_topics li.section#section-0 div.content h3.sectionname {
+    max-width: 90%;
+}
+
+.course-content ul.medschool_topics li.section#section-0 div.content h3.sectionname a {
+    max-width: 100%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.course-content ul.medschool_topics li.section#section-0 div.content h3.sectionname .inplaceeditable a {
+    max-width: 90%;
+}
