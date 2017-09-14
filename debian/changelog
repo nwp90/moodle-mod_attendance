@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.2.5.2017091100+0facmed2-1) jessie; urgency=medium
+
+  * Add medschool_topics course format.
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 14 Sep 2017 14:46:36 +1200
+
 moodle-site-otagounifom (3.2.5.2017091100+0facmed1-1) jessie; urgency=medium
 
   * Upstream update; security fixes CVE-2017-12156/MDL-59972, CVE-2017-12157/
