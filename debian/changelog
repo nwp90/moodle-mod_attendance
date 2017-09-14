@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.2.5.2017091100+0facmed3-1) jessie; urgency=medium
+
+  * Fix html gen for modal in mod_bootstrapelements
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 14 Sep 2017 17:24:04 +1200
+
 moodle-site-otagounifom (3.2.5.2017091100+0facmed2-1) jessie; urgency=medium
 
   * Add medschool_topics course format.
