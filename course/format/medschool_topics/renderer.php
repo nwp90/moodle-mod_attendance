@@ -136,8 +136,10 @@ class format_medschool_topics_renderer extends format_section_renderer_base {
         $fmt = course_get_format($course->id);
         $course_format_options = $fmt->get_format_options();
         $num_sections = $course_format_options['numsections'];
+        $course_url = $CFG->wwwroot.'/course/view.php?id='.$course->id;
 
         $banner_url = $CFG->wwwroot . "/course/format/medschool_topics/pix/Header.jpg";
+        $single_section_link = $course_format_options['navigationsectionlink'];
 
         $navbar = '';
         if ($course_format_options['navigationbardisplay']) {
@@ -176,13 +178,21 @@ class format_medschool_topics_renderer extends format_section_renderer_base {
                     $section_name = get_section_name($course, $current_section);
                 }
 
-                if ($current_section->visible) {
+                if ($current_section->visible && $single_section_link === 0) {
                     $sectionlinks[] = html_writer::link(
                         '#section-' . $section_number,
                         html_writer::span('', 'fa fa-' . $icon_size . 'x fa-fw fa-' . $section_icon) . 
                         html_writer::span($section_name)
 
                     );
+                }else if ($current_section->visible && $single_section_link !== 0){
+                    $sectionlinks[] = html_writer::link(
+                        $course_url.'&section=' . $section_number,
+                        html_writer::span('', 'fa fa-' . $icon_size . 'x fa-fw fa-' . $section_icon) . 
+                        html_writer::span($section_name)
+
+                    );
+                
                 }
             }
             $navbar = html_writer::div(join("\n", $sectionlinks), 'iconbar-solid');
@@ -203,7 +213,12 @@ class format_medschool_topics_renderer extends format_section_renderer_base {
                     break;
                 }
             }
-            $attrs = [ 'style' => 'background-image:url(' . $banner_url . ');' ];
+            if($course_format_options['coursebannerheight'] > 0){
+                 $attrs = [ 'style' => 'height:80px; background-image:url(' . $banner_url . ');' ];
+            }
+            else{
+                $attrs = [ 'style' => 'background-image:url(' . $banner_url . ');' ];
+            }
             $section->summary = html_writer::span('', 'header-image', $attrs) . $navbar . $section->summary;
         }
         else {
