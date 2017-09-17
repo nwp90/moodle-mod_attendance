@@ -5,6 +5,7 @@ PULL_REQUEST_TEMPLATE.txt      /srv/moodle/otagounifom/moodle/
 README.txt                     /srv/moodle/otagounifom/moodle/
 TRADEMARK.txt                  /srv/moodle/otagounifom/moodle/
 admin                          /srv/moodle/otagounifom/moodle/
+analytics		       /srv/moodle/otagounifom/moodle/
 auth                           /srv/moodle/otagounifom/moodle/
 availability                   /srv/moodle/otagounifom/moodle/
 backup                         /srv/moodle/otagounifom/moodle/
