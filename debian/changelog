@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.4.0~2017090700+0facmed1-2) jessie; urgency=medium
+
+  * Fix packaging (debian/install)
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 18 Sep 2017 08:36:18 +1200
+
 moodle-site-otagounifom (3.4.0~2017090700+0facmed1-1) jessie; urgency=medium
 
   * Update to latest 3.4dev
