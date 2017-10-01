@@ -14,10 +14,29 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Student form class.
+ *
+ * @package    mod_attendance
+ * @copyright  2011 Artem Andreev <andreev.artem@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir.'/formslib.php');
 
+/**
+ * Class mod_attendance_student_attendance_form
+ *
+ * @copyright  2011 Artem Andreev <andreev.artem@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class mod_attendance_student_attendance_form extends moodleform {
+    /**
+     * Called to define this moodle form
+     *
+     * @return void
+     */
     public function definition() {
         global $USER;
 
@@ -27,6 +46,18 @@ class mod_attendance_student_attendance_form extends moodleform {
         $attblock = $this->_customdata['attendance'];
 
         $statuses = $attblock->get_statuses();
+        // Check if user has access to all statuses.
+        $disabledduetotime = false;
+        foreach ($statuses as $status) {
+            if ($status->studentavailability === '0') {
+                unset($statuses[$status->id]);
+            }
+            if (!empty($status->studentavailability) &&
+                time() > $attforsession->sessdate + ($status->studentavailability * 60)) {
+                unset($statuses[$status->id]);
+                $disabledduetotime = true;
+            }
+        }
 
         $mform->addElement('hidden', 'sessid', null);
         $mform->setType('sessid', PARAM_INT);
@@ -46,16 +77,43 @@ class mod_attendance_student_attendance_form extends moodleform {
         if (!empty($attforsession->description)) {
             $mform->addElement('html', $attforsession->description);
         }
-
+        if (!empty($attforsession->studentpassword)) {
+            $mform->addElement('text', 'studentpassword', get_string('password', 'attendance'));
+            $mform->setType('studentpassword', PARAM_TEXT);
+            $mform->addRule('studentpassword', get_string('passwordrequired', 'attendance'), 'required');
+        }
         // Create radio buttons for setting the attendance status.
         $radioarray = array();
         foreach ($statuses as $status) {
-            $radioarray[] =& $mform->createElement('radio', 'status', '', $status->description, $status->id, array());
+            $name = html_writer::span($status->description, 'statusdesc');
+            $radioarray[] =& $mform->createElement('radio', 'status', '', $name, $status->id, array());
         }
-        // Add the radio buttons as a control with the user's name in front.
-        $mform->addGroup($radioarray, 'statusarray', $USER->firstname.' '.$USER->lastname.':', array(''), false);
-        $mform->addRule('statusarray', get_string('attendancenotset', 'attendance'), 'required', '', 'client', false, false);
+        if ($disabledduetotime) {
+            $warning = html_writer::span(get_string('somedisabledstatus', 'attendance'), 'somedisabledstatus');
+            $radioarray[] =& $mform->createElement('static', '', '', $warning);
+        }
 
+        // Add the radio buttons as a control with the user's name in front.
+        $radiogroup = $mform->addGroup($radioarray, 'statusarray', $USER->firstname.' '.$USER->lastname.':', array(''), false);
+        $radiogroup->setAttributes(array('class' => 'statusgroup'));
+        $mform->addRule('statusarray', get_string('attendancenotset', 'attendance'), 'required', '', 'client', false, false);
         $this->add_action_buttons();
+    }
+
+    /**
+     * Validate Form.
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
+    public function validation($data, $files) {
+        $errors = array();
+        // Check if this status is allowed to be set.
+        if (empty($data['status'])) {
+            $errors['statusarray'] = get_string('invalidstatus', 'attendance');
+        }
+
+        return $errors;
     }
 }

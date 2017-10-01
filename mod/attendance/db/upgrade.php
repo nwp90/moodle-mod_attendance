@@ -14,9 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-require_once(dirname(__FILE__) . '/upgradelib.php');
-
 /**
  * upgrade processes for this module.
  *
@@ -24,6 +21,9 @@ require_once(dirname(__FILE__) . '/upgradelib.php');
  * @copyright 2011 Artem Andreev <andreev.artem@gmail.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+defined('MOODLE_INTERNAL') || die();
+require_once(dirname(__FILE__) . '/upgradelib.php');
 
 /**
  * upgrade this attendance instance - this function could be skipped but it will be needed later
@@ -214,7 +214,7 @@ function xmldb_attendance_upgrade($oldversion=0) {
         upgrade_mod_savepoint(true, 2016121300, 'attendance');
     }
 
-    if ($oldversion < 2016121305) {
+    if ($oldversion < 2017020700) {
         // Define field timemodified to be added to attendance.
         $table = new xmldb_table('attendance');
 
@@ -230,8 +230,228 @@ function xmldb_attendance_upgrade($oldversion=0) {
         }
 
         // Attendance savepoint reached.
-        upgrade_mod_savepoint(true, 2016121305, 'attendance');
+        upgrade_mod_savepoint(true, 2017020700, 'attendance');
     }
 
+    if ($oldversion < 2017042800) {
+        $table = new xmldb_table('attendance_sessions');
+
+        $field = new xmldb_field('studentpassword');
+        $field->set_attributes(XMLDB_TYPE_CHAR, '50', null, false, null, '', 'studentscanmark');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2017042800, 'attendance');
+    }
+
+    if ($oldversion < 2017051101) {
+
+        // Define field studentavailability to be added to attendance_statuses.
+        $table = new xmldb_table('attendance_statuses');
+        $field = new xmldb_field('studentavailability', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'grade');
+
+        // Conditionally launch add field studentavailability.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Attendance savepoint reached.
+        upgrade_mod_savepoint(true, 2017051101, 'attendance');
+    }
+
+    if ($oldversion < 2017051103) {
+        $table = new xmldb_table('attendance_sessions');
+        $newfield = $table->add_field('subnet', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'studentpassword');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        upgrade_mod_savepoint(true, 2017051103, 'attendance');
+    }
+
+    if ($oldversion < 2017051104) {
+        // The meaning of the subnet in the attendance table has changed - it is now the "default" value - find all existing
+        // Attendance with subnet set and set the session subnet for these.
+        $attendances = $DB->get_recordset_select('attendance', 'subnet IS NOT NULL');
+        foreach ($attendances as $attendance) {
+            if (!empty($attendance->subnet)) {
+                // Get all sessions for this attendance.
+                $sessions = $DB->get_recordset('attendance_sessions', array('attendanceid' => $attendance->id));
+                foreach ($sessions as $session) {
+                    $session->subnet = $attendance->subnet;
+                    $DB->update_record('attendance_sessions', $session);
+                }
+                $sessions->close();
+            }
+        }
+        $attendances->close();
+
+        upgrade_mod_savepoint(true, 2017051104, 'attendance');
+    }
+
+    if ($oldversion < 2017051900) {
+        // Define field setunmarked to be added to attendance_statuses.
+        $table = new xmldb_table('attendance_statuses');
+        $field = new xmldb_field('setunmarked', XMLDB_TYPE_INTEGER, '2', null, null, null, null, 'studentavailability');
+
+        // Conditionally launch add field studentavailability.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Attendance savepoint reached.
+        upgrade_mod_savepoint(true, 2017051900, 'attendance');
+    }
+
+    if ($oldversion < 2017052201) {
+        // Define field setunmarked to be added to attendance_statuses.
+        $table = new xmldb_table('attendance_sessions');
+        $field = new xmldb_field('automark', XMLDB_TYPE_INTEGER, '1', null, true, null, '0', 'subnet');
+
+        // Conditionally launch add field automark.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('automarkcompleted', XMLDB_TYPE_INTEGER, '1', null, true, null, '0', 'automark');
+
+        // Conditionally launch add field automarkcompleted.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Attendance savepoint reached.
+        upgrade_mod_savepoint(true, 2017052201, 'attendance');
+    }
+
+    if ($oldversion < 2017060900) {
+        // Automark values changed.
+        $default = get_config('attendance', 'automark_default');
+        if (!empty($default)) { // Change default if set.
+            set_config('automark_default', 2, 'attendance');
+        }
+        // Update any sessions set to use automark = 1.
+        $sql = "UPDATE {attendance_sessions} SET automark = 2 WHERE automark = 1";
+        $DB->execute($sql);
+
+        // Update automarkcompleted to 2 if already complete.
+        $sql = "UPDATE {attendance_sessions} SET automarkcompleted = 2 WHERE automarkcompleted = 1";
+        $DB->execute($sql);
+
+        upgrade_mod_savepoint(true, 2017060900, 'attendance');
+    }
+
+    if ($oldversion < 2017062000) {
+
+        // Define table attendance_warning_done to be created.
+        $table = new xmldb_table('attendance_warning_done');
+
+        // Adding fields to table attendance_warning_done.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('notifyid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timesent', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table attendance_warning_done.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        // Adding indexes to table attendance_warning_done.
+        $table->add_index('notifyid_userid', XMLDB_INDEX_UNIQUE, array('notifyid', 'userid'));
+
+        // Conditionally launch create table for attendance_warning_done.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Attendance savepoint reached.
+        upgrade_mod_savepoint(true, 2017062000, 'attendance');
+    }
+
+    if ($oldversion < 2017071305) {
+
+        // Define table attendance_warning to be created.
+        $table = new xmldb_table('attendance_warning');
+
+        if (!$dbman->table_exists($table)) {
+            // Adding fields to table attendance_warning.
+            $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+            $table->add_field('idnumber', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+            $table->add_field('warningpercent', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+            $table->add_field('warnafter', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+            $table->add_field('emailuser', XMLDB_TYPE_INTEGER, '4', null, XMLDB_NOTNULL, null, null);
+            $table->add_field('emailsubject', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+            $table->add_field('emailcontent', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+            $table->add_field('emailcontentformat', XMLDB_TYPE_INTEGER, '4', null, XMLDB_NOTNULL, null, null);
+            $table->add_field('thirdpartyemails', XMLDB_TYPE_TEXT, null, null, null, null, null);
+
+            // Adding keys to table attendance_warning.
+            $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+            $table->add_key('level_id', XMLDB_KEY_UNIQUE, array('idnumber, warningpercent, warnafter'));
+
+            // Conditionally launch create table for attendance_warning.
+            $dbman->create_table($table);
+
+        } else {
+            // Key definition is probably incorrect so fix it - drop_key dml function doesn't seem to work.
+            $indexes = $DB->get_indexes('attendance_warning');
+            foreach ($indexes as $name => $index) {
+                if ($DB->get_dbfamily() === 'mysql') {
+                    $DB->execute("ALTER TABLE {attendance_warning} DROP INDEX ". $name);
+                } else {
+                    $DB->execute("DROP INDEX ". $name);
+                }
+            }
+            $index = new xmldb_key('level_id', XMLDB_KEY_UNIQUE, array('idnumber, warningpercent', 'warnafter'));
+            $dbman->add_key($table, $index);
+        }
+        // Attendance savepoint reached.
+        upgrade_mod_savepoint(true, 2017071305, 'attendance');
+    }
+
+    if ($oldversion < 2017071800) {
+        // Define field setunmarked to be added to attendance_statuses.
+        $table = new xmldb_table('attendance_warning');
+        $field = new xmldb_field('maxwarn', XMLDB_TYPE_INTEGER, '10', null, true, null, '1', 'warnafter');
+
+        // Conditionally launch add field automark.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        // Attendance savepoint reached.
+        upgrade_mod_savepoint(true, 2017071800, 'attendance');
+    }
+
+    if ($oldversion < 2017071802) {
+        // Define field setunmarked to be added to attendance_statuses.
+        $table = new xmldb_table('attendance_warning_done');
+
+        $index = new xmldb_index('notifyid_userid', XMLDB_INDEX_UNIQUE, array('notifyid', 'userid'));
+        $dbman->drop_index($table, $index);
+
+        $index = new xmldb_index('notifyid', XMLDB_INDEX_NOTUNIQUE, array('notifyid', 'userid'));
+        $dbman->add_index($table, $index);
+
+        // Attendance savepoint reached.
+        upgrade_mod_savepoint(true, 2017071802, 'attendance');
+    }
+
+    if ($oldversion < 2017082200) {
+        // Warnings idnumber field should use attendanceid instead of cmid.
+        $sql = "SELECT cm.id, cm.instance
+                  FROM {course_modules} cm
+                  JOIN {modules} md ON md.id = cm.module AND md.name = 'attendance'";
+        $idnumbers = $DB->get_records_sql_menu($sql);
+        $warnings = $DB->get_recordset('attendance_warning');
+        foreach ($warnings as $warning) {
+            if (!empty($warning->idnumber) && !empty($idnumbers[$warning->idnumber])) {
+                $warning->idnumber = $idnumbers[$warning->idnumber];
+                $DB->update_record("attendance_warning", $warning);
+            }
+        }
+        $warnings->close();
+
+        // Attendance savepoint reached.
+        upgrade_mod_savepoint(true, 2017082200, 'attendance');
+    }
     return $result;
 }
