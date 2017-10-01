@@ -32,12 +32,17 @@ require_once(dirname(__FILE__).'/../../../calendar/lib.php');
  * @return bool result of calendar event creation
  */
 function attendance_create_calendar_event(&$session) {
+    global $DB;
+
     // We don't want to create multiple calendar events for 1 session.
     if ($session->caleventid) {
         return $session->caleventid;
     }
+    if (empty(get_config('attendance', 'enablecalendar'))) {
+        // Calendar events are not used.
+        return true;
+    }
 
-    global $DB;
     $attendance = $DB->get_record('attendance', array('id' => $session->attendanceid));
 
     $caleventdata = new stdClass();
@@ -64,10 +69,16 @@ function attendance_create_calendar_event(&$session) {
 /**
  * Create multiple calendar events based on sessions data.
  *
- * @param array %sessionsids array of sessions ids
+ * @param array $sessionsids array of sessions ids
  */
 function attendance_create_calendar_events($sessionsids) {
     global $DB;
+
+    if (empty(get_config('attendance', 'enablecalendar'))) {
+        // Calendar events are not used.
+        return true;
+    }
+
     $sessions = $DB->get_recordset_list('attendance_sessions', 'id', $sessionsids);
 
     foreach ($sessions as $session) {
@@ -81,12 +92,18 @@ function attendance_create_calendar_events($sessionsids) {
 /**
  * Update calendar event duration and date
  *
- * @param $caleventid int calendar event id
- * @param $timeduration int duration of the event
- * @param $timestart int start time of the event
+ * @param int $caleventid calendar event id
+ * @param int $timeduration duration of the event
+ * @param int $timestart start time of the event
  * @return bool result of updating
  */
 function attendance_update_calendar_event($caleventid, $timeduration, $timestart) {
+
+    if (empty(get_config('attendance', 'enablecalendar'))) {
+        // Calendar events are not used.
+        return true;
+    }
+
     $caleventdata = new stdClass();
     $caleventdata->timeduration   = $timeduration;
     $caleventdata->timestart      = $timestart;
@@ -103,7 +120,7 @@ function attendance_update_calendar_event($caleventid, $timeduration, $timestart
 /**
  * Delete calendar events for sessions
  *
- * @param array %sessionsids array of sessions ids
+ * @param array $sessionsids array of sessions ids
  * @return bool result of updating
  */
 function attendance_delete_calendar_events($sessionsids) {

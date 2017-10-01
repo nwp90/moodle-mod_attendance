@@ -21,15 +21,14 @@ Feature: Test the various new features in the attendance module
       | C1     | student3 | student        | ##yesterday## |
 
     And I log in as "teacher1"
-    And I follow "Course 1"
-    And I turn editing mode on
+    And I am on "Course 1" course homepage with editing mode on
     And I add a "Attendance" to section "1" and I fill the form with:
       | Name | Test attendance |
     And I log out
 
   Scenario: A teacher can create and update temporary users
     Given I log in as "teacher1"
-    And I follow "Course 1"
+    And I am on "Course 1" course homepage
     And I follow "Test attendance"
     And I follow "Temporary users"
 
@@ -61,7 +60,7 @@ Feature: Test the various new features in the attendance module
 
   Scenario: A teacher can take attendance for temporary users
     Given I log in as "teacher1"
-    And I follow "Course 1"
+    And I am on "Course 1" course homepage
     And I follow "Test attendance"
     And I follow "Temporary users"
     And I set the following fields to these values:
@@ -78,24 +77,24 @@ Feature: Test the various new features in the attendance module
       | id_addmultiply | 0 |
     And I click on "submitbutton" "button"
 
-    When I follow "Take attendance"
+    And I follow "Take attendance"
     # Present
-    And I click on "td.c3 input" "css_element" in the "Student 1" "table_row"
+    And I click on "td.cell.c3 input" "css_element" in the "Student 1" "table_row"
     # Late
-    And I click on "td.c4 input" "css_element" in the "Student 2" "table_row"
+    And I click on "td.cell.c4 input" "css_element" in the "Student 2" "table_row"
     # Excused
-    And I click on "td.c5 input" "css_element" in the "Temporary user 1" "table_row"
+    And I click on "td.cell.c5 input" "css_element" in the "Temporary user 1" "table_row"
     # Absent
-    And I click on "td.c6 input" "css_element" in the "Temporary user 2" "table_row"
+    And I click on "td.cell.c6 input" "css_element" in the "Temporary user 2" "table_row"
     And I press "Save attendance"
     And I follow "Report"
-    Then "P" "text" should exist in the "Student 1" "table_row"
+    And "P" "text" should exist in the "Student 1" "table_row"
     And "L" "text" should exist in the "Student 2" "table_row"
     And "E" "text" should exist in the "Temporary user 1" "table_row"
     And "A" "text" should exist in the "Temporary user 2" "table_row"
 
-    When I follow "Temporary user 2"
-    Then I should see "Absent"
+    And I follow "Temporary user 2"
+    And I should see "Absent"
 
     # Merge user.
     When I follow "Test attendance"
@@ -105,11 +104,11 @@ Feature: Test the various new features in the attendance module
     And I press "Merge user"
     And I follow "Report"
 
-    Then "P" "text" should exist in the "Student 1" "table_row"
+    And "P" "text" should exist in the "Student 1" "table_row"
     And "L" "text" should exist in the "Student 2" "table_row"
     And "E" "text" should exist in the "Temporary user 1" "table_row"
     And "A" "text" should exist in the "Student 3" "table_row"
-    And I should not see "Temporary user 2"
+    Then I should not see "Temporary user 2"
 
   Scenario: A teacher can select a subset of users for export
     Given the following "groups" exist:
@@ -124,7 +123,7 @@ Feature: Test the various new features in the attendance module
       | Group2 | student3 |
 
     And I log in as "teacher1"
-    And I follow "Course 1"
+    And I am on "Course 1" course homepage
     And I follow "Test attendance"
     And I follow "Add"
     And I set the following fields to these values:
@@ -147,7 +146,7 @@ Feature: Test the various new features in the attendance module
 
   Scenario: A teacher can create and use multiple status lists
     Given I log in as "teacher1"
-    And I follow "Course 1"
+    And I am on "Course 1" course homepage
     And I follow "Test attendance"
     And I follow "Status set"
     And I set the field "jump" to "New set of statuses"
@@ -182,21 +181,21 @@ Feature: Test the various new features in the attendance module
       | id_sestime_endhour        | 13 |
     And I click on "submitbutton" "button"
 
-    When I click on "Take attendance" "link" in the "10am" "table_row"
+    When I click on "Take attendance" "link" in the "10AM" "table_row"
     Then "Set status for all users to «Present»" "link" should exist
     And "Set status for all users to «Late»" "link" should exist
     And "Set status for all users to «Excused»" "link" should exist
     And "Set status for all users to «Absent»" "link" should exist
 
     When I follow "Sessions"
-    And I click on "Take attendance" "link" in the "12pm" "table_row"
+    And I click on "Take attendance" "link" in the "12PM" "table_row"
     Then "Set status for all users to «Great»" "link" should exist
     And "Set status for all users to «OK»" "link" should exist
     And "Set status for all users to «Bad»" "link" should exist
 
   Scenario: A teacher can use the radio buttons to set attendance values for all users
     Given I log in as "teacher1"
-    And I follow "Course 1"
+    And I am on "Course 1" course homepage
     And I follow "Test attendance"
     And I follow "Add"
     And I set the following fields to these values:
