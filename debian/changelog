@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.4.0~2017090700+0facmed4-1) jessie; urgency=medium
+
+  * Update format-medschool_topics to latest.
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 02 Oct 2017 14:19:43 +1300
+
 moodle-site-otagounifom (3.4.0~2017090700+0facmed3-1) jessie; urgency=medium
 
   * Upgrade mod_attendance from git, to get optional calendar entries.
