@@ -100,7 +100,7 @@ class format_medschool_topics_renderer extends format_section_renderer_base {
 					$section_icon = 'star-o';
                 }
             }
-            $title = html_writer::span('', 'fa fa-' . $section_icon) . $title;
+            $title = html_writer::span('', 'fa fa-' . $section_icon) . "\n" . $title;
     	}
     	return $title;
     }
