@@ -24,7 +24,8 @@
     display: none;
 }
 
-.course-content ul.medschool_topics li.section .right img.icon {
+/* > gets icons in heading, but we don't want the icons in edit menu */
+.course-content ul.medschool_topics li.section .right > img.icon {
     padding: 0 0 4px 0;
 }
 
@@ -67,10 +68,13 @@
     white-space: nowrap;
 }
 
-/*end of KJ additions*/
-
-/*KJ testing course icons and banners*/
-
+/* edit dropdowns size to fit their content. no idea where it's getting width from
+   without this
+*/
+.course-content ul.medschool_topics li.section ul.menu {
+    width: max-content;
+    width: -moz-max-content;
+}
 
 /*icon-bar-solid styles*/
 
@@ -82,38 +86,61 @@
     clear: both;
     background-color: #363636;
     overflow: auto;
+    margin-left: 0px;
+    margin-right: 0px;
+    margin-top: 0px;
     margin-bottom: -1px;
     padding-left: 15px;
+    padding-right: 15px;
 }
 
-.medschool_topics #section-0 div.iconbar-solid a {
+.medschool_topics #section-0 div.iconbar-solid a,
+.medschool_topics #section-0 div.iconbar-solid button {
     color: white;
-    float: left; 
+    background-color: #363636;
+/*    float: left;  */
     text-align: center; 
     width: auto; 
-    padding: 12px 0;
-    padding-bottom:7px;
+    padding-top: 12px;
+    padding-bottom: 7px;
+    padding-left: 5px;
+    padding-right: 5px;
+    margin: 0px;
     transition: all 0.3s ease;
-    height: auto;
+    height: 100%;
+    vertical-align: top;
+    border: 0.5px solid #363636;
 }
 
-.medschool_topics #section-0 div.iconbar-solid a span {
-    display: block; 
+.medschool_topics #section-0 div.iconbar-solid a:hover,
+.medschool_topics #section-0 div.iconbar-solid button:hover {
+    color: white;
+    background-color: #696969;
+/*    background-color: #3FACE6; */
+    transition: all 0.3s ease;
+    border: 0.5px solid #999;
+    text-decoration: none;
+}
+
+.medschool_topics #section-0 div.iconbar-solid a span,
+.medschool_topics #section-0 div.iconbar-solid button span {
+    display: block;
     margin-left: auto; 
     margin-right: auto;
     margin-top: 5px;
     padding-left: 2px;
     padding-right: 2px;
-    width: 90px;	
 }
 
-.medschool_topics #section-0 div.iconbar-solid a span[class^="fa"] {
+.medschool_topics #section-0 div.iconbar-solid a span[class^="fa"],
+.medschool_topics #section-0 div.iconbar-solid button span[class^="fa"] {
     text-align: center;
 }
 
-.medschool_topics #section-0 div.iconbar-solid a:hover {
-    text-decoration: none;
-    background-color: #3FACE6;
+.medschool_topics #section-0 div.iconbar-solid a span:not(:first-child),
+.medschool_topics #section-0 div.iconbar-solid button span:not(:first-child) {
+    min-width: 4em;	
+    max-width: 6em;	
 }
 
 /*banner work*/

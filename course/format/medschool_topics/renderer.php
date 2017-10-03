@@ -179,23 +179,39 @@ class format_medschool_topics_renderer extends format_section_renderer_base {
                 }
 
                 if ($current_section->visible && $single_section_link === 0) {
-                    $sectionlinks[] = html_writer::link(
-                        '#section-' . $section_number,
-                        html_writer::span('', 'fa fa-' . $icon_size . 'x fa-fw fa-' . $section_icon) . 
-                        html_writer::span($section_name)
-
+                    $sectionlinks[] = html_writer::tag(
+                        'a',
+                        html_writer::span('', 'fa fa-' . $icon_size . 'x fa-fw fa-' . $section_icon) .
+#                        html_writer::empty_tag('br') .
+                        html_writer::span($section_name),
+                        [
+                            'href' => $course_url . '#section-' . $section_number,
+                            'class' => 'btn btn-medtopics',
+                            'role' => 'button'
+                        ]
                     );
                 }else if ($current_section->visible && $single_section_link !== 0){
-                    $sectionlinks[] = html_writer::link(
-                        $course_url.'&section=' . $section_number,
-                        html_writer::span('', 'fa fa-' . $icon_size . 'x fa-fw fa-' . $section_icon) . 
-                        html_writer::span($section_name)
-
+                    $sectionlinks[] = html_writer::tag(
+                        'a',
+                        html_writer::span('', 'fa fa-' . $icon_size . 'x fa-fw fa-' . $section_icon) .
+#                        html_writer::empty_tag('br') .
+                        html_writer::span($section_name),
+                        [
+                            'href' => $course_url . '&section=' . $section_number,
+                            'class' => 'btn btn-medtopics',
+                            'role' => 'button'
+                        ]
                     );
+#                    $sectionlinks[] = html_writer::link(
+#                        $course_url.'&section=' . $section_number,
+#                        html_writer::span('', 'fa fa-' . $icon_size . 'x fa-fw fa-' . $section_icon) . 
+#                        html_writer::span($section_name)
+#                    );
                 
                 }
             }
-            $navbar = html_writer::div(join("\n", $sectionlinks), 'iconbar-solid');
+            $navbar = html_writer::tag('nolink', html_writer::div(join("\n", $sectionlinks), 'btn-toolbar iconbar-solid'));
+#            $navbar = html_writer::div(join("\n", $sectionlinks), 'iconbar-solid');
         }
 
         if ($course_format_options['coursebannerdisplay']) {
