@@ -220,7 +220,12 @@ function bootstrapelements_toggle_outline($togglename, $toggletitle, $togglecont
         'class' => 'panel-title'
     ));
 
-    $output .= html_writer::tag('a', '<i class="fa '.$icon.'"></i>&nbsp;'.$toggletitle, array(
+    $linktext = html_writer::span(
+        html_writer::tag('i', '', ['class' => "fa ".$icon]) .
+        html_writer::end_tag('i') . '&nbsp;'.$toggletitle
+    );
+
+    $output .= html_writer::tag('a', $linktext, array(
         'data-toggle' => 'collapse',
         'class' => 'accordion-toggle collapsed',
         'href' => '#'.$togglename
