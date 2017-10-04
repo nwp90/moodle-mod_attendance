@@ -7,24 +7,29 @@
     min-width: 200px;
 }
 
+.mod-bootstrapelements-toggle .panel-heading a span {
+    width: 100%;
+    display: inline-block;
+}
+
 .mod-bootstrapelements-toggle .panel-heading a {
     max-width: 100%;
     white-space: normal;
     display: inline;
 }
 
-.panel-heading .accordion-toggle:after {
+.mod-bootstrapelements-toggle .panel-heading .accordion-toggle span:after {
     font-family: 'FontAwesome';
     content: "\f062";
-    margin-left: 5px;
+    margin-left: -1em;
     color: grey;
     float: right;
 }
 
-.panel-heading .accordion-toggle:hover {
+.mod-bootstrapelements-toggle .panel-heading .accordion-toggle:hover {
     text-decoration: none;
 }
 
-.panel-heading .accordion-toggle.collapsed:after {
+.mod-bootstrapelements-toggle .panel-heading .accordion-toggle.collapsed span:after {
     content: "\f063";
 }
