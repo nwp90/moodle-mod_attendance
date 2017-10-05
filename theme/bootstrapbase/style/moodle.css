@@ -15955,7 +15955,8 @@ body {
   width: auto;
   max-width: 92%;
 }
-.block_calendar_upcoming .content .date {
+.block_calendar_upcoming .content .date,
+.block_calendar_upcoming .content .course {
   padding-left: 22px;
 }
 .block_calendar_upcoming .content .footer {
