@@ -1226,6 +1226,27 @@ class grade_plugin_return {
     }
 
     /**
+     * Checks whether given user is selected by this gpr's userid/groupid combination
+     *
+     * @param integer $userid userid to check for inclusion
+     *
+     * @return boolean included
+     */
+    public function includes_user($userid) {
+        if ($this->userid !== null and $this->userid !== $userid) {
+            return false;
+        }
+        // groupid 0 is returned by groups_get_course_group for "all participants";
+        // groups_is_member does not treat it appropriately.
+        if ($this->groupid !== null and $this->groupid !== 0) {
+            return groups_is_member($this->groupid, $userid);
+        }
+        // gpr has neither userid nor groupid specified; is valid for entire course.
+        // No meaningful check we can perform using $this->courseid.
+        return true;
+    }
+
+    /**
      * Returns return url
      *
      * @param string $default default url when params not set
@@ -1825,6 +1846,15 @@ class grade_structure {
     }
 
     /**
+     * Returns the grade_category eid
+     * @param grade_category $grade_category A grade_category object
+     * @return string eid
+     */
+    public function get_category_eid($grade_category) {
+        return 'cg'.$grade_category->id;
+    }
+
+    /**
      * Given a grade_tree element, returns an array of parameters
      * used to build an icon for that element.
      *
@@ -1981,9 +2011,10 @@ class grade_structure {
      * @param array  $element An array representing an element in the grade_tree
      * @param object $gpr A grade_plugin_return object
      * @param bool $returnactionmenulink return the instance of action_menu_link instead of string
+     * @param bool $contentsonly link to set hidden on element's contents rather than on element itself
      * @return string|action_menu_link
      */
-    public function get_hiding_icon($element, $gpr, $returnactionmenulink = false) {
+    public function get_hiding_icon($element, $gpr, $returnactionmenulink = false, $contentsonly = false) {
         global $CFG, $OUTPUT;
 
         if (!$element['object']->can_control_visibility()) {
@@ -2002,7 +2033,17 @@ class grade_structure {
         $url = new moodle_url('/grade/edit/tree/action.php', array('id' => $this->courseid, 'sesskey' => sesskey(), 'eid' => $element['eid']));
         $url = $gpr->add_url_params($url);
 
-        if ($element['object']->is_hidden()) {
+        // gpr test alone is the wrong test; may only need type & key tests, will see.
+        if ($element['type'] === 'grade' or $gpr === null or !array_key_exists('showngrades', $element)) {
+            $needshow = $element['object']->is_hidden();
+        } else {
+            /* Show only if all are hidden; that way if mixed, we will never
+             * have to click to show all before hiding all. It's OK to hide for a
+             * moment before showing, but not vice-versa.
+             */
+            $needshow = ($element['showngrades'] === 0);
+        }
+        if ($needshow) {
             $type = 'show';
             $tooltip = $strshow;
 
@@ -2013,7 +2054,11 @@ class grade_structure {
                         userdate($element['object']->get_hidden()));
             }
 
-            $url->param('action', 'show');
+            if ($contentsonly) {
+                $url->param('action', 'showcontents');
+            } else {
+                $url->param('action', 'show');
+            }
 
             if ($returnactionmenulink) {
                 $hideicon = new action_menu_link_secondary($url, new pix_icon('t/'.$type, $tooltip), get_string('show'));
@@ -2022,7 +2067,11 @@ class grade_structure {
             }
 
         } else {
-            $url->param('action', 'hide');
+            if ($contentsonly) {
+                $url->param('action', 'hidecontents');
+            } else {
+                $url->param('action', 'hide');
+            }
             if ($returnactionmenulink) {
                 $hideicon = new action_menu_link_secondary($url, new pix_icon('t/hide', $strhide), get_string('hide'));
             } else {
@@ -2313,6 +2362,12 @@ class grade_tree extends grade_structure {
     public $levels;
 
     /**
+     * Grade categories
+     * @var array $categories
+     */
+    public $categories;
+
+    /**
      * Grade items
      * @var array $items
      */
@@ -2479,6 +2534,7 @@ class grade_tree extends grade_structure {
         // prepare unique identifier
         if ($element['type'] == 'category') {
             $element['eid'] = 'cg'.$element['object']->id;
+            $this->categories[$element['object']->id] =& $element['object'];
         } else if (in_array($element['type'], array('item', 'courseitem', 'categoryitem'))) {
             $element['eid'] = 'ig'.$element['object']->id;
             $this->items[$element['object']->id] =& $element['object'];
@@ -2658,11 +2714,105 @@ class grade_tree extends grade_structure {
                     continue;
                 }
                 if ($element['eid'] == $eid) {
+                    // NB - this returns a copy of the element due to the way foreach works.
                     return $element;
                 }
             }
         }
 
+        return null;
+    }
+
+    /**
+     * Add 1 to count of hidden grades within an item or category element and all its parents
+     *
+     * @param string $eid The eid of the element to which we are referring
+     *
+     * @return void
+     */
+    public function addhidden($eid) {
+        $element = null;
+        // Can't use locate_element as it returns copy.
+        foreach ($this->levels as $levelkey => $row) {
+            foreach ($row as $index => $testelement) {
+                if ($testelement['type'] == 'filler') {
+                    continue;
+                }
+                if ($testelement['eid'] == $eid) {
+                    $element =& $this->levels[$levelkey][$index];
+                }
+            }
+        }
+        if ($element === null) {
+            debugging('addhidden to eid '.$eid.', element not found');
+            return null;
+        }
+        if (!array_key_exists('hiddengrades', $element)) {
+            $element['hiddengrades'] = 0;
+        }
+        if (!array_key_exists('showngrades', $element)) {
+            $element['showngrades'] = 0;
+        }
+        $element['hiddengrades']++;
+        $parent = null;
+        if ($element['type'] === 'grade') {
+            $parent = $this->get_item($element['object']->itemid);
+            return $this->addhidden($this->get_item_eid($parent));
+        } else if ($element['type'] === 'item') {
+            $parent = $this->get_category($element['object']->categoryid);
+        } else if ($element['type'] === 'category' and $element['object']->parent) {
+            $parent = $this->get_category($element['object']->parent);
+        }
+        if ($parent !== null) {
+            $eid = $this->get_category_eid($parent);
+            return $this->addhidden($eid);
+        }
+        return null;
+    }
+
+    /**
+     * Add 1 to count of shown grades within an item or category element and all its parents
+     *
+     * @param string $eid The eid of the element to which we are referring
+     *
+     * @return void
+     */
+    public function addshown($eid) {
+        $element = null;
+        foreach ($this->levels as $levelkey => $row) {
+            foreach ($row as $index => $testelement) {
+                if ($testelement['type'] == 'filler') {
+                    continue;
+                }
+                if ($testelement['eid'] == $eid) {
+                    $element =& $this->levels[$levelkey][$index];
+                }
+            }
+        }
+        if ($element === null) {
+            debugging('addshown to eid '.$eid.', element not found');
+            return null;
+        }
+        if (!array_key_exists('hiddengrades', $element)) {
+            $element['hiddengrades'] = 0;
+        }
+        if (!array_key_exists('showngrades', $element)) {
+            $element['showngrades'] = 0;
+        }
+        $element['showngrades']++;
+        $parent = null;
+        if ($element['type'] === 'grade') {
+            $parent = $this->get_item($element['object']->itemid);
+            return $this->addshown($this->get_item_eid($parent));
+        } else if ($element['type'] === 'item') {
+            $parent = $this->get_category($element['object']->categoryid);
+        } else if ($element['type'] === 'category' and $element['object']->parent) {
+            $parent = $this->get_category($element['object']->parent);
+        }
+        if ($parent !== null) {
+            $eid = $this->get_category_eid($parent);
+            return $this->addshown($eid);
+        }
         return null;
     }
 
@@ -2805,6 +2955,30 @@ class grade_tree extends grade_structure {
     public function get_item($itemid) {
         if (array_key_exists($itemid, $this->items)) {
             return $this->items[$itemid];
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Returns the array of grade categories
+     *
+     * @return array
+     */
+    public function get_categories() {
+        return $this->categories;
+    }
+
+    /**
+     * Returns a specific Grade Category
+     *
+     * @param int $categoryid The ID of the grade_category object
+     *
+     * @return grade_category
+     */
+    public function get_category($categoryid) {
+        if (array_key_exists($categoryid, $this->categories)) {
+            return $this->categories[$categoryid];
         } else {
             return false;
         }

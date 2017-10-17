@@ -478,8 +478,9 @@ abstract class grade_object {
      *
      * @param int $hidden 0 means visiable, 1 means hidden always, a timestamp means "hidden until"
      * @param bool $cascade Ignored
+     * @param grade_plugin_return Ignored
      */
-    function set_hidden($hidden, $cascade=false) {
+    public function set_hidden($hidden, $cascade=false, $gpr=null) {
         $this->hidden = $hidden;
         $this->update();
     }

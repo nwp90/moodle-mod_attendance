@@ -650,16 +650,21 @@ class grade_item extends grade_object {
      * 0 mean always visible, 1 means always hidden and a number > 1 is a timestamp to hide until
      *
      * @param int $hidden new hidden status
-     * @param bool $cascade apply to child objects too
+     * @param bool $cascade apply to child objects too - only applies to child objects that already exist
+     * @param grade_plugin_return $gpr optionally restrict action to grades for students matching
+     *         gpr user/group
      */
-    public function set_hidden($hidden, $cascade=false) {
-        parent::set_hidden($hidden, $cascade);
+    public function set_hidden($hidden, $cascade=false, $gpr=null) {
+        // If gpr is specified, we only want to hide/show individual users' grades within item.
+        if ($gpr === null) {
+            parent::set_hidden($hidden, $cascade);
+        }
 
         if ($cascade) {
             if ($grades = grade_grade::fetch_all(array('itemid'=>$this->id))) {
                 foreach($grades as $grade) {
                     $grade->grade_item =& $this;
-                    $grade->set_hidden($hidden, $cascade);
+                    $grade->set_hidden($hidden, $cascade, $gpr);
                 }
             }
         }
@@ -671,7 +676,7 @@ class grade_item extends grade_object {
                 $category = $category_array[$this->categoryid];
                 //call set_hidden on the category regardless of whether it is hidden as its parent might be hidden
                 //if($category->is_hidden()) {
-                    $category->set_hidden($hidden, false);
+                $category->set_hidden($hidden, false, $gpr);
                 //}
             }
         }
