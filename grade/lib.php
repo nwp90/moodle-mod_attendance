@@ -1185,6 +1185,25 @@ class grade_plugin_return {
     }
 
     /**
+     * Checks whether given user is selected by this gpr's userid/groupid combination
+     *
+     * @param integer $userid userid to check for inclusion
+     * 
+     * @return boolean included
+     */
+    public function includes_user($userid) {
+        if ($this->userid !== null and $this->userid !== $userid) {
+            return false;
+        }
+        if ($this->groupid !== null) {
+            return groups_is_member($this->groupid, $userid);
+        }
+        // gpr has neither userid nor groupid specified; is valid for entire course.
+        // no meaningful check we can perform using $this->courseid
+        return true;
+    }
+
+    /**
      * Returns return url
      *
      * @param string $default default url when params not set

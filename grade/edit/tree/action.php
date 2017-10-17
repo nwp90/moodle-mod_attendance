@@ -65,7 +65,7 @@ switch ($action) {
             if (!$object->can_control_visibility()) {
                 print_error('componentcontrolsvisibility', 'grades', $returnurl);
             }
-            $object->set_hidden(1, true);
+            $object->set_hidden(1, true, $gpr);
         }
         break;
 
@@ -80,7 +80,7 @@ switch ($action) {
             if (!$object->can_control_visibility()) {
                 print_error('componentcontrolsvisibility', 'grades', $returnurl);
             }
-            $object->set_hidden(0, true);
+            $object->set_hidden(0, true, $gpr);
         }
         break;
 

@@ -626,10 +626,14 @@ class grade_grade extends grade_object {
      *
      * @param int $hidden new hidden status
      * @param bool $cascade ignored
+     * @param grade_plugin_return $gpr optionally restrict action to grades for students matching
+     *         gpr user/group
      */
-    public function set_hidden($hidden, $cascade=false) {
-       $this->hidden = $hidden;
-       $this->update();
+    public function set_hidden($hidden, $cascade=false, $gpr=null) {
+        if ($gpr === null or $gpr->includes_user($this->userid)) {
+            $this->hidden = $hidden;
+            $this->update();
+        }
     }
 
     /**
