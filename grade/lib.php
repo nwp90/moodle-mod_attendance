@@ -1097,11 +1097,41 @@ function print_grade_page_head($courseid, $active_type, $active_plugin=null,
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class grade_plugin_return {
+    /**
+     * Type of grade plugin (e.g. 'edit', 'report')
+     *
+     * @var string
+     */
     public $type;
+    /**
+     * Name of grade plugin (e.g. 'grader', 'overview')
+     *
+     * @var string
+     */
     public $plugin;
+    /**
+     * Course id being viewed
+     *
+     * @var int
+     */
     public $courseid;
+    /**
+     * Id of user whose information is being viewed/edited
+     *
+     * @var int
+     */
     public $userid;
+    /**
+     * Id of group for which information is being viewed/edited
+     *
+     * @var int
+     */
     public $groupid;
+    /**
+     * Current page # within output
+     *
+     * @var int
+     */
     public $page;
 
     /**
@@ -1110,33 +1140,27 @@ class grade_plugin_return {
      * @param array $params - associative array with return parameters, if null parameter are taken from _GET or _POST
      */
     public function __construct($params = null) {
-        global $DB;
+        $this->type     = optional_param('gpr_type', null, PARAM_SAFEDIR);
+        $this->plugin   = optional_param('gpr_plugin', null, PARAM_PLUGIN);
+        $this->courseid = optional_param('gpr_courseid', null, PARAM_INT);
+        $this->userid   = optional_param('gpr_userid', null, PARAM_INT);
+        $this->groupid  = optional_param('gpr_groupid', null, PARAM_INT);
+        $this->page     = optional_param('gpr_page', null, PARAM_INT);
 
-        if (empty($params)) {
-            $this->type     = optional_param('gpr_type', null, PARAM_SAFEDIR);
-            $this->plugin   = optional_param('gpr_plugin', null, PARAM_PLUGIN);
-            $this->courseid = optional_param('gpr_courseid', null, PARAM_INT);
-            $this->userid   = optional_param('gpr_userid', null, PARAM_INT);
-            $this->groupid  = optional_param('gpr_groupid', null, PARAM_INT);
-            $this->page     = optional_param('gpr_page', null, PARAM_INT);
-
-        } else {
-            foreach ($params as $key=>$value) {
-                if (property_exists($this, $key)) {
-                    $this->$key = $value;
-                }
+        foreach ($params as $key => $value) {
+            if (property_exists($this, $key)) {
+                $this->$key = $value;
             }
-            if (array_key_exists('course', $params)) {
-                $course = $params['course'];
-                $this->courseid = $course->id;
-            }
-            elseif (!empty($this->courseid)) {
-                $course = $DB->get_record('course', array('id' => $this->courseid));
-            }
-            $changegroup = optional_param('group', -1, PARAM_INT);
-            if ($changegroup !== -1 or (empty($this->groupid) and !empty($this->courseid))) {
-                $this->groupid = groups_get_course_group($course, true);
-            }
+        }
+        if (array_key_exists('course', $params)) {
+            $course = $params['course'];
+            $this->courseid = $course->id;
+        } else if (!empty($this->courseid)) {
+            $course = get_course($this->courseid);
+        }
+        $changegroup = optional_param('group', -1, PARAM_INT);
+        if ($changegroup !== -1 or (empty($this->groupid) and !empty($this->courseid))) {
+            $this->groupid = groups_get_course_group($course, true);
         }
     }
 
@@ -1281,6 +1305,7 @@ class grade_plugin_return {
         if (!empty($this->page)) {
             $result .= '<input type="hidden" name="gpr_page" value="'.$this->page.'" />';
         }
+        return $result;
     }
 
     /**
