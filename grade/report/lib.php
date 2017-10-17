@@ -366,7 +366,12 @@ abstract class grade_report {
     protected function setup_groups() {
         // find out current groups mode
         if ($this->groupmode = groups_get_course_groupmode($this->course)) {
-            $this->currentgroup = groups_get_course_group($this->course, true);
+            if (empty($this->gpr->groupid)) {
+                $this->currentgroup = groups_get_course_group($this->course, true);
+            }
+            else {
+                $this->currentgroup = $this->gpr->groupid;
+            }
             $this->group_selector = groups_print_course_menu($this->course, $this->pbarurl, true);
 
             if ($this->groupmode == SEPARATEGROUPS and !$this->currentgroup and !has_capability('moodle/site:accessallgroups', $this->context)) {

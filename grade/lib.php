@@ -1101,6 +1101,7 @@ class grade_plugin_return {
     public $plugin;
     public $courseid;
     public $userid;
+    public $groupid;
     public $page;
 
     /**
@@ -1109,11 +1110,14 @@ class grade_plugin_return {
      * @param array $params - associative array with return parameters, if null parameter are taken from _GET or _POST
      */
     public function __construct($params = null) {
+        global $DB;
+
         if (empty($params)) {
             $this->type     = optional_param('gpr_type', null, PARAM_SAFEDIR);
             $this->plugin   = optional_param('gpr_plugin', null, PARAM_PLUGIN);
             $this->courseid = optional_param('gpr_courseid', null, PARAM_INT);
             $this->userid   = optional_param('gpr_userid', null, PARAM_INT);
+            $this->groupid  = optional_param('gpr_groupid', null, PARAM_INT);
             $this->page     = optional_param('gpr_page', null, PARAM_INT);
 
         } else {
@@ -1121,6 +1125,17 @@ class grade_plugin_return {
                 if (property_exists($this, $key)) {
                     $this->$key = $value;
                 }
+            }
+            if (array_key_exists('course', $params)) {
+                $course = $params['course'];
+                $this->courseid = $course->id;
+            }
+            elseif (!empty($this->courseid)) {
+                $course = $DB->get_record('course', array('id' => $courseid));
+            }
+            $changegroup = optional_param('group', -1, PARAM_INT);
+            if ($changegroup !== -1 or (empty($this->groupid) and !empty($this->courseid))) {
+                $this->groupid = groups_get_course_group($course, true);
             }
         }
     }
@@ -1158,6 +1173,10 @@ class grade_plugin_return {
             $params['userid'] = $this->userid;
         }
 
+        if (!empty($this->groupid)) {
+            $params['group'] = $this->groupid;
+        }
+
         if (!empty($this->page)) {
             $params['page'] = $this->page;
         }
@@ -1190,6 +1209,11 @@ class grade_plugin_return {
 
         if (!empty($this->userid)) {
             $url .= $glue.'userid='.$this->userid;
+            $glue = '&amp;';
+        }
+
+        if (!empty($this->groupid)) {
+            $url .= $glue.'group='.$this->groupid;
             $glue = '&amp;';
         }
 
@@ -1231,6 +1255,10 @@ class grade_plugin_return {
             $result .= '<input type="hidden" name="gpr_userid" value="'.$this->userid.'" />';
         }
 
+        if (!empty($this->groupid)) {
+            $result .= '<input type="hidden" name="gpr_groupid" value="'.$this->groupid.'" />';
+        }
+
         if (!empty($this->page)) {
             $result .= '<input type="hidden" name="gpr_page" value="'.$this->page.'" />';
         }
@@ -1266,6 +1294,11 @@ class grade_plugin_return {
             $mform->setType('gpr_userid', PARAM_INT);
         }
 
+        if (!empty($this->groupid)) {
+            $mform->addElement('hidden', 'gpr_groupid', $this->groupid);
+            $mform->setType('gpr_groupid', PARAM_INT);
+        }
+
         if (!empty($this->page)) {
             $mform->addElement('hidden', 'gpr_page', $this->page);
             $mform->setType('gpr_page', PARAM_INT);
@@ -1296,6 +1329,10 @@ class grade_plugin_return {
 
         if (!empty($this->userid)) {
             $url->param('gpr_userid', $this->userid);
+        }
+
+        if (!empty($this->groupid)) {
+            $url->param('gpr_groupid', $this->groupid);
         }
 
         if (!empty($this->page)) {
