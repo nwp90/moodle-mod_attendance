@@ -649,7 +649,7 @@ class grade_item extends grade_object {
      */
     public function set_hidden($hidden, $cascade=false, $gpr=null) {
         //if gpr is specified, we only want to hide/show individual users' grades within item
-        if ($gpr !== null) {
+        if ($gpr === null) {
             parent::set_hidden($hidden, $cascade);
         }
 

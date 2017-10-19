@@ -577,8 +577,17 @@ class grade_report_grader extends grade_report {
                     $this->allgrades[$graderec->userid][$graderec->itemid] = $grade;
                 }
                 if (in_array($graderec->userid, $userids) and array_key_exists($graderec->itemid, $this->gtree->get_items())) { // some items may not be present!!
+                    $item = $this->gtree->get_item($graderec->itemid); // db caching
+                    $eid = $this->gtree->get_item_eid($item);
+                    $element = $this->gtree->locate_element($eid);
                     $this->grades[$graderec->userid][$graderec->itemid] = $grade;
-                    $this->grades[$graderec->userid][$graderec->itemid]->grade_item = $this->gtree->get_item($graderec->itemid); // db caching
+                    $this->grades[$graderec->userid][$graderec->itemid]->grade_item = $item;
+                    if ($grade->is_hidden()) {
+                        $this->gtree->addhidden($eid);
+                    }
+                    else {
+                        $this->gtree->addshown($eid);
+                    }
                 }
             }
         }
@@ -587,12 +596,20 @@ class grade_report_grader extends grade_report {
         foreach ($userids as $userid) {
             foreach ($this->gtree->get_items() as $itemid => $unused) {
                 if (!isset($this->grades[$userid][$itemid])) {
+                    $item = $this->gtree->get_item($itemid); // db caching
+                    $eid = $this->gtree->get_item_eid($item);
+                    $element = $this->gtree->locate_element($eid);
                     $this->grades[$userid][$itemid] = new grade_grade();
                     $this->grades[$userid][$itemid]->itemid = $itemid;
                     $this->grades[$userid][$itemid]->userid = $userid;
-                    $this->grades[$userid][$itemid]->grade_item = $this->gtree->get_item($itemid); // db caching
-
+                    $this->grades[$userid][$itemid]->grade_item = $item;
                     $this->allgrades[$userid][$itemid] = $this->grades[$userid][$itemid];
+                    if ($grade->is_hidden()) {
+                        $this->gtree->addhidden($eid);
+                    }
+                    else {
+                        $this->gtree->addshown($eid);
+                    }
                 }
             }
         }

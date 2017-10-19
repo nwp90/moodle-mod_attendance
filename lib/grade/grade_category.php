@@ -2592,7 +2592,7 @@ class grade_category extends grade_object {
         //this hides the associated grade item (the course total)
         $this->grade_item->set_hidden($hidden, $cascade, $gpr);
         //if gpr is specified, we only want to hide/show individual users' grades within category
-        if ($gpr !== null) {
+        if ($gpr === null) {
             //this hides the category itself and everything it contains
             parent::set_hidden($hidden, $cascade, $gpr);
         }
