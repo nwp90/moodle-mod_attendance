@@ -631,6 +631,9 @@ class grade_grade extends grade_object {
      */
     public function set_hidden($hidden, $cascade=false, $gpr=null) {
         if ($gpr === null or $gpr->includes_user($this->userid)) {
+            if (empty($this->id)) {
+                $this->insert();
+            }
             $this->hidden = $hidden;
             $this->update();
         }

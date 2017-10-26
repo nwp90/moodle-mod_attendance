@@ -1131,7 +1131,7 @@ class grade_plugin_return {
                 $this->courseid = $course->id;
             }
             elseif (!empty($this->courseid)) {
-                $course = $DB->get_record('course', array('id' => $courseid));
+                $course = $DB->get_record('course', array('id' => $this->courseid));
             }
             $changegroup = optional_param('group', -1, PARAM_INT);
             if ($changegroup !== -1 or (empty($this->groupid) and !empty($this->courseid))) {
@@ -1962,9 +1962,10 @@ class grade_structure {
      * @param array  $element An array representing an element in the grade_tree
      * @param object $gpr A grade_plugin_return object
      * @param bool $returnactionmenulink return the instance of action_menu_link instead of string
+     * @param bool $contentsonly link to set hidden on element's contents rather than on element itself
      * @return string|action_menu_link
      */
-    public function get_hiding_icon($element, $gpr, $returnactionmenulink = false) {
+    public function get_hiding_icon($element, $gpr, $returnactionmenulink = false, $contentsonly = false) {
         global $CFG, $OUTPUT;
 
         if (!$element['object']->can_control_visibility()) {
@@ -2006,7 +2007,12 @@ class grade_structure {
                         userdate($element['object']->get_hidden()));
             }
 
-            $url->param('action', 'show');
+            if ($contentsonly) {
+                $url->param('action', 'showcontents');
+            }
+            else {
+                $url->param('action', 'show');
+            }
 
             if ($returnactionmenulink) {
                 $hideicon = new action_menu_link_secondary($url, new pix_icon('t/'.$type, $tooltip), get_string('show'));
@@ -2015,7 +2021,12 @@ class grade_structure {
             }
 
         } else {
-            $url->param('action', 'hide');
+            if ($contentsonly) {
+                $url->param('action', 'hidecontents');
+            }
+            else {
+                $url->param('action', 'hide');
+            }
             if ($returnactionmenulink) {
                 $hideicon = new action_menu_link_secondary($url, new pix_icon('t/hide', $strhide), get_string('hide'));
             } else {

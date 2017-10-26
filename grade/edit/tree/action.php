@@ -59,13 +59,10 @@ switch ($action) {
             if (!has_capability('moodle/grade:manage', $context) and !has_capability('moodle/grade:hide', $context)) {
                 print_error('nopermissiontohide', '', $returnurl);
             }
-            if ($type == 'grade' and empty($object->id)) {
-                $object->insert();
-            }
-            if (!$object->can_control_visibility()) {
+            if ($type !== 'grade' and !$object->can_control_visibility()) {
                 print_error('componentcontrolsvisibility', 'grades', $returnurl);
             }
-            $object->set_hidden(1, true, $gpr);
+            $object->set_hidden(1, true);
         }
         break;
 
@@ -74,10 +71,30 @@ switch ($action) {
             if (!has_capability('moodle/grade:manage', $context) and !has_capability('moodle/grade:hide', $context)) {
                 print_error('nopermissiontoshow', '', $returnurl);
             }
-            if ($type == 'grade' and empty($object->id)) {
-                $object->insert();
+            if ($type !== 'grade' and !$object->can_control_visibility()) {
+                print_error('componentcontrolsvisibility', 'grades', $returnurl);
             }
-            if (!$object->can_control_visibility()) {
+            $object->set_hidden(0, true);
+        }
+        break;
+    case 'hidecontents':
+        if ($eid and confirm_sesskey()) {
+            if (!has_capability('moodle/grade:manage', $context) and !has_capability('moodle/grade:hide', $context)) {
+                print_error('nopermissiontohide', '', $returnurl);
+            }
+            if ($type !== 'grade' and !$object->can_control_visibility()) {
+                print_error('componentcontrolsvisibility', 'grades', $returnurl);
+            }
+            $object->set_hidden(1, true, $gpr);
+        }
+        break;
+
+    case 'showcontents':
+        if ($eid and confirm_sesskey()) {
+            if (!has_capability('moodle/grade:manage', $context) and !has_capability('moodle/grade:hide', $context)) {
+                print_error('nopermissiontoshow', '', $returnurl);
+            }
+            if ($type !== 'grade' and !$object->can_control_visibility()) {
                 print_error('componentcontrolsvisibility', 'grades', $returnurl);
             }
             $object->set_hidden(0, true, $gpr);

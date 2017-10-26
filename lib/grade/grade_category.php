@@ -2602,7 +2602,7 @@ class grade_category extends grade_object {
             if ($children = grade_item::fetch_all(array('categoryid'=>$this->id))) {
 
                 foreach ($children as $child) {
-                    if ($child->can_control_visibility()) {
+                    if ($gpr !== null or $child->can_control_visibility()) {
                         $child->set_hidden($hidden, $cascade, $gpr);
                     }
                 }
