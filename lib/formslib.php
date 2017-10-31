@@ -1411,6 +1411,16 @@ abstract class moodleform {
 
         return $data;
     }
+
+    /**
+     * Set display mode for the form when labels take full width of the form and above the elements even on big screens
+     *
+     * Useful for forms displayed inside modals or in narrow containers
+     */
+    public function set_display_vertical() {
+        $oldclass = $this->_form->getAttribute('class');
+        $this->_form->updateAttributes(array('class' => $oldclass . ' full-width-labels'));
+    }
 }
 
 /**
@@ -2331,7 +2341,9 @@ require(["core/event", "jquery"], function(Event, $) {
             //end of fix
             $escapedElementName = preg_replace_callback(
                 '/[_\[\]-]/',
-                create_function('$matches', 'return sprintf("_%2x",ord($matches[0]));'),
+                function($matches) {
+                    return sprintf("_%2x", ord($matches[0]));
+                },
                 $elementName);
             $valFunc = 'validate_' . $this->_formName . '_' . $escapedElementName . '(ev.target, \''.$escapedElementName.'\')';
 

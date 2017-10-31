@@ -68,6 +68,26 @@ $functions = array(
         'ajax' => true,
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
     ),
+    'core_calendar_get_calendar_day_view' => array(
+        'classname' => 'core_calendar_external',
+        'methodname' => 'get_calendar_day_view',
+        'description' => 'Fetch the day view data for a calendar',
+        'classpath' => 'calendar/externallib.php',
+        'type' => 'read',
+        'capabilities' => '',
+        'ajax' => true,
+        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
+    ),
+    'core_calendar_get_calendar_upcoming_view' => array(
+        'classname' => 'core_calendar_external',
+        'methodname' => 'get_calendar_upcoming_view',
+        'description' => 'Fetch the upcoming view data for a calendar',
+        'classpath' => 'calendar/externallib.php',
+        'type' => 'read',
+        'capabilities' => '',
+        'ajax' => true,
+        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
+    ),
     'core_calendar_update_event_start_day' => array(
         'classname' => 'core_calendar_external',
         'methodname' => 'update_event_start_day',
@@ -255,6 +275,14 @@ $functions = array(
         'description' => 'Update completion status for the current user in an activity, only for activities with manual tracking.',
         'type' => 'write',
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
+    ),
+    'core_completion_override_activity_completion_status' => array(
+        'classname'     => 'core_completion_external',
+        'methodname'    => 'override_activity_completion_status',
+        'description'   => 'Update completion status for a user in an activity by overriding it.',
+        'type'          => 'write',
+        'capabilities'  => 'moodle/course:overridecompletion',
+        'ajax'          => true,
     ),
     'core_course_create_categories' => array(
         'classname' => 'core_course_external',
@@ -2047,6 +2075,15 @@ $functions = array(
         'capabilities'  => '',
         'services'      => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
     ),
+
+    // Filters functions.
+    'core_filters_get_available_in_context' => array(
+        'classname'   => 'core_filters\external',
+        'methodname'  => 'get_available_in_context',
+        'description' => 'Returns the filters available in the given contexts.',
+        'type'        => 'read',
+        'services'    => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
+    )
 );
 
 $services = array(

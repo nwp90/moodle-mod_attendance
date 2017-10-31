@@ -53,6 +53,7 @@ Feature: Perform basic calendar functionality
     Given I log in as "teacher1"
     And I create a calendar event with form data:
       | Type of event | course |
+      | Course        | Course 1 |
       | Event title | Really awesome event! |
       | Description | Come join this awesome event, sucka! |
     And I log out
@@ -60,8 +61,8 @@ Feature: Perform basic calendar functionality
     When I am on "Course 1" course homepage
     And I follow "This month"
     And I click on "Really awesome event!" "link"
-    And "Course 1" "link" should exist in the ".modal-body" "css_element"
-    And I click on ".close" "css_element"
+    And "Course 1" "link" should exist in the "Really awesome event!" "dialogue"
+    And I click on "Close" "button"
     And I log out
     And I log in as "student2"
     And I follow "This month"
@@ -70,8 +71,10 @@ Feature: Perform basic calendar functionality
   @javascript
   Scenario: Create a group event
     Given I log in as "teacher1"
+    And I am on "Course 1" course homepage
     And I create a calendar event with form data:
       | Type of event | group |
+      | Group         | Group 1 |
       | Event title | Really awesome event! |
       | Description | Come join this awesome event |
     And I log out
@@ -133,9 +136,9 @@ Feature: Perform basic calendar functionality
       | activity | course | idnumber | name        | intro                   | timeopen      | timeclose     |
       | choice   | C1     | choice1  | Test choice | Test choice description | ##today## | ##today##  |
     When I follow "This month"
-    Then I should see "Choice Test choice open"
-    And I should see "Choice Test choice close"
-    When I click on "Choice Test choice open" "link"
+    Then I should see "Test choice opens"
+    And I should see "Test choice closes"
+    When I click on "Test choice opens" "link"
     Then "Delete" "button" should not exist
     And "Edit" "button" should not exist
     And I should see "Open event"
@@ -144,7 +147,7 @@ Feature: Perform basic calendar functionality
     Then I should see "Test choice"
     And I am on "Course 1" course homepage
     And I follow "This month"
-    When I click on "Choice Test choice close" "link"
+    When I click on "Test choice closes" "link"
     Then "Delete" "button" should not exist
     And "Edit" "button" should not exist
     And I should see "Close event"
