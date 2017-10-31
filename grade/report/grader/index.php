@@ -65,7 +65,7 @@ require_capability('gradereport/grader:view', $context);
 require_capability('moodle/grade:viewall', $context);
 
 // return tracking object
-$gpr = new grade_plugin_return(array('type'=>'report', 'plugin'=>'grader', 'courseid'=>$courseid, 'page'=>$page));
+$gpr = new grade_plugin_return(array('type'=>'report', 'plugin'=>'grader', 'course'=>$course, 'page'=>$page));
 
 // last selected report session tracking
 if (!isset($USER->grade_last_report)) {
