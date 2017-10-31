@@ -2584,21 +2584,26 @@ class grade_category extends grade_object {
      *
      * @param int $hidden 0 mean always visible, 1 means always hidden and a number > 1 is a timestamp to hide until
      * @param bool $cascade apply to child objects too
+     * @param grade_plugin_return $gpr optionally restrict action to grades for students matching
+     *         gpr user/group
      */
-    public function set_hidden($hidden, $cascade=false) {
+    public function set_hidden($hidden, $cascade=false, $gpr=null) {
         $this->load_grade_item();
         //this hides the associated grade item (the course total)
-        $this->grade_item->set_hidden($hidden, $cascade);
-        //this hides the category itself and everything it contains
-        parent::set_hidden($hidden, $cascade);
+        $this->grade_item->set_hidden($hidden, $cascade, $gpr);
+        //if gpr is specified, we only want to hide/show individual users' grades within category
+        if ($gpr === null) {
+            //this hides the category itself and everything it contains
+            parent::set_hidden($hidden, $cascade, $gpr);
+        }
 
         if ($cascade) {
 
             if ($children = grade_item::fetch_all(array('categoryid'=>$this->id))) {
 
                 foreach ($children as $child) {
-                    if ($child->can_control_visibility()) {
-                        $child->set_hidden($hidden, $cascade);
+                    if ($gpr !== null or $child->can_control_visibility()) {
+                        $child->set_hidden($hidden, $cascade, $gpr);
                     }
                 }
             }
@@ -2606,7 +2611,7 @@ class grade_category extends grade_object {
             if ($children = grade_category::fetch_all(array('parent'=>$this->id))) {
 
                 foreach ($children as $child) {
-                    $child->set_hidden($hidden, $cascade);
+                    $child->set_hidden($hidden, $cascade, $gpr);
                 }
             }
         }
@@ -2618,7 +2623,7 @@ class grade_category extends grade_object {
                 $category = $category_array[$this->parent];
                 //call set_hidden on the category regardless of whether it is hidden as its parent might be hidden
                 //if($category->is_hidden()) {
-                    $category->set_hidden($hidden, false);
+                $category->set_hidden($hidden, false, $gpr);
                 //}
             }
         }
