@@ -1,3 +1,10 @@
+moodle-site-otagounifom (3.4.0~2017102700+0facmed1-1) jessie; urgency=medium
+
+  * Upstream -> 3.4beta+ (2017102700)
+  * New plugins
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 03 Nov 2017 16:49:02 +1300
+
 moodle-site-otagounifom (3.4.0~2017090700+0facmed5-1) jessie; urgency=medium
 
   * Fixes from testing mod_bootstrapelements and format_medschool_topics
