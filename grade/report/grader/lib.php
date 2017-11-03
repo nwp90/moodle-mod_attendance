@@ -577,8 +577,17 @@ class grade_report_grader extends grade_report {
                     $this->allgrades[$graderec->userid][$graderec->itemid] = $grade;
                 }
                 if (in_array($graderec->userid, $userids) and array_key_exists($graderec->itemid, $this->gtree->get_items())) { // some items may not be present!!
+                    $item = $this->gtree->get_item($graderec->itemid); // db caching
+                    $eid = $this->gtree->get_item_eid($item);
+                    $element = $this->gtree->locate_element($eid);
                     $this->grades[$graderec->userid][$graderec->itemid] = $grade;
-                    $this->grades[$graderec->userid][$graderec->itemid]->grade_item = $this->gtree->get_item($graderec->itemid); // db caching
+                    $this->grades[$graderec->userid][$graderec->itemid]->grade_item = $item;
+                    if ($grade->is_hidden()) {
+                        $this->gtree->addhidden($eid);
+                    }
+                    else {
+                        $this->gtree->addshown($eid);
+                    }
                 }
             }
         }
@@ -587,12 +596,22 @@ class grade_report_grader extends grade_report {
         foreach ($userids as $userid) {
             foreach ($this->gtree->get_items() as $itemid => $unused) {
                 if (!isset($this->grades[$userid][$itemid])) {
-                    $this->grades[$userid][$itemid] = new grade_grade();
+                    $item = $this->gtree->get_item($itemid); // db caching
+                    $eid = $this->gtree->get_item_eid($item);
+                    $element = $this->gtree->locate_element($eid);
+                    $grade = new grade_grade();
+                    $this->grades[$userid][$itemid] = $grade;
                     $this->grades[$userid][$itemid]->itemid = $itemid;
                     $this->grades[$userid][$itemid]->userid = $userid;
-                    $this->grades[$userid][$itemid]->grade_item = $this->gtree->get_item($itemid); // db caching
-
+                    $this->grades[$userid][$itemid]->grade_item = $item;
                     $this->allgrades[$userid][$itemid] = $this->grades[$userid][$itemid];
+                    $grade->insert();
+                    if ($grade->is_hidden()) {
+                        $this->gtree->addhidden($eid);
+                    }
+                    else {
+                        $this->gtree->addshown($eid);
+                    }
                 }
             }
         }
@@ -872,6 +891,9 @@ class grade_report_grader extends grade_report {
                         $categorycell->text = $this->get_course_header($element);
                         $categorycell->header = true;
                         $categorycell->scope = 'col';
+                        if ($element['object']->is_hidden()) {
+                            $categorycell->attributes['class'] .= ' dimmed_text';
+                        }
 
                         // Print icons.
                         if ($USER->gradeediting[$this->courseid]) {
@@ -1056,7 +1078,14 @@ class grade_report_grader extends grade_report {
                 }
 
                 // Do not show any icons if no grade (no record in DB to match)
+                // XXX - this does not do what you think it does - item->needsupdate
+                // has nothing to do with this user's grade. item is the grade_item,
+                // not the grade_grade.
                 if (!$item->needsupdate and $USER->gradeediting[$this->courseid]) {
+                    // This test would replace !$item->needsupdate to do what is described above
+                    if (empty($grade->id)) {
+                        //error_log('nonexistent grade object for user '.$userid.', item '.$itemid);
+                    }
                     $itemcell->text .= $this->get_icons($element);
                 }
 
@@ -1697,7 +1726,7 @@ class grade_report_grader extends grade_report {
             }
 
             if ($this->get_pref('showeyecons')) {
-                $showhideicon = $this->gtree->get_hiding_icon($element, $this->gpr);
+                $showhideicon = $this->gtree->get_hiding_icon($element, $this->gpr, false, true);
             }
 
             if ($this->get_pref('showlocks')) {

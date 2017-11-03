@@ -23,6 +23,8 @@
  */
 namespace core_calendar\local\event\forms;
 
+use context_system;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/lib/formslib.php');
@@ -34,15 +36,34 @@ require_once($CFG->dirroot.'/lib/formslib.php');
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class create extends \moodleform {
+
+    /**
+     * Build the editor options using the given context.
+     *
+     * @param \context $context A Moodle context
+     * @return array
+     */
+    public static function build_editor_options(\context $context) {
+        global $CFG;
+
+        return [
+            'context' => $context,
+            'maxfiles' => EDITOR_UNLIMITED_FILES,
+            'maxbytes' => $CFG->maxbytes,
+            'noclean' => true,
+            'autosave' => false
+        ];
+    }
+
     /**
      * The form definition
      */
-    public function definition () {
+    public function definition() {
         global $PAGE;
 
         $mform = $this->_form;
-        $haserror = !empty($this->_customdata['haserror']);
         $starttime = isset($this->_customdata['starttime']) ? $this->_customdata['starttime'] : 0;
+        $editoroptions = !(empty($this->_customdata['editoroptions'])) ? $this->_customdata['editoroptions'] : null;
         $eventtypes = calendar_get_all_allowed_types();
 
         if (empty($eventtypes)) {
@@ -71,7 +92,7 @@ class create extends \moodleform {
         // Start of advanced elements.
         // Advanced elements are not visible to the user by default.
         // They are displayed through the user of a show more / less button.
-        $mform->addElement('editor', 'description', get_string('eventdescription', 'calendar'), ['rows' => 3]);
+        $mform->addElement('editor', 'description', get_string('eventdescription', 'calendar'), ['rows' => 3], $editoroptions);
         $mform->setType('description', PARAM_RAW);
         $mform->setAdvanced('description');
 
@@ -82,8 +103,7 @@ class create extends \moodleform {
         $this->add_event_repeat_elements($mform);
 
         // Add the javascript required to enhance this mform.
-        // Including the show/hide of advanced elements and the display of the correct select elements for event types.
-        $PAGE->requires->js_call_amd('core_calendar/event_form', 'init', [$mform->getAttribute('id'), $haserror]);
+        $PAGE->requires->js_call_amd('core_calendar/event_form', 'init', [$mform->getAttribute('id')]);
     }
 
     /**
@@ -113,6 +133,14 @@ class create extends \moodleform {
             } else {
                 $errors[$coursekey] = get_string('invalidcourse', 'error');
             }
+        }
+
+        if ($eventtype == 'course' && empty($data['courseid'])) {
+            $errors['courseid'] = get_string('selectacourse');
+        }
+
+        if ($eventtype == 'group' && empty($data['groupcourseid'])) {
+            $errors['groupcourseid'] = get_string('selectacourse');
         }
 
         if ($data['duration'] == 1 && $data['timestart'] > $data['timedurationuntil']) {
@@ -186,6 +214,9 @@ class create extends \moodleform {
         if (isset($eventtypes['course'])) {
             $options['course'] = get_string('course');
         }
+        if (isset($eventtypes['category'])) {
+            $options['category'] = get_string('category');
+        }
         if (isset($eventtypes['site'])) {
             $options['site'] = get_string('site');
         }
@@ -206,25 +237,31 @@ class create extends \moodleform {
             $mform->addElement('select', 'eventtype', get_string('eventkind', 'calendar'), $options);
         }
 
-        if (isset($eventtypes['course'])) {
-            $courseoptions = [];
-            foreach ($eventtypes['course'] as $course) {
-                $courseoptions[$course->id] = format_string($course->fullname, true,
-                    ['context' => \context_course::instance($course->id)]);
+        if (isset($eventtypes['category'])) {
+            $categoryoptions = [];
+            foreach ($eventtypes['category'] as $id => $category) {
+                $categoryoptions[$id] = $category;
             }
 
-            $mform->addElement('select', 'courseid', get_string('course'), $courseoptions);
+            $mform->addElement('select', 'categoryid', get_string('category'), $categoryoptions);
+            $mform->hideIf('categoryid', 'eventtype', 'noteq', 'category');
+        }
+
+        if (isset($eventtypes['course'])) {
+            $limit = !has_capability('moodle/calendar:manageentries', context_system::instance());
+            $mform->addElement('course', 'courseid', get_string('course'), ['limittoenrolled' => $limit]);
             $mform->hideIf('courseid', 'eventtype', 'noteq', 'course');
         }
 
         if (isset($eventtypes['group'])) {
-            $courseoptions = [];
-            foreach ($eventtypes['groupcourses'] as $course) {
-                $courseoptions[$course->id] = format_string($course->fullname, true,
-                    ['context' => \context_course::instance($course->id)]);
+            $options = ['limittoenrolled' => true];
+            // Exclude courses without group.
+            if (isset($eventtypes['course']) && isset($eventtypes['groupcourses'])) {
+                $options['exclude'] = array_diff(array_keys($eventtypes['course']),
+                    array_keys($eventtypes['groupcourses']));
             }
 
-            $mform->addElement('select', 'groupcourseid', get_string('course'), $courseoptions);
+            $mform->addElement('course', 'groupcourseid', get_string('course'), $options);
             $mform->hideIf('groupcourseid', 'eventtype', 'noteq', 'group');
 
             $groupoptions = [];
@@ -238,6 +275,7 @@ class create extends \moodleform {
 
             $mform->addElement('select', 'groupid', get_string('group'), $groupoptions);
             $mform->hideIf('groupid', 'eventtype', 'noteq', 'group');
+            // We handle the group select hide/show actions on the event_form module.
         }
     }
 
