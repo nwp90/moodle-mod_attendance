@@ -62,7 +62,6 @@ robots.txt		       /srv/moodle/otagounifom/moodle/
 rss                            /srv/moodle/otagounifom/moodle/
 search                         /srv/moodle/otagounifom/moodle/
 tag                            /srv/moodle/otagounifom/moodle/
-tags.txt                       /srv/moodle/otagounifom/moodle/
 theme                          /srv/moodle/otagounifom/moodle/
 user                           /srv/moodle/otagounifom/moodle/
 userpix                        /srv/moodle/otagounifom/moodle/
