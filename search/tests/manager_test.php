@@ -46,6 +46,12 @@ class search_manager_testcase extends advanced_testcase {
         $this->mycoursesareaid = \core_search\manager::generate_areaid('core_course', 'mycourse');
     }
 
+    protected function tearDown() {
+        // Stop it from faking time in the search manager (if set by test).
+        testable_core_search::fake_current_time();
+        parent::tearDown();
+    }
+
     public function test_search_enabled() {
 
         $this->resetAfterTest();
@@ -212,6 +218,9 @@ class search_manager_testcase extends advanced_testcase {
         $generator->get_plugin_generator('mod_forum')->create_discussion(['course' => $course->id,
                 'forum' => $forum->id, 'userid' => $USER->id, 'timemodified' => $now + 2,
                 'name' => 'Zombie']);
+        $generator->get_plugin_generator('mod_forum')->create_discussion(['course' => $course->id,
+                'forum' => $forum->id, 'userid' => $USER->id, 'timemodified' => $now + 2,
+                'name' => 'Werewolf']);
         time_sleep_until($now + 3);
 
         // Clear the count of added documents.
@@ -219,6 +228,9 @@ class search_manager_testcase extends advanced_testcase {
 
         // Make the search engine delay while indexing each document.
         $search->get_engine()->set_add_delay(1.2);
+
+        // Use fake time, starting from now.
+        testable_core_search::fake_current_time(time());
 
         // Index with a limit of 2 seconds - it should index 2 of the documents (after the second
         // one, it will have taken 2.4 seconds so it will stop).
@@ -228,6 +240,9 @@ class search_manager_testcase extends advanced_testcase {
         $this->assertEquals('Frog', $added[0]->get('title'));
         $this->assertEquals('Toad', $added[1]->get('title'));
         $this->assertEquals(1, get_config($componentname, $varname . '_partial'));
+        // Whilst 2.4 seconds of "time" have elapsed, the indexing duration is
+        // measured in seconds, so should be 2.
+        $this->assertEquals(2, $searcharea->get_last_indexing_duration());
 
         // Add a label.
         $generator->create_module('label', ['course' => $course->id, 'intro' => 'Vampire']);
@@ -235,6 +250,7 @@ class search_manager_testcase extends advanced_testcase {
         // Wait to next second (so as to not reindex the label more than once, as it will now
         // be timed before the indexing run).
         $this->waitForSecond();
+        testable_core_search::fake_current_time(time());
 
         // Next index with 1 second limit should do the label and not the forum - the logic is,
         // if it spent ages indexing an area last time, do that one last on next run.
@@ -243,15 +259,18 @@ class search_manager_testcase extends advanced_testcase {
         $this->assertCount(1, $added);
         $this->assertEquals('Vampire', $added[0]->get('title'));
 
-        // Index again with a 2 second limit - it will redo last post for safety (because of other
+        // Index again with a 3 second limit - it will redo last post for safety (because of other
         // things possibly having the same time second), and then do the remaining one. (Note:
         // because it always does more than one second worth of items, it would actually index 2
-        // posts even if the limit were less than 2.)
-        $search->index(false, 2);
+        // posts even if the limit were less than 2, we are testing it does 3 posts to make sure
+        // the time limiting is actually working with the specified time.)
+        $search->index(false, 3);
         $added = $search->get_engine()->get_and_clear_added_documents();
-        $this->assertCount(2, $added);
+        $this->assertCount(3, $added);
         $this->assertEquals('Toad', $added[0]->get('title'));
-        $this->assertEquals('Zombie', $added[1]->get('title'));
+        $remainingtitles = [$added[1]->get('title'), $added[2]->get('title')];
+        sort($remainingtitles);
+        $this->assertEquals(['Werewolf', 'Zombie'], $remainingtitles);
         $this->assertFalse(get_config($componentname, $varname . '_partial'));
 
         // Index again - there should be nothing to index this time.
@@ -850,6 +869,7 @@ class search_manager_testcase extends advanced_testcase {
 
         // Do the processing again with a time limit and indexing delay. The time limit is too
         // small; because of the way the logic works, this means it will index 2 activities.
+        testable_core_search::fake_current_time(time());
         $search->get_engine()->set_add_delay(0.2);
         $search->process_index_requests(0.1, $progress);
         $out = $progress->get_buffer();

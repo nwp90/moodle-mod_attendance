@@ -546,6 +546,14 @@ $functions = array(
         'type' => 'write',
         'ajax' => true,
     ),
+    'core_enrol_unenrol_user_enrolment' => array(
+        'classname' => 'core_enrol_external',
+        'methodname' => 'unenrol_user_enrolment',
+        'classpath' => 'enrol/externallib.php',
+        'description' => 'External function that unenrols a given user enrolment',
+        'type' => 'write',
+        'ajax' => true,
+    ),
     'core_fetch_notifications' => array(
         'classname' => 'core_external',
         'methodname' => 'fetch_notifications',
@@ -1034,6 +1042,7 @@ $functions = array(
         'classpath' => 'notes/externallib.php',
         'description' => 'Create notes',
         'type' => 'write',
+        'ajax' => true,
         'capabilities' => 'moodle/notes:manage',
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
     ),
