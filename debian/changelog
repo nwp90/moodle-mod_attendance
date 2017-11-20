@@ -1,3 +1,13 @@
+moodle-site-otagounifom (3.4.0.2017111600+0facmed1-1) jessie; urgency=medium
+
+  * Release!
+  * Would target stretch, as Moodle now requires PHP7, which basically
+    means we can only deploy to stretch... but that needs pbuilder to
+    be ready for it, which means upgrading pbuilder host to stretch,
+    and we're not quite ready for that yet.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 21 Nov 2017 10:17:17 +1300
+
 moodle-site-otagounifom (3.4.0~2017102700+0facmed1-1) jessie; urgency=medium
 
   * Upstream -> 3.4beta+ (2017102700)
