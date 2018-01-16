@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.4.1.2018011700+0facmed1-1) stretch; urgency=medium
+
+  * 3.4.1, security update, actually targeting stretch.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 17 Jan 2018 10:57:06 +1300
+
 moodle-site-otagounifom (3.4.0.2017111600+0facmed1-1) jessie; urgency=medium
 
   * Release!
