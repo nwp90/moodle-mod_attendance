@@ -20,13 +20,13 @@ Feature: In the roster report a teacher may toggle the display of names
   @javascript
   Scenario: Toggle learning mode off and on
     Given I log in as "teacher1"
-    And I follow "Course 1"
+    And I am on "Course 1" course homepage
     And I navigate to "Roster" node in "Course administration > Reports"
     Then I should see "Sally Student"
     And I should see "Learning mode off"
     When I press "Learning mode off"
     Then I should not see "Sally Student"
     And I should see "Learning mode on"
-    When I press "Learning mode on" 
+    When I press "Learning mode on"
     Then I should see "Sally Student"
     And I should see "Learning mode off"
