@@ -22,12 +22,14 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die;
+
 define('ROSTER_MODE_DISPLAY', 'display');
 define('ROSTER_MODE_PRINT', 'print');
 
 function report_roster_get_group_options($id) {
     $groupsfromdb = groups_get_all_groups($id);
-    $groups = array();
+    $groups = array(0 => get_string('allusers', 'report_roster'));
     foreach ($groupsfromdb as $key => $value) {
         $groups[$key] = $value->name;
     }
@@ -47,7 +49,7 @@ function report_roster_output_action_buttons($id, $group, $mode, $url) {
     $modeurl = clone $url;
     $modeurl->params(array('group' => $group));
 
-    $select = new single_select($groupurl, 'group', $groups, $group, array('' => get_string('allusers', 'report_roster')));
+    $select = new single_select($groupurl, 'group', $groups, $group, null);
     $select->label = get_string('group');
     $html = html_writer::start_tag('div');
     $html .= $OUTPUT->render($select);
