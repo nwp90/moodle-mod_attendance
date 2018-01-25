@@ -18,22 +18,18 @@
  * Back-end code for handling data - for the reporting site (rank and quiz). It collects all information together.
  *
  * @package    mod_studentquiz
- * @copyright  2016 HSR (http://www.hsr.ch)
+ * @copyright  2017 HSR (http://www.hsr.ch)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
-require_once(dirname(__FILE__) . '/locallib.php');
-require_once($CFG->dirroot . '/mod/quiz/renderer.php');
-require_once($CFG->dirroot . '/mod/quiz/attemptlib.php');
-require_once($CFG->dirroot . '/mod/quiz/accessmanager.php');
-require_once($CFG->libdir . '/gradelib.php');
+require_once(__DIR__ . '/locallib.php');
 
 /**
  * Back-end code for handling data - for the reporting site (rank and quiz). It collects all information together.
- *
+ * TODO: REFACTOR!
  * @package    mod_studentquiz
- * @copyright  2016 HSR (http://www.hsr.ch)
+ * @copyright  2017 HSR (http://www.hsr.ch)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_studentquiz_report {
@@ -46,9 +42,102 @@ class mod_studentquiz_report {
      */
     protected $course;
     /**
-     * @var context the quiz context.
+     * @var context_module the quiz context.
      */
     protected $context;
+    /**
+     * @var stdClass the studentquiz settings
+     */
+    protected $studentquiz;
+
+    /**
+     * @var $userid of currently viewing user
+     */
+    protected $userid;
+
+    /**
+     * @var int Number of questions available in this StudentQuiz.
+     * This includes all questions created by not enrolled people
+     * And questions in child categories
+     */
+    protected $availablequestions;
+    public function get_available_questions() {
+        return $this->availablequestions;
+    }
+
+    /**
+     * @var int Number of questions available in this StudentQuiz.
+     * This includes all questions created by not enrolled people
+     * And questions in child categories
+     */
+    protected $enrolledusers;
+    public function get_enrolled_users() {
+        return $this->enrolledusers;
+    }
+
+    /**
+     * Overall Stats of the studentquiz
+     * @return stdClass
+     */
+    protected $studentquizstats;
+    public function get_studentquiz_stats() {
+        if (empty($this->studentquizstats)) {
+            $this->studentquizstats = mod_studentquiz_community_stats($this->get_cm_id());
+            $this->questionstats = mod_studentquiz_question_stats($this->get_cm_id());
+            $this->studentquizstats->questions_available = $this->questionstats->questions_available;
+            $this->studentquizstats->questions_average_rating = $this->questionstats->average_rating;
+            $this->studentquizstats->questions_questions_approved = $this->questionstats->questions_approved;
+            return $this->studentquizstats;
+        } else {
+            return $this->studentquizstats;
+        }
+    }
+
+    /**
+     * Ranking stats for current user (same as ranking table)
+     */
+    protected $userrankingstats;
+    public function get_user_stats() {
+        if (empty($this->userrankingstats)) {
+            $this->userrankingstats = mod_studentquiz_user_stats($this->get_cm_id(),
+                $this->get_quantifiers(), $this->get_user_id());
+            return $this->userrankingstats;
+        } else {
+            return $this->userrankingstats;
+        }
+    }
+
+    /**
+     * Returns a user stats record with all zero varlus
+     * @return stdClass
+     */
+    public function get_zero_user_stats() {
+        $r = new stdClass();
+        $r->userid = 0;
+        $r->firstname = get_string('creator_anonym_firstname', 'studentquiz');
+        $r->lastname = get_string('creator_anonym_lastname', 'studentquiz');
+        $r->points = 0;
+        $r->questions_created = 0;
+        $r->questions_approved = 0;
+        $r->rates_received = 0;
+        $r->rates_average = 0;
+        $r->question_attempts = 0;
+        $r->question_attempts_correct = 0;
+        $r->question_attempts_incorrect = 0;
+        $r->last_attempt_exists = 0;
+        $r->last_attempt_correct = 0;
+        $r->last_attempt_incorrect = 0;
+        return $r;
+    }
+
+    /**
+     * Personal stats for interaction with studentquiz:
+     * @return stdClass: numcomments, numrates, avgrates, numstarts
+     */
+    protected $useractivitystats;
+    public function get_useractivitystats() {
+        return $this->useractivitystats;
+    }
 
     /**
      * Constructor assuming we already have the necessary data loaded.
@@ -56,7 +145,7 @@ class mod_studentquiz_report {
      * @throws mod_studentquiz_view_exception if course module or course can't be retrieved
      */
     public function __construct($cmid) {
-        global $DB;
+        global $DB, $USER;
         if (!$this->cm = get_coursemodule_from_id('studentquiz', $cmid)) {
             throw new mod_studentquiz_view_exception($this, 'invalidcoursemodule');
         }
@@ -64,22 +153,37 @@ class mod_studentquiz_report {
             throw new mod_studentquiz_view_exception($this, 'coursemisconf');
         }
 
+        if (!$this->studentquiz = $DB->get_record('studentquiz',
+            array('coursemodule' => $this->cm->id, 'course' => $this->course->id))) {
+            throw new mod_studentquiz_view_exception($this, 'studentquiznotfound');
+        }
+
         $this->context = context_module::instance($this->cm->id);
+        $this->userid = $USER->id;
+        $this->availablequestions = mod_studentquiz_count_questions($cmid);
+    }
+
+    /**
+     * Returns current user id
+     * @return int $user->id
+     */
+    public function get_user_id() {
+        return $this->userid;
     }
 
     /**
      * Get quiz report url
      * @return moodle_url
      */
-    public function get_quizreporturl() {
-        return new moodle_url('/mod/studentquiz/reportquiz.php', $this->get_urlview_data());
+    public function get_stat_url() {
+        return new moodle_url('/mod/studentquiz/reportstat.php', $this->get_urlview_data());
     }
 
     /**
      * Get quiz report url
      * @return moodle_url
      */
-    public function get_rankreporturl() {
+    public function get_rank_url() {
         return new moodle_url('/mod/studentquiz/reportrank.php', $this->get_urlview_data());
     }
 
@@ -117,7 +221,7 @@ class mod_studentquiz_report {
 
     /**
      * Get activity context
-     * @return int
+     * @return context_module
      */
     public function get_context() {
         return $this->context;
@@ -140,81 +244,67 @@ class mod_studentquiz_report {
     }
 
     /**
-     * Get the title
+     * Get the question quantifier of this studentquiz
+     */
+    public function get_quantifier_question() {
+        return $this->studentquiz->questionquantifier;
+    }
+
+    /**
+     * Get the approved quantifier of this studentquiz
+     */
+    public function get_quantifier_approved() {
+        return $this->studentquiz->approvedquantifier;
+    }
+
+    /**
+     * Get the rate quantifier of this studentquiz
+     */
+    public function get_quantifier_rate() {
+        return $this->studentquiz->ratequantifier;
+    }
+
+    /**
+     * Get the correctanswerquantifier of this studentquiz
+     */
+    public function get_quantifier_correctanswer() {
+        return $this->studentquiz->correctanswerquantifier;
+    }
+
+    /**
+     * Get the correctanswerquantifier of this studentquiz
+     */
+    public function get_quantifier_incorrectanswer() {
+        return $this->studentquiz->incorrectanswerquantifier;
+    }
+
+    /**
+     * @return stdClass of quantifiers
+     */
+    public function get_quantifiers() {
+        $quantifiers = new stdClass();
+            $quantifiers->question = $this->studentquiz->questionquantifier;
+            $quantifiers->rate = $this->studentquiz->ratequantifier;
+            $quantifiers->approved = $this->studentquiz->approvedquantifier;
+            $quantifiers->correctanswer = $this->studentquiz->correctanswerquantifier;
+            $quantifiers->incorrectanswer = $this->studentquiz->incorrectanswerquantifier;
+        return $quantifiers;
+    }
+
+    /**
+     * Get the ranking title
      * @return string
      */
-    public function get_title() {
+    public function get_ranking_title() {
         return get_string('reportrank_title', 'studentquiz');
     }
 
     /**
-     * Get all quiz course_modules from the active StudentQuiz
-     * @param int $userid
-     * @return array stdClass course modules
+     * Get the statistic title
+     * @return string
      */
-    private function get_quiz_course_modules($userid) {
-        global $DB;
-
-        $sql = 'SELECT'
-            . '    cm.*'
-            . '   FROM {studentquiz_practice} sq'
-            . '   JOIN {course_modules} cm'
-            . '     ON sq.quizcoursemodule = cm.id'
-            . '   WHERE sq.userid = :userid'
-            . '   AND sq.studentquizcoursemodule = :studentquizcoursemodule'
-            . '   ORDER BY cm.id DESC';
-
-        return $DB->get_records_sql($sql, array(
-            'userid' => $userid
-            , 'studentquizcoursemodule' => $this->cm->id));
-    }
-
-    /**
-     * Get quiz tables
-     * @return string rendered /mod/quiz/view tables
-     */
-    public function get_quiz_tables() {
-        global $PAGE, $USER;
-
-        /** @var mod_studentquiz_renderer $reportrenderer */
-        $reportrenderer = $PAGE->get_renderer('mod_studentquiz');
-
-        $total = new stdClass();
-        $total->numattempts = 0;
-        $total->obtainedmarks = 0;
-        $total->questionsright = 0;
-        $total->questionsanswered = 0;
-
-        $outputsummaries = $this->get_user_quiz_summary($USER->id, $total);
-
-        $outputstats = $this->get_user_quiz_stats($USER->id);
-        $usergrades = $this->get_user_quiz_grade($USER->id);
-
-        $output = $reportrenderer->view_quizreport_stats(null, $total, $outputstats, $usergrades);
-        $output .= $reportrenderer->view_quizreport_summary();
-        $output .= $outputsummaries;
-
-        return $output;
-    }
-
-    /**
-     * Get all users in a course
-     * @param int $courseid
-     * @return array stdClass userid, courseid, firstname, lastname
-     */
-    private function get_all_users_in_course($courseid) {
-        global $DB;
-
-        $sql = 'SELECT u.id as userid, c.id as courseid, u.firstname, u.lastname'
-            . '     FROM {user} u'
-            . '     INNER JOIN {user_enrolments} ue ON ue.userid = u.id'
-            . '     INNER JOIN {enrol} e ON e.id = ue.enrolid'
-            . '     INNER JOIN {course} c ON e.courseid = c.id'
-            . '     WHERE c.id = :courseid';
-
-        return $DB->get_records_sql($sql, array(
-            'courseid' => $courseid
-        ));
+    public function get_statistic_title() {
+        return get_string('reportquiz_stats_title', 'studentquiz');
     }
 
     /**
@@ -226,491 +316,20 @@ class mod_studentquiz_report {
     }
 
     /**
-     * Get quiz admin statistic view
-     * @return string pre rendered /mod/stundentquiz view_quizreport_table
+     * Returns the id of the currently evaluated StudentQuiz.
      */
-    public function get_quiz_admin_statistic_view() {
-        global $PAGE, $USER;
-        $reportrenderer = $PAGE->get_renderer('mod_studentquiz');
-
-        $overalltotal = new stdClass();
-        $overalltotal->numattempts = 0;
-        $overalltotal->obtainedmarks = 0;
-        $overalltotal->questionsright = 0;
-        $overalltotal->questionsanswered = 0;
-        $usersdata = array();
-
-        $users = $this->get_all_users_in_course($this->course->id);
-        $overalltotal->usercount = count($users);
-        foreach ($users as $user) {
-            $total = new stdClass();
-            $total->numattempts = 0;
-            $total->obtainedmarks = 0;
-            $total->questionsright = 0;
-            $total->questionsanswered = 0;
-            $this->get_user_quiz_summary($user->userid, $total);
-            $userstats = $this->get_user_quiz_grade($user->userid);
-            $total->attemptedgrade = $userstats->usermark;
-            $total->maxgrade = $userstats->stuquizmaxmark;
-
-            $overalltotal->numattempts += $total->numattempts;
-            $overalltotal->obtainedmarks += $total->obtainedmarks;
-            $overalltotal->questionsright += $total->questionsright;
-            $overalltotal->questionsanswered += $total->questionsanswered;
-
-            $total->name = $user->firstname . ' ' . $user->lastname;
-            $total->id = $user->userid;
-            $usersdata[] = $total;
-        }
-        $outputstats = $this->get_user_quiz_stats($USER->id);
-        $usergrades = $this->get_user_quiz_grade($USER->id);
-
-        $total = new stdClass();
-        $total->numattempts = 0;
-        $total->obtainedmarks = 0;
-        $total->questionsright = 0;
-        $total->questionsanswered = 0;
-
-        $output = $reportrenderer->view_quizreport_stats($overalltotal, $total, $outputstats, $usergrades, true);
-        $output .= $reportrenderer->view_quizreport_table($this, $usersdata);
-
-        $output .= $reportrenderer->view_quizreport_admin_quizzes($this, $this->get_quiz_information($USER->id));
-
-        return $output;
+    public function get_studentquiz_id() {
+        return $this->cm->instance;
     }
 
     /**
-     * Get quiz information
-     * @param int $userid
-     * @return array
+     * Get Paginated ranking data ordered (DESC) by points, questions_created, questions_approved, rates_average
+     * @param int $limitfrom return a subset of records, starting at this point (optional).
+     * @param int $limitnum return a subset comprising this many records (optional, required if $limitfrom is set).
+     * @return moodle_recordset of paginated ranking table
      */
-    public function get_quiz_information($userid) {
-        $quizinfos = array();
-        foreach ($this->get_quiz_course_modules($userid) as $cm) {
-            $quizobj = quiz::create($cm->instance, $userid);
-            $quiz = $quizobj->get_quiz();
-            $quiz->cmid = $cm->id;
-            $quizinfos[] = $quiz;
-        }
-        return $quizinfos;
-    }
-
-    /**
-     * @param $userid
-     * @return array usermaxmark usermark stuquizmaxmark
-     */
-    public function get_user_quiz_grade($userid) {
-        global $DB;
-        $sql = 'select COALESCE(round(sum(sub.maxmark), 1), 0.0) as usermaxmark, '
-            .' COALESCE(round(sum(sub.mark), 1), 0.0) usermark, '
-            .'  COALESCE((SELECT round(sum(q.defaultmark), 1) '
-            .'     FROM {question} q '
-            .'       LEFT JOIN {question_categories} qc ON q.category = qc.id '
-            .'       LEFT JOIN {context} c ON qc.contextid = c.id '
-            .'     WHERE q.parent = 0 AND c.instanceid = :cmid AND c.contextlevel = 70), 0.0) as stuquizmaxmark '
-            .'from ( '
-            .'    SELECT suatt.id, suatt.questionid, questionattemptid, max(fraction) as fraction, suatt.maxmark,  '
-            .'max(fraction) * suatt.maxmark as mark '
-            .'from {question_attempt_steps} suats '
-            .'  left JOIN {question_attempts} suatt on suats.questionattemptid = suatt.id '
-            .'WHERE state in (\'gradedright\', \'gradedpartial\', \'gradedwrong\') '
-            .'        AND userid = :userid AND suatt.questionid IN (SELECT q.id '
-            .'                                            FROM {question} q '
-            .'                                              LEFT JOIN {question_categories} qc ON q.category = qc.id '
-            .'                                              LEFT JOIN {context} c ON qc.contextid = c.id '
-            .'                                            WHERE q.parent = 0 AND c.instanceid = :cmid2 AND c.contextlevel = 70) '
-            .'AND suats.id in (select max(suatsmax.id)
-                         FROM {question_attempt_steps} suatsmax
-                           LEFT JOIN {question_attempts} suattmax ON suatsmax.questionattemptid = suattmax.id
-                         where suatsmax.state in (\'gradedright\', \'gradedpartial\', \'gradedwrong\')
-                         AND suatsmax.userid = suats.userid
-                         GROUP BY suattmax.questionid)'
-            .'GROUP BY suatt.questionid, suatt.id, suatt.questionid, suatt.maxmark, suats.questionattemptid) as sub ';
-
-        $record = $DB->get_record_sql($sql, array(
-            'cmid' => $this->cm->id, 'cmid2' => $this->cm->id,
-            'userid' => $userid));
-        return $record;
-    }
-
-    /**
-     * gets the Stats of the user for the actual studenquiz
-     * @param int $userid
-     * @return array
-     */
-    public function get_user_quiz_stats($userid) {
-        global $DB;
-        $sql = 'select ( '
-            . '  SELECT count(1) '
-            . '  FROM {question} q '
-            . '    LEFT JOIN {question_categories} qc ON q.category = qc.id '
-            . '    LEFT JOIN {context} c ON qc.contextid = c.id '
-            . '  WHERE c.instanceid = :cmid AND q.parent = 0 AND c.contextlevel = 70 '
-            . ') AS TotalNrOfQuestions, '
-            . '  (SELECT count(1) '
-            . '   FROM {question} q '
-            . '     LEFT JOIN {question_categories} qc ON q.category = qc.id '
-            . '     LEFT JOIN {context} c ON qc.contextid = c.id '
-            . '   WHERE c.instanceid = :cmid2 AND q.parent = 0 AND c.contextlevel = 70 AND q.createdby = :userid '
-            . '  ) AS TotalUsersQuestions, '
-            . '  (select count(DISTINCT att.questionid) '
-            . '   from {question_attempt_steps} ats '
-            . '     left JOIN {question_attempts} att on att.id = ats.questionattemptid '
-            . '   WHERE ats.userid = :userid2 AND ats.state = \'gradedright\' '
-            . '         AND att.questionid in (SELECT q.id '
-            . '                            FROM {question} q '
-            . '                              LEFT JOIN {question_categories} qc ON q.category = qc.id '
-            . '                              LEFT JOIN {context} c ON qc.contextid = c.id '
-            . '                            WHERE c.instanceid = :cmid3 AND c.contextlevel = 70)
-            AND ats.id IN (SELECT max(suatsmax.id)
-                        FROM {question_attempt_steps} suatsmax LEFT JOIN {question_attempts} suattmax
-                            ON suatsmax.questionattemptid = suattmax.id
-                        WHERE suatsmax.state IN (\'gradedright\', \'gradedpartial\', \'gradedwrong\') AND
-                              suatsmax.userid = ats.userid
-                        GROUP BY suattmax.questionid)) AS TotalRightAnswers ,
-                (select  COALESCE(round(avg(v.vote), 1), 0.0)
-from {studentquiz_vote} v
-where v.questionid in (SELECT q.id
-                       FROM {question} q LEFT JOIN
-                         {question_categories} qc
-                           ON q.category = qc.id
-                         LEFT JOIN {context} c
-                           ON qc.contextid = c.id
-                       WHERE c.instanceid = :cmid4 AND
-                             c.contextlevel = 70
-                             and q.createdby = :userid3)) as avgvotes,
- (select COALESCE(sum(v.approved), 0)
- from {studentquiz_question} v
- WHERE v.questionid in (SELECT q.id
-                       FROM {question} q LEFT JOIN
-                         {question_categories} qc
-                           ON q.category = qc.id
-                         LEFT JOIN {context} c
-                           ON qc.contextid = c.id
-                       WHERE c.instanceid = :cmid5 AND
-                             c.contextlevel = 70
-                             and q.createdby = :userid4)) as numapproved ';
-        $record = $DB->get_record_sql($sql, array(
-            'cmid' => $this->cm->id, 'cmid2' => $this->cm->id, 'cmid3' => $this->cm->id,
-            'cmid4' => $this->cm->id, 'cmid5' => $this->cm->id,
-            'userid' => $userid, 'userid2' => $userid, 'userid3' => $userid, 'userid4' => $userid));
-        return $record;
-    }
-
-    /**
-     * Pre render the single user summary table and get quiz stats
-     * @param int $userid
-     * @param stdClass $total
-     * @return mixed|string
-     * @throws coding_exception
-     */
-    public function get_user_quiz_summary($userid, &$total) {
-        global $PAGE;
-        $outputsummaries = '';
-        $coursemodules = $this->get_quiz_course_modules($userid);
-        $quizrenderer = $PAGE->get_renderer('mod_quiz');
-        foreach ($coursemodules as $cm) {
-            $quizobj = quiz::create($cm->instance, $userid);
-            $quiz = $quizobj->get_quiz();
-            $context = context_module::instance($cm->id);
-
-            /*
-             *  modified /mod/quiz/view.php code, simplified and rearranged
-             *  ==============================================================
-             */
-
-            $canattempt = has_capability('mod/quiz:attempt', $context);
-            $canreviewmine = has_capability('mod/quiz:reviewmyattempts', $context);
-            $canpreview = has_capability('mod/quiz:preview', $context);
-
-            $accessmanager = new quiz_access_manager($quizobj, time(),
-                has_capability('mod/quiz:ignoretimelimits', $context, null, false));
-
-            $viewobj = new mod_quiz_view_object();
-            $viewobj->accessmanager = $accessmanager;
-            $viewobj->canreviewmine = $canreviewmine;
-
-            $attempts = quiz_get_user_attempts($quiz->id, $userid, 'finished', true);
-            $lastfinishedattempt = end($attempts);
-            $unfinished = false;
-            $unfinishedattemptid = null;
-            if ($unfinishedattempt = quiz_get_user_attempt_unfinished($quiz->id, $userid)) {
-                $attempts[] = $unfinishedattempt;
-
-                $quizobj->create_attempt_object($unfinishedattempt)->handle_if_time_expired(time(), false);
-
-                $unfinished = $unfinishedattempt->state == quiz_attempt::IN_PROGRESS ||
-                    $unfinishedattempt->state == quiz_attempt::OVERDUE;
-                if (!$unfinished) {
-                    $lastfinishedattempt = $unfinishedattempt;
-                }
-                $unfinishedattemptid = $unfinishedattempt->id;
-                $unfinishedattempt = null; // To make it clear we do not use this again.
-            }
-            $numattempts = count($attempts);
-            $viewobj->attempts = $attempts;
-            $viewobj->attemptobjs = array();
-            $total->numattempts += $numattempts;
-
-            foreach ($attempts as $attempt) {
-                $fullattempt = new quiz_attempt($attempt, $quiz, $cm, $this->course, false);
-                $viewobj->attemptobjs[] = $fullattempt;
-
-                $this->get_attempt_statistic($fullattempt->get_quizid(), $attempt->uniqueid, $total);
-            }
-
-            if (!$canpreview) {
-                $mygrade = quiz_get_best_grade($quiz, $userid);
-            } else if ($lastfinishedattempt) {
-                $mygrade = quiz_rescale_grade($lastfinishedattempt->sumgrades, $quiz, false);
-            } else {
-                $mygrade = null;
-            }
-
-            $mygradeoverridden = false;
-            $gradebookfeedback = '';
-
-            $gradinginfo = grade_get_grades($this->course->id, 'mod', 'quiz', $quiz->id, $userid);
-            if (!empty($gradinginfo->items)) {
-                $item = $gradinginfo->items[0];
-                if (isset($item->grades[$userid])) {
-                    $grade = $item->grades[$userid];
-
-                    if ($grade->overridden) {
-                        $mygrade = $grade->grade + 0; // Convert to number.
-                        $mygradeoverridden = true;
-                    }
-                    if (!empty($grade->str_feedback)) {
-                        $gradebookfeedback = $grade->str_feedback;
-                    }
-                }
-            }
-
-            if ($attempts) {
-                list($someoptions, $alloptions) = quiz_get_combined_reviewoptions($quiz, $attempts, $context);
-
-                $viewobj->attemptcolumn  = $quiz->attempts != 1;
-
-                $viewobj->gradecolumn    = $someoptions->marks >= question_display_options::MARK_AND_MAX &&
-                    quiz_has_grades($quiz);
-                $viewobj->markcolumn     = $viewobj->gradecolumn && ($quiz->grade != $quiz->sumgrades);
-                $viewobj->overallstats   = $lastfinishedattempt && $alloptions->marks >= question_display_options::MARK_AND_MAX;
-
-                $viewobj->feedbackcolumn = quiz_has_feedback($quiz) && $alloptions->overallfeedback;
-            }
-
-            $viewobj->timenow = time();
-            $viewobj->numattempts = $numattempts;
-            $viewobj->mygrade = $mygrade;
-            $viewobj->moreattempts = $unfinished ||
-                !$accessmanager->is_finished($numattempts, $lastfinishedattempt);
-            $viewobj->mygradeoverridden = $mygradeoverridden;
-            $viewobj->gradebookfeedback = $gradebookfeedback;
-            $viewobj->lastfinishedattempt = $lastfinishedattempt;
-            $viewobj->canedit = false; // Modified to false.
-            // Changed url's.
-            $viewobj->editurl = new moodle_url('/course/view.php', array('id' => $this->course->id));
-            $viewobj->backtocourseurl = new moodle_url('/course/view.php', array('id' => $this->course->id));
-            $viewobj->startattempturl = $quizobj->start_attempt_url();
-
-            if ($accessmanager->is_preflight_check_required($unfinishedattemptid)) {
-                $viewobj->preflightcheckform = $accessmanager->get_preflight_check_form(
-                    $viewobj->startattempturl, $unfinishedattemptid);
-            }
-
-            $viewobj->popuprequired = $accessmanager->attempt_must_be_in_popup();
-            $viewobj->popupoptions = $accessmanager->get_popup_options();
-
-            $viewobj->infomessages = $viewobj->accessmanager->describe_rules();
-            if ($quiz->attempts != 1) {
-                $viewobj->infomessages[] = get_string('gradingmethod', 'quiz',
-                    quiz_get_grading_option_name($quiz->grademethod));
-            }
-
-            $viewobj->quizhasquestions = $quizobj->has_questions();
-            $viewobj->preventmessages = array();
-            if (!$viewobj->quizhasquestions) {
-                $viewobj->buttontext = '';
-
-            } else {
-                if ($unfinished) {
-                    if ($canattempt) {
-                        $viewobj->buttontext = get_string('continueattemptquiz', 'quiz');
-                    } else if ($canpreview) {
-                        $viewobj->buttontext = get_string('continuepreview', 'quiz');
-                    }
-                } else {
-                    if ($canattempt) {
-                        $viewobj->preventmessages = $viewobj->accessmanager->prevent_new_attempt(
-                            $viewobj->numattempts, $viewobj->lastfinishedattempt);
-
-                        if ($viewobj->preventmessages) {
-                            $viewobj->buttontext = '';
-                        } else if ($viewobj->numattempts == 0) {
-                            $viewobj->buttontext = get_string('attemptquiznow', 'quiz');
-                        } else {
-                            $viewobj->buttontext = get_string('reattemptquiz', 'quiz');
-                        }
-                    } else if ($canpreview) {
-                        $viewobj->buttontext = get_string('previewquiznow', 'quiz');
-                    }
-                }
-
-                if ($viewobj->buttontext) {
-                    if (!$viewobj->moreattempts) {
-                        $viewobj->buttontext = '';
-                    } else if ($canattempt
-                        && $viewobj->preventmessages = $viewobj->accessmanager->prevent_access()) {
-                        $viewobj->buttontext = '';
-                    }
-                }
-            }
-
-            $viewobj->showbacktocourse = ($viewobj->buttontext === '' &&
-                course_get_format($this->course)->has_view_page());
-
-            /*
-             *  ==============================================================
-             *  custom code
-            */
-
-            $outputsummaries .= $quizrenderer->view_table($quiz, $context, $viewobj);
-            $outputsummaries = str_replace(get_string('summaryofattempts', 'quiz')
-                , $quizrenderer->heading(userdate($quiz->timecreated), 3)
-                , $outputsummaries);
-
-            if ($attempts) {
-                $outputsummaries .= $quizrenderer->box($quizrenderer->view_page_buttons($viewobj), 'quizattempt');
-            }
-        }
-        return $outputsummaries;
-    }
-
-    /**
-     * Get the obtainedmarks, questionright, questionanswered total from the attempt
-     * @param int $quizid
-     * @param int $attemptuniqueid
-     * @param stdClass $total
-     */
-    private function get_attempt_statistic($quizid, $attemptuniqueid, &$total) {
-        $quba = question_engine::load_questions_usage_by_activity($attemptuniqueid);
-
-        foreach (array_keys($this->get_quiz_slots($quizid)) as $slot) {
-            $fraction = $quba->get_question_fraction($slot);
-            $maxmarks = $quba->get_question_max_mark($slot);
-            $total->obtainedmarks += $fraction * $maxmarks;
-            if ($fraction > 0) {
-                ++$total->questionsright;
-            }
-            ++$total->questionsanswered;
-        }
-    }
-
-    /**
-     * Get the quiz slots
-     * @param int $quizid
-     * @return array stdClass slot array
-     */
-    private function get_quiz_slots($quizid) {
-        global $DB;
-        return $DB->get_records('quiz_slots',
-            array('quizid' => $quizid), 'slot',
-            'slot, requireprevious, questionid');
-    }
-
-    /**
-     * Get the calculcated user ranking from the database
-     * @return array user ranking data
-     */
-    public function get_user_ranking() {
-        global $DB;
-        $sql = 'SELECT'
-            . '    u.id AS userid, u.firstname, u.lastname,'
-            . '    MAX(c.id) AS courseid, MAX(c.fullname), MAX(c.shortname),'
-            . '    MAX(r.archetype) AS rolename,'
-            . '    MAX(countq.countquestions),'
-            . '    MAX(votes.meanvotes),'
-            . '    ROUND(COALESCE('
-            . '        COALESCE(MAX(countquestions) * :questionquantifier, 0) +'
-            . '        COALESCE(SUM(votes.meanvotes) * :votequantifier, 0) +'
-            . '        COALESCE(MAX(correctanswers.countanswer) * :correctanswerquantifier, 0) +'
-            . '        COALESCE(MAX(incorrectanswers.countanswer) * :incorrectanswerquantifier, 0)'
-            . '    , 0), 1) AS points'
-            . '     FROM {studentquiz} sq'
-            . '     JOIN {context} con ON( con.instanceid = sq.coursemodule )'
-            . '     JOIN {question_categories} qc ON( qc.contextid = con.id )'
-            . '     JOIN {course} c ON( sq.course = c.id )'
-            . '     JOIN {enrol} e ON( c.id = e.courseid )'
-            . '     JOIN {role} r ON( r.id = e.roleid )'
-            . '     JOIN {user_enrolments} ue ON( ue.enrolid = e.id )'
-            . '     JOIN {user} u ON( u.id = ue.userid )'
-            . '     LEFT JOIN {question} q ON( q.createdby = u.id AND q.category = qc.id )'
-            // Answered questions.
-            // Correct answers.
-            . '   LEFT JOIN (SELECT  count(DISTINCT suatt.questionid) AS countanswer, userid
-             FROM {question_attempt_steps} suats
-               LEFT JOIN {question_attempts} suatt ON suats.questionattemptid = suatt.id
-             WHERE
-               state IN (\'gradedright\', \'gradedpartial\', \'gradedwrong\')
-               AND suatt.rightanswer = suatt.responsesummary
-               AND suatt.questionid IN (
-                 SELECT q.id  FROM {question} q
-                   LEFT JOIN {question_categories} qc ON q.category = qc.id
-                   LEFT JOIN {context} c ON qc.contextid = c.id
-                 WHERE q.parent = 0
-                       AND c.instanceid = :cmid2 AND
-                       c.contextlevel = 70) AND
-               suats.id IN (SELECT max(suatsmax.id)
-                            FROM {question_attempt_steps} suatsmax LEFT JOIN {question_attempts} suattmax
-                                ON suatsmax.questionattemptid = suattmax.id
-                            WHERE suatsmax.state IN (\'gradedright\', \'gradedpartial\', \'gradedwrong\') AND
-                                  suatsmax.userid = suats.userid
-                            GROUP BY suattmax.questionid)
-             GROUP BY userid) correctanswers
-    ON (correctanswers.userid = u.id) '
-            // Incorrect answers.
-            . '    LEFT JOIN'
-            . '    ('
-            . '         SELECT'
-            . '            count(distinct q.id) AS countanswer,'
-            . '            qza.userid, q.category'
-            . '         FROM {quiz_attempts} qza'
-            . '         LEFT JOIN {quiz_slots} qs ON ( qs.quizid = qza.quiz )'
-            . '         LEFT JOIN {question_attempts} qna ON ('
-            . '              qza.uniqueid = qna.questionusageid'
-            . '              AND qna.questionid = qs.questionid'
-            . '              AND qna.rightanswer <> qna.responsesummary'
-            . '              AND qna.responsesummary IS NOT NULL'
-            . '         )'
-            . '         LEFT JOIN {question} q ON( q.id = qna.questionid )'
-            . '         GROUP BY q.category, qza.userid'
-            . '    ) incorrectanswers ON ( incorrectanswers.userid = u.id AND incorrectanswers.category = qc.id )'
-            // Questions created.
-            . '    LEFT JOIN'
-            . '    ('
-            . '         SELECT COUNT(*) AS countquestions, createdby, category FROM {question}'
-            . '         WHERE parent = 0 GROUP BY category, createdby'
-            . '    ) countq ON( countq.createdby = u.id AND countq.category = qc.id )'
-            // Question votes.
-            . '    LEFT JOIN'
-            . '    ('
-            . '         SELECT'
-            . '            ROUND(SUM(sqvote.vote) / COUNT(sqvote.vote),2) AS meanvotes,'
-            . '            questionid'
-            . '         FROM {studentquiz_vote} sqvote'
-            . '         GROUP BY sqvote.questionid'
-            . '     ) votes ON( votes.questionid = q.id )'
-            . '     WHERE sq.coursemodule = :cmid'
-            . '     GROUP BY u.id, u.firstname, u.lastname'
-            . '     ORDER BY points DESC';
-
-        return $DB->get_records_sql($sql, array(
-            'cmid' => $this->cm->id, 'cmid2' => $this->cm->id
-            , 'questionquantifier' => get_config('moodle', 'studentquiz_add_question_quantifier')
-            , 'votequantifier' => get_config('moodle', 'studentquiz_vote_quantifier')
-            , 'correctanswerquantifier' => get_config('moodle', 'studentquiz_correct_answered_question_quantifier')
-            , 'incorrectanswerquantifier' => get_config('moodle', 'studentquiz_incorrect_answered_question_quantifier')
-        ));
+    public function get_user_ranking_table($limitfrom = 0, $limitnum = 0) {
+        return mod_studentquiz_get_user_ranking_table($this->get_cm_id(), $this->get_quantifiers(), 0, $limitfrom, $limitnum);
     }
 
     /**
@@ -719,16 +338,20 @@ where v.questionid in (SELECT q.id
      * @return bool is loggedin user
      */
     public function is_loggedin_user($userid) {
-        global $USER;
-
-        return $USER->id == $userid;
+        return $this->userid == $userid;
     }
 
     /**
-     * Is anonym active
-     * @return bool
+     * @return bool studentquiz is set to anoymize
      */
-    public function is_anonym() {
-        return mod_studentquiz_is_anonym($this->cm->id);
+    public function is_anonymized() {
+        if (!$this->studentquiz->anonymrank) {
+            return false;
+        }
+        if (has_capability('mod/studentquiz:unhideanonymous', $this->get_context())) {
+            return false;
+        }
+        // Instance is anonymized and isn't allowed to unhide that.
+        return true;
     }
 }
