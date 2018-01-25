@@ -14,7 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-// Translated by Vasilis Daloukas.
+/**
+ * Strings for component 'game', language 'en', branch 'MOODLE_20_STABLE'
+ *
+ * @package mod_game
+ * @copyright 2007 Vasilis Daloukas
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die();
 
 // File bookquiz/importodt.php.
 $string[ 'bookquiz_not_select_book'] = 'You have not select book';
@@ -27,6 +35,14 @@ $string[ 'sudoku_submit'] = 'Grade answers';
 $string[ 'bookquiz_categories'] = 'Categories';
 $string[ 'bookquiz_chapters'] = 'Chapters';
 $string[ 'bookquiz_numquestions'] = 'Questions';
+
+// Check.php.
+$string[ 'common_problems'] = 'Common problems';
+$string[ 'millionaire_also_multichoice'] = 'Multichoice answers without single correct answer';
+$string[ 'common_problems_allowspaces'] = 'There are words with spaces but in the game, spaces are not allowed';
+$string[ 'common_problems_shortanswer_hangman'] = 'Not all characters are in the language of game';
+$string[ 'common_problems_crossword_param1'] = "'Maximum number of cols/rows' is too small";
+$string[ 'millionaire_no_multichoice_questions'] = 'There are no multichoice questions';
 
 // Classes.
 $string[ 'eventgamecreated'] = 'Game created';
@@ -292,6 +308,8 @@ $string[ 'sudoku_maxquestions'] = 'Maximum number of questions';
 $string[ 'sudoku_options'] = 'Sudoku options';
 $string[ 'toptext'] = 'Text at the top of page';
 $string[ 'userdefined'] = 'User defined';
+$string[ 'different_glossary_category'] = "The selected category doesn't corespond to selected glossary";
+$string[ 'highscore'] = 'Show high score (number of students)';
 
 // File preview.php.
 $string[ 'only_teachers'] = 'Only teacher can see this page';
@@ -306,6 +324,7 @@ $string[ 'reviewofattempt'] = 'Review of Attempt {$a}';
 $string[ 'showall'] = 'Show all';
 $string[ 'startagain'] = 'Start again';
 $string[ 'timetaken'] = 'Time taken';
+$string[ 'col_highscores'] = 'High scores';
 
 // File settings.php.
 $string[ 'hangmanimagesets'] = 'Number of image sets used by hangman';
