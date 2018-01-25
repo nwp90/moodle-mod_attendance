@@ -19,7 +19,7 @@
  *
  * @package   mod_studentquiz
  * @category  backup
- * @copyright 2015 Your Name <your@email.adress>
+ * @copyright 2017 HSR (http://www.hsr.ch)
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -32,7 +32,7 @@ require_once($CFG->dirroot . '/mod/studentquiz/backup/moodle2/backup_studentquiz
  *
  * @package   mod_studentquiz
  * @category  backup
- * @copyright 2015 Your Name <your@email.adress>
+ * @copyright 2017 HSR (http://www.hsr.ch)
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class backup_studentquiz_activity_task extends backup_activity_task {
@@ -47,7 +47,11 @@ class backup_studentquiz_activity_task extends backup_activity_task {
      * Defines a backup step to store the instance data in the studentquiz.xml file
      */
     protected function define_my_steps() {
+        // Backup studentquiz tables.
         $this->add_step(new backup_studentquiz_activity_structure_step('studentquiz_structure', 'studentquiz.xml'));
+
+        // Backup question categories.
+        $this->add_step(new backup_calculate_question_categories('activity_question_categories'));
     }
 
     /**

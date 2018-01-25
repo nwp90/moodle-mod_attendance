@@ -21,60 +21,82 @@
  * and lets students to generate new quizzes or add questions.
  *
  * @package    mod_studentquiz
- * @copyright  2016 HSR (http://www.hsr.ch)
+ * @copyright  2017 HSR (http://www.hsr.ch)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
-require_once(dirname(__FILE__) . '/viewlib.php');
-require_once(dirname(__FILE__).'/classes/event/studentquiz_questionbank_viewed.php');
+require_once(dirname(dirname(__DIR__)).'/config.php');
+require_once(__DIR__ . '/viewlib.php');
+require_once(__DIR__.'/classes/event/studentquiz_questionbank_viewed.php');
+require_once(__DIR__.'/reportlib.php');
 
 // Get parameters.
-$cmid = optional_param('id', 0, PARAM_INT);
-if (!$cmid) {
-    $cmid = required_param('cmid', PARAM_INT);
+if (!$cmid = optional_param('cmid', 0, PARAM_INT)) {
+    $cmid = required_param('id', PARAM_INT);
+}
+
+// Load course and course module requested.
+if ($cmid) {
+    if (!$cm = get_coursemodule_from_id('studentquiz', $cmid)) {
+        print_error('invalidcoursemodule');
+    }
+    if (!$course = $DB->get_record('course', array('id' => $cm->course))) {
+        print_error('coursemisconf');
+    }
+} else {
+    print_error('invalidcoursemodule');
 }
 
 // Authentication check.
-$view = new mod_studentquiz_view($cmid);
-require_login($view->get_course(), true, $view->get_coursemodule());
+require_login($cm->course, false, $cm);
 
-// Trigger event that the questionbank has been viewed.
-$params = array(
-    'objectid' => $view->get_cm_id(),
-    'context' => $view->get_context()
-);
-$event = \mod_studentquiz\event\studentquiz_questionbank_viewed::create($params);
-$event->trigger();
+// Load context.
+$context = context_module::instance($cm->id);
+
+// Load studentquiz.
+$studentquiz = mod_studentquiz_load_studentquiz($cm->id, $context->id);
 
 // Redirect if we have received valid POST data.
 if (data_submitted()) {
     if (optional_param('startquiz', null, PARAM_BOOL)) {
-        if ($quizmid = $view->generate_quiz_with_selected_ids((array) data_submitted())) {
-            redirect(new moodle_url('/mod/quiz/view.php', array('id' => $quizmid)));
+        if ($ids = mod_studentquiz_helper_get_ids_by_raw_submit(data_submitted())) {
+            if ($attempt = mod_studentquiz_generate_attempt($ids, $studentquiz, $USER->id)) {
+                $questionusage = question_engine::load_questions_usage_by_activity($attempt->questionusageid);
+                redirect(new moodle_url('/mod/studentquiz/attempt.php',
+                    array('cmid' => $cmid, 'id' => $attempt->id, 'slot' => $questionusage->get_first_question_number())));
+            }
         }
-    }
-    if (optional_param('startfilteredquiz', null, PARAM_RAW)) {
-        $ids = required_param('filtered_question_ids', PARAM_RAW);
-        if ($quizmid = $view->generate_quiz_with_filtered_ids($ids)) {
-            redirect(new moodle_url('/mod/quiz/view.php', array('id' => $quizmid)));
-        }
+        // Redirect to overview to clear submit.
+        redirect(new moodle_url('view.php', array('id' => $cmid)),
+                get_string('no_questions_selected_message', 'studentquiz'),
+                null, \core\output\notification::NOTIFY_WARNING);
     }
 }
 
-/** @var mod_studentquiz_renderer $output */
-$output = $PAGE->get_renderer('mod_studentquiz');
+// Load view.
+$view = new mod_studentquiz_view($course, $context, $cm, $studentquiz, $USER->id);
+$report = new mod_studentquiz_report($cmid);
 
-$view->show_questionbank();
 $PAGE->set_url($view->get_pageurl());
-
 $PAGE->set_title($view->get_title());
 $PAGE->set_heading($COURSE->fullname);
 
-// Render site with questionbank.
+// Process actions.
+$view->process_actions();
+
+// Fire view event for completion API and event API.
+mod_studentquiz_overview_viewed($course, $cm, $context);
+
+$renderer = $PAGE->get_renderer('mod_studentquiz', 'overview');
+
+$regions = $PAGE->blocks->get_regions();
+$PAGE->blocks->add_fake_block($renderer->render_stat_block($report), reset($regions));
+$regions = $PAGE->blocks->get_regions();
+$PAGE->blocks->add_fake_block($renderer->render_ranking_block($report), reset($regions));
+
 echo $OUTPUT->header();
+// Render view.
+echo $renderer->render_overview($view);
 
-$output->display_questionbank($view);
-
-echo '<div class="container-fluid" id="page">';
 echo $OUTPUT->footer();
+

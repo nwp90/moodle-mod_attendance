@@ -18,7 +18,7 @@
  * Data generator test
  *
  * @package    mod_studentquiz
- * @copyright  2016 HSR (http://www.hsr.ch)
+ * @copyright  2017 HSR (http://www.hsr.ch)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -29,7 +29,7 @@ defined('MOODLE_INTERNAL') || die();
  * Data generator test
  *
  * @package    mod_studentquiz
- * @copyright  2016 HSR (http://www.hsr.ch)
+ * @copyright  2017 HSR (http://www.hsr.ch)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_studentquiz_generator_testcase extends advanced_testcase {
@@ -60,10 +60,10 @@ class mod_studentquiz_generator_testcase extends advanced_testcase {
     }
 
     /**
-     * Test create vote
+     * Test create rate
      * @throws coding_exception
      */
-    public function test_create_vote() {
+    public function test_create_rate() {
         global $DB;
 
         $this->resetAfterTest();
@@ -73,17 +73,17 @@ class mod_studentquiz_generator_testcase extends advanced_testcase {
         $cat = $questiongenerator->create_question_category();
         $question = $questiongenerator->create_question('description', null, array('category' => $cat->id));
 
-        $count = $DB->count_records('studentquiz_vote');
+        $count = $DB->count_records('studentquiz_rate');
 
         $user = $this->getDataGenerator()->create_user();
 
-        $voterecord = new stdClass();
-        $voterecord->vote = 5;
-        $voterecord->questionid = $question->id;
-        $voterecord->userid = $user->id;
+        $raterecord = new stdClass();
+        $raterecord->rate = 5;
+        $raterecord->questionid = $question->id;
+        $raterecord->userid = $user->id;
 
-        $rec = $studentquizgenerator->create_comment($voterecord);
+        $rec = $studentquizgenerator->create_comment($raterecord);
         $this->assertEquals($count + 1, $DB->count_records('studentquiz_comment'));
-        $this->assertEquals(5, $rec->vote);
+        $this->assertEquals(5, $rec->rate);
     }
 }

@@ -21,18 +21,15 @@
  * See https://docs.moodle.org/dev/version.php for more info.
  *
  * @package    mod_studentquiz
- * @copyright  2016 HSR (http://www.hsr.ch) <your@email.address>
+ * @copyright  2017 HSR (http://www.hsr.ch) <your@email.address>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component    = 'mod_studentquiz';
-$plugin->version      = 2017053101;
-$plugin->release      = 'v2.0.3';
-$plugin->requires     = 2015102300; // Version 3.0.
+$plugin->version      = 2018011100;
+$plugin->release      = 'v3.0.1';
+$plugin->requires     = 2016052300; // Version MOODLE_31, 3.1.0.
 $plugin->maturity     = MATURITY_STABLE;
 $plugin->cron         = 0;
-$plugin->dependencies = array(
-    'mod_quiz' => '2015111600'
-);

@@ -18,7 +18,7 @@
  * mod_studentquiz data generator
  *
  * @package    mod_studentquiz
- * @copyright  2016 HSR (http://www.hsr.ch)
+ * @copyright  2017 HSR (http://www.hsr.ch)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
  * mod_studentquiz data generator
  *
  * @package    mod_studentquiz
- * @copyright  2016 HSR (http://www.hsr.ch)
+ * @copyright  2017 HSR (http://www.hsr.ch)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_studentquiz_generator extends testing_module_generator {
@@ -42,9 +42,9 @@ class mod_studentquiz_generator extends testing_module_generator {
     protected $commentcount = 0;
 
     /**
-     * @var int keep track of how many StudentQuiz votes have been created.
+     * @var int keep track of how many StudentQuiz rate have been created.
      */
-    protected $votecount = 0;
+    protected $ratecount = 0;
 
 
     /**
@@ -55,7 +55,7 @@ class mod_studentquiz_generator extends testing_module_generator {
     public function reset() {
         $this->studentquizcount = 0;
         $this->commentcount = 0;
-        $this->votecount = 0;
+        $this->ratecount = 0;
         parent::reset();
     }
 
@@ -66,12 +66,12 @@ class mod_studentquiz_generator extends testing_module_generator {
      * @return stdClass
      */
     public function create_instance($record = null, array $options = null) {
-        global $CFG;
-        require_once("$CFG->dirroot/mod/studentquiz/locallib.php");
-
         $record = (object)(array)$record;
-        $record->name = 'studentquiz ' . $this->studentquizcount;
-        $record->grade = 1;
+
+        // TODO for behats I think this is the reason for studentquiz 0!
+        if (!isset($record->name)) {
+            $record->name = 'studentquiz ' . $this->studentquizcount;
+        }
 
         return parent::create_instance($record, (array)$options);
     }
@@ -97,14 +97,14 @@ class mod_studentquiz_generator extends testing_module_generator {
     }
 
     /**
-     * Create StudentQuiz vote on question
+     * Create StudentQuiz rate on question
      * @param null $record
      * @return object
      */
-    public function create_vote($record = null) {
+    public function create_rate($record = null) {
         global $DB;
 
-        $this->votecount++;
+        $this->ratecount++;
 
         $record['id'] = $DB->insert_record('studentquiz_comment', $record);
         return (object) $record;
