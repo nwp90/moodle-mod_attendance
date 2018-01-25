@@ -15,9 +15,9 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
-    @template mod_questionnaire/questionspage
+    @template mod_questionnaire/question_sectiontext
 
-    Template which defines a questionnaire completion page.
+    Template which defines a sectiontext type question survey display.
 
     Classes required for JS:
     * /mod/questionnaire/module.js
@@ -26,16 +26,20 @@
     * none
 
     Context variables required for this template:
-    * tabsarea - string: HTML of the tabs management area.
-    * formarea - string: HTML of the management form.
 
     Example context (json):
     {
-        "tabsarea": "<div>HTML of the tabs area.</div>",
-        "formarea": "<div>HTML of the form area</div>"
+        "qelements": {
+            "choice": {
+                "fb": "feedback messages"
+            }
+        }
     }
     }}
-<div class="mod_questionnaire_questionspage generalbox">
-    {{{tabsarea}}}
-    {{{formarea}}}
-</div>
+<!-- Begin HTML generated from question_sectiontext template. -->
+{{#qelements}}
+{{#choice}}
+{{{choice.fb}}}
+{{/choice}}
+{{/qelements}}
+<!-- End HTML generated from question_sectiontext template. -->
