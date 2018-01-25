@@ -112,32 +112,33 @@ function bootstrapelements_get_coursemodule_info($coursemodule) {
         switch($bootstrapelements->bootstraptype) {
             case 0:
                 $info->content = bootstrapelements_modal_outline($bootstrapelements->name, $bootstrapelements->title,
-                        format_module_intro('bootstrapelements', $bootstrapelements, $coursemodule->id, false), $bootstrapelements->bootstrapicon).
-                        bootstrapelements_modal_button($bootstrapelements->name, $bootstrapelements->title, $bootstrapelements->bootstrapicon);
+                        format_module_intro('bootstrapelements', $bootstrapelements, $coursemodule->id, false),
+                        $bootstrapelements->bootstrapicon).
+                        bootstrapelements_modal_button($bootstrapelements->name, $bootstrapelements->title,
+                        $bootstrapelements->bootstrapicon);
             break;
 
             case 1:
                 $info->content = bootstrapelements_toggle_outline($bootstrapelements->name, $bootstrapelements->title,
-                        format_module_intro('bootstrapelements', $bootstrapelements, $coursemodule->id, false), $bootstrapelements->bootstrapicon);
+                        format_module_intro('bootstrapelements', $bootstrapelements, $coursemodule->id, false),
+                        $bootstrapelements->bootstrapicon);
             break;
 
             case 2:
                 $info->content = bootstrapelements_standard($bootstrapelements->name, $bootstrapelements->title,
-                        format_module_intro('bootstrapelements', $bootstrapelements, $coursemodule->id, false), $bootstrapelements->bootstrapicon);
+                        format_module_intro('bootstrapelements', $bootstrapelements, $coursemodule->id, false),
+                        $bootstrapelements->bootstrapicon);
             break;
         
             case 3:
                 $info->content = bootstrapelements_blockquote($bootstrapelements->name, $bootstrapelements->title,
-                        format_module_intro('bootstrapelements', $bootstrapelements, $coursemodule->id, false), $bootstrapelements->bootstrapicon);
+                        format_module_intro('bootstrapelements', $bootstrapelements, $coursemodule->id, false),
+                        $bootstrapelements->bootstrapicon);
             break;
         }
 
         // font-awesome is already pulled in, either by the stylesheet that this module
         // provides, or in our case by the theme. It should not be needed *again*.
-        // $iconstyle = '@import url("//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css");';
-        // $info->content .= \html_writer::tag('style', $iconstyle);
-
-        // $PAGE->requires->css('/mod/bootstrapelements/styles.css');
 
         $info->name  = $bootstrapelements->name;
         return $info;
