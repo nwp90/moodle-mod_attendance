@@ -4,6 +4,45 @@ moodle-block_people
 Changes
 -------
 
+### v3.4-r1
+
+* 2017-12-15 - Used new user picture attribute and removed the user profile quick link because of redundancy.
+* 2017-12-13 - Replaced a check for a capability with a new introduced function call.
+* 2017-12-12 - Prepare compatibility for Moodle 3.4, no functionality change.
+
+### v3.3-r4
+
+* 2017-12-15 - Fixed a minor bug to restore the functionality of the setting linkparticipantspage.
+
+### v3.3-r3
+
+* 2017-12-08 - Minor string bug fix.
+
+### v3.3-r2
+
+* 2017-12-07 - Added Workaround to travis.yml for fixing Behat tests with TravisCI.
+* 2017-12-06 - Fixed further pix-icon displaying bugs.
+
+### v3.3-r1
+
+* 2017-11-23 - Replaced deprecated function $OUTPUT->pix_url() with $OUTPUT->pix_icon().
+* 2017-11-23 - Prepare compatibility for Moodle 3.3, no functionality change.
+* 2017-11-08 - Updated travis.yml to use newer node version for fixing TravisCI error.
+
+### V3.2-r6
+
+* 2017-10-24 - Improved README.md
+* 2017-10-24 - Improved check in settings from string to integer.
+* 2017-10-24 - Settings to permit or deny users to be able to hide the block in their courses and to reset the visibility.
+
+### v3.2-r5
+
+* 2017-09-19 - Setting to display link to the participants page within the block.
+
+### v3.2-r4
+
+* 2017-05-29 - Add Travis CI support
+
 ### v3.2-r3
 
 * 2017-05-05 - Improve README.md

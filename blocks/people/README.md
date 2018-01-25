@@ -1,13 +1,15 @@
 moodle-block_people
 ===================
 
+[![Build Status](https://travis-ci.org/moodleuulm/moodle-block_people.svg?branch=master)](https://travis-ci.org/moodleuulm/moodle-block_people)
+
 Moodle block which displays all teachers of a course with contact quicklinks, as well as a quicklink to the participants list
 
 
 Requirements
 ------------
 
-This plugin requires Moodle 3.2+
+This plugin requires Moodle 3.4+
 
 
 Motivation for this plugin
@@ -30,26 +32,54 @@ Usage & Settings
 
 After installing the plugin, it can be directly used by users and can be added to course overview pages.
 
-The plugin has neither a settings page nor settings in config.php. Nevertheless, there are some Moodle settings it responds to:
+To configure the plugin and its behaviour, please visit: 
+Site administration -> Plugins -> Blocks -> People.
+
+There, you find three settings:
+
+### 1. Participants page
+
+#### Show link to the participants page
+
+By enabling this setting, a link to the participants page of the course will be shown within the block.
+
+Please note: Even if this setting is enabled, this block only shows the link to the participants list if the user has the capability moodle/course:viewparticipants.
+If the user does not hold this capability, a hint "Viewing the participants list is prohibited in this course" will be shown in the block.
+See http://docs.moodle.org/en/Capabilities/moodle/course:viewparticipants for details on this capability.
+
+
+### 2. Hiding the block
+
+#### Hiding the block
+
+By enabling this setting, the block can be hidden by users.
+
+Important notice:
+Disabling this setting will entirely remove the showing / hiding the block menu item. This means, that users cannot hide this block anymore, but on the other hand, blocks that are already hidden cannot be shown anymore, too. If you want to enable this feature, consider using the following function to reset the visibility for all "block_people" instances.
+
+#### Reset visibility
+
+By enabling this checkbox, the visibility of all existing "block_people" instances will be set to visible (again).
+
+Please note:
+After saving this option, the database operations for resetting the visibility will be triggered and this checkbox will be unticked again. The next enabling and saving of this feature will trigger the database operations for resetting the visibility again.
+
+Fixed Behaviours
+----------------
 
 ### 1. List of teachers
 
 block_people gets the list of teacher roles from $CFG->coursecontact. With this Moodle core setting, you can define which roles are displayed in block_people's list of teachers.
 
-### 2. Quicklink for teachers
+### 2. Links
 
-block_people only shows a quicklink to the teacher's profile if the user has the capability moodle/user:viewdetails
+block_people only allows to view the teacher's profile if the user has the capability moodle/user:viewdetails
 See http://docs.moodle.org/en/Capabilities/moodle/user:viewdetails for details on this capability
 
-block_people only shows a quicklink to the message system if the user has the capability moodle/site:sendmessage and if the Moodle message system is turnes on ($CFG->messaging)
+block_people only shows a quicklink to the message system if the user has the capability moodle/site:sendmessage and if the Moodle message system is turned on ($CFG->messaging)
 See http://docs.moodle.org/en/Capabilities/moodle/site:sendmessage for details on this capability and http://docs.moodle.org/en/Messaging for details on the messaging system
 
-### 3. Participants List
-
-block_people only shows the link to the participants list if the user has the capability moodle/course:viewparticipants.
-See http://docs.moodle.org/en/Capabilities/moodle/course:viewparticipants for details on this capability
-
-### 4. Roles sort order
+### 3. Roles sort order
 
 block_people shows teacher role groups in the order defined in /admin/roles/manage.php. Please visit this settings page if you want to modify the sort order
 
@@ -132,9 +162,7 @@ If you want to use this plugin with a RTL language and it doesn't work as-is, yo
 PHP7 Support
 ------------
 
-Since Moodle 3.0, Moodle core basically supports PHP7.
-Please note that PHP7 support is on our roadmap for this plugin, but it has not yet been thoroughly tested for PHP7 support and we are still running it in production on PHP5.
-If you encounter any success or failure with this plugin and PHP7, please let us know.
+Since Moodle 3.4 core, PHP7 is mandatory. We are developing and testing this plugin for PHP7 only.
 
 
 Copyright
