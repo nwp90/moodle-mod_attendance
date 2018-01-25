@@ -33,3 +33,8 @@
 .mod-bootstrapelements-toggle .panel-heading .accordion-toggle.collapsed span:after {
     content: "\f063";
 }
+
+/* ?? */
+.bootstrapelements .fa {
+    margin-right: 5px;
+}
