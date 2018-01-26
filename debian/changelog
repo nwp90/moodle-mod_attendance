@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.4.1.2018011700+0facmed2-1) stretch; urgency=medium
+
+  * Update plugins.
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 26 Jan 2018 14:10:23 +1300
+
 moodle-site-otagounifom (3.4.1.2018011700+0facmed1-1) stretch; urgency=medium
 
   * 3.4.1, security update, actually targeting stretch.
