@@ -18,7 +18,7 @@
  * The mod_studentquiz settings.
  *
  * @package    mod_studentquiz
- * @copyright  2016 HSR (http://www.hsr.ch)
+ * @copyright  2017 HSR (http://www.hsr.ch)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -27,34 +27,54 @@ defined('MOODLE_INTERNAL') || die;
 if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_heading(
         'studentquiz/ratingsettings',
-        get_string('rankingsettingsheader', 'studentquiz'), '')
-    );
+        get_string('rankingsettingsheader', 'studentquiz'),
+        get_string('rankingsettingsdescription', 'studentquiz')
+    ));
 
     $settings->add(new admin_setting_configtext(
-        'studentquiz_add_question_quantifier',
-        get_string('settings_add_q_quantifier', 'studentquiz'),
-        get_string('config_add_q_quantifier', 'studentquiz'),
+        'studentquiz/addquestion',
+        get_string('settings_questionquantifier', 'studentquiz'),
+        get_string('settings_questionquantifier_help', 'studentquiz'),
         10, PARAM_INT
     ));
 
     $settings->add(new admin_setting_configtext(
-        'studentquiz_vote_quantifier',
-        get_string('settings_vote_quantifier', 'studentquiz'),
-        get_string('config_vote_quantifier', 'studentquiz'),
+        'studentquiz/approved',
+        get_string('settings_approvedquantifier', 'studentquiz'),
+        get_string('settings_approvedquantifier_help', 'studentquiz'),
+        5, PARAM_INT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'studentquiz/rate',
+        get_string('settings_ratequantifier', 'studentquiz'),
+        get_string('settings_ratequantifier_help', 'studentquiz'),
         3, PARAM_INT
     ));
 
     $settings->add(new admin_setting_configtext(
-        'studentquiz_correct_answered_question_quantifier',
-        get_string('settings_correct_answered_q_quantifier', 'studentquiz'),
-        get_string('config_correct_answered_q_quantifier', 'studentquiz'),
+        'studentquiz/correctanswered',
+        get_string('settings_lastcorrectanswerquantifier', 'studentquiz'),
+        get_string('settings_lastcorrectanswerquantifier_help', 'studentquiz'),
         2, PARAM_INT
     ));
 
     $settings->add(new admin_setting_configtext(
-        'studentquiz_incorrect_answered_question_quantifier',
-        get_string('settings_incorrect_answered_q_quantifier', 'studentquiz'),
-        get_string('config_incorrect_answered_q_quantifier', 'studentquiz'),
-        0, PARAM_INT
+        'studentquiz/incorrectanswered',
+        get_string('settings_lastincorrectanswerquantifier', 'studentquiz'),
+        get_string('settings_lastincorrectanswerquantifier_help', 'studentquiz'),
+        -1, PARAM_INT
     ));
+
+    // Show a onetime settings option as info, that we'll uninstall the questionbehavior plugin automatically.
+    // Will not show this option if this plugin doesn't exist.
+    if (array_key_exists('studentquiz', core_component::get_plugin_list('qbehaviour'))) {
+        $url = new moodle_url('/admin/plugins.php', array('sesskey' => sesskey(), 'uninstall' => 'qbehaviour_studentquiz'));
+        $settings->add(new admin_setting_configcheckbox('studentquiz/removeqbehavior',
+            get_string('settings_removeqbehavior_label', 'studentquiz'),
+            get_string('settings_removeqbehavior_help', 'studentquiz', $url->out()),
+            '1'
+        ));
+    }
+
 }

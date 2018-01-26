@@ -62,6 +62,7 @@ defined('MOODLE_INTERNAL') || die();
 class qformat_giftmedia extends qformat_gift {
     /** @var string path to the temporary directory. */
     public $tempdir = '';
+
     /**
      * This plugin provide import
      * @return bool true
@@ -70,10 +71,18 @@ class qformat_giftmedia extends qformat_gift {
         return true;
     }
 
+    /**
+     * This plugin doesn't provide import
+     * @return bool false
+     */
     public function provide_export() {
         return false;
     }
 
+    /**
+     * This plugin takes a zip archive
+     * @return string mime-type of the files that this plugin reads
+     */
     public function mime_type() {
         return mimeinfo('type', '.zip');
     }
@@ -92,10 +101,10 @@ class qformat_giftmedia extends qformat_gift {
 
     /**
      * Store an image file in a draft filearea
-     * @param array $text, if itemid element don't exists it will be created
-     * @param string tempdir path to root of image tree
-     * @param string filepathinsidetempdir path to image in the tree
-     * @param string filename image's name
+     * @param array $text, if itemid element doesn't exist it will be created
+     * @param string $tempdir path to root of image tree
+     * @param string $filepathinsidetempdir path to image in the tree
+     * @param string $filename image's name
      * @return string new name of the image as it was stored
      */
     protected function store_file_for_text_field(&$text, $tempdir, $filepathinsidetempdir, $filename) {
@@ -133,7 +142,7 @@ class qformat_giftmedia extends qformat_gift {
      * store all medias in a draft filearea,
      * and return an array with all urls in text recoded,
      * format set to FORMAT_HTML, and itemid set to filearea itemid
-     * @param string text text to parse and recode
+     * @param string $text text to parse and recode
      * @return array with keys text, format, itemid.
      */
     public function text_field($text) {
@@ -156,10 +165,22 @@ class qformat_giftmedia extends qformat_gift {
         return $data;
     }
 
+    /**
+     * The file extension (including .) that is normally used by this plugin
+     * @return string extension
+     */
     public function export_file_extension() {
         return '.zip';
     }
 
+
+    /**
+     * Parse the text
+     * @param string $text the text to parse
+     * @param integer $defaultformat text format
+     * @return array with keys text, format, itemid.
+     *
+     */
     protected function parse_text_with_format($text, $defaultformat = FORMAT_MOODLE) {
         // Parameter defaultformat is ignored we set format to be html in all cases.
 
@@ -176,19 +197,20 @@ class qformat_giftmedia extends qformat_gift {
      * Return content of all files containing questions,
      * as an array one element for each file found,
      * For each file, the corresponding element is an array of lines.
-     * @param string filename name of file
+     * @param string $filename name of file
      * @return mixed contents array or false on failure
      */
     public function readdata($filename) {
-        $unique_code = time();
-        $this->tempdir = make_temp_directory('giftmedia/' . $unique_code);
+        $uniquecode = time();
+        $this->tempdir = make_temp_directory('giftmedia/' . $uniquecode);
         if (is_readable($filename)) {
             if (!copy($filename, $this->tempdir . '/gift.zip')) {
                 $this->error(get_string('cannotcopybackup', 'question'));
                 fulldelete($this->tempdir);
                 return false;
             }
-            if (unzip_file($this->tempdir . '/gift.zip', '', false)) {
+            $packer = get_file_packer('application/zip');
+            if ($packer->extract_to_pathname($this->tempdir . '/gift.zip', $this->tempdir)) {
                 // Search for a text file in the zip archive.
                 // TODO ? search it, even if it is not a root level ?
                 $filenames = array();
@@ -222,7 +244,7 @@ class qformat_giftmedia extends qformat_gift {
         $question = $this->defaultquestion();
         $comment = null;
         // Define replaced by simple assignment, stop redefine notices.
-        $gift_answerweight_regex = '/^%\-*([0-9]{1,2})\.?([0-9]*)%/';
+        $giftanswerweightregex = '/^%\-*([0-9]{1,2})\.?([0-9]*)%/';
 
         // Remove commented lines and implode.
         foreach ($lines as $key => $line) {
@@ -232,7 +254,7 @@ class qformat_giftmedia extends qformat_gift {
             }
         }
 
-        $text = trim(implode(' ', $lines));
+        $text = trim(implode("\n", $lines));
 
         if ($text == '') {
             return false;
@@ -262,7 +284,7 @@ class qformat_giftmedia extends qformat_gift {
             } else {
                 $questionname = substr($text, 0, $namefinish);
                 $question->name = $this->clean_question_name($this->escapedchar_post($questionname));
-                $text = trim(substr($text, $namefinish+2)); // Remove name from text.
+                $text = trim(substr($text, $namefinish + 2)); // Remove name from text.
             }
         } else {
             $question->name = false;
@@ -332,12 +354,12 @@ class qformat_giftmedia extends qformat_gift {
         // Determine question type.
         $question->qtype = null;
 
-        // Give plugins first try
-        // plugins must promise not to intercept standard qtypes
+        // Give plugins first try.
+        // Plugins must promise not to intercept standard qtypes
         // MDL-12346, this could be called from lesson mod which has its own base class =(.
-        if (method_exists($this, 'try_importing_using_qtypes') &&
-                ($try_question = $this->try_importing_using_qtypes($lines, $question, $answertext))) {
-            return $try_question;
+        if (method_exists($this, 'try_importing_using_qtypes')
+                && ($tryquestion = $this->try_importing_using_qtypes($lines, $question, $answertext))) {
+            return $tryquestion;
         }
 
         if ($description) {
@@ -353,7 +375,7 @@ class qformat_giftmedia extends qformat_gift {
             // Only Multiplechoice questions contain tilde ~.
             $question->qtype = 'multichoice';
 
-        } else if (strpos($answertext, '=')  !== false
+        } else if (strpos($answertext, '=') !== false
                 && strpos($answertext, '->') !== false) {
             // Only Matching contains both = and ->.
             $question->qtype = 'match';
@@ -361,14 +383,14 @@ class qformat_giftmedia extends qformat_gift {
         } else { // Either truefalse or shortanswer.
 
             // Truefalse question check.
-            $truefalse_check = $answertext;
+            $truefalsecheck = $answertext;
             if (strpos($answertext, '#') > 0) {
                 // Strip comments to check for TrueFalse question.
-                $truefalse_check = trim(substr($answertext, 0, strpos($answertext, "#")));
+                $truefalsecheck = trim(substr($answertext, 0, strpos($answertext, "#")));
             }
 
-            $valid_tf_answers = array('T', 'TRUE', 'F', 'FALSE');
-            if (in_array($truefalse_check, $valid_tf_answers)) {
+            $validtfanswers = array('T', 'TRUE', 'F', 'FALSE');
+            if (in_array($truefalsecheck, $validtfanswers)) {
                 $question->qtype = 'truefalse';
 
             } else { // Must be shortanswer.
@@ -390,8 +412,10 @@ class qformat_giftmedia extends qformat_gift {
 
             case 'essay':
                 $question->responseformat = 'editor';
+                $question->responserequired = 1;
                 $question->responsefieldlines = 15;
                 $question->attachments = 0;
+                $question->attachmentsrequired = 0;
                 $question->graderinfo = array(
                         'text' => '', 'format' => FORMAT_HTML);
                 $question->responsetemplate = array(
@@ -426,18 +450,18 @@ class qformat_giftmedia extends qformat_gift {
 
                     // Determine answer weight.
                     if ($answer[0] == '=') {
-                        $answer_weight = 1;
+                        $answerweight = 1;
                         $answer = substr($answer, 1);
 
-                    } else if (preg_match($gift_answerweight_regex, $answer)) {    // Check for properly formatted answer weight.
-                        $answer_weight = $this->answerweightparser($answer);
+                    } else if (preg_match($giftanswerweightregex, $answer)) {    // Check for properly formatted answer weight.
+                        $answerweight = $this->answerweightparser($answer);
 
                     } else {     // Default, i.e., wrong anwer.
-                        $answer_weight = 0;
+                        $answerweight = 0;
                     }
-                    list($question->answer[$key], $question->feedback[$key]) =
-                            $this->commentparser($answer, $question->questiontextformat);
-                    $question->fraction[$key] = $answer_weight;
+                    list($question->answer[$key], $question->feedback[$key])
+                            = $this->commentparser($answer, $question->questiontextformat);
+                    $question->fraction[$key] = $answerweight;
                 }  // End foreach answer.
 
                 return $question;
@@ -474,10 +498,10 @@ class qformat_giftmedia extends qformat_gift {
                 return $question;
 
             case 'truefalse':
-                list($answer, $wrongfeedback, $rightfeedback) =
-                        $this->split_truefalse_comment($answertext, $question->questiontextformat);
+                list($answer, $wrongfeedback, $rightfeedback)
+                        = $this->split_truefalse_comment($answertext, $question->questiontextformat);
 
-                if ($answer['text'] == "T" OR $answer['text'] == "TRUE") {
+                if ($answer['text'] == "T" || $answer['text'] == "TRUE") {
                     $question->correctanswer = 1;
                     $question->feedbacktrue = $rightfeedback;
                     $question->feedbackfalse = $wrongfeedback;
@@ -509,17 +533,17 @@ class qformat_giftmedia extends qformat_gift {
                     $answer = trim($answer);
 
                     // Answer weight.
-                    if (preg_match($gift_answerweight_regex, $answer)) {    // Check for properly formatted answer weight.
-                        $answer_weight = $this->answerweightparser($answer);
+                    if (preg_match($giftanswerweightregex, $answer)) {    // Check for properly formatted answer weight.
+                        $answerweight = $this->answerweightparser($answer);
                     } else {     // Default, i.e., full-credit anwer.
-                        $answer_weight = 1;
+                        $answerweight = 1;
                     }
 
                     list($answer, $question->feedback[$key]) = $this->commentparser(
                             $answer, $question->questiontextformat);
 
                     $question->answer[$key] = $answer['text'];
-                    $question->fraction[$key] = $answer_weight;
+                    $question->fraction[$key] = $answerweight;
                 }
 
                 return $question;
@@ -555,27 +579,27 @@ class qformat_giftmedia extends qformat_gift {
                     $answer = trim($answer);
 
                     // Answer weight.
-                    if (preg_match($gift_answerweight_regex, $answer)) {    // Check for properly formatted answer weight.
-                        $answer_weight = $this->answerweightparser($answer);
+                    if (preg_match($giftanswerweightregex, $answer)) {    // Check for properly formatted answer weight.
+                        $answerweight = $this->answerweightparser($answer);
                     } else {     // Default, i.e., full-credit anwer.
-                        $answer_weight = 1;
+                        $answerweight = 1;
                     }
 
                     list($answer, $question->feedback[$key]) = $this->commentparser(
                             $answer, $question->questiontextformat);
-                    $question->fraction[$key] = $answer_weight;
+                    $question->fraction[$key] = $answerweight;
                     $answer = $answer['text'];
 
                     // Calculate Answer and Min/Max values.
                     if (strpos($answer, "..") > 0) { // Optional [min]..[max] format.
                         $marker = strpos($answer, "..");
-                        $max = trim(substr($answer, $marker+2));
+                        $max = trim(substr($answer, $marker + 2));
                         $min = trim(substr($answer, 0, $marker));
-                        $ans = ($max + $min)/2;
+                        $ans = ($max + $min) / 2;
                         $tol = $max - $ans;
                     } else if (strpos($answer, ':') > 0) { // Standard [answer]:[errormargin] format.
                         $marker = strpos($answer, ':');
-                        $tol = trim(substr($answer, $marker+1));
+                        $tol = trim(substr($answer, $marker + 1));
                         $ans = trim(substr($answer, 0, $marker));
                     } else { // Only one valid answer (zero errormargin).
                         $tol = 0;
@@ -610,6 +634,4 @@ class qformat_giftmedia extends qformat_gift {
 
         }
     }
-
-
 }

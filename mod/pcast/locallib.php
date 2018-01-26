@@ -53,26 +53,6 @@ function pcast_get_media_information($filename) {
 
 
 /**
- * Get the complete file path based on the SHA1 hash
- *
- * @global stdClass $CFG
- * @param object $filehash (This is the content hash)
- * @return path to file in dataroot, false on error
- **/
-function pcast_file_path_lookup ($filehash) {
-    global $CFG;
-    if (!empty($filehash)) {
-        $hash1 = substr($filehash, 0, 2);
-        $hash2 = substr($filehash, 2, 2);
-        $filepath = $CFG->dataroot . '/filedir/' . $hash1 .'/' .$hash2 . '/' . $filehash;
-        return $filepath;
-
-    } else {
-        return false;
-    }
-}
-
-/**
  * Prints the approval menu
  * @param object $cm
  * @param object $pcast
@@ -340,9 +320,7 @@ function pcast_print_sorting_links($cm, $mode, $sortkey = '', $sortorder = '', $
             $currentorder = $desc;
             $neworder = 'asc';
             $strchangeto = get_string('changeto', 'pcast', $asc);
-            $icon = html_writer::empty_tag('img', array('src' => $OUTPUT->pix_url($sortorder, 'pcast'),
-                                                        'class' => 'icon',
-                                                        'alt' => $strchangeto));
+            $icon = " " . $OUTPUT->pix_icon($sortorder, $strchangeto, 'pcast');
 
             break;
 
@@ -350,9 +328,7 @@ function pcast_print_sorting_links($cm, $mode, $sortkey = '', $sortorder = '', $
             $currentorder = $asc;
             $neworder = 'desc';
             $strchangeto = get_string('changeto', 'pcast', $desc);
-            $icon = html_writer::empty_tag('img', array('src' => $OUTPUT->pix_url($sortorder, 'pcast'),
-                                                        'class' => 'icon',
-                                                        'alt' => $strchangeto));
+            $icon = " " . $OUTPUT->pix_icon($sortorder, $strchangeto, 'pcast');
 
             break;
         default:
@@ -364,9 +340,7 @@ function pcast_print_sorting_links($cm, $mode, $sortkey = '', $sortorder = '', $
                 case PCAST_AUTHOR_LNAME:
                     $strchangeto = get_string('changeto', 'pcast', $asc);
                     $neworder = 'asc';
-                    $icon = html_writer::empty_tag('img', array('src' => $OUTPUT->pix_url('asc', 'pcast'),
-                                                                'class' => 'icon',
-                                                                'alt' => $strchangeto));
+                    $icon = " " . $OUTPUT->pix_icon($neworder, $strchangeto, 'pcast');
                     $currentorder = '';
                     break;
 
@@ -1657,8 +1631,7 @@ function pcast_display_mediafile_link($episode, $cm) {
         foreach ($files as $file) {
             $filename = $file->get_filename();
             $mimetype = $file->get_mimetype();
-            $iconimage = html_writer::empty_tag('img', array('src' => $OUTPUT->pix_url(file_mimetype_icon($mimetype)),
-                                                'class' => 'icon', 'alt' => $mimetype));
+            $iconimage = $OUTPUT->image_icon(file_mimetype_icon($mimetype), $mimetype);
             $path = file_encode_url($CFG->wwwroot.'/pluginfile.php',
                                     '/'.$context->id.'/mod_pcast/episode/'.$episode->id.'/'.$filename);
         }

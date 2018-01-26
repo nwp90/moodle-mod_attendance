@@ -17,9 +17,8 @@
 /**
  * The question bank custom filter
  *
- *
  * @package    mod_studentquiz
- * @copyright  2016 HSR (http://www.hsr.ch)
+ * @copyright  2017 HSR (http://www.hsr.ch)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -33,7 +32,7 @@ require_once($CFG->dirroot.'/user/filters/date.php');
  * Question bank filter form intance
  *
  * @package    mod_studentquiz
- * @copyright  2016 HSR (http://www.hsr.ch)
+ * @copyright  2017 HSR (http://www.hsr.ch)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_studentquiz_question_bank_filter_form extends moodleform {
@@ -81,11 +80,19 @@ class mod_studentquiz_question_bank_filter_form extends moodleform {
         $mform = $this->_form;
 
         $mform->addElement('header', 'filtertab', get_string('filter', 'studentquiz'));
-        $mform->setExpanded('filtertab', false);
+        $mform->setExpanded('filtertab', true);
+        $fastfilters = array();
         foreach ($this->fields as $field) {
-            $field->setupForm($mform);
+            if ($field instanceof toggle_filter_checkbox) {
+                $field->setup_form_in_group($mform, $fastfilters);
+            }
         }
-
+        $mform->addGroup($fastfilters, 'fastfilters', get_string('filter_label_fast_filters', 'studentquiz'), ' ', false);
+        foreach ($this->fields as $field) {
+            if (!$field instanceof toggle_filter_checkbox) {
+                $field->setupForm($mform);
+            }
+        }
         $group = array();
         $group[] = $mform->createElement('submit', 'submitbutton', get_string('filter'));
         $group[] = $mform->createElement('submit', 'resetbutton', get_string('reset'));
@@ -121,12 +128,133 @@ class mod_studentquiz_question_bank_filter_form extends moodleform {
     }
 }
 
+class toggle_filter_checkbox extends user_filter_checkbox {
+
+    protected $operator;
+
+    protected $value;
+
+    protected $helptext;
+
+    /**
+     * A toggle filter applies adds a hard coded test to the filter set.
+     *
+     * @param string $name the name of the filter instance
+     * @param string $label the label of the filter instance
+     * @param boolean $advanced advanced form element flag
+     * @param mixed $field user table field/fields name for comparison
+     * @param array $disableelements name of fields which should be disabled if this checkbox is checked.
+     * @param int $operator key 0 : >=,
+     * @param mixed $value text or number for comparison
+     *
+     */
+    public function __construct($name, $label, $advanced, $field, $disableelements, $operator, $value, $helptext = '') {
+        parent::__construct($name, $label, $advanced, $field, $disableelements);
+        $this->field   = $field;
+        $this->operator = $operator;
+        $this->value = $value;
+        $this->helptext = $helptext;
+    }
+
+    public function setup_form_in_group(&$mform, &$group) {
+        $titledlabel = \html_writer::span($this->_label, '', array('title' => $this->helptext));
+        $element = $mform->createElement('checkbox', $this->_name, null, $titledlabel, array('class' => 'toggle'));
+
+        if ($this->_advanced) {
+            $mform->setAdvanced($this->_name);
+        }
+        // Check if disable if options are set. if yes then set rules.
+        if (!empty($this->disableelements) && is_array($this->disableelements)) {
+            foreach ($this->disableelements as $disableelement) {
+                $mform->disabledIf($disableelement, $this->_name, 'checked');
+            }
+        }
+        $group[] = $element;
+    }
+
+    public function get_sql_filter($data) {
+        switch($this->operator) {
+            case 0:
+                $res = "($this->field IS null OR $this->field = 0)";
+                break;
+            case 1:
+                $res = "$this->field >= $this->value";
+                break;
+            case 2:
+                $res = "$this->field = $this->value";
+                break;
+            default:
+                $res = '';
+        }
+        return array($res, array());
+    }
+}
+
+
+class user_filter_tag extends user_filter_text {
+
+    /**
+     * Returns the condition to be used with SQL where
+     * @param array $data filter settings
+     * @return array sql string and $params
+     */
+    public function get_sql_filter($data) {
+        static $counter = 0;
+        $name = 'ex_tag' . $counter++;
+
+        // TODO Override for PoC.
+        $name = 'searchtag';
+
+        $operator = $data['operator'];
+
+        // Search is case insensitive!
+        $value = strtolower($data['value']);
+
+        $field = $this->_field;
+
+        // TODO: Ugly override for PoC.
+        $field = 'tags';
+
+        $params = array();
+
+        switch ($operator) {
+            case 0: // Contains.
+                $res = ' searchtag > 0 ';
+                $params[$name] = "%$value%";
+                break;
+            case 1: // Does not contain.
+                $res = ' (searchtag = 0 or searchtag is null) ';
+                $params[$name] = "%$value%";
+                break;
+            case 2: // Equal to.
+                $res = '  searchtag = 1 ';
+                $params[$name] = "$value";
+                break;
+            case 3: // Starts with.
+                $res = '  searchtag > 0 ';
+                $params[$name] = "$value%";
+                break;
+            case 4: // Ends with.
+                $res = ' searchtag > 0 ';
+                $params[$name] = "%$value";
+                break;
+            case 5: // Empty.
+                $res = ' (tags = 0 or tags is null) ';
+                $params[$name] = "-ignore-";
+                break;
+            default:
+                return '';
+        }
+        return array($res, $params);
+    }
+
+}
 
 /**
  * Number filter
  *
  * @package    mod_studentquiz
- * @copyright  2016 HSR (http://www.hsr.ch)
+ * @copyright  2017 HSR (http://www.hsr.ch)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class user_filter_number extends user_filter_text {
@@ -183,5 +311,21 @@ class user_filter_number extends user_filter_text {
                 return '';
         }
         return array($res, $params);
+    }
+}
+
+/**
+ * Class user_filter_percent Users can enter a number of percent, database is queried for unit value.
+ */
+class user_filter_percent extends user_filter_number {
+    public function get_sql_filter($data) {
+        $val = round($data->value, 0);
+        if ($val > 100 or $val < 0) {
+            return '';
+        }
+        if ($val > 1) {
+            $data->value = $val / 100;
+        }
+        return parent::get_sql_filter($data);
     }
 }

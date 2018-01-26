@@ -17,9 +17,8 @@
 /**
  * The question bank question text row
  *
- *
  * @package    mod_studentquiz
- * @copyright  2016 HSR (http://www.hsr.ch)
+ * @copyright  2017 HSR (http://www.hsr.ch)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -31,7 +30,7 @@ defined('MOODLE_INTERNAL') || die();
  * A column type for the name of the question name.
  *
  * @package    mod_studentquiz
- * @copyright  2016 HSR (http://www.hsr.ch)
+ * @copyright  2017 HSR (http://www.hsr.ch)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class question_text_row extends \core_question\bank\row_base {
@@ -69,6 +68,7 @@ class question_text_row extends \core_question\bank\row_base {
      * @param string $rowclasses CSS class names that should be applied to this row of output.
      */
     public function display($question, $rowclasses) {
+
     }
 
     /**

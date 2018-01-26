@@ -25,14 +25,14 @@
  * Moodle is performing actions across all modules.
  *
  * @package    mod_studentquiz
- * @copyright  2016 HSR (http://www.hsr.ch)
+ * @copyright  2017 HSR (http://www.hsr.ch)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/lib/questionlib.php');
-require_once(dirname(__FILE__) . '/locallib.php');
+require_once(__DIR__ . '/locallib.php');
 
 /* Core API */
 
@@ -50,8 +50,6 @@ function studentquiz_supports($feature) {
         case FEATURE_MOD_INTRO:
             return true;
         case FEATURE_SHOW_DESCRIPTION:
-            return true;
-        case FEATURE_GRADE_HAS_GRADE:
             return true;
         case FEATURE_BACKUP_MOODLE2:
             return true;
@@ -77,42 +75,42 @@ function studentquiz_add_instance(stdClass $studentquiz, mod_studentquiz_mod_for
 
     $studentquiz->timecreated = time();
 
-    if (!isset($studentquiz->anonymrank)) {
+    // TODO unify parsing of submitted variables!
+
+    if (!empty($mform->anonymrank)) {
+        $studentquiz->anonymrank = $mform->anonymrank;
+    }
+    if (empty($studentquiz->anonymrank)) {
         $studentquiz->anonymrank = 0;
+    }
+
+    if (!isset($studentquiz->allowedqtypes)) {
+        $studentquiz->allowedqtypes = 'ALL';
+    } else {
+        $studentquiz->allowedqtypes = implode(',', array_keys($studentquiz->allowedqtypes));
+    }
+
+    if ((!isset($studentquiz->hiddensection))) {
+        $studentquiz->hiddensection = 0;
+    }
+
+    if (isset($mform->hiddensection)) {
+        $studentquiz->hiddensection = $mform->hiddensection;
     }
 
     // You may have to add extra stuff in here.
     $studentquiz->id = $DB->insert_record('studentquiz', $studentquiz);
 
-    $role = $DB->get_record('role', array('shortname' => 'student'));
     $context = context_module::instance($studentquiz->coursemodule);
 
-    $capabilities = array(
-        'moodle/question:usemine',
-        'moodle/question:useall',
-        'moodle/question:editmine',
-        'moodle/question:add'
-    );
-
-    foreach ($capabilities as $capability) {
-        $obj = new stdClass();
-        $obj->contextid = $context->id;
-        $obj->roleid = $role->id;
-        $obj->capability = $capability;
-        $obj->permission = 1;
-        $obj->timemodified = time();
-        $obj->modifierid = 0;
-
-        $DB->insert_record('role_capabilities', $obj, false);
-    }
+    // Leverage add capabilities to add questions in StudentQuiz context.
+    mod_studentquiz_add_question_capabilities($context);
 
     // Add default category.
     $questioncategory = question_make_default_categories(array($context));
     $questioncategory->name .= $studentquiz->name;
-    $questioncategory->parent = -1;
+    $questioncategory->parent = 0;
     $DB->update_record('question_categories', $questioncategory);
-
-    studentquiz_grade_item_update($studentquiz);
 
     return $studentquiz->id;
 }
@@ -134,15 +132,13 @@ function studentquiz_update_instance(stdClass $studentquiz, mod_studentquiz_mod_
     $studentquiz->timemodified = time();
     $studentquiz->id = $studentquiz->instance;
 
+    // Initialize values or manipulations where needed.
     if (!isset($studentquiz->anonymrank)) {
         $studentquiz->anonymrank = 0;
     }
-
-    // You may have to add extra stuff in here.
+    $studentquiz->allowedqtypes = implode(',', array_keys($studentquiz->allowedqtypes));
 
     $result = $DB->update_record('studentquiz', $studentquiz);
-
-    studentquiz_grade_item_update($studentquiz);
 
     return $result;
 }
@@ -170,8 +166,25 @@ function studentquiz_delete_instance($id) {
 
     $DB->delete_records('studentquiz', array('id' => $studentquiz->id));
 
-    studentquiz_grade_item_delete($studentquiz);
+    return true;
+}
 
+/**
+ * Clean up studentquiz question categories when deleting studentquiz
+ * @Warning: This callback is only triggered in Moodle Version >=3.1!
+ * @param cm_info|stdClass $mod The course module info object or record
+ * @return true|false
+ */
+function studentquiz_pre_course_module_delete($cm) {
+    global $DB;
+
+    // Skip if $cm is not a studentquiz module.
+    if (! $studentquiz = $DB->get_record('studentquiz', array('id' => $cm->instance))) {
+        return false;
+    }
+    $context = context_module::instance($studentquiz->coursemodule);
+
+    $DB->delete_records('question_categories', array('contextid' => $context->id));
     return true;
 }
 
@@ -281,114 +294,6 @@ function studentquiz_get_extra_capabilities() {
     return array();
 }
 
-/* Gradebook API */
-
-/**
- * Is a given scale used by the instance of StudentQuiz?
- *
- * This function returns if a scale is being used by one StudentQuiz
- * if it has support for grading and scales.
- *
- * @param int $studentquizid ID of an instance of this module
- * @param int $scaleid ID of the scale
- * @return bool true if the scale is used by the given StudentQuiz instance
- */
-function studentquiz_scale_used($studentquizid, $scaleid) {
-    global $DB;
-
-    if ($scaleid and $DB->record_exists('studentquiz', array('id' => $studentquizid, 'grade' => -$scaleid))) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-/**
- * Checks if scale is being used by any instance of StudentQuiz.
- *
- * This is used to find out if scale used anywhere.
- *
- * @param int $scaleid ID of the scale
- * @return boolean true if the scale is used by any StudentQuiz instance
- */
-function studentquiz_scale_used_anywhere($scaleid) {
-    global $DB;
-
-    if ($scaleid and $DB->record_exists('studentquiz', array('grade' => -$scaleid))) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-/**
- * Creates or updates grade item for the given StudentQuiz instance
- *
- * Needed by {@link grade_update_mod_grades()}.
- *
- * @param stdClass $studentquiz instance object with extra cmidnumber and modname property
- * @param array or string $grades 'reset' grades in the gradebook
- * @return int Returns GRADE_UPDATE_OK, GRADE_UPDATE_FAILED, GRADE_UPDATE_MULTIPLE or GRADE_UPDATE_ITEM_LOCKED
- */
-function studentquiz_grade_item_update(stdClass $studentquiz, $grades=null) {
-    global $CFG;
-    require_once($CFG->libdir.'/gradelib.php');
-
-    $item = array();
-    $item['itemname'] = clean_param($studentquiz->name, PARAM_NOTAGS);
-    $item['gradetype'] = GRADE_TYPE_VALUE;
-
-    if ($studentquiz->grade > 0) {
-        $item['gradetype'] = GRADE_TYPE_VALUE;
-        $item['grademax']  = $studentquiz->grade;
-        $item['grademin']  = 0;
-    } else if ($studentquiz->grade < 0) {
-        $item['gradetype'] = GRADE_TYPE_SCALE;
-        $item['scaleid']   = -$studentquiz->grade;
-    } else {
-        $item['gradetype'] = GRADE_TYPE_NONE;
-    }
-
-    if ($grades === 'reset') {
-        $item['reset'] = true;
-    }
-
-    return grade_update('mod/studentquiz', $studentquiz->course, 'mod', 'studentquiz',
-            $studentquiz->id, 0, $grades, $item);
-}
-
-/**
- * Delete grade item for given StudentQuiz instance
- *
- * @param stdClass $studentquiz instance object
- * @return grade_item
- */
-function studentquiz_grade_item_delete($studentquiz) {
-    global $CFG;
-    require_once($CFG->libdir.'/gradelib.php');
-
-    return grade_update('mod/studentquiz', $studentquiz->course, 'mod', 'studentquiz',
-            $studentquiz->id, 0, null, array('deleted' => 1));
-}
-
-/**
- * Update StudentQuiz grades in the gradebook
- *
- * Needed by {@link grade_update_mod_grades()}.
- *
- * @param stdClass $studentquiz instance object with extra cmidnumber and modname property
- * @param int $userid update grade of specific user only, 0 means all participants
- */
-function studentquiz_update_grades(stdClass $studentquiz, $userid = 0) {
-    global $CFG;
-    require_once($CFG->libdir.'/gradelib.php');
-
-    // Populate array of grade objects indexed by userid.
-    $grades = array();
-
-    grade_update('mod/studentquiz', $studentquiz->course, 'mod', 'studentquiz', $studentquiz->id, 0, $grades);
-}
-
 /* File API */
 
 /**
@@ -446,47 +351,12 @@ function studentquiz_pluginfile($course, $cm, $context, $filearea, array $args, 
         send_file_not_found();
     }
 
-    require_login($course, true, $cm);
+    require_login($course, false, $cm);
 
     send_file_not_found();
 }
 
 /* Navigation API */
-
-/**
- * Extends the global navigation tree by adding StudentQuiz nodes if there is a relevant content
- *
- * This can be called by an AJAX request so do not rely on $PAGE as it might not be set up properly.
- *
- * @param navigation_node $navref An object representing the navigation tree node of the StudentQuiz module instance
- * @param stdClass $course current course record
- * @param stdClass $module current StudentQuiz instance record
- * @param cm_info $cm course module information
- */
-function studentquiz_extend_navigation(navigation_node $navref, stdClass $course, stdClass $module, cm_info $cm) {
-    $navref->showinflatnavigation = true;
-    $stats = $navref->add(get_string('reportquiz_dashboard_title', 'studentquiz')
-        , new moodle_url('/mod/studentquiz/reportquiz.php?id=' . $cm->id));
-    $stats->showinflatnavigation = true;
-    $rank = $navref->add(get_string('nav_report_rank', 'studentquiz')
-        , new moodle_url('/mod/studentquiz/reportrank.php?id=' . $cm->id));
-    $rank->showinflatnavigation = true;
-    if (mod_studentquiz_check_created_permission($cm->id)) {
-        $context = context_module::instance($cm->id);
-        $category = question_get_default_category($context->id);
-        $cat = 'cat=' . $category->id . ',' . $context->id;
-
-        $export = $navref->add(get_string('nav_export', 'studentquiz')
-            , new moodle_url('/mod/studentquiz/export.php?' . $cat . '&cmid=' . $cm->id));
-        $export->showinflatnavigation = true;
-        $import = $navref->add(get_string('nav_import', 'studentquiz')
-            , new moodle_url('/mod/studentquiz/import.php?' . $cat . '&cmid=' . $cm->id));
-        $import->showinflatnavigation = true;
-        $questionbank = $navref->add(get_string('nav_questionbank', 'studentquiz')
-            , new moodle_url('/question/edit.php?courseid' . $course->id . '&' . $cat . '&cmid=' . $cm->id));
-        $questionbank->showinflatnavigation = true;
-    }
-}
 
 /**
  * Extends the settings navigation with the StudentQuiz settings
@@ -497,5 +367,40 @@ function studentquiz_extend_navigation(navigation_node $navref, stdClass $course
  * @param settings_navigation $settingsnav complete settings navigation tree
  * @param navigation_node $studentquiznode StudentQuiz administration node
  */
-function studentquiz_extend_settings_navigation(settings_navigation $settingsnav, navigation_node $studentquiznode=null) {
+function studentquiz_extend_settings_navigation(settings_navigation $settingsnav, navigation_node $studentquiznode) {
+    global $PAGE, $CFG;
+
+    // Require {@link questionlib.php}
+    // Included here as we only ever want to include this file if we really need to.
+    require_once($CFG->libdir . '/questionlib.php');
+
+    // We want to add these new nodes after the Edit settings node, and before the
+    // Locally assigned roles node. Of course, both of those are controlled by capabilities.
+    $keys = $studentquiznode->get_children_key_list();
+    $beforekey = null;
+    $i = array_search('modedit', $keys);
+    if ($i === false and array_key_exists(0, $keys)) {
+        $beforekey = $keys[0];
+    } else if (array_key_exists($i + 1, $keys)) {
+        $beforekey = $keys[$i + 1];
+    }
+
+    // Add the navigation items.
+    $studentquiznode->add_node(navigation_node::create(get_string('modulename', 'studentquiz'),
+        new moodle_url('/mod/studentquiz/view.php', array('id' => $PAGE->cm->id)),
+        navigation_node::TYPE_SETTING, null, 'mod_studentquiz_dashboard',
+        new pix_icon('i/cohort', '')), $beforekey);
+    $studentquiznode->add_node(navigation_node::create(get_string('reportquiz_stats_title', 'studentquiz'),
+        new moodle_url('/mod/studentquiz/reportstat.php', array('id' => $PAGE->cm->id)),
+        navigation_node::TYPE_SETTING, null, 'mod_studentquiz_statistics',
+        new pix_icon('i/report', '')), $beforekey);
+    $studentquiznode->add_node(navigation_node::create(get_string('reportrank_title', 'studentquiz'),
+        new moodle_url('/mod/studentquiz/reportrank.php', array('id' => $PAGE->cm->id)),
+        navigation_node::TYPE_SETTING, null, 'mod_studentquiz_rank',
+        new pix_icon('i/scales', '')), $beforekey);
+
+    if (mod_studentquiz_check_created_permission($PAGE->cm->id)) {
+        question_extend_settings_navigation($studentquiznode, $PAGE->cm->context)->trim_if_empty();
+    }
+
 }
