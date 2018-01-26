@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.4.1.2018011700+0facmed4-1) stretch; urgency=medium
+
+  * Fix error in admin_presets block update
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 26 Jan 2018 15:09:38 +1300
+
 moodle-site-otagounifom (3.4.1.2018011700+0facmed3-1) stretch; urgency=medium
 
   * Fix error in mod_publication update.
