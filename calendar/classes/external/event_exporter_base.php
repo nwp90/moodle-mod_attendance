@@ -243,7 +243,6 @@ class event_exporter_base extends exporter {
         $event = $this->event;
         $legacyevent = container::get_event_mapper()->from_event_to_legacy_event($event);
         $context = $this->related['context'];
-        $course = $this->related['course'];
         $values['isactionevent'] = false;
         $values['iscourseevent'] = false;
         $values['iscategoryevent'] = false;
@@ -269,11 +268,10 @@ class event_exporter_base extends exporter {
             $values['category'] = $categorysummaryexporter->export($output);
         }
 
-        if ($course) {
+        if ($course = $this->related['course']) {
             $coursesummaryexporter = new course_summary_exporter($course, ['context' => $context]);
             $values['course'] = $coursesummaryexporter->export($output);
         }
-
         $courseid = (!$course) ? SITEID : $course->id;
 
         $values['canedit'] = calendar_edit_event_allowed($legacyevent, true);
@@ -292,11 +290,15 @@ class event_exporter_base extends exporter {
         $values['formattedtime'] = calendar_format_event_time($legacyevent, time(), null, false,
                 $timesort);
 
+        if ($course = $this->related['course']) {
+            $coursesummaryexporter = new course_summary_exporter($course, ['context' => $context]);
+            $values['course'] = $coursesummaryexporter->export($output);
+        }
+
         if ($group = $event->get_group()) {
             $values['groupname'] = format_string($group->get('name'), true,
                 ['context' => \context_course::instance($event->get_course()->get('id'))]);
         }
-
         return $values;
     }
 
