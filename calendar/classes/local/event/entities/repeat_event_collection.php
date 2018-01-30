@@ -72,6 +72,10 @@ class repeat_event_collection implements event_collection_interface {
     public function __construct($parentid, $repeatid, event_factory_interface $factory) {
         $this->parentid = $repeatid ? $repeatid : $parentid;
         $this->factory = $factory;
+
+        if (!$this->get_parent_record()) {
+            throw new no_repeat_parent_exception(sprintf('No record found for id %d', $parentid));
+        }
     }
 
     public function get_id() {
@@ -105,11 +109,11 @@ class repeat_event_collection implements event_collection_interface {
     protected function get_parent_record() {
         global $DB;
 
-        if (!isset($this->parentrecord)) {
-            $this->parentrecord = $DB->get_record('event', ['id' => $this->parentid]);
+        if (isset($this->parentrecord)) {
+                return $this->parentrecord;
         }
 
-        return $this->parentrecord;
+        return $DB->get_record('event', ['id' => $this->parentid]);
     }
 
     /**

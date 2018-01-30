@@ -165,12 +165,6 @@ abstract class event_abstract_factory implements event_factory_interface {
             });
         }
 
-        if (isset($dbrow->repeatid) && !empty($dbrow->repeatid)) {
-            $repeatcollection = new repeat_event_collection($dbrow->id, $dbrow->repeatid, $this);
-        } else {
-            $repeatcollection = null;
-        }
-
         $event = new event(
             $dbrow->id,
             $dbrow->name,
@@ -179,7 +173,7 @@ abstract class event_abstract_factory implements event_factory_interface {
             $course,
             $group,
             $user,
-            $repeatcollection,
+            new repeat_event_collection($dbrow->id, $dbrow->repeatid, $this),
             $module,
             $dbrow->eventtype,
             new event_times(
