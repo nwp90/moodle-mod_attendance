@@ -1,3 +1,20 @@
+moodle-site-otagounifom (3.4.1.2018012500+0facmed3-1) stretch; urgency=medium
+
+  * Missing version was contingency plan in case calendar speedups were
+    a disaster; they weren't.
+  * But they weren't right either; they have been reverted and replaced
+    by separate versions of the improvements that were included there.
+  * MDL-60959 Remove redundancy in calendar exporters for calendar month view
+  * MDL-60960 Check course enrolment later in event factory early bailout check
+  * MDL-60962 Load the calendar blocks after page load
+  * MDL-60963 Use related cache to load course modules during event export
+  * MDL-60966 Allow contexts to be passed into external format functions
+  * Not yet included - MDL-60958 Stop loading parent record in repeat
+    collection
+  * Wontfix - MDL-60961 Batch load groups in calendar_set_filters
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 31 Jan 2018 08:47:12 +1300
+
 moodle-site-otagounifom (3.4.1.2018012500+0facmed1-1) stretch; urgency=medium
 
   * New upstream weekly
