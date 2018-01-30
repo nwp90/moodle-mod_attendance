@@ -1,3 +1,12 @@
+moodle-site-otagounifom (3.4.1.2018012500+0facmed2-1) stretch; urgency=medium
+
+  * Contingency planning in case calendar speedups cause failure.
+  * Calendar speedups reverted.
+  * It is not intended that this release ever be used, unless there
+    are serious issues with 3.4.1.2018012500+0facmed1-1.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 30 Jan 2018 16:16:23 +1300
+
 moodle-site-otagounifom (3.4.1.2018012500+0facmed1-1) stretch; urgency=medium
 
   * New upstream weekly
