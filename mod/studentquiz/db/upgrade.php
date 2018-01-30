@@ -318,28 +318,6 @@ function xmldb_studentquiz_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2017112406, 'studentquiz');
     }
 
-    // Update capabilities list and permission types, to make sure the defaults are set after this upgrade.
-    if ($oldversion < 2017112602) {
-        // Load current access definition for easier iteration.
-        require_once(dirname(__DIR__) . '/db/access.php');
-        // Load all contexts this has to be defined.
-        // Only system context needed, as by default it's inherited from there.
-        // if someone did make an override, it's intentional.
-        $context = context_system::instance();
-        // Load the roles for easier name to id assignment.
-        $roleids = $DB->get_records_menu('role', null, '', 'shortname, id');
-        // And finally update them for every context.
-        foreach ($capabilities as $capname => $capability) {
-            if (!empty($capability['archetypes'])) {
-                foreach ($capability['archetypes'] as $role => $captype) {
-                    role_change_permission($roleids[$role], $context, $capname, $captype);
-                }
-            }
-        }
-
-        upgrade_mod_savepoint(true, 2017112602, 'studentquiz');
-    }
-
     // Rename vote to rate in all occurences.
     if ($oldversion < 2017120201) {
         $table = new xmldb_table('studentquiz_vote');

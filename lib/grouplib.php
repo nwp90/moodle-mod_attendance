@@ -165,7 +165,8 @@ function groups_get_grouping_by_idnumber($courseid, $idnumber) {
  * @param int $groupid ID of the group.
  * @param string $fields (default is all fields)
  * @param int $strictness (IGNORE_MISSING - default)
- * @return stdGlass group object
+ * @return bool|stdClass group object or false if not found
+ * @throws dml_exception
  */
 function groups_get_group($groupid, $fields='*', $strictness=IGNORE_MISSING) {
     global $DB;
@@ -520,6 +521,55 @@ function groups_get_user_groups($courseid, $userid=0) {
     } else {
         return array('0' => array());
     }
+}
+
+/**
+ * Returns info about user's groups in an array of courses.
+ *
+ * @category group
+ * @param stdClass[] $courses Array of course objects
+ * @param int $userid $USER if not specified
+ * @return array Array[courseid][groups]
+ */
+function groups_get_user_groups_for_courses(array $courses, $userid = 0) {
+    global $USER, $DB;
+
+    if (empty($userid)) {
+        $userid = $USER->id;
+    }
+
+    if (empty($courses)) {
+        return [];
+    }
+
+    $groups = [];
+    $params = [$userid];
+    $courseids = array_map(function($c) { return $c->id; }, $courses);
+    list($insql, $inparams) = $DB->get_in_or_equal($courseids);
+    $params = array_merge($params, $inparams);
+    $sql = "SELECT g.*
+              FROM {groups} g
+                   JOIN {groups_members} gm   ON gm.groupid = g.id
+              LEFT JOIN {groupings_groups} gg ON gg.groupid = g.id
+             WHERE gm.userid = ? AND g.courseid $insql";
+
+    $rs = $DB->get_recordset_sql($sql, $params);
+
+    if (!$rs->valid()) {
+        $rs->close(); // Not going to iterate (but exit), close rs
+        return array('0' => array());
+    }
+
+    foreach ($rs as $group) {
+        if (!isset($groups[$group->courseid])) {
+            $groups[$group->courseid] = [$group];
+        } else {
+            $groups[$group->courseid][] = $group;
+        }
+    }
+    $rs->close();
+
+    return $groups;
 }
 
 /**
