@@ -113,7 +113,7 @@ class calendar_event_exporter extends event_exporter_base {
             $url = $event->get_category()->get_proxied_instance()->get_view_link();
         } else {
             // TODO MDL-58866 We do not have any way to find urls for events outside of course modules.
-            $url = course_get_url($hascourse ? $course->id : SITEID);
+            $url = course_get_url($hascourse ? $course : SITEID);
         }
 
         $values['url'] = $url->out(false);

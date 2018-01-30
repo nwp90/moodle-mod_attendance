@@ -190,7 +190,7 @@ class events_related_objects_cache {
             $this->load_module_instances();
         }
 
-        $id = $event->get_course_module()->get('id');
+        $id = $event->get_course_module()->get('instance');
         $name = $event->get_course_module()->get('modname');
 
         if (isset($this->moduleinstances[$name])) {
@@ -265,7 +265,7 @@ class events_related_objects_cache {
         $modulestoload = [];
         foreach ($this->events as $event) {
             if ($module = $event->get_course_module()) {
-                $id = $module->get('id');
+                $id = $module->get('instance');
                 $name = $module->get('modname');
 
                 $ids = isset($modulestoload[$name]) ? $modulestoload[$name] : [];
