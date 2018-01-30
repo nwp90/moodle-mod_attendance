@@ -1,3 +1,11 @@
+moodle-site-otagounifom (3.4.1.2018012500+0facmed1-1) stretch; urgency=medium
+
+  * New upstream weekly
+  * Ryan Wyllie's calendar speedups (MDL-60402)
+  * Fix to studentquiz db/upgrade.php
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 30 Jan 2018 16:10:04 +1300
+
 moodle-site-otagounifom (3.4.1.2018011700+0facmed5-2) stretch; urgency=medium
 
   * Fix error in qtype_gapfill update
