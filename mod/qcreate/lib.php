@@ -163,6 +163,7 @@ function qcreate_update_instance(stdClass $data, $form) {
  */
 function qcreate_refresh_events($courseid = 0) {
     global $DB;
+    require_once($CFG->dirroot . '/mod/qcreate/locallib.php');
 
     if ($courseid == 0) {
         if (!$qcreates = $DB->get_records('qcreate')) {
