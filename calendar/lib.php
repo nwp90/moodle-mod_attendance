@@ -2534,7 +2534,9 @@ function calendar_get_allowed_types(&$allowed, $course = null, $groups = null, $
                     return groups_get_all_groups($course->id, $user->id);
                 } else {
                     return array_filter($groups, function($group) use ($user) {
-                        return isset($group->members[$user->id]);
+                        return property_exists($group, 'member')?
+                          $group->member:
+                          isset($group->members[$user->id]);
                     });
                 }
             }

@@ -472,13 +472,14 @@ function groups_get_basic_user_groups_for_courses($courses=null, $userid=null) {
 
     list($courseidsql, $courseidparams) = $DB->get_in_or_equal($courseids);
     
-    $sql = "SELECT g.id, g.courseid, g.name
+    $sql = "SELECT g.id, g.courseid, g.name, gm.userid as member
               FROM {groups} g
-              JOIN {groups_members} gm ON gm.groupid = g.id
-             WHERE gm.userid = ? ";
+              LEFT JOIN {groups_members} gm ON (
+                gm.groupid = g.id AND gm.userid = ?
+              )";
 
     if (!empty($courseids)) {
-        $sql .= "AND g.courseid {$courseidsql}";
+        $sql .= "WHERE g.courseid {$courseidsql}";
         $params = array_merge($params, $courseidparams);
     }
 
