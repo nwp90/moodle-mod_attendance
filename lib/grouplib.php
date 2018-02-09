@@ -442,6 +442,60 @@ function groups_get_all_groups_for_courses($courses) {
 }
 
 /**
+ * Gets array of basic info on all groups a user is a member of in a set of courses.
+ *
+ * @category group
+ * @param array $courses Array of course objects or course ids. All courses if not specified.
+ * @param int $userid, $USER will be used if not specified
+ * @return array Array of groups indexed by course id.
+ */
+function groups_get_basic_user_groups_for_courses($courses=null, $userid=null) {
+    global $USER, $DB;
+
+    if (is_null($userid)) {
+        $userid = $USER->id;
+    }
+
+    if (is_null($courses)) {
+        $courses = array();
+    }
+
+    $groups = [];
+    $courseids = [];
+    $params = array($userid);
+
+    foreach ($courses as $course) {
+        $courseid = is_object($course) ? $course->id : $course;
+        $groups[$courseid] = [];
+        $courseids[] = $courseid;
+    }
+
+    list($courseidsql, $courseidparams) = $DB->get_in_or_equal($courseids);
+    
+    $sql = "SELECT g.id, g.courseid, g.name
+              FROM {groups} g
+              JOIN {groups_members} gm ON gm.groupid = g.id
+             WHERE gm.userid = ? ";
+
+    if (!empty($courseids)) {
+        $sql .= "AND g.courseid {$courseidsql}";
+        $params = array_merge($params, $courseidparams);
+    }
+
+    $rs = $DB->get_recordset_sql($sql, $params);
+
+    foreach ($rs as $group) {
+        if (!array_key_exists($group->courseid, $groups)) {
+            $groups[$group->courseid] = array();
+        }
+        $groups[$group->courseid][$group->id] = $group;
+    }
+    $rs->close();
+
+    return $groups;
+}
+    
+/**
  * Gets array of all groups in current user.
  *
  * @since Moodle 2.5

@@ -2614,7 +2614,7 @@ function calendar_get_all_allowed_types() {
     // We want to pre-fetch all of the groups for each course in a single
     // query to avoid calendar_get_allowed_types from hitting the DB for
     // each separate course.
-    $groups = groups_get_all_groups_for_courses($courses);
+    $groups = groups_get_basic_user_groups_for_courses($courses);
 
     foreach ($courses as $course) {
         $coursegroups = isset($groups[$course->id]) ? $groups[$course->id] : null;
