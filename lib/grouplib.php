@@ -297,6 +297,9 @@ function groups_get_all_groups($courseid, $userid=0, $groupingid=0, $fields='g.*
 
 /**
  * Gets array of all groups in a set of course.
+ * Warning: this function may be extremely inefficient if a large number of courses
+ * are specified. When the information it returns is sufficient, then the function
+ * "groups_get_basic_user_groups_for_courses" should be used instead.
  *
  * @category group
  * @param array $courses Array of course objects or course ids.
@@ -442,12 +445,17 @@ function groups_get_all_groups_for_courses($courses) {
 }
 
 /**
- * Gets array of basic info on all groups in a set of courses, in particular whether user is a member.
+ * Gets array of basic info on all groups in a set of courses.
+ * "Basic info" is the group id, course id, group name, and whether the specified user
+ * (or logged-in user if no user is specified) is a member of the group. This function
+ * should be used in preference to "groups_get_all_groups_for_courses" whenever this
+ * information will be sufficient, as it is far more efficient. If lists of group
+ * members are required, use the other function.
  *
  * @category group
  * @param array $courses Array of course objects or course ids. All courses if not specified.
  * @param int $userid, $USER will be used if not specified
- * @return array Array of groups indexed by course id.
+ * @return array Array of arrays of group info indexed by course id then group id.
  */
 function groups_get_basic_user_groups_for_courses($courses=null, $userid=null) {
     global $USER, $DB;
@@ -470,8 +478,6 @@ function groups_get_basic_user_groups_for_courses($courses=null, $userid=null) {
         $courseids[] = $courseid;
     }
 
-    list($courseidsql, $courseidparams) = $DB->get_in_or_equal($courseids);
-    
     $sql = "SELECT g.id, g.courseid, g.name, gm.userid as member
               FROM {groups} g
               LEFT JOIN {groups_members} gm ON (
@@ -479,6 +485,7 @@ function groups_get_basic_user_groups_for_courses($courses=null, $userid=null) {
               )";
 
     if (!empty($courseids)) {
+        list($courseidsql, $courseidparams) = $DB->get_in_or_equal($courseids);
         $sql .= "WHERE g.courseid {$courseidsql}";
         $params = array_merge($params, $courseidparams);
     }
