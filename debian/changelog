@@ -1,3 +1,15 @@
+moodle-site-otagounifom (3.4.1.2018012500+0facmed4-1) stretch; urgency=medium
+
+  * More calendar fixes:
+    - MDL-60958 from Ryan Wyllie
+    - Initial version of fix to event creation (MDL-61409),
+      commits 2d919edce9556f095873a6f5fdeffcfe139d098a,
+      a9c2c56d7b421f63d757e0fcb3800bc87608c30c - to be reverted
+      and replaced with eventual solution to MDL-61409 when available.
+  * Fix mod_qcreate lib.php to import locallib in qcreate_refresh_events
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 12 Feb 2018 10:32:01 +1300
+
 moodle-site-otagounifom (3.4.1.2018012500+0facmed3-1) stretch; urgency=medium
 
   * Missing version was contingency plan in case calendar speedups were
