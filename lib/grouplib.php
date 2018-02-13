@@ -442,7 +442,7 @@ function groups_get_all_groups_for_courses($courses) {
 }
 
 /**
- * Gets array of basic info on all groups a user is a member of in a set of courses.
+ * Gets array of basic info on all groups in a set of courses, in particular whether user is a member.
  *
  * @category group
  * @param array $courses Array of course objects or course ids. All courses if not specified.
