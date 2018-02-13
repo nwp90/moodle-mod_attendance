@@ -1,3 +1,19 @@
+moodle-site-otagounifom (3.4.1.2018020800+0facmed1-1) stretch; urgency=medium
+
+  * New upstream version
+  * More calendar fixes:
+    - MDL-61426 temporary fix pending integration of MDL-58768;
+      commit 480a88e9ebb6771922f16e07f4206a43ce2bef0a should be reverted
+      once MDL-58768 fix available.
+    - Also via MDL-61426 but not part of MDL-58768, commit
+      278137f9bc74a0ef52e0322fd690017ccae32de8 (which also relies on
+      MDL-61409 fix below) will need replacing when MDL-61409 and MDL-58768
+      are resolved.
+    - Above two temporary fixes cause correct group/user events to be
+      exported via calendar export URL.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 13 Feb 2018 17:02:09 +1300
+
 moodle-site-otagounifom (3.4.1.2018012500+0facmed4-1) stretch; urgency=medium
 
   * More calendar fixes:
