@@ -5,6 +5,8 @@ require_once('../config.php');
 require_once($CFG->dirroot.'/calendar/lib.php');
 require_once($CFG->libdir.'/bennu/bennu.inc.php');
 
+global $USER;
+
 $userid = optional_param('userid', 0, PARAM_INT);
 $username = optional_param('username', '', PARAM_TEXT);
 $authtoken = required_param('authtoken', PARAM_ALPHANUM);
@@ -30,6 +32,8 @@ $authusername = !empty($username) && $authtoken == sha1($username . $user->passw
 if (!$authuserid && !$authusername) {
     die('Invalid authentication');
 }
+
+$USER = $user;
 
 // Get the calendar type we are using.
 $calendartype = \core_calendar\type_factory::get_calendar_instance();
@@ -65,9 +69,30 @@ if(!empty($what) && !empty($time)) {
         $paramcourses = $courses;
         if ($what == 'all' || $what == 'groups') {
             $groups = array();
-            foreach ($courses as $course) {
-                $course_groups = groups_get_all_groups($course->id, $user->id);
-                $groups = array_merge($groups, array_keys($course_groups));
+            $groupsbycourse = groups_get_basic_user_groups_for_courses($courses, $user->id);
+            foreach ($groupsbycourse as $courseid => $coursegroups) {
+                $coursecontext = \context_course::instance($courseid);
+                if (has_any_capability(
+                    array(
+                        'moodle/calendar:manageentries',
+                        'moodle/calendar:managegroupentries'
+                    ), $coursecontext, $user->id)
+                ) {
+                    if (has_capability('moodle/site:accessallgroups', $coursecontext, $user->id)) {
+                        $groups = array_merge($groups, array_keys($coursegroups));
+                    }
+                    else {
+                        $groups = array_merge(
+                            $groups, array_keys(
+                                array_filter($coursegroups, function($group) use ($user) {
+                                    return property_exists($group, 'member')?
+                                      $group->member:
+                                      isset($group->members[$user->id]);
+                                })
+                            )
+                        );
+                    }
+                }
             }
             if (empty($groups)) {
                 $groups = false;
