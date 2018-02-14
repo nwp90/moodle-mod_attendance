@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.4.1.2018020800+0facmed2-1) stretch; urgency=medium
+
+  * Fix to fix for MDL-61426; normal users need their group events too!
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 15 Feb 2018 09:52:53 +1300
+
 moodle-site-otagounifom (3.4.1.2018020800+0facmed1-1) stretch; urgency=medium
 
   * New upstream version
