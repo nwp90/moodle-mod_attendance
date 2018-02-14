@@ -72,27 +72,20 @@ if(!empty($what) && !empty($time)) {
             $groupsbycourse = groups_get_basic_user_groups_for_courses($courses, $user->id);
             foreach ($groupsbycourse as $courseid => $coursegroups) {
                 $coursecontext = \context_course::instance($courseid);
-                if (has_any_capability(
-                    array(
-                        'moodle/calendar:manageentries',
-                        'moodle/calendar:managegroupentries'
-                    ), $coursecontext, $user->id)
-                ) {
-                    if (has_capability('moodle/site:accessallgroups', $coursecontext, $user->id)) {
-                        $groups = array_merge($groups, array_keys($coursegroups));
-                    }
-                    else {
-                        $groups = array_merge(
-                            $groups, array_keys(
-                                array_filter($coursegroups, function($group) use ($user) {
-                                    return property_exists($group, 'member')?
-                                      $group->member:
-                                      isset($group->members[$user->id]);
-                                })
-                            )
-                        );
-                    }
+                if (has_capability('moodle/site:accessallgroups', $coursecontext, $user->id)) {
+                    $groups = array_merge($groups, array_keys($coursegroups));
                 }
+                else {
+                    $groups = array_merge(
+                        $groups, array_keys(
+                            array_filter($coursegroups, function($group) use ($user) {
+                                return property_exists($group, 'member')?
+                                  $group->member:
+                                  isset($group->members[$user->id]);
+                            })
+                        )
+                    );
+                }                
             }
             if (empty($groups)) {
                 $groups = false;
@@ -205,6 +198,7 @@ if(!empty($what) && !empty($time)) {
         die();
     }
 }
+
 $events = calendar_get_legacy_events($timestart, $timeend, $users, $groups, array_keys($paramcourses), false);
 
 $ical = new iCalendar;
