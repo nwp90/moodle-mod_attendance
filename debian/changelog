@@ -1,3 +1,10 @@
+moodle-site-otagounifom (3.4.1.2018020800+0facmed3-1) stretch; urgency=medium
+
+  * Merge markn86/MDL-61375_34 (so mod_chat doesn't break cron)
+  * Fix our previous fix for mod_qcreate (so mod_qcreate doesn't break cron)
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 15 Feb 2018 14:17:47 +1300
+
 moodle-site-otagounifom (3.4.1.2018020800+0facmed2-1) stretch; urgency=medium
 
   * Fix to fix for MDL-61426; normal users need their group events too!
