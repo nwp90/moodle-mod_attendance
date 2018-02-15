@@ -162,7 +162,7 @@ function qcreate_update_instance(stdClass $data, $form) {
  * @return bool
  */
 function qcreate_refresh_events($courseid = 0) {
-    global $DB;
+    global $DB, $CFG;
     require_once($CFG->dirroot . '/mod/qcreate/locallib.php');
 
     if ($courseid == 0) {
