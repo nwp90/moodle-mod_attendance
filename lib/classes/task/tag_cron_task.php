@@ -181,9 +181,10 @@ class tag_cron_task extends scheduled_task {
         }
 
         // Get the other itemtypes.
-        $sql = "SELECT DISTINCT component, itemtype
+        $sql = "SELECT MIN(id), component, itemtype
                   FROM {tag_instance}
-                 WHERE itemtype <> 'user' or component <> 'core'";
+                 WHERE itemtype <> 'user' or component <> 'core'
+                 GROUP BY component, itemtype";
         $tagareas = $DB->get_records_sql($sql);
         foreach ($tagareas as $tagarea) {
             $sql = 'SELECT ti.id
