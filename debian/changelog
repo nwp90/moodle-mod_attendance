@@ -1,3 +1,11 @@
+moodle-site-otagounifom (3.4.1.2018021600+0facmed1-1) stretch; urgency=medium
+
+  * New upstream version
+  * Updated mod_qcreate to new upstream version
+  * Local fix for MDL-56635 (tag_cron_task cleanup invalid query)
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 16 Feb 2018 14:03:34 +1300
+
 moodle-site-otagounifom (3.4.1.2018020800+0facmed3-1) stretch; urgency=medium
 
   * Merge markn86/MDL-61375_34 (so mod_chat doesn't break cron)
