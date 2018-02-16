@@ -52,10 +52,15 @@ class mod_qcreate_mod_form extends moodleform_mod {
         $mform->addElement('header', 'general', get_string('general', 'form'));
         // Adding the standard "name" field.
         $mform->addElement('text', 'name', get_string('name'), array('size' => '64'));
-        $mform->setType('name', PARAM_TEXT);
+        if (!empty($CFG->formatstringstriptags)) {
+            $mform->setType('name', PARAM_TEXT);
+        } else {
+            $mform->setType('name', PARAM_CLEANHTML);
+        }
         $mform->addRule('name', null, 'required', null, 'client');
         $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
 
+        // Introduction.
         $this->standard_intro_elements(get_string('intro', 'qcreate'));
 
         // Open and close time.
@@ -179,8 +184,8 @@ class mod_qcreate_mod_form extends moodleform_mod {
         // Set up the completion checkboxes which aren't part of standard data.
         // We also make the default value (if you turn on the checkbox) for those
         // numbers to be 1, this will not apply unless checkbox is ticked.
-        $defaultvalues['completionquestionsenabled'] =
-            !empty($defaultvalues['completionquestions']) ? 1 : 0;
+        $defaultvalues['completionquestionsenabled']
+                = !empty($defaultvalues['completionquestions']) ? 1 : 0;
         if (empty($defaultvalues['completionquestions'])) {
             $defaultvalues['completionquestions'] = 1;
         }
@@ -255,18 +260,24 @@ class mod_qcreate_mod_form extends moodleform_mod {
 
     }
 
-    public function get_data() {
-        $data = parent::get_data();
-        if (!$data) {
-            return false;
-        }
+    /**
+     * Allows module to modify the data returned by form get_data().
+     * This method is also called in the bulk activity completion form.
+     *
+     * Only available on moodleform_mod.
+     *
+     * @param stdClass $data the form data to be modified.
+     */
+    public function data_postprocessing($data) {
+        parent::data_postprocessing($data);
+        // Set up completion section even if checkbox is not ticked.
         if (!empty($data->completionunlocked)) {
-            // Turn off completion settings if the checkboxes aren't ticked.
+             // Turn off completion settings if the checkboxes aren't ticked.
             $autocompletion = !empty($data->completion) && $data->completion == COMPLETION_TRACKING_AUTOMATIC;
             if (empty($data->completionquestionsenabled) || !$autocompletion) {
                 $data->completionquestions = 0;
             }
         }
-        return $data;
     }
+
 }

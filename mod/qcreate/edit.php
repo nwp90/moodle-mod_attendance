@@ -165,7 +165,6 @@ $table->define_baseurl($thispageurl->out());
 
 $table->sortable(true, 'lastname');// Sorted by lastname by default.
 $table->collapsible(true);
-$table->initialbars(true);
 
 $table->column_suppress('picture');
 $table->column_suppress('fullname');
@@ -185,7 +184,7 @@ if ($gradinginterface) {
     }
 }
 
-$table->set_attribute('id', 'attempts');
+$table->set_attribute('id', 'student_questions');
 $table->set_attribute('class', 'grades');
 
 if ($gradinginterface) {
@@ -264,6 +263,8 @@ if (!empty($users) && ($showungraded || $showgraded || $showneedsregrade)) {
     $answercount = 0;
 }
 
+$table->initialbars($answercount > 20);
+
 if ($gradinginterface) {
     echo '<form id="showoptions" action="'.$thispageurl->out(true).'" method="post">';
     echo '<div>';
@@ -322,15 +323,19 @@ if ($answercount && false !== ($answers = $DB->get_records_sql(
         } else {
             $highlight = false;
         }
-        $colquestion = $answer->qname;
+        if ($highlight) {
+            $colquestion = html_writer::tag('span', $answer->qname, array('class' => 'highlight'));
+        } else {
+            $colquestion = $answer->qname;
+        }
         // Preview?
         $strpreview = get_string('preview', 'qcreate');
 
         if (question_has_capability_on($answer->qid, 'use')) {
 
             $link = new moodle_url('/question/preview.php?id=' . $answer->qid . '&amp;courseid=' .$COURSE->id);
-            $colquestion .= $OUTPUT->action_link($link, "<img src=\""
-                    .$OUTPUT->pix_url('t/preview')."\" class=\"iconsmall\" alt=\"$strpreview\" />",
+            $image = $OUTPUT->pix_icon('t/preview', $strpreview);
+            $colquestion .= $OUTPUT->action_link($link, $image,
                     new popup_action ('click', $link, 'questionpreview', question_preview_popup_params()));
         }
 
@@ -347,10 +352,8 @@ if ($answercount && false !== ($answers = $DB->get_records_sql(
                 $link, $OUTPUT->pix_icon('t/view', get_string('view'), '', array('class' => 'iconsmall')));
         }
 
-        if ($highlight) {
-            $colquestion = '<span class="highlight">'.$colquestion.'</span>';
-        }
         $colquestion .= '<br />(' . question_bank::get_qtype_name($answer->qtype) . ')';
+        $colquestion = '<div id="qu'.$answer->qid.'">'.$colquestion.'</div>';
         if ($answer->timemodified > 0) {
             $studentmodified = '<div id="ts'.$answer->qid.'">'.userdate($answer->timemodified).'</div>';
         } else {
@@ -358,7 +361,6 @@ if ($answercount && false !== ($answers = $DB->get_records_sql(
         }
         if (!empty($answer->gradeid)) {
             // Prints student answer and student modified date
-            // attach file or print link to student answer, depending on the type of the assignment.
             // Refer to print_student_answer in inherited classes.
 
             // Print grade, dropdown or text.
@@ -368,9 +370,13 @@ if ($answercount && false !== ($answers = $DB->get_records_sql(
                 if ($finalgradevalue->locked or $finalgradevalue->overridden) {
                     $grade = '<div id="g'.$answer->qid.'">'.$finalgradevalue->str_grade.'</div>';
                 } else {
-                    $menu = html_writer::select(make_grades_menu($qcreate->grade),
+                    $menu = html_writer::select($grademenu,
                             'menu['.$answer->qid.']', $answer->grade, array('-1' => get_string('nograde')));
-                    $grade = '<div id="g'.$answer->qid.'">'. $menu .'</div>';
+                    $grade = '<div id="g'.$answer->qid.'">'
+                            .'<label class="accesshide"
+                            for="menumenu' .$answer->qid . '">'
+                            .get_string('questiongrade', 'qcreate') .
+                            '</label>'. $menu .'</div>';
                 }
 
             } else {
@@ -378,9 +384,13 @@ if ($answercount && false !== ($answers = $DB->get_records_sql(
                 if ($finalgradevalue->locked or $finalgradevalue->overridden) {
                     $grade = '<div id="g'.$answer->qid.'">'.$finalgradevalue->str_grade.'</div>';
                 } else {
-                    $menu = html_writer::select(make_grades_menu($qcreate->grade),
+                    $menu = html_writer::select($grademenu,
                             'menu['.$answer->qid.']', $answer->grade, array('-1' => get_string('nograde')));
-                    $grade = '<div id="g'.$answer->qid.'">'.$menu.'</div>';
+                    $grade = '<div id="g'.$answer->qid.'">'
+                            .'<label class="accesshide"
+                            for="menumenu' .$answer->qid . '">'
+                            .get_string('questiongrade', 'qcreate') .
+                            '</label>'.$menu.'</div>';
                 }
             }
             // Print Comment.
@@ -389,26 +399,36 @@ if ($answercount && false !== ($answers = $DB->get_records_sql(
 
             } else {
                 $comment = '<div id="com'.$answer->qid.'">'
-                         . '<textarea tabindex="'.$tabindex++.'" name="gradecomment['.$answer->qid.']" id="gradecomment'
-                         . $answer->qid.'" rows="4" cols="30">'.($answer->gradecomment).'</textarea></div>';
+                        .'<label class="accesshide"
+                        for="gradecomment' . $answer->qid.'">'
+                        . get_string('gradecomment', 'qcreate')
+                        .'</label><textarea tabindex="'.$tabindex++.'" name="gradecomment['.$answer->qid.']" id="gradecomment'
+                        . $answer->qid.'" rows="4" cols="30">'.($answer->gradecomment).'</textarea></div>';
             }
         } else {
             $teachermodified = '<div id="tt'.$answer->qid.'">&nbsp;</div>';
-            $status          = '<div id="st'.$answer->qid.'">&nbsp;</div>';
+            $status = '&nbsp;';
 
             if ($finalgradevalue->locked or $finalgradevalue->overridden) {
                 $grade = '<div id="g'.$answer->qid.'">'.$finalgradevalue->str_grade.'</div>';
             } else {   // Allow editing.
-                $menu = html_writer::select(make_grades_menu($qcreate->grade),
+                $menu = html_writer::select($grademenu,
                        'menu['.$answer->qid.']', $answer->grade, array('-1' => get_string('nograde')));
-                $grade = '<div id="g'.$answer->qid.'">'.$menu.'</div>';
+                $grade = '<div id="g'.$answer->qid.'">'
+                        .'<label class="accesshide"
+                        for="menumenu' .$answer->qid . '">'
+                        .get_string('questiongrade', 'qcreate') .
+                        '</label>'.$menu.'</div>';
             }
 
             if ($finalgradevalue->locked or $finalgradevalue->overridden) {
                 $comment = '<div id="com'.$answer->qid.'">'.$finalgradevalue->str_feedback.'</div>';
             } else {
                 $comment = '<div id="com'.$answer->qid.'">'
-                         . '<textarea tabindex="'.$tabindex++.'" name="gradecomment['.$answer->qid.']" id="gradecomment'
+                        .'<label class="accesshide"
+                        for="gradecomment' . $answer->qid.'">'
+                        .get_string('gradecomment', 'qcreate')
+                        .'</label><textarea tabindex="'.$tabindex++.'" name="gradecomment['.$answer->qid.']" id="gradecomment'
                          . $answer->qid.'" rows="4" cols="30">'.($answer->gradecomment).'</textarea></div>';
             }
         }
@@ -421,8 +441,9 @@ if ($answercount && false !== ($answers = $DB->get_records_sql(
             $status = get_string('graded', 'qcreate');
         }
         if ($highlight) {
-            $status = '<span class="highlight">'.$status.'</span>';
+            $status = html_writer::tag('span', $status, array('class' => 'highlight'));
         }
+        $status = '<div id="st'.$answer->qid.'">'.$status.'</div>';
 
         $finalgradestr = '<span id="finalgrade_'.$answer->qid.'">'.$finalgradevalue->str_grade.'</span>';
 
