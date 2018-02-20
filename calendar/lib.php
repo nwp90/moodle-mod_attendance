@@ -3279,7 +3279,7 @@ function calendar_get_legacy_events($tstart, $tend, $users, $groups, $courses,
         null,
         null,
         null,
-        40,
+        0,
         null,
         $userparam,
         $groupparam,
@@ -3314,7 +3314,7 @@ function calendar_get_view(\calendar_information $calendar, $view, $includenavig
     $calendardate = $type->timestamp_to_date_array($calendar->time);
 
     $date = new \DateTime('now', core_date::get_user_timezone_object(99));
-    $eventlimit = 200;
+    $eventlimit = 0;
 
     if ($view === 'day') {
         $tstart = $type->convert_to_timestamp($calendardate['year'], $calendardate['mon'], $calendardate['mday']);
