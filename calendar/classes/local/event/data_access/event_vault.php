@@ -102,8 +102,8 @@ class event_vault implements event_vault_interface {
         $ignorehidden = true,
         callable $filter = null
     ) {
-        if ($limitnum < 1 || $limitnum > 200) {
-            throw new limit_invalid_parameter_exception("Limit must be between 1 and 200 (inclusive)");
+        if ($limitnum < 0) {
+            throw new limit_invalid_parameter_exception("Limit must be greater than or equal to zero");
         }
 
         $fromquery = function($field, $timefrom, $lastseenmethod, $afterevent, $withduration) {
@@ -187,7 +187,9 @@ class event_vault implements event_vault_interface {
                     }
                 }
             }
-
+            if ($limitnum == 0) {
+                break;
+            }
             $offset += $limitnum;
         }
 
