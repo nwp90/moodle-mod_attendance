@@ -73,6 +73,10 @@ class mod_attendance_report_page_params extends mod_attendance_page_with_filter_
             $params['sort'] = $this->sort;
         }
 
+        if (empty($this->showextrauserdetails)) {
+            $params['showextrauserdetails'] = 0;
+        }
+
         if (empty($this->showsessiondetails)) {
             $params['showsessiondetails'] = 0;
         }
