@@ -1,3 +1,11 @@
+moodle-site-otagounifom (3.4.1.2018021600+0facmed2-1) stretch; urgency=medium
+
+  * Fixes to mod_attendance
+  * Use marinaglancy fix for MDL-56635 (likely to become official)
+  * Interim fix for MDL-59650 (export unlimited calendar entries)
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 22 Feb 2018 16:00:46 +1300
+
 moodle-site-otagounifom (3.4.1.2018021600+0facmed1-1) stretch; urgency=medium
 
   * New upstream version
