@@ -1240,7 +1240,7 @@ class mod_attendance_renderer extends plugin_renderer_base {
         $extrafields = get_extra_user_fields($reportdata->att->context);
         $showextrauserdetails = $reportdata->pageparams->showextrauserdetails;
         $params = $reportdata->pageparams->get_significant_params();
-        $text = get_string('users')
+        $text = get_string('users');
         if ($extrafields) {
             if ($showextrauserdetails) {
                 $params['showextrauserdetails'] = 0;
