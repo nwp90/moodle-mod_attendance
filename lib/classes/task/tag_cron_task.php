@@ -181,11 +181,10 @@ class tag_cron_task extends scheduled_task {
         }
 
         // Get the other itemtypes.
-        $sql = "SELECT MIN(id), component, itemtype
+        $sql = "SELECT DISTINCT component, itemtype
                   FROM {tag_instance}
-                 WHERE itemtype <> 'user' or component <> 'core'
-                 GROUP BY component, itemtype";
-        $tagareas = $DB->get_records_sql($sql);
+                 WHERE itemtype <> 'user' or component <> 'core'";
+        $tagareas = $DB->get_recordset_sql($sql);
         foreach ($tagareas as $tagarea) {
             $sql = 'SELECT ti.id
                       FROM {tag_instance} ti
@@ -197,6 +196,7 @@ class tag_cron_task extends scheduled_task {
                 $tagarray[] = $tagid->id;
             }
         }
+        $tagareas->close();
 
         // Get instances for each of the ids to be deleted.
         if (count($tagarray) > 0) {
