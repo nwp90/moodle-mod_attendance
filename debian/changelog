@@ -1,3 +1,11 @@
+moodle-site-otagounifom (3.4.1.2018021600+0facmed3-1) stretch; urgency=medium
+
+  * Minor fixes to prevent warnings in apache log
+  * Allow unlimited number of events in calendar viewing on Moodle
+    (update to patch for MDL-59650)
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 28 Feb 2018 16:06:41 +1300
+
 moodle-site-otagounifom (3.4.1.2018021600+0facmed2-1) stretch; urgency=medium
 
   * Fixes to mod_attendance
