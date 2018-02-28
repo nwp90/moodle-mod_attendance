@@ -5,7 +5,7 @@ require_once('../config.php');
 require_once($CFG->dirroot.'/calendar/lib.php');
 require_once($CFG->libdir.'/bennu/bennu.inc.php');
 
-global $USER;
+global $USER, $PAGE;
 
 $userid = optional_param('userid', 0, PARAM_INT);
 $username = optional_param('username', '', PARAM_TEXT);
@@ -17,9 +17,9 @@ if (empty($CFG->enablecalendarexport)) {
 }
 
 //Fetch user information
-$checkuserid = !empty($userid) && $user = $DB->get_record('user', array('id' => $userid), 'id,password');
+$checkuserid = !empty($userid) && $user = $DB->get_record('user', array('id' => $userid), 'id,password,mnethostid');
 //allowing for fallback check of old url - MDL-27542
-$checkusername = !empty($username) && $user = $DB->get_record('user', array('username' => $username), 'id,password');
+$checkusername = !empty($username) && $user = $DB->get_record('user', array('username' => $username), 'id,password,mnethostid');
 if (!$checkuserid && !$checkusername) {
     //No such user
     die('Invalid authentication');
@@ -34,6 +34,7 @@ if (!$authuserid && !$authusername) {
 }
 
 $USER = $user;
+$PAGE->set_context(context_system::instance());
 
 // Get the calendar type we are using.
 $calendartype = \core_calendar\type_factory::get_calendar_instance();
