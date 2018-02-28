@@ -5,7 +5,7 @@ require_once('../config.php');
 require_once($CFG->dirroot.'/calendar/lib.php');
 require_once($CFG->libdir.'/bennu/bennu.inc.php');
 
-global $USER;
+global $USER, $PAGE;
 
 $userid = optional_param('userid', 0, PARAM_INT);
 $username = optional_param('username', '', PARAM_TEXT);
@@ -34,6 +34,7 @@ if (!$authuserid && !$authusername) {
 }
 
 $USER = $user;
+$PAGE->set_context(context_system::instance());
 
 // Get the calendar type we are using.
 $calendartype = \core_calendar\type_factory::get_calendar_instance();
