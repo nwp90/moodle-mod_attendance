@@ -26,6 +26,13 @@
 defined('MOODLE_INTERNAL') or die();
 
 $functions = array(
+    'local_presentation_get_course_role_users' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_course_role_users',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of users in specified role in specified course.',
+        'type' => 'read',
+    ),
     'local_presentation_get_tagged_resources_by_course' => array(
         'classname' => 'local_presentation_external',
         'methodname' => 'get_tagged_resources_by_course',
