@@ -54,6 +54,7 @@ pix                            /srv/moodle/otagounifom/moodle/
 plagiarism                     /srv/moodle/otagounifom/moodle/
 pluginfile.php                 /srv/moodle/otagounifom/moodle/
 portfolio                      /srv/moodle/otagounifom/moodle/
+privacy                        /srv/moodle/otagounifom/moodle/
 question                       /srv/moodle/otagounifom/moodle/
 rating                         /srv/moodle/otagounifom/moodle/
 report                         /srv/moodle/otagounifom/moodle/
