@@ -1,3 +1,14 @@
+moodle-site-otagounifom (3.4.2.2018031900+0facmed1-1) stretch; urgency=medium
+
+  * Upstream update, 3.4.2, with significant change being privacy API
+  * Also security fixes CVE-2018-1081, CVE-2018-1082
+  * Other standard Moodle stable bugfixes.
+  * Local fix for multigrader report
+  * local_presentation new API function for users in roles in courses,
+    for curriculum map use.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 21 Mar 2018 11:55:34 +1300
+
 moodle-site-otagounifom (3.4.1.2018021600+0facmed4-1) stretch; urgency=medium
 
   * Fix multigrader report.
