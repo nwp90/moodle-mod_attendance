@@ -39,6 +39,67 @@ require_once("$CFG->libdir/externallib.php");
 class local_presentation_external extends external_api {
 
     /**
+     * Describes the parameters for get_tagged_resources_by_course
+     *
+     * @return external_external_function_parameters
+     * @since Moodle 3.0
+     */
+    public static function get_course_role_users_parameters() {
+        return new external_function_parameters (
+            array(
+                'course' => new external_value(PARAM_ALPHANUMEXT, 'course shortname'),
+                'role' => new external_value(PARAM_TEXT, 'role shortname')
+            )
+        );
+    }
+
+    /**
+     * Returns a list of resources tagged at least once, for a given course.
+     *
+     * @param string $course a course shortname
+     * @return array the resource details
+     * @since Moodle 2.5
+     */
+    public static function get_course_role_users($coursename = '', $rolename='') {
+        global $CFG, $DB, $USER;
+        $returnfiles = array();
+        $params = self::validate_parameters(self::get_course_role_users_parameters(), array('course' => $coursename, 'role' => $rolename));
+        $course = $params['course'];
+        $role = $params['role'];
+        if ($course != '' && $role != '') {
+            $courseid = $DB->get_field('course', 'id', array("shortname" => $course));
+            if ($courseid) {
+                $coursecontext = context_course::instance($courseid);
+                $roleid = $DB->get_field('role', 'id', array("shortname" => $role));
+                if ($roleid) {
+                    $users = get_role_users($roleid, $coursecontext, true, 'u.username, u.firstname, u.lastname, u.email');
+                    return $users;
+                }
+            }
+        }
+        return array();
+    }
+
+    /**
+     * Describes the get_tagged_resources_by_course return value.
+     *
+     * @return external_single_structure
+     * @since Moodle 2.5
+     */
+     public static function get_course_role_users_returns() {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'username' => new external_value(PARAM_TEXT, 'Username'),
+                    'firstname' => new external_value(PARAM_TEXT, 'User first name'),
+                    'lastname' => new external_value(PARAM_TEXT, 'User last name'),
+                    'email' => new external_value(PARAM_TEXT, 'User email'),
+                ), 'user'
+            )
+        );
+    }
+
+    /**
      * Describes the parameters for get_objects_by_tag
      * To be used by any method getting objects purely by tag, with no
      * other parameters.
