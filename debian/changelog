@@ -1,3 +1,11 @@
+moodle-site-otagounifom (3.4.1.2018021600+0facmed4-1) stretch; urgency=medium
+
+  * Fix multigrader report.
+  * Extra API function in local_presentation to get users in roles in
+    given course (needed for curriculum map).
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 21 Mar 2018 10:05:43 +1300
+
 moodle-site-otagounifom (3.4.1.2018021600+0facmed3-1) stretch; urgency=medium
 
   * Minor fixes to prevent warnings in apache log
