@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.4.2.2018031900+0facmed1-2) stretch; urgency=medium
+
+  * Fix debian/install for new privacy dir at top level.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 21 Mar 2018 12:01:19 +1300
+
 moodle-site-otagounifom (3.4.2.2018031900+0facmed1-1) stretch; urgency=medium
 
   * Upstream update, 3.4.2, with significant change being privacy API
