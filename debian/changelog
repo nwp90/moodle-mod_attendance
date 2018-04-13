@@ -1,3 +1,11 @@
+moodle-site-otagounifom (3.4.2.2018041200+0facmed1-1) stretch; urgency=medium
+
+  * New upstream version. Such fixes. Very debug. Wow.
+  * Add ereserve plugins (local/ereserve_plus, atto/plugins/ereserve
+    and tinymce/plugins/ereserve)
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 13 Apr 2018 14:20:05 +1200
+
 moodle-site-otagounifom (3.4.2.2018031900+0facmed1-2) stretch; urgency=medium
 
   * Fix debian/install for new privacy dir at top level.
