@@ -24,3 +24,4 @@
 
 $string['participants:addinstance'] = 'Add a new participants block';
 $string['pluginname'] = 'Participants';
+$string['privacy:metadata'] = 'The Particpants block only shows data stored in other locations.';
