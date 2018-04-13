@@ -1,0 +1,10 @@
+{
+    "name": "moodle-atto_ereserve-button",
+    "builds": {
+        "moodle-atto_ereserve-button": {
+            "jsfiles": [
+                "button.js"
+            ]
+        }
+    }
+}
