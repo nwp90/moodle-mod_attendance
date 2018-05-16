@@ -52,6 +52,10 @@ class theme_bootstrapbase_core_renderer extends core_renderer {
             }
         }
 
+        if (file_exists("$this->page->theme->dir/javascript/fontawesome/svg-with-js/js/fontawesome-all.js")) {
+            $this->page->requires->js("fontawesome/svg-with-js/js/fontawesome-all.js");
+        }
+        
         return $output;
     }
 
