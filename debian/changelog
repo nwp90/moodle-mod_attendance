@@ -1,3 +1,10 @@
+moodle-site-otagounifom (3.4.2.2018051500+0facmed1-1) stretch; urgency=medium
+
+  * New upstream version.
+  * Tweak to bootstrapbase to use FA5 (free or pro) pluggably.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 16 May 2018 16:59:12 +1200
+
 moodle-site-otagounifom (3.4.2.2018041200+0facmed1-1) stretch; urgency=medium
 
   * New upstream version. Such fixes. Very debug. Wow.
