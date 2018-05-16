@@ -130,6 +130,38 @@ class privacy_manager_testcase extends advanced_testcase {
     }
 
     /**
+     * Provider for component_is_compliant tests.
+     *
+     * @return  array
+     */
+    public function component_is_compliant_provider() {
+        return [
+            'An empty subsystem' => [
+                'core_countries',
+                true,
+            ],
+            'A real subsystem' => [
+                'core_privacy',
+                true,
+            ],
+        ];
+    }
+
+    /**
+     * Test verifying the output of component_is_compliant with specified
+     * components.
+     *
+     * @dataProvider    component_is_compliant_provider
+     * @param   string  $component
+     * @param   boolean $expected
+     */
+    public function test_component_is_compliant_examples($component, $expected) {
+        $manager = new \core_privacy\manager();
+
+        $this->assertEquals($expected, $manager->component_is_compliant($component));
+    }
+
+    /**
      *  Test verifying only approved contextlists can be used with the export_user_data method.
      */
     public function test_export_user_data() {
@@ -212,5 +244,60 @@ class privacy_manager_testcase extends advanced_testcase {
         // Throw an exception if the wrong type of provider is given.
         $this->expectException(\coding_exception::class);
         $string = $manager->get_null_provider_reason('mod_testcomponent');
+    }
+
+    /**
+     * Test that manager::plugintype_class_callback() can be executed.
+     */
+    public function test_plugintype_class_callback() {
+        \core_privacy\manager::plugintype_class_callback('doesnotexist', 'unusable', 'foo', ['bar']);
+    }
+
+    /**
+     * Test that manager::component_class_callback() can be executed.
+     */
+    public function test_component_class_callback() {
+        \core_privacy\manager::component_class_callback('foo_bar', 'unusable', 'foo', ['bar']);
+    }
+
+    /**
+     * Test the manager::is_empty_subsystem function.
+     *
+     * @dataProvider is_empty_subsystem_provider
+     * @param   string  $component
+     * @param   bool    $expected
+     */
+    public function test_is_empty_subsystem($component, $expected) {
+        $this->assertEquals($expected, \core_privacy\manager::is_empty_subsystem($component));
+    }
+
+    /**
+     * Test cases for the is_empty_subsystem function.
+     *
+     * @return array
+     */
+    public function is_empty_subsystem_provider() {
+        return [
+            'A subsystem which has no directory' => [
+                'core_langconfig',
+                true,
+            ],
+            'A subsystem with a directory' => [
+                'core_portfolio',
+                false,
+            ],
+            'A plugin' => [
+                'mod_forum',
+                false,
+            ],
+            'A plugintype' => [
+                'mod',
+                false,
+            ],
+            'An unprefixed subsystem with no directory' => [
+                'langconfig',
+                false,
+            ],
+        ];
     }
 }
