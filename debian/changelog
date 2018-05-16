@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.4.2.2018051500+0facmed1-2) stretch; urgency=medium
+
+  * Re-ran grunt css generation.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 16 May 2018 17:15:10 +1200
+
 moodle-site-otagounifom (3.4.2.2018051500+0facmed1-1) stretch; urgency=medium
 
   * New upstream version.
