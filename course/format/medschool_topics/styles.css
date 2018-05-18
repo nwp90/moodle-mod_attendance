@@ -98,7 +98,7 @@
 .medschool_topics #section-0 div.iconbar-solid button {
     color: white;
     background-color: #363636;
-/*    float: left;  */
+    /*    float: left;  */
     text-align: center; 
     width: auto; 
     padding-top: 12px;
@@ -117,12 +117,12 @@
     padding-top: 7px;
     padding-bottom: 7px;
 }
-    
+
 .medschool_topics #section-0 div.iconbar-solid a:hover,
 .medschool_topics #section-0 div.iconbar-solid button:hover {
     color: white;
     background-color: #696969;
-/*    background-color: #3FACE6; */
+    /*    background-color: #3FACE6; */
     transition: all 0.3s ease;
     border: 0.5px solid #999;
     text-decoration: none;
@@ -138,16 +138,6 @@
     padding-right: 2px;
 }
 
-.medschool_topics #section-0 div.iconbar-solid a span.btn-medtopics-sub-name,
-.medschool_topics #section-0 div.iconbar-solid button span.btn-medtopics-sub-name {
-    margin-top: 0;
-}
-    
-.medschool_topics #section-0 div.iconbar-solid a span.btn-medtopics-sub-icon,
-.medschool_topics #section-0 div.iconbar-solid button span.btn-medtopics-sub-icon {
-    margin-top: 3px;
-}
-    
 .medschool_topics #section-0 div.iconbar-solid a span[class^="fa"],
 .medschool_topics #section-0 div.iconbar-solid button span[class^="fa"] {
     text-align: center;
@@ -175,9 +165,9 @@
     display: inline-block;
     line-height: normal;
 
-margin: 0;
+    margin: 0;
     padding: 10px;
-     background-color: #fff;
+    background-color: #fff;
     opacity: 0.9;
     filter: alpha(opacity=90);
 }
@@ -221,7 +211,7 @@ margin: 0;
     float: left;
 }
 
-.medschool_topics div.no-overflow {
+.medschool_topics #section-0 div.no-overflow {
     overflow: initial !important;
 }
 
@@ -242,21 +232,21 @@ margin: 0;
 
 /*kj added styles*/
 /* The dropdown container */
-.medschool_topics .dropdown-btn {
-  float: left;  
-  overflow: hidden;
+.medschool_topics #section-0 div.iconbar-solid .dropdown-btn {
+    float: left;  
+    overflow: hidden;
 }
 
 /* Dropdown button */
-.medschool_topics .dropdown-btn .sub_btn{
-  font-size: 14px !important; 
-  border: none;
-  outline: none;
-  color: white;
-  /*padding: 14px 16px;*/
-  background-color: inherit;
-  font-family: inherit; /* Important for vertical align on mobile phones */
-  margin: 0; /* Important for vertical align on mobile phones */
+.medschool_topics #section-0 div.iconbar-solid .dropdown-btn .sub_btn {
+    font-size: 14px !important; 
+    border: none;
+    outline: none;
+    color: white;
+    /*padding: 14px 16px;*/
+    background-color: inherit;
+    font-family: inherit; /* Important for vertical align on mobile phones */
+    margin: 0; /* Important for vertical align on mobile phones */
 }
 
 /*.dropdown-btn-content span{
@@ -269,48 +259,49 @@ font-size: 14px !important;
 }*/
 
 /* Dropdown content (hidden by default) */
-.medschool_topics .dropdown-btn-content {
-  display: none;
-  position: absolute;
-  background-color: #f9f9f9;
-  min-width: 160px;
-  z-index: 1;
+.medschool_topics #section-0 div.iconbar-solid .dropdown-btn-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    z-index: 1;
+    font-size: 14px;
 }
 
 /* Links inside the dropdown */
-.medschool_topics .dropdown-btn-content a{
-  float: none;
-  color: inherit;
-  padding: 6px 8px;
-  text-decoration: none;
-  display: block;
-  text-align: left;
-  /*font-size: 14px !important; */
+.medschool_topics #section-0 div.iconbar-solid .dropdown-btn-content a {
+    float: none;
+    padding: 6px 8px;
+    text-decoration: none;
+    display: block;
+    text-align: left;
 }
 
 /* Add a grey background color to dropdown links on hover */
-.medschool_topics .dropdown-btn-content a:hover {
-  background-color: #ddd;
+.medschool_topics #section-0 div.iconbar-solid .dropdown-btn-content a:hover {
+    background-color: #ddd;
 }
 
 /* Show the dropdown menu on hover */
-.medschool_topics .dropdown-btn:hover .dropdown-btn-content {
-  display: block;
+.medschool_topics #section-0 div.iconbar-solid .dropdown-btn:hover .dropdown-btn-content {
+    display: block;
 }
 
-
-.medschool_topics span.btn-medtopics-sub-icon{
-display: block;
-float:left;
-font-size: 14px !important; 
+.medschool_topics #section-0 div.iconbar-solid .btn-medtopics-sub-icon {
+    display: inline-block;
+    float: left;
+    padding: 0.2em;
+    margin-top: 0;
 }
 
-.medschool_topics span.btn-medtopics-sub-name{
-display: block;
-text-align:left;
-font-size: 14px !important; 
+.medschool_topics #section-0 div.iconbar-solid .btn-medtopics-sub-name {
+    display: inline-block;
+    text-align: left;
+    margin-top: 0;
 }
 
-.medschool_topics span.dropdown-btn i{
-    padding-left:5px;
+/* carets in dropdown buttons, careful to avoid main button image */
+.medschool_topics #section-0 div.iconbar-solid span.dropdown-btn span i,
+.medschool_topics #section-0 div.iconbar-solid span.dropdown-btn span svg {
+    padding-left: 5px;
 }
