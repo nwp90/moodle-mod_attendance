@@ -112,6 +112,12 @@
     border: 0.5px solid #363636;
 }
 
+.medschool_topics #section-0 div.iconbar-solid a.sub-btn,
+.medschool_topics #section-0 div.iconbar-solid button.sub-btn {
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+    
 .medschool_topics #section-0 div.iconbar-solid a:hover,
 .medschool_topics #section-0 div.iconbar-solid button:hover {
     color: white;
@@ -132,6 +138,16 @@
     padding-right: 2px;
 }
 
+.medschool_topics #section-0 div.iconbar-solid a span.btn-medtopics-sub-name,
+.medschool_topics #section-0 div.iconbar-solid button span.btn-medtopics-sub-name {
+    margin-top: 0;
+}
+    
+.medschool_topics #section-0 div.iconbar-solid a span.btn-medtopics-sub-icon,
+.medschool_topics #section-0 div.iconbar-solid button span.btn-medtopics-sub-icon {
+    margin-top: 3px;
+}
+    
 .medschool_topics #section-0 div.iconbar-solid a span[class^="fa"],
 .medschool_topics #section-0 div.iconbar-solid button span[class^="fa"] {
     text-align: center;
@@ -140,7 +156,7 @@
 .medschool_topics #section-0 div.iconbar-solid a span:not(:first-child),
 .medschool_topics #section-0 div.iconbar-solid button span:not(:first-child) {
     min-width: 4em;	
-    max-width: 6em;	
+    max-width: 7em;	
 }
 
 /*banner work*/
@@ -158,6 +174,12 @@
     background: none;
     display: inline-block;
     line-height: normal;
+
+margin: 0;
+    padding: 10px;
+     background-color: #fff;
+    opacity: 0.9;
+    filter: alpha(opacity=90);
 }
 
 .medschool_topics #section-0 div.summary {
@@ -215,4 +237,80 @@
 }
 .course-content ul.medschool_topics li.section#section-0 div.content h3.sectionname .inplaceeditable a {
     max-width: 90%;
+}
+
+
+/*kj added styles*/
+/* The dropdown container */
+.medschool_topics .dropdown-btn {
+  float: left;  
+  overflow: hidden;
+}
+
+/* Dropdown button */
+.medschool_topics .dropdown-btn .sub_btn{
+  font-size: 14px !important; 
+  border: none;
+  outline: none;
+  color: white;
+  /*padding: 14px 16px;*/
+  background-color: inherit;
+  font-family: inherit; /* Important for vertical align on mobile phones */
+  margin: 0; /* Important for vertical align on mobile phones */
+}
+
+/*.dropdown-btn-content span{
+font-size: 14px !important;   
+}*/
+
+/* Add a red background color to navbar links on hover 
+.dropdown-btn:hover .sub_btn {
+  background-color: red;
+}*/
+
+/* Dropdown content (hidden by default) */
+.medschool_topics .dropdown-btn-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  z-index: 1;
+}
+
+/* Links inside the dropdown */
+.medschool_topics .dropdown-btn-content a{
+  float: none;
+  color: inherit;
+  padding: 6px 8px;
+  text-decoration: none;
+  display: block;
+  text-align: left;
+  /*font-size: 14px !important; */
+}
+
+/* Add a grey background color to dropdown links on hover */
+.medschool_topics .dropdown-btn-content a:hover {
+  background-color: #ddd;
+}
+
+/* Show the dropdown menu on hover */
+.medschool_topics .dropdown-btn:hover .dropdown-btn-content {
+  display: block;
+}
+
+
+.medschool_topics span.btn-medtopics-sub-icon{
+display: block;
+float:left;
+font-size: 14px !important; 
+}
+
+.medschool_topics span.btn-medtopics-sub-name{
+display: block;
+text-align:left;
+font-size: 14px !important; 
+}
+
+.medschool_topics span.dropdown-btn i{
+    padding-left:5px;
 }
