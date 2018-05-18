@@ -1,3 +1,11 @@
+moodle-site-otagounifom (3.4.3.2018051700+0facmed1-1) stretch; urgency=medium
+
+  * New upstream version 3.4.3 (security update)
+  * Revert bootstrapbase tweak for FA5, as we can't get it working
+    right with CSS pseudoelements at present.
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 18 May 2018 15:11:46 +1200
+
 moodle-site-otagounifom (3.4.2.2018051500+0facmed1-2) stretch; urgency=medium
 
   * Re-ran grunt css generation.
