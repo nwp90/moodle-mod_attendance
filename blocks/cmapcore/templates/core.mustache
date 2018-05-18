@@ -1,0 +1,28 @@
+<span>
+  Curriculum Map elements linked to <a href="{{ modulelink }}">{{ modulename }}</a> module:
+</span>
+<div id="cmapcore-accordion">
+  {{# elementtype}}
+  <div id="cmap-{{abbrev}}-div" class="panel panel-primary">
+    <div class="panel-heading" data-toggle="collapse" data-target="#collapse-{{abbrev}}" aria-expanded="true" aria-controls="collapse-{{abbrev}}" id="headingOne">
+      <a class="mb-0">
+	  {{elementlabel}}<i class="fa fa-caret-down" style="padding-left:5px"></i>
+      </a>
+    </div>
+  
+    <div id="collapse-{{abbrev}}" class="collapse" aria-labelledby="heading-{{abbrev}}" data-parent="#cmapcore-accordion">
+      <div class="loading panel-body" style="display: none;">
+	{{# str }} loading, block_cmapcore {{/ str }}
+      </div>
+      <div class="elementlist panel-body" style="display: none;">
+        <p>{{listlabel}}</p>
+      </div>
+      <div class="noelements panel-body" style="display: none;">
+        <p>{{nonetext}}</p>
+      </div>
+    </div>
+    <div class="panel-footer">
+    </div>
+  </div>
+  {{/ elementtype}}
+</div>

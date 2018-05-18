@@ -1,0 +1,29 @@
+<img class="cmap-logo" src="{{ cmap_logo_url }}" alt="Curriculum Map Logo">
+<span class="cmap-heading">
+  <a href="{{ mapbase }}">{{# str }} curriculummap, block_cmapcore {{/ str }}</a>
+</span>
+<div id="cmapcore-accordion">
+  {{# elementtype}}
+  <div id="cmap-{{abbrev}}-div" class="card">
+    <div class="card-header" id="headingOne">
+      <h5 class="mb-0">
+	<button class="btn btn-link" data-toggle="collapse" data-target="#collapse-{{abbrev}}" aria-expanded="true" aria-controls="collapse-{{abbrev}}">
+	  {{elementlabel}}<i class="fa fa-caret-down" style="padding-left:5px"></i>
+	</button>
+      </h5>
+    </div>
+  
+    <div id="collapse-{{abbrev}}" class="collapse show card-body" aria-labelledby="heading-{{abbrev}}" data-parent="#cmapcore-accordion">
+      <div class="loading" style="display: none;">
+	{{# str }} loading, block_cmapcore {{/ str }}
+      </div>
+      <div class="elementlist" style="display: none;">
+        <p>{{listlabel}}</p>
+      </div>
+      <div class="noelements" style="display: none;">
+        <p>{{nonetext}}</p>
+      </div>
+    </div>
+  </div>
+  {{/ elementtype}}
+</div>
