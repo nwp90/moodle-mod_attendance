@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * format_medschool_topics related unit tests
+ * format_topics related unit tests
  *
- * @package    format_medschool_topics
+ * @package    format_topics
  * @copyright  2015 Marina Glancy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -28,42 +28,16 @@ global $CFG;
 require_once($CFG->dirroot . '/course/lib.php');
 
 /**
- * format_medschool_topics related unit tests
+ * format_topics related unit tests
  *
- * @package    format_medschool_topics
+ * @package    format_topics
  * @copyright  2015 Marina Glancy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class format_medschool_topics_testcase extends advanced_testcase {
-
-    public function test_update_course_numsections() {
-        global $DB;
-        $this->resetAfterTest(true);
-
-        $generator = $this->getDataGenerator();
-
-        $course = $generator->create_course(array('numsections' => 10, 'format' => 'topics'),
-            array('createsections' => true));
-        $generator->create_module('assign', array('course' => $course, 'section' => 7));
-
-        $this->setAdminUser();
-
-        $this->assertEquals(11, $DB->count_records('course_sections', array('course' => $course->id)));
-
-        // Change the numsections to 8, last two sections did not have any activities, they should be deleted.
-        update_course((object)array('id' => $course->id, 'numsections' => 8));
-        $this->assertEquals(9, $DB->count_records('course_sections', array('course' => $course->id)));
-        $this->assertEquals(9, count(get_fast_modinfo($course)->get_section_info_all()));
-
-        // Change the numsections to 5, section 8 should be deleted but section 7 should remain as it has activities.
-        update_course((object)array('id' => $course->id, 'numsections' => 6));
-        $this->assertEquals(8, $DB->count_records('course_sections', array('course' => $course->id)));
-        $this->assertEquals(8, count(get_fast_modinfo($course)->get_section_info_all()));
-        $this->assertEquals(6, course_get_format($course)->get_course()->numsections);
-    }
+class format_topics_testcase extends advanced_testcase {
 
     /**
-     * Tests for format_medschool_topics::get_section_name method with default section names.
+     * Tests for format_topics::get_section_name method with default section names.
      */
     public function test_get_section_name() {
         global $DB;
@@ -87,7 +61,7 @@ class format_medschool_topics_testcase extends advanced_testcase {
     }
 
     /**
-     * Tests for format_medschool_topics::get_section_name method with modified section names.
+     * Tests for format_topics::get_section_name method with modified section names.
      */
     public function test_get_section_name_customised() {
         global $DB;
@@ -119,7 +93,7 @@ class format_medschool_topics_testcase extends advanced_testcase {
     }
 
     /**
-     * Tests for format_medschool_topics::get_default_section_name.
+     * Tests for format_topics::get_default_section_name.
      */
     public function test_get_default_section_name() {
         global $DB;
@@ -138,10 +112,10 @@ class format_medschool_topics_testcase extends advanced_testcase {
         $courseformat = course_get_format($course);
         foreach ($coursesections as $section) {
             if ($section->section == 0) {
-                $sectionname = get_string('section0name', 'format_medschool_topics');
+                $sectionname = get_string('section0name', 'format_topics');
                 $this->assertEquals($sectionname, $courseformat->get_default_section_name($section));
             } else {
-                $sectionname = get_string('sectionname', 'format_medschool_topics') . ' ' . $section->section;
+                $sectionname = get_string('sectionname', 'format_topics') . ' ' . $section->section;
                 $this->assertEquals($sectionname, $courseformat->get_default_section_name($section));
             }
         }
@@ -163,7 +137,7 @@ class format_medschool_topics_testcase extends advanced_testcase {
 
         // Call webservice without necessary permissions.
         try {
-            core_external::update_inplace_editable('format_medschool_topics', 'sectionname', $section->id, 'New section name');
+            core_external::update_inplace_editable('format_topics', 'sectionname', $section->id, 'New section name');
             $this->fail('Exception expected');
         } catch (moodle_exception $e) {
             $this->assertEquals('Course or activity not accessible. (Not enrolled)',
@@ -174,7 +148,7 @@ class format_medschool_topics_testcase extends advanced_testcase {
         $teacherrole = $DB->get_record('role', array('shortname' => 'editingteacher'));
         $this->getDataGenerator()->enrol_user($user->id, $course->id, $teacherrole->id);
 
-        $res = core_external::update_inplace_editable('format_medschool_topics', 'sectionname', $section->id, 'New section name');
+        $res = core_external::update_inplace_editable('format_topics', 'sectionname', $section->id, 'New section name');
         $res = external_api::clean_returnvalue(core_external::update_inplace_editable_returns(), $res);
         $this->assertEquals('New section name', $res['value']);
         $this->assertEquals('New section name', $DB->get_field('course_sections', 'name', array('id' => $section->id)));
@@ -196,8 +170,8 @@ class format_medschool_topics_testcase extends advanced_testcase {
 
         $section = $DB->get_record('course_sections', array('course' => $course->id, 'section' => 2));
 
-        // Call callback format_medschool_topics_inplace_editable() directly.
-        $tmpl = component_callback('format_medschool_topics', 'inplace_editable', array('sectionname', $section->id, 'Rename me again'));
+        // Call callback format_topics_inplace_editable() directly.
+        $tmpl = component_callback('format_topics', 'inplace_editable', array('sectionname', $section->id, 'Rename me again'));
         $this->assertInstanceOf('core\output\inplace_editable', $tmpl);
         $res = $tmpl->export_for_template($PAGE->get_renderer('core'));
         $this->assertEquals('Rename me again', $res['value']);
@@ -249,5 +223,42 @@ class format_medschool_topics_testcase extends advanced_testcase {
         $weeksformat = course_get_format($course->id);
         $this->assertEquals($enddate, $weeksformat->get_default_course_enddate($courseform->get_quick_form()));
 
+    }
+
+    /**
+     * Test for get_view_url() to ensure that the url is only given for the correct cases
+     */
+    public function test_get_view_url() {
+        global $CFG;
+        $this->resetAfterTest();
+
+        $linkcoursesections = $CFG->linkcoursesections;
+
+        // Generate a course with two sections (0 and 1) and two modules.
+        $generator = $this->getDataGenerator();
+        $course1 = $generator->create_course(array('format' => 'topics'));
+        course_create_sections_if_missing($course1, array(0, 1));
+
+        $data = (object)['id' => $course1->id];
+        $format = course_get_format($course1);
+        $format->update_course_format_options($data);
+
+        // In page.
+        $CFG->linkcoursesections = 0;
+        $this->assertNotEmpty($format->get_view_url(null));
+        $this->assertNotEmpty($format->get_view_url(0));
+        $this->assertNotEmpty($format->get_view_url(1));
+        $CFG->linkcoursesections = 1;
+        $this->assertNotEmpty($format->get_view_url(null));
+        $this->assertNotEmpty($format->get_view_url(0));
+        $this->assertNotEmpty($format->get_view_url(1));
+
+        // Navigation.
+        $CFG->linkcoursesections = 0;
+        $this->assertNull($format->get_view_url(1, ['navigation' => 1]));
+        $this->assertNull($format->get_view_url(0, ['navigation' => 1]));
+        $CFG->linkcoursesections = 1;
+        $this->assertNotEmpty($format->get_view_url(1, ['navigation' => 1]));
+        $this->assertNotEmpty($format->get_view_url(0, ['navigation' => 1]));
     }
 }
