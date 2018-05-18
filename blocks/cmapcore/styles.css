@@ -1,0 +1,78 @@
+.showblockicons .block.block_cmapcore .header .title h2:before {
+    content:url([[pix:block_cmapcore|cmap-logo-small]]);
+}
+
+.block_cmapcore span.cmap-heading{
+    font-family: Helvetica Neue; helvetica, arial, sans-serif; 
+    color: #777777; 
+    font-size: 20px;
+    padding-bottom: 10px;
+}
+
+.block_cmapcore img.cmap-logo{
+    padding-right: 10px;
+    margin-top: -10px;
+    height: 19px;
+    width: 19px;
+}
+
+/* BS4 for cards :( */
+.block_cmapcore div.card-header{
+    background-color: transparent;
+    border-bottom: none;
+}
+
+.block_cmapcore div.card{
+    background-color: transparent;
+    border: none;
+    margin-bottom:-10px;
+}
+
+/* Panels in BS2 */
+.block_cmapcore .panel {
+    margin-top: 10px;
+}
+
+.block_cmapcore .panel-heading {
+    border: 1px solid;
+    border-radius: 10px 10px 0 0;
+    border-bottom: 0;
+    padding: 15px 15px 0px 15px;
+    background-color: #f3f3f3;
+    border-color: #555555;
+    border-collapse: true;
+    color: #555555;
+    line-height: 
+}
+
+.block_cmapcore .panel-heading a {
+    font-size: 110%;
+    font-weight: normal;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 80%;
+    display: inline-block;
+}
+
+.block_cmapcore .panel-body {
+    padding: 15px 15px 0 15px;
+    border: 1px solid #555555;
+    border-top: 0;
+    border-bottom: 0;
+    border-radius: 0;
+    border-collapse: true;
+    background-color: #f3f3f3;
+}
+
+.block_cmapcore .panel-body p {
+    margin-bottom: 0;
+}
+
+.block_cmapcore .panel-footer {
+    padding-bottom: 10px;
+    border: 1px solid #555555;
+    border-top: 0;
+    border-radius: 0 0 10px 10px;
+    background-color: #f3f3f3;
+}
