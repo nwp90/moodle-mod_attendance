@@ -3,6 +3,8 @@ moodle-site-otagounifom (3.4.3.2018051700+0facmed1-1) stretch; urgency=medium
   * New upstream version 3.4.3 (security update)
   * Revert bootstrapbase tweak for FA5, as we can't get it working
     right with CSS pseudoelements at present.
+  * Add cmapcore block
+  * Tweak medschool_topics format to work with FA5
 
  -- Nick Phillips <nwp@debian.org>  Fri, 18 May 2018 15:11:46 +1200
 
