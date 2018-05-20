@@ -133,6 +133,15 @@ class format_medschool_topics_renderer extends format_section_renderer_base {
         return $section;
     }
 
+    protected function get_next_section($fmt, $modinfo, $section) {
+        for(
+            $next = $this->get_section($fmt, $modinfo, $section->number + 1);
+            !(is_null($next) || $this->show_section($next));
+            $next = $this->get_section($fmt, $modinfo, $next->number + 1)
+        );
+        return $next;
+    }
+        
     protected function show_section($section) {
         $showsection = (
             $section->options['section_hide'] === FORMAT_MEDTOPICS_SHOW ||
@@ -201,7 +210,7 @@ class format_medschool_topics_renderer extends format_section_renderer_base {
            
             $section = $this->get_section($fmt, $course_modinfo, 1);
             foreach (range(1, $num_sections) as $section_number) {
-                $next_section = $this->get_section($fmt, $course_modinfo, $section_number + 1);
+                $next_section = $this->get_next_section($fmt, $course_modinfo, $section);
 
                 if ($single_section_link !== 0 ) {
                     $link_character = '&';
@@ -268,7 +277,7 @@ class format_medschool_topics_renderer extends format_section_renderer_base {
                             for(
                                 $subsection = $next_section;
                                 !is_null($subsection) && $subsection->is_subsection;
-                                $subsection = $this->get_section($fmt, $course_modinfo, $subsection->number + 1)
+                                $subsection = $this->get_next_section($fmt, $course_modinfo, $subsection)
                             ) {
                                 if ($subsection->name === '') {
                                     $subsection->name = get_section_name($course, $subsection->number);
