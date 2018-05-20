@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.4.3.2018051700+0facmed2-1) stretch; urgency=medium
+
+  * Bugfix to medschool_topics format
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 21 May 2018 10:24:36 +1200
+
 moodle-site-otagounifom (3.4.3.2018051700+0facmed1-1) stretch; urgency=medium
 
   * New upstream version 3.4.3 (security update)
