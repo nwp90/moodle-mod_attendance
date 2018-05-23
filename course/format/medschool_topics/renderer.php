@@ -98,7 +98,7 @@ class format_medschool_topics_renderer extends format_section_renderer_base {
 					$section_icon = 'check-square';
                 }
                 else {
-					$section_icon = 'star-o';
+					$section_icon = 'star';
                 }
             }
             $title = html_writer::span('', 'fa fa-' . $section_icon) . "\n" . $title;
@@ -118,7 +118,7 @@ class format_medschool_topics_renderer extends format_section_renderer_base {
         $section->icon = $section->options['section_icon'];
         $section->name = $section->options['nav_name'];
         $section->is_subsection = (bool) $section->options['section_sub'];
-        if ($section->icon === '') {
+        if ($section->icon === '' || ctype_space($section->icon)) {
             switch($number) {
             case 1:
                 $section->icon = 'info-circle';
@@ -127,7 +127,7 @@ class format_medschool_topics_renderer extends format_section_renderer_base {
                 $section->icon = 'check-square';
                 break;
             default:
-                $section->icon = 'star-o';
+                $section->icon = 'star';
             }
         }
         return $section;
@@ -209,9 +209,15 @@ class format_medschool_topics_renderer extends format_section_renderer_base {
             $sectionlinks = [];
            
             $section = $this->get_section($fmt, $course_modinfo, 1);
-            foreach (range(1, $num_sections) as $section_number) {
+            for (
+                $section = $this->get_section($fmt, $course_modinfo, 1);
+                !is_null($section) && $section->number <= $num_sections;
+                $section = $next_section
+            ) {
                 $next_section = $this->get_next_section($fmt, $course_modinfo, $section);
-
+                if (!$this->show_section($section)) {
+                    continue;
+                }
                 if ($single_section_link !== 0 ) {
                     $link_character = '&';
                     $link_character_dash = '=';
@@ -225,82 +231,79 @@ class format_medschool_topics_renderer extends format_section_renderer_base {
                 }
 
                 if (!$section->is_subsection) {
-                    if ($this->show_section($section)) {
-                        if (!$next_section->is_subsection) {
-                            $sectionlinks[] = html_writer::start_span('dropdown-btn btn-medtopics').
-                                html_writer::tag(
-                                    'a',
-                                    html_writer::span('', 'fa fa-' . $icon_size . 'x fa-fw fa-' . $section->icon) .
-                                    html_writer::span($section->name),
-                                    [
-                                        'href' => $course_url . $link_character .'section' .$link_character_dash  . $section_number,
-                                        'class' => 'btn btn-medtopics',
-                                        'role' => 'button'
-                                    ]
-                                ).html_writer::end_span();
+                    if (!$next_section->is_subsection) {
+                        $sectionlinks[] = html_writer::start_span('dropdown-btn btn-medtopics').
+                            html_writer::tag(
+                                'a',
+                                html_writer::span('', 'fa fa-' . $icon_size . 'x fa-fw fa-' . $section->icon) .
+                                html_writer::span($section->name),
+                                [
+                                    'href' => $course_url . $link_character .'section' .$link_character_dash  . $section->number,
+                                    'class' => 'btn btn-medtopics',
+                                    'role' => 'button'
+                                ]
+                            ).html_writer::end_span();
+                    } else {
+                        if($single_section_link !== 0 ) {
+                            $link_character = '&';
+                            $link_character_dash = '=';
                         } else {
-                            if($single_section_link !== 0 ) {
-                                $link_character = '&';
-                                $link_character_dash = '=';
-                            } else {
-                                $link_character = '#';
-                                $link_character_dash = '-';
+                            $link_character = '#';
+                            $link_character_dash = '-';
+                        }
+                            
+                        $sectionlinks[] = html_writer::start_span('dropdown-btn btn-medtopics').
+                            html_writer::tag(
+                                'a',
+                                html_writer::span('', 'fa fa-' . $icon_size . 'x fa-fw fa-' . $section->icon) .
+                                html_writer::start_span().$section->name.
+                                html_writer::tag('i','',['class'=>'fa fa-caret-down']).
+                                html_writer::end_span()
+                                ,
+                                [
+                                    'href' => $course_url . $link_character .'section' .$link_character_dash . $section->number,
+                                    'class' => 'btn btn-medtopics',
+                                    'role' => 'button'
+                                ]
+                            );
+                            
+                        $sectionlinks[] = html_writer::start_span('dropdown-btn-content btn-medtopics').
+                            html_writer::tag(
+                                'a',
+                                html_writer::span('', 'btn-medtopics-sub-icon fa fa-fw fa-' . $section->icon).
+                                html_writer::span($section->name, 'btn-medtopics-sub-name'),
+                                [
+                                    'href' => $course_url . $link_character .'section' . $link_character_dash . $section->number,
+                                    'class' => 'sub-btn btn-medtopics',
+                                    'role' => 'button'
+                                ]
+                            );
+
+                        for(
+                            $subsection = $next_section;
+                            !is_null($subsection) && $subsection->is_subsection;
+                            $subsection = $this->get_next_section($fmt, $course_modinfo, $subsection)
+                        ) {
+                            if ($subsection->name === '') {
+                                $subsection->name = get_section_name($course, $subsection->number);
                             }
-                            
-                            $sectionlinks[] = html_writer::start_span('dropdown-btn btn-medtopics').
-                                html_writer::tag(
+                            if ($this->show_section($subsection)) {
+                                $sectionlinks[] = html_writer::tag(
                                     'a',
-                                    html_writer::span('', 'fa fa-' . $icon_size . 'x fa-fw fa-' . $section->icon) .
-                                    html_writer::start_span().$section->name.
-                                    html_writer::tag('i','',['class'=>'fa fa-caret-down']).
-                                    html_writer::end_span()
-                                    ,
+                                    html_writer::span('', 'btn-medtopics-sub-icon fa fa-fw fa-' . $subsection->icon) .
+                                    html_writer::span($subsection->name, 'btn-medtopics-sub-name'),
                                     [
-                                        'href' => $course_url . $link_character .'section' .$link_character_dash . $section_number,
-                                        'class' => 'btn btn-medtopics',
-                                        'role' => 'button'
-                                    ]
-                                );
-                            
-                            $sectionlinks[] = html_writer::start_span('dropdown-btn-content btn-medtopics').
-                                html_writer::tag(
-                                    'a',
-                                    html_writer::span('', 'btn-medtopics-sub-icon fa fa-fw fa-' . $section->icon).
-                                    html_writer::span($section->name, 'btn-medtopics-sub-name'),
-                                    [
-                                        'href' => $course_url . $link_character .'section' . $link_character_dash . $section_number,
+                                        'href' => $course_url . $link_character . 'section' . $link_character_dash . $subsection->number,
                                         'class' => 'sub-btn btn-medtopics',
                                         'role' => 'button'
                                     ]
                                 );
-
-                            for(
-                                $subsection = $next_section;
-                                !is_null($subsection) && $subsection->is_subsection;
-                                $subsection = $this->get_next_section($fmt, $course_modinfo, $subsection)
-                            ) {
-                                if ($subsection->name === '') {
-                                    $subsection->name = get_section_name($course, $subsection->number);
-                                }
-                                if ($this->show_section($subsection)) {
-                                    $sectionlinks[] = html_writer::tag(
-                                        'a',
-                                        html_writer::span('', 'btn-medtopics-sub-icon fa fa-fw fa-' . $subsection->icon) .
-                                        html_writer::span($subsection->name, 'btn-medtopics-sub-name'),
-                                        [
-                                            'href' => $course_url . $link_character . 'section' . $link_character_dash . $subsection->number,
-                                            'class' => 'sub-btn btn-medtopics',
-                                            'role' => 'button'
-                                        ]
-                                    );
-                                }
                             }
-                            $sectionlinks[] = html_writer::end_span().html_writer::end_span();
                         }
+                        $sectionlinks[] = html_writer::end_span().html_writer::end_span();
                     }
                 }
                 $navbar = html_writer::tag('nolink', html_writer::div(join("\n", $sectionlinks), 'btn-toolbar iconbar-solid'));
-                $section = $next_section;
             }
         }
 

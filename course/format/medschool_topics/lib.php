@@ -222,7 +222,7 @@ class format_medschool_topics extends format_base {
     public function get_default_blocks() {
         return array(
             BLOCK_POS_LEFT => array(),
-            BLOCK_POS_RIGHT => array('people', 'calendar_upcoming', 'oms_grade', 'navigation')
+            BLOCK_POS_RIGHT => array()
         );
     }
 
