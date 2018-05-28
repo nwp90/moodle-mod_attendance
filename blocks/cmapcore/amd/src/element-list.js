@@ -71,7 +71,7 @@ define([
 
       console.log("showing loadingmsg for " + elementtype);
       loadingmsg.show();
-     $.getJSON(elementUrl, function(data) {
+      $.getJSON(elementUrl, function(data) {
 	var items = [];
 	if (data.count === 0) {
 	  loadingmsg.hide();
@@ -111,9 +111,30 @@ define([
 	  mapbase = 'https://medmap.otago.ac.nz';
 	}
 
-	getElements('p', mapbase, shortname);
-	getElements('c', mapbase, shortname);
-	getElements('a', mapbase, shortname);
+	// Check whether module exists in map before trying to get elements;
+	// if it doesn't, hide the CMap block unless editing is on.
+	//
+	// Ideally this would probably be done in the block PHP, and we would
+	// never even get called when the module doesn't make sense.
+	//
+	var courseUrl = mapbase + '/api/modules/' + shortname + '/';
+	var cmapcore = $(".block.block_cmapcore:not(.block_with_controls)");
+	$.ajax({
+	  url: courseUrl,
+	  success: function(data, textStatus, jqXHR) {
+	    console.log("got data: ", data);
+	    cmapcore.show();
+	    getElements('p', mapbase, shortname);
+	    getElements('c', mapbase, shortname);
+	    getElements('a', mapbase, shortname);
+	  },
+	  statusCode: {
+	    404: function() {
+	      console.log("module '" + shortname + "' not found in cmap");
+	      cmapcore.hide();
+	    }
+	  }
+	});
       }
     }
   });

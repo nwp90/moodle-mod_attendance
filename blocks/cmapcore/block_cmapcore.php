@@ -34,7 +34,8 @@ class block_cmapcore extends block_base {
 
     public function applicable_formats() {
         return [
-            'course-view' => true,
+            'all' => true,
+            'course' => true,
             'mod' => true,
             'mod-quiz' => false,
             'mod-*-mod' => true // course/modedit.php
