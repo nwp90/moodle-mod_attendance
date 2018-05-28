@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.4.3.2018051700+0facmed5-1) stretch; urgency=medium
+
+  * Fixes to cmapcore block, & rebuild AMD code.
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 28 May 2018 15:15:03 +1200
+
 moodle-site-otagounifom (3.4.3.2018051700+0facmed4-1) stretch; urgency=medium
 
   * Fixes to cmapcore block
