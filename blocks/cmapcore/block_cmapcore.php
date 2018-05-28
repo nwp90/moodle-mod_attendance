@@ -56,24 +56,6 @@ class block_cmapcore extends block_base {
         return;
     }
 
-
-    // The PHP tag and the curly bracket for the class definition 
-    // will only be closed after there is another function added in the next section.
-
-    /*public function specialization() {
-        if (isset($this->config)) {
-             if (empty($this->config->title)) {
-               $this->title = get_string('defaulttitle', 'block_cmapcore');            
-             } else {
-            $this->title = $this->config->title;
-         }
- 
-        if (empty($this->config->text)) {
-            $this->config->text = get_string('defaulttext', 'block_cmapcore');
-         }    
-        }
-    }*/
-
     public function instance_allow_multiple() {
         return false;
     }
