@@ -2126,14 +2126,15 @@ class theme_config {
             // If $svg isn't a bool then we need to decide for ourselves.
             $svg = $this->use_svg_icons();
         }
-
         if ($component === 'moodle' or $component === 'core' or empty($component)) {
-            if ($imagefile = $this->image_exists("$this->dir/pix_core/$image", $svg)) {
-                return $imagefile;
-            }
-            foreach (array_reverse($this->parent_configs) as $parent_config) { // base first, the immediate parent last
-                if ($imagefile = $this->image_exists("$parent_config->dir/pix_core/$image", $svg)) {
+            if ($CFG->allowthemeimageoverride) {
+                if ($imagefile = $this->image_exists("$this->dir/pix_core/$image", $svg)) {
                     return $imagefile;
+                }
+                foreach (array_reverse($this->parent_configs) as $parent_config) { // base first, the immediate parent last
+                    if ($imagefile = $this->image_exists("$parent_config->dir/pix_core/$image", $svg)) {
+                        return $imagefile;
+                    }
                 }
             }
             if ($imagefile = $this->image_exists("$CFG->dataroot/pix/$image", $svg)) {
@@ -2164,12 +2165,14 @@ class theme_config {
             }
             list($type, $plugin) = explode('_', $component, 2);
 
-            if ($imagefile = $this->image_exists("$this->dir/pix_plugins/$type/$plugin/$image", $svg)) {
-                return $imagefile;
-            }
-            foreach (array_reverse($this->parent_configs) as $parent_config) { // base first, the immediate parent last
-                if ($imagefile = $this->image_exists("$parent_config->dir/pix_plugins/$type/$plugin/$image", $svg)) {
+            if ($CFG->allowthemeimageoverride) {
+                if ($imagefile = $this->image_exists("$this->dir/pix_plugins/$type/$plugin/$image", $svg)) {
                     return $imagefile;
+                }
+                foreach (array_reverse($this->parent_configs) as $parent_config) { // base first, the immediate parent last
+                    if ($imagefile = $this->image_exists("$parent_config->dir/pix_plugins/$type/$plugin/$image", $svg)) {
+                        return $imagefile;
+                    }
                 }
             }
             if ($imagefile = $this->image_exists("$CFG->dataroot/pix_plugins/$type/$plugin/$image", $svg)) {
