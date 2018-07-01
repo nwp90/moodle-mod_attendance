@@ -107,7 +107,10 @@ class sessions {
             get_string('subnet', 'attendance'),
             get_string('automark', 'attendance'),
             get_string('autoassignstatus', 'attendance'),
-            get_string('absenteereport', 'attendance')
+            get_string('absenteereport', 'attendance'),
+            get_string('preventsharedip', 'attendance'),
+            get_string('preventsharediptime', 'attendance'),
+            get_string('calendarevent', 'attendance')
         );
     }
 
@@ -134,13 +137,19 @@ class sessions {
                 'from' => $data->header3,
                 'to' => $data->header4,
                 'description' => $data->header5,
-                'studentscanmark' => $data->header6,
-                'passwordgrp' => $data->header7,
-                'randompassword' => $data->header8,
-                'subnet' => $data->header9,
-                'automark' => $data->header10,
-                'autoassignstatus' => $data->header11,
-                'absenteereport' => $data->header12
+                'repeaton' => $data->header6,
+                'repeatevery' => $data->header7,
+                'repeatuntil' => $data->header8,
+                'studentscanmark' => $data->header9,
+                'passwordgrp' => $data->header10,
+                'randompassword' => $data->header11,
+                'subnet' => $data->header12,
+                'automark' => $data->header13,
+                'autoassignstatus' => $data->header14,
+                'absenteereport' => $data->header15,
+                'preventsharedip' => $data->header16,
+                'preventsharediptime' => $data->header17,
+                'calendarevent' => $data->header18
             );
         } else {
             return array(
@@ -150,13 +159,19 @@ class sessions {
                 'from' => 3,
                 'to' => 4,
                 'description' => 5,
-                'studentscanmark' => 6,
-                'passwordgrp' => 7,
-                'randompassword' => 8,
-                'subnet' => 9,
-                'automark' => 10,
-                'autoassignstatus' => 11,
-                'absenteereport' => 12
+                'repeaton' => 6,
+                'repeatevery' => 7,
+                'repeatuntil' => 8,
+                'studentscanmark' => 9,
+                'passwordgrp' => 10,
+                'randompassword' => 11,
+                'subnet' => 12,
+                'automark' => 13,
+                'autoassignstatus' => 14,
+                'absenteereport' => 15,
+                'preventsharedip' => 16,
+                'preventsharediptime' => 17,
+                'calendarevent' => 18
             );
         }
     }
@@ -311,6 +326,17 @@ class sessions {
             } else {
                 $session->absenteereport = $this->get_column_data($row, $mapping['absenteereport']);
             }
+            if ($mapping['preventsharedip'] == -1) {
+                $session->preventsharedip = $pluginconfig->preventsharedip;
+            } else {
+                $session->preventsharedip = $this->get_column_data($row, $mapping['preventsharedip']);
+            }
+            if ($mapping['preventsharediptime'] == -1) {
+                $session->preventsharediptime = $pluginconfig->preventsharediptime;
+            } else {
+                $session->preventsharediptime = $this->get_column_data($row, $mapping['preventsharediptime']);
+            }
+
             $session->statusset = 0;
 
             $sessions[] = $session;

@@ -493,6 +493,14 @@ class mod_attendance_structure {
                 $sess->subnet = '';
             }
 
+            if (!isset($sess->preventsharedip)) {
+                $sess->preventsharedip = 0;
+            }
+
+            if (!isset($sess->preventsharediptime)) {
+                $sess->preventsharediptime = '';
+            }
+
             $event->add_record_snapshot('attendance_sessions', $sess);
             $event->trigger();
         }
@@ -522,6 +530,7 @@ class mod_attendance_structure {
             array('subdirs' => false, 'maxfiles' => -1, 'maxbytes' => 0), $formdata->sdescription['text']);
         $sess->description = $description;
         $sess->descriptionformat = $formdata->sdescription['format'];
+        $sess->calendarevent = empty($formdata->calendarevent) ? 0 : $formdata->calendarevent;
 
         $sess->studentscanmark = 0;
         $sess->autoassignstatus = 0;
@@ -529,6 +538,8 @@ class mod_attendance_structure {
         $sess->subnet = '';
         $sess->automark = 0;
         $sess->automarkcompleted = 0;
+        $sess->preventsharedip = 0;
+        $sess->preventsharediptime = '';
         if (!empty(get_config('attendance', 'enablewarnings'))) {
             $sess->absenteereport = empty($formdata->absenteereport) ? 0 : 1;
         }
@@ -549,6 +560,13 @@ class mod_attendance_structure {
             if (!empty($formdata->automark)) {
                 $sess->automark = $formdata->automark;
             }
+            if (!empty($formdata->preventsharedip)) {
+                $sess->preventsharedip = $formdata->preventsharedip;
+            }
+            if (!empty($formdata->preventsharediptime)) {
+                $sess->preventsharediptime = $formdata->preventsharediptime;
+            }
+
         }
 
         $sess->timemodified = time();
@@ -558,7 +576,7 @@ class mod_attendance_structure {
              // This shouldn't really happen, but just in case to prevent fatal error.
             attendance_create_calendar_event($sess);
         } else {
-            attendance_update_calendar_event($sess->caleventid, $sess->duration, $sess->sessdate);
+            attendance_update_calendar_event($sess);
         }
 
         $info = construct_session_full_date_time($sess->sessdate, $sess->duration);
@@ -592,6 +610,7 @@ class mod_attendance_structure {
         $record->sessionid = $mformdata->sessid;
         $record->timetaken = $now;
         $record->takenby = $USER->id;
+        $record->ipaddress = getremoteaddr(null);
 
         $dbsesslog = $this->get_session_log($mformdata->sessid);
         if (array_key_exists($record->studentid, $dbsesslog)) {
@@ -1018,7 +1037,8 @@ class mod_attendance_structure {
             $where = "ats.attendanceid = :aid AND ats.sessdate >= :csdate";
         }
         if ($this->get_group_mode()) {
-            $sql = "SELECT ats.id, ats.sessdate, ats.groupid, al.statusid, al.remarks
+            $sql = "SELECT ats.id, ats.sessdate, ats.groupid, al.statusid, al.remarks,
+                           ats.preventsharediptime, ats.preventsharedip
                   FROM {attendance_sessions} ats
                   JOIN {attendance_log} al ON ats.id = al.sessionid AND al.studentid = :uid
                   LEFT JOIN {groups_members} gm ON gm.userid = al.studentid AND gm.groupid = ats.groupid
@@ -1033,7 +1053,8 @@ class mod_attendance_structure {
                 'edate'     => $this->pageparams->enddate);
 
         } else {
-            $sql = "SELECT ats.id, ats.sessdate, ats.groupid, al.statusid, al.remarks
+            $sql = "SELECT ats.id, ats.sessdate, ats.groupid, al.statusid, al.remarks,
+                           ats.preventsharediptime, ats.preventsharedip
                   FROM {attendance_sessions} ats
                   JOIN {attendance_log} al
                     ON ats.id = al.sessionid AND al.studentid = :uid
@@ -1075,7 +1096,8 @@ class mod_attendance_structure {
         $id = $DB->sql_concat(':value', 'ats.id');
         if ($this->get_group_mode()) {
             $sql = "SELECT $id, ats.id, ats.groupid, ats.sessdate, ats.duration, ats.description,
-                           al.statusid, al.remarks, ats.studentscanmark, ats.autoassignstatus
+                           al.statusid, al.remarks, ats.studentscanmark, ats.autoassignstatus,
+                           ats.preventsharedip, ats.preventsharediptime
                       FROM {attendance_sessions} ats
                 RIGHT JOIN {attendance_log} al
                         ON ats.id = al.sessionid AND al.studentid = :uid
@@ -1084,7 +1106,8 @@ class mod_attendance_structure {
                   ORDER BY ats.sessdate ASC";
         } else {
             $sql = "SELECT $id, ats.id, ats.groupid, ats.sessdate, ats.duration, ats.description, ats.statusset,
-                           al.statusid, al.remarks, ats.studentscanmark, ats.autoassignstatus
+                           al.statusid, al.remarks, ats.studentscanmark, ats.autoassignstatus,
+                           ats.preventsharedip, ats.preventsharediptime
                       FROM {attendance_sessions} ats
                 RIGHT JOIN {attendance_log} al
                         ON ats.id = al.sessionid AND al.studentid = :uid
@@ -1114,7 +1137,8 @@ class mod_attendance_structure {
             $where = "ats.attendanceid = :aid AND ats.sessdate >= :csdate AND ats.groupid $gsql";
         }
         $sql = "SELECT $id, ats.id, ats.groupid, ats.sessdate, ats.duration, ats.description, ats.statusset,
-                       al.statusid, al.remarks, ats.studentscanmark, ats.autoassignstatus
+                       al.statusid, al.remarks, ats.studentscanmark, ats.autoassignstatus,
+                       ats.preventsharedip, ats.preventsharediptime
                   FROM {attendance_sessions} ats
              LEFT JOIN {attendance_log} al
                     ON ats.id = al.sessionid AND al.studentid = :uid
@@ -1173,7 +1197,7 @@ class mod_attendance_structure {
             $sess->timemodified = $now;
             $DB->update_record('attendance_sessions', $sess);
             if ($sess->caleventid) {
-                attendance_update_calendar_event($sess->caleventid, $duration, $sess->sessdate);
+                attendance_update_calendar_event($sess);
             }
             $event = \mod_attendance\event\session_duration_updated::create(array(
                 'objectid' => $this->id,
