@@ -26,8 +26,9 @@ use mod_checklist\local\checklist_comment;
 use mod_checklist\local\checklist_item;
 use mod_checklist\local\output_status;
 
-require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
-require_once(dirname(__FILE__).'/lib.php');
+defined('MOODLE_INTERNAL') || die();
+global $CFG;
+require_once($CFG->dirroot.'/mod/checklist/lib.php');
 
 define("CHECKLIST_TEXT_INPUT_WIDTH", 45);
 define("CHECKLIST_OPTIONAL_NO", 0);
@@ -140,6 +141,14 @@ class checklist_class {
     }
 
     /**
+     * Force checklist into 'edit dates' mode (really only needed by behat generator).
+     * @param bool $edit
+     */
+    public function set_editing_dates($edit) {
+        $this->editdates = (bool)$edit;
+    }
+
+    /**
      * Get an array of the items in a checklist
      *
      */
@@ -232,19 +241,20 @@ class checklist_class {
             }
 
             $sectionheading = 0;
-            while (list($itemid, $item) = each($this->items)) {
+            while ($item = current($this->items)) {
                 // Search from current position.
                 if (($item->moduleid == $section) && ($item->itemoptional == CHECKLIST_OPTIONAL_HEADING)) {
-                    $sectionheading = $itemid;
+                    $sectionheading = $item->id;
                     break;
                 }
+                next($this->items);
             }
 
             if (!$sectionheading) {
                 // Search again from the start.
                 foreach ($this->items as $item) {
                     if (($item->moduleid == $section) && ($item->itemoptional == CHECKLIST_OPTIONAL_HEADING)) {
-                        $sectionheading = $itemid;
+                        $sectionheading = $item->id;
                         break;
                     }
                 }
@@ -278,12 +288,15 @@ class checklist_class {
                 if ($this->cm->id == $cmid) {
                     continue; // Do not include this checklist in the list of modules.
                 }
-                if ($mods->get_cm($cmid)->modname == 'label') {
+                if ($mods->get_cm($cmid)->modname === 'label') {
                     continue; // Ignore any labels.
+                }
+                if (isset($mods->get_cm($cmid)->deletioninprogress) && $mods->get_cm($cmid)->deletioninprogress) {
+                    continue; // M3.2 onwards - if cm is in the recycle bin, being deleted, then skip it.
                 }
 
                 $foundit = false;
-                while (list(, $item) = each($this->items)) {
+                while ($item = current($this->items)) {
                     // Search list from current position (will usually be the next item).
                     if (($item->moduleid == $cmid) && ($item->itemoptional != CHECKLIST_OPTIONAL_HEADING)) {
                         $foundit = $item;
@@ -293,6 +306,7 @@ class checklist_class {
                         // Skip any items that are not linked to modules.
                         $nextpos++;
                     }
+                    next($this->items);
                 }
                 if (!$foundit) {
                     // Search list again from the start (just in case).
@@ -1729,7 +1743,7 @@ class checklist_class {
         $item->itemoptional = $optional;
         $item->hidden = $hidden;
         $item->duetime = 0;
-        if ($duetime) {
+        if ($this->editdates && $duetime) {
             $item->duetime = make_timestamp($duetime['year'], $duetime['month'], $duetime['day']);
         }
         $item->eventid = 0;
@@ -1780,6 +1794,7 @@ class checklist_class {
                 $event->delete();
             } catch (dml_missing_record_exception $e) {
                 // Just ignore this error - the event is missing, so does not need deleting.
+                $event = null; // Do something here to stop codechecker complaining.
             }
             $item->eventid = 0;
             if ($add) {
@@ -1824,7 +1839,8 @@ class checklist_class {
         }
     }
 
-    protected function updateitem($itemid, $displaytext, $duetime = false, $linkcourseid = null, $linkurl = null, $grouping = null) {
+    protected function updateitem($itemid, $displaytext, $duetime = false, $linkcourseid = null, $linkurl = null,
+                                  $grouping = null) {
         $displaytext = trim($displaytext);
         if ($displaytext == '') {
             return;
@@ -1837,9 +1853,11 @@ class checklist_class {
                 $item = $this->items[$itemid];
                 $oldlinkcourseid = $item->linkcourseid;
                 $item->displaytext = $displaytext;
-                $item->duetime = 0;
-                if ($duetime) {
-                    $item->duetime = make_timestamp($duetime['year'], $duetime['month'], $duetime['day']);
+                if ($this->editdates) {
+                    $item->duetime = 0;
+                    if ($duetime) {
+                        $item->duetime = make_timestamp($duetime['year'], $duetime['month'], $duetime['day']);
+                    }
                 }
                 $item->linkcourseid = $linkcourseid;
                 $item->linkurl = $linkurl;
