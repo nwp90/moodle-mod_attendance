@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
 class restore_checklist_activity_structure_step extends restore_activity_structure_step {
 
     protected function define_structure() {
@@ -69,6 +71,10 @@ class restore_checklist_activity_structure_step extends restore_activity_structu
 
         // Apply offset to the deadline.
         $data->duetime = $this->apply_date_offset($data->duetime);
+
+        if (!$this->task->is_samesite()) {
+            $data->linkcourseid = null; // Course links do not work when restoring to a different site.
+        }
 
         // Sort out the rest of moduleids in the 'after_restore' function - after all the other activities have been restored.
 
