@@ -1,4 +1,4 @@
-<?PHP
+<?php
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -13,19 +13,34 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
 /**
- * Version information. When a new version is released version is incremented
+ * Privacy class for Moodle Gapfill question type.
  *
  * @package    qtype_gapfill
+ * @copyright  Marcus Green 2018
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+namespace qtype_gapfill\privacy;
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Privacy Subsystem for qtype_gapfill implementing null_provider.
+ *
  * @copyright  2018 Marcus Green
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->component = 'qtype_gapfill';
-$plugin->version  = 2018050700;
-$plugin->requires = 2016052311;  // Moodle 3.1.11.
-$plugin->release = '1.972';
-$plugin->maturity  = MATURITY_STABLE;
+class provider implements
+    // This plugin does not store any personal user data.
+    \core_privacy\local\metadata\null_provider
+{
+    use \core_privacy\local\legacy_polyfill;
+    /**
+     * Get the language string identifier with the component's language
+     * file to explain why this plugin stores no data.
+     *
+     * @return  string
+     */
+    public static function _get_reason() {
+        return 'privacy:null_reason';
+    }
+}
