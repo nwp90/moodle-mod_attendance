@@ -15,37 +15,32 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Atto text editor integration version file.
+ * Privacy provider for atto_count plugin
  *
- * @package    atto_count
- * @copyright  2014 Damyon Wiese  <damyon@moodle.com>
+ * @copyright  2018 Mathieu Petit-Clair <mathieu@petitclair.ca>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+namespace atto_count\privacy;
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Initialise the strings required for js
+ * Privacy Subsystem for atto_count implementing null_provider.
+ *
+ * @package    atto_count
+ * @copyright  2018 Mathieu Petit-Clair <mathieu@petitclair.ca>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-function atto_count_strings_for_js() {
-    global $PAGE;
+class provider implements \core_privacy\local\metadata\null_provider {
 
-    $strings = array(
-        'wordsinalltext',
-        'lettersinalltext',
-        'countwordsandletters'
-    );
-
-    $PAGE->requires->strings_for_js($strings, 'atto_count');
+    /**
+     * Get the language string identifier with the component's language
+     * file to explain why this plugin stores no data.
+     *
+     * @return  string
+     */
+    public static function get_reason() : string {
+        return 'privacy:metadata';
+    }
 }
-
-
-/**
- * Get icon mapping for font-awesome.
- */
-function atto_count_get_fontawesome_icon_map() {
-    return [
-        'atto_count:icon' => 'fa-hashtag'
-    ];
-}
-
