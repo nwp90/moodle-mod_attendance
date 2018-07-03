@@ -21,7 +21,8 @@
  * @copyright  2015 UC Regents
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
+// Login check require_login() is called in zoom_get_instance_setup();.
+// @codingStandardsIgnoreLine
 require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
 require_once(dirname(__FILE__).'/lib.php');
 require_once(dirname(__FILE__).'/locallib.php');
@@ -29,6 +30,10 @@ require_once(dirname(__FILE__).'/mod_form.php');
 require_once(dirname(__FILE__).'/../../lib/moodlelib.php');
 
 list($course, $cm, $zoom) = zoom_get_instance_setup();
+
+// Check capability.
+$context = context_module::instance($cm->id);
+require_capability('mod/zoom:addinstance', $context);
 
 $PAGE->set_url('/mod/zoom/report.php', array('id' => $cm->id));
 

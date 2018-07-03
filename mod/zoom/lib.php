@@ -124,13 +124,7 @@ function zoom_update_instance(stdClass $zoom, mod_zoom_mod_form $mform = null) {
             zoom_print_error('meeting/create', $service->lasterror);
         }
     } else if (!$service->meeting_update($zoom)) {
-        if (zoom_is_meeting_gone_error($service->lasterror)) {
-            if (!$service->meeting_create($zoom)) {
-                zoom_print_error('meeting/create', $service->lasterror);
-            }
-        } else {
-            zoom_print_error('meeting/update', $service->lasterror);
-        }
+        zoom_print_error('meeting/update', $service->lasterror, $zoom->coursemodule);
     }
 
     $zoom = $service->lastresponse;
@@ -168,18 +162,18 @@ function zoom_delete_instance($id) {
     // Include locallib.php for constants.
     require_once($CFG->dirroot.'/mod/zoom/locallib.php');
 
-    // Delete any dependent records here.
     // Status -1 means expired and missing from zoom.
     // So don't bother with the webservice in this case.
     if ($zoom->status !== ZOOM_MEETING_EXPIRED) {
         $service = new mod_zoom_webservice();
-        if (!$service->meeting_delete($zoom)) {
-            zoom_print_error('meeting/delete', $service->lasterror);
-        }
+        // Don't bother notifying user if cannot delete Zoom meeting, since user
+        // wants it gone from Moodle.
+        $service->meeting_delete($zoom);
     }
 
     $DB->delete_records('zoom', array('id' => $zoom->id));
 
+    // Delete any dependent records here.
     zoom_calendar_item_delete($zoom);
     zoom_grade_item_delete($zoom);
 
@@ -527,9 +521,12 @@ function zoom_extend_settings_navigation(settings_navigation $settingsnav, navig
  *
  * @param string $apicall API endpoint (e.g. meeting/get)
  * @param string $error Error message (most likely from mod_zoom_webservice->lasterror)
+ * @param int $cmid Optional (used for recreate links). Cmid of the instance that caused the error
  */
-function zoom_print_error($apicall, $error) {
+function zoom_print_error($apicall, $error, $cmid = -1) {
     global $CFG, $COURSE, $OUTPUT, $PAGE;
+
+    require_once($CFG->dirroot.'/mod/zoom/locallib.php');
 
     // Lang string for the error.
     $errstring = 'zoomerr';
@@ -541,7 +538,7 @@ function zoom_print_error($apicall, $error) {
     if (isset($_SERVER['HTTP_REFERER'])) {
         $nexturl = clean_param($_SERVER['HTTP_REFERER'], PARAM_LOCALURL);
     } else {
-        $nexturl = '/';
+        $nexturl = course_get_url($COURSE->id);
     }
 
     // This handles special error messages that aren't the generic zoomerr.
@@ -561,7 +558,7 @@ function zoom_print_error($apicall, $error) {
     } else {
         switch ($apicall) {
             case 'user/getbyemail':
-                if (strpos($error, 'not exist') !== false) {
+                if (zoom_is_user_not_found_error($error)) {
                     // Assume user is using Zoom for the first time.
                     $errstring = 'zoomerr_usernotfound';
                     $param = get_config('mod_zoom', 'zoomurl');
@@ -574,49 +571,14 @@ function zoom_print_error($apicall, $error) {
                 break;
             case 'meeting/get':
             case 'meeting/update':
-            case 'meeting/delete':
                 if (zoom_is_meeting_gone_error($error)) {
                     $errstring = 'zoomerr_meetingnotfound';
+                    $param = zoom_meetingnotfound_param($cmid);
+                    $nexturl = "/mod/zoom/view.php?id=$cmid";
                 }
                 break;
         }
     }
 
-    // Based on fatal_error() in lib/outputrenderers.php, but with Bootstrap notification.
-    $protocol = isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0';
-    @header($protocol . ' 404 Not Found');
-
-    $PAGE->set_title(get_string('error'));
-    $PAGE->set_heading($COURSE->fullname);
-    echo $OUTPUT->header();
-
-    echo $OUTPUT->notification(get_string($errstring, 'mod_zoom', $param), $style);
-    if ($CFG->debugdeveloper) {
-        echo $OUTPUT->notification("<strong>Debug info:</strong> $apicall: $error", 'notifytiny');
-        echo $OUTPUT->notification('<strong>Stack trace:</strong> '.format_backtrace(debug_backtrace()), 'notifytiny');
-    }
-    echo $OUTPUT->continue_button($nexturl);
-
-    echo $OUTPUT->footer();
-    exit(1);
-}
-
-/**
- * Check if the error indicates that a meeting is gone.
- *
- * @param string $error
- * @return bool
- */
-function zoom_is_meeting_gone_error($error) {
-    return strpos($error, 'not found') !== false;
-}
-
-/**
- * Check if the error indicates that a user is not found.
- *
- * @param string $error
- * @return bool
- */
-function zoom_is_user_not_found_error($error) {
-    return strpos($error, 'User not exist') !== false;
+    print_error($errstring, 'mod_zoom', $nexturl, $param, "$apicall : $error");
 }
