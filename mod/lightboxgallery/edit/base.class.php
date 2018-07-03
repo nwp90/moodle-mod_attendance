@@ -35,8 +35,6 @@ class edit_base {
     public $context;
 
     public function __construct($gallery, $cm, $image, $tab, $showthumb = true) {
-        global $CFG;
-
         $this->gallery = $gallery;
         $this->cm = $cm;
         $this->image = $image;
