@@ -90,20 +90,18 @@ if ($action == "submit-questionnaire") {
 }
 
 $mode = 'student';
-
+$script = 'view';
 if (has_capability('mod/teambuilder:create', $ctxt)) {
     if ($preview) {
         $mode = 'preview';
-        $PAGE->requires->js("/mod/teambuilder/js/view.js");
     } else {
         $mode = 'teacher';
-        $PAGE->requires->js("/mod/teambuilder/js/editview.js");
+        $script = 'editview';
     }
 } else {
     require_capability('mod/teambuilder:respond', $ctxt);
-    $mode = 'student';
-    $PAGE->requires->js("/mod/teambuilder/js/view.js");
 }
+$PAGE->requires->js_call_amd('mod_teambuilder/'.$script, 'init');
 
 if (($mode == 'teacher') && ($teambuilder->open < time()) && !isset($_GET['f'])) {
     redirect(new moodle_url('/mod/teambuilder/build.php', ['id' => $id]));
@@ -162,15 +160,20 @@ if (($mode == "student") && $teambuilder->groupid && !groups_is_member($teambuil
         $questions = teambuilder_get_questions($teambuilder->id);
         echo '<script type="text/javascript"> var init_questions = ' . json_encode($questions) . '</script>';
 
+        $displaytypes = [
+            "one" => get_string('selectone', 'mod_teambuilder'),
+            "any" => get_string('selectany', 'mod_teambuilder'),
+            "atleastone" => get_string('selectatleastone', 'mod_teambuilder'),
+        ];
         echo '<div id="questions">';
         foreach ($questions as $q) {
             echo <<<HTML
 <div class="question" id="question-{$q->id}"><table>
 <tr>
     <td rowspan="2" class="handle">&nbsp;</td>
-    <td><span class="questionText">$q->question</span> <span class="type">$q->type</span></td>
+    <td><span class="questionText">$q->question</span> <span class="type">{$displaytypes[$q->type]}</span></td>
     <td class="edit">
-        <a onclick="deleteQuestion(this)">Delete</a>
+        <a class="deleteQuestion">Delete</a>
     </td>
 </tr>
 <tr>
@@ -187,9 +190,8 @@ HTML;
         if ($teambuilder->open > time()) {
 
             // New question form.
-            $onclick = "saveQuestionnaire('{$CFG->wwwroot}/mod/teambuilder/ajax.php', {$id})";
             echo '<div style="display:none;text-align:center;" id="savingIndicator"></div>';
-            echo '<div style="text-align:center;"><button type="button" id="saveQuestionnaire" onclick="'.$onclick.'">';
+            echo '<div style="text-align:center;"><button type="button" id="saveQuestionnaire" data-id="'.$id.'">';
             echo get_string('savequestionnaire', 'mod_teambuilder').'</button></div>';
 
             if (empty($questions)) {
@@ -233,13 +235,13 @@ HTML;
         <tr>
             <th scope="row">$stranswers</th>
             <td id="answerSection"><input type="text" name="answers[]" class="text" /><br/>
-                <button onclick="addNewAnswer();" type="button">+</button>
-                <button onclick="removeLastAnswer();" type="button">-</button>
+                <button id="addnewanswer" type="button">+</button>
+                <button id="removelastanswer" type="button">-</button>
             </td>
         </tr>
         <tr>
             <td></td>
-            <td><button id="addNewQuestion" type="button" onclick="addNewQuestion();">$straddnewquestion</button></td>
+            <td><button id="addNewQuestion" type="button">$straddnewquestion</button></td>
         </tr>
     </table>
 </div>
@@ -274,12 +276,12 @@ HTML;
 
         if (!$responses || $teambuilder->allowupdate) {
             $preview = $mode == "preview" ? "&preview=1" : "";
-            echo '<form onsubmit="return validateForm(this)" action="view.php?id='.$id.$preview.'" method="POST">';
+            echo '<form id="questionnaireform" action="view.php?id='.$id.$preview.'" method="POST">';
 
             $displaytypes = [
-                "one" => "Select <strong>one</strong> of the following:",
-                "any" => "Select any (or none) of the following:",
-                "atleastone" => "Select <strong>at least one</strong> of the following:",
+                "one" => get_string('selectoneresponse', 'mod_teambuilder'),
+                "any" => get_string('selectanyresponse', 'mod_teambuilder'),
+                "atleastone" => get_string('selectatleastoneresponse', 'mod_teambuilder'),
             ];
             foreach ($questions as $q) {
                 echo <<<HTML
