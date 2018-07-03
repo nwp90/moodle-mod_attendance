@@ -15,7 +15,7 @@ Feature: Test importing questions from Moodle glossary export.
       | user    | course | role           |
       | teacher | C1     | editingteacher |
     And I log in as "teacher"
-    And I follow "Course 1"
+    And I follow "C1"
 
   @javascript @_file_upload
   Scenario: import XML file of an export glossary
@@ -32,6 +32,6 @@ Feature: Test importing questions from Moodle glossary export.
     # Now export again.
     And I navigate to "Export" node in "Course administration > Question bank"
     And I set the field "id_format_glossary" to "1"
+    And I set the field "Export category" to "Vocabulary"
     And I press "Export questions to file"
     And following "click here" should download between "6500" and "7500" bytes
-
