@@ -41,7 +41,10 @@ class practice_column extends \core_question\bank\column_base {
 
         global $DB, $USER;
         $this->currentuserid = $USER->id;
-        $cmid = $this->qbank->get_most_specific_context()->instanceid;
+        // Build context, categoryid and cmid here for use later.
+        $context = $this->qbank->get_most_specific_context();
+        $this->categoryid = question_get_default_category($context->id)->id;
+        $cmid = $context->instanceid;
         // TODO: Get StudentQuiz id from infrastructure instead of DB!
         // TODO: Exception handling lookup fails somehow.
         $sq = $DB->get_record('studentquiz', array('coursemodule' => $cmid));
@@ -106,7 +109,8 @@ class practice_column extends \core_question\bank\column_base {
      */
     public function get_extra_joins() {
 
-        $tests = array('qa.responsesummary IS NOT NULL');
+        // Add outer WHERE tests here to limit the dataset to just the module question category.
+        $tests = array('qa.responsesummary IS NOT NULL', 'q.parent = 0', 'q.hidden = 0', 'q.category = ' . $this->categoryid);
         return array('pr' => 'LEFT JOIN ('
             . 'SELECT COUNT(questionid) as practice'
             . ', questionid FROM {question_attempts} qa JOIN {question} q ON qa.questionid = q.id'
@@ -136,20 +140,21 @@ class practice_column extends \core_question\bank\column_base {
                 .' 	JOIN {question_attempts} qa on qa.questionusageid = qu.id '
                 .' 	LEFT JOIN {question_attempt_steps} qas on qas.questionattemptid = qa.id'
                 .' 	LEFT JOIN {question_attempt_step_data} qasd on qasd.attemptstepid = qas.id'
+                .'  INNER JOIN ('
+                .' 	 SELECT MAX(qasd.id) maxqasdid'
+                .' 	 FROM {studentquiz} sq '
+                .' 	 JOIN {studentquiz_attempt} sqa on sqa.studentquizid = sq.id'
+                .' 	 JOIN {question_usages} qu on qu.id = sqa.questionusageid '
+                .' 	 JOIN {question_attempts} qa on qa.questionusageid = qu.id '
+                .' 	 LEFT JOIN {question_attempt_steps} qas on qas.questionattemptid = qa.id'
+                .' 	 LEFT JOIN {question_attempt_step_data} qasd on qasd.attemptstepid = qas.id'
+                .' 	 WHERE qasd.name = \'-submit\''
+                .'   AND sq.id = ' . $this->studentquizid
+                .'   AND sqa.userid = ' . $this->currentuserid
+                .'   AND (qas.state = \'gradedright\' OR qas.state = \'gradedwrong\' OR qas.state=\'gradedpartial\')'
+                .'   GROUP BY qa.questionid'
+                .'  ) qasdmax on qasd.id = qasdmax.maxqasdid'
                 .' WHERE qasd.name = \'-submit\''
-                .' AND qasd.id IN ('
-                .' 	SELECT MAX(qasd.id)'
-                .' 	FROM {studentquiz} sq '
-                .' 	JOIN {studentquiz_attempt} sqa on sqa.studentquizid = sq.id'
-                .' 	JOIN {question_usages} qu on qu.id = sqa.questionusageid '
-                .' 	JOIN {question_attempts} qa on qa.questionusageid = qu.id '
-                .' 	LEFT JOIN {question_attempt_steps} qas on qas.questionattemptid = qa.id'
-                .' 	LEFT JOIN {question_attempt_step_data} qasd on qasd.attemptstepid = qas.id'
-                .' 	WHERE qasd.name = \'-submit\''
-                .'  AND sq.id = ' . $this->studentquizid
-                .'  AND sqa.userid = ' . $this->currentuserid
-                .'  AND (qas.state = \'gradedright\' OR qas.state = \'gradedwrong\' OR qas.state=\'gradedpartial\')'
-                .' 	GROUP BY qa.questionid)'
                 . ') mylatts ON mylatts.questionid = q.id'
             );
     }
@@ -164,7 +169,7 @@ class practice_column extends \core_question\bank\column_base {
 
     /**
      * Get sql sortable name
-     * @return string field name
+     * @return array field name
      */
     public function is_sortable() {
         return array(

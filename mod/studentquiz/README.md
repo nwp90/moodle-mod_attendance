@@ -38,7 +38,7 @@ For changes and instructions please read the [Release Notes](https://github.com/
 
 ## Documentation
 
-You can find manuals for each role in the [manuals website](https://studentquiz.hsr.ch/docs/). 
+You can find manuals for each role in the [manuals website](https://docs.moodle.org/34/en/StudentQuiz_module). 
 
 ## Compatibility
 
@@ -46,7 +46,7 @@ Supported and tested with:
 
 * Moodle 3.1, 3.2, 3.3, 3.4
 * PHP 5.6, 7.0, 7.1, 7.2
-* Databases: MySQL, PostgreSQL
+* Databases: MySQL, MariaDB, PostgreSQL
 * Browsers: Firefox, Chrome
 
 Refer to the Moodle release notes for the minimum requirements for PHP and the databases. Other modern browsers should be compatible too, it's just not tested or developed against them explicitly.
