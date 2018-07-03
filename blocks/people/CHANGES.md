@@ -4,6 +4,10 @@ moodle-block_people
 Changes
 -------
 
+### v3.4-r2
+
+* 2018-05-16 - Implement Privacy API.
+
 ### v3.4-r1
 
 * 2017-12-15 - Used new user picture attribute and removed the user profile quick link because of redundancy.
