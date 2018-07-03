@@ -25,6 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/mod/zoom/locallib.php');
+require_once($CFG->dirroot.'/lib/filelib.php');
 
 /**
  * Web service class.
@@ -71,27 +72,15 @@ class mod_zoom_webservice {
 
         $postfields = http_build_query($data, '', '&');
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $postfields);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'Content-Type: application/x-www-form-urlencoded; charset=utf-8'
-            ));
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_FAILONERROR, true);
-
-        $response = curl_exec($ch);
-        if ($response === false) {
+        $curl = new curl();
+        $curl->setHeader('Content-Type: application/x-www-form-urlencoded; charset=utf-8');
+        $response = $curl->post($url, $postfields, array('CURLOPT_FAILONERROR' => true));
+        if ($curl->get_errno()) {
             // Curl error.
-            $error = curl_error($ch);
-            curl_close($ch);
-            $this->lasterror = $error;
-            throw new moodle_exception('errorwebservice', 'mod_zoom', '', $error);
+            $this->lasterror = $curl->error;
+            throw new moodle_exception('errorwebservice', 'mod_zoom', '', $curl->error);
         }
 
-        curl_close($ch);
         $response = json_decode($response);
         if (isset($response->error)) {
             // Web service error.
@@ -356,6 +345,34 @@ class mod_zoom_webservice {
         return true;
     }
 
+    /**
+     * Get details about a particular webinar UUID/session
+     * using Dashboard API.
+     *
+     * @param string $uuid
+     * @param int $pagesize Optional; number of records per page
+     * @param int $pagenumber Optional; which page to request
+     * @return bool
+     */
+    public function metrics_webinar_detail($uuid,
+            $pagesize = ZOOM_DEFAULT_RECORDS_PER_CALL, $pagenumber = 1) {
+        $url = 'metrics/webinardetail';
+        $data = array(
+            'meeting_id' => $uuid,
+            'type' => 2,
+            'page_size' => $pagesize,
+            'page_number' => $pagenumber
+        );
+
+        try {
+            $this->make_call($url, $data);
+        } catch (moodle_exception $e) {
+            return false;
+        }
+
+        return true;
+    }
+
     // Helper functions
     // --------------------------------
 
@@ -400,6 +417,7 @@ class mod_zoom_webservice {
         // Required parameters.
         foreach ($required as $field) {
             if (!isset($data[$field])) {
+                $this->lasterror = 'Missing required parameter.';
                 return false;
             }
         }

@@ -1,5 +1,5 @@
 <?php
-// This file is part of the Zoom plugin for Moodle - http://moodle.org/
+// This file is part of the Zoom module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,23 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Definition of Zoom scheduled tasks.
+ * Zoom module capability definition
  *
  * @package    mod_zoom
- * @copyright  2015 UC Regents
+ * @author     Nick Stefanski <nstefanski@escoffier.edu>
+ * @copyright  2017 Auguste Escoffier School of Culinary Arts {@link https://www.escoffier.edu}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
-
-$tasks = array(
-    array(
-        'classname' => 'mod_zoom\task\update_meetings',
-        'blocking' => 0,
-        'minute' => '0',
-        'hour' => '0',
-        'day' => '*',
-        'month' => '*',
-        'dayofweek' => '*'
-    )
+$addons = array(
+    "mod_zoom" => array()
 );

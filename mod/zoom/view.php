@@ -24,7 +24,8 @@
  * @copyright  2015 UC Regents
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
+// Login check require_login() is called in zoom_get_instance_setup();.
+// @codingStandardsIgnoreLine
 require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
 require_once(dirname(__FILE__).'/lib.php');
 require_once(dirname(__FILE__).'/locallib.php');
@@ -33,6 +34,9 @@ require_once(dirname(__FILE__).'/../../lib/moodlelib.php');
 $config = get_config('mod_zoom');
 
 list($course, $cm, $zoom) = zoom_get_instance_setup();
+
+$context = context_module::instance($cm->id);
+$iszoommanager = has_capability('mod/zoom:addinstance', $context);
 
 $event = \mod_zoom\event\course_module_viewed::create(array(
     'objectid' => $PAGE->cm->instance,
@@ -55,17 +59,11 @@ $PAGE->set_heading(format_string($course->fullname));
  * $PAGE->add_body_class('zoom-'.$somevar);
  */
 
-$cache = cache::make('mod_zoom', 'zoomid');
-if (!($zoomuserid = $cache->get($USER->id))) {
-    $zoomuserid = false;
-    $service = new mod_zoom_webservice();
-    // Not an error if this fails, since people don't need a Zoom account to view/join meetings.
-    if ($service->user_getbyemail($USER->email)) {
-        $zoomuserid = $service->lastresponse->id;
-    }
-    $cache->set($USER->id, $zoomuserid);
-}
+$zoomuserid = zoom_get_user_id(false);
 $userishost = ($zoomuserid == $zoom->host_id);
+
+$service = new mod_zoom_webservice();
+$showrecreate = !$service->get_meeting_info($zoom) && zoom_is_meeting_gone_error($service->lasterror);
 
 $stryes = get_string('yes');
 $strno = get_string('no');
@@ -86,6 +84,18 @@ $strall = get_string('allmeetings', 'mod_zoom');
 
 // Output starts here.
 echo $OUTPUT->header();
+
+if ($showrecreate) {
+    // Only show recreate/delete links in the message for users that can edit.
+    if ($iszoommanager) {
+        $message = get_string('zoomerr_meetingnotfound', 'mod_zoom', zoom_meetingnotfound_param($cm->id));
+        $style = 'notifywarning';
+    } else {
+        $message = get_string('zoomerr_meetingnotfound_info', 'mod_zoom');
+        $style = 'notifymessage';
+    }
+    echo $OUTPUT->notification($message, $style);
+}
 
 echo $OUTPUT->heading(format_string($zoom->name), 2);
 if ($zoom->intro) {
@@ -121,11 +131,14 @@ $title->header = true;
 $title->colspan = $numcolumns;
 $table->data[] = array($title);
 
-$sessionsurl = new moodle_url('/mod/zoom/report.php', array('id' => $cm->id));
-$sessionslink = html_writer::link($sessionsurl, get_string('sessions', 'mod_zoom'));
-$sessions = new html_table_cell($sessionslink);
-$sessions->colspan = $numcolumns;
-$table->data[] = array($sessions);
+// Only show sessions link to users with edit capability.
+if ($iszoommanager) {
+    $sessionsurl = new moodle_url('/mod/zoom/report.php', array('id' => $cm->id));
+    $sessionslink = html_writer::link($sessionsurl, get_string('sessions', 'mod_zoom'));
+    $sessions = new html_table_cell($sessionslink);
+    $sessions->colspan = $numcolumns;
+    $table->data[] = array($sessions);
+}
 
 if ($zoom->recurring) {
     $recurringmessage = new html_table_cell(get_string('recurringmeetinglong', 'mod_zoom'));
