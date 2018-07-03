@@ -1,6 +1,6 @@
 CBM Grades Readme.txt file
 Tony Gardner-Medwin (a.gardner-medwin@ucl.ac.uk) 
-v 2.7.02 (23 Aug 2014) for Moodle 2.7, 2.7.1, 2.8
+v 2.7.04 (18 May 2018) for Moodle 2.7 + GDPR adapted
 
  This plugin directory ('cbmgrades') belongs in /moodle/mod/quiz/report .
  It displays scores appropriate for interpreting performance when using CBM.
