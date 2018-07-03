@@ -35,9 +35,7 @@ class mod_lightboxgallery_imageadd_form extends moodleform {
         global $COURSE, $cm;
 
         $mform =& $this->_form;
-        $gallery = $this->_customdata;
 
-        $handlecollisions = !get_config('lightboxgallery', 'overwritefiles');
         $mform->addElement('header', 'general', get_string('addimage', 'lightboxgallery'));
 
         $mform->addElement('filemanager', 'image', get_string('file'), '0',
@@ -91,8 +89,7 @@ class mod_lightboxgallery_imageadd_form extends moodleform {
 
 
     private function can_resize() {
-        global $gallery;
-
+        $gallery = $this->_customdata['gallery'];
         return !in_array($gallery->autoresize, array(AUTO_RESIZE_UPLOAD, AUTO_RESIZE_BOTH));
     }
 }
