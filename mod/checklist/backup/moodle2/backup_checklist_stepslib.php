@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Define all the backup steps that will be used by the backup_forum_activity_task
  */
@@ -41,7 +43,8 @@ class backup_checklist_activity_structure_step extends backup_activity_structure
         $item = new backup_nested_element('item', array('id'),
                                           array(
                                               'userid', 'displaytext', 'position', 'indent',
-                                              'itemoptional', 'duetime', 'colour', 'moduleid', 'hidden'
+                                              'itemoptional', 'duetime', 'colour', 'moduleid', 'hidden',
+                                              'linkcourseid', 'linkurl',
                                           ));
 
         $checks = new backup_nested_element('checks');

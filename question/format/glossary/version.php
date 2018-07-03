@@ -18,15 +18,15 @@
  * Version information for the calculated question type.
  *
  * @package    qformat_glossary
- * @copyright  2016 Daniel Thies <dthies@ccal.edu>
+ * @copyright  2016 Daniel Thies <dethies@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'qformat_glossary';
-$plugin->version   = 2016072800;
-$plugin->release   = '1.0 Buuild(20160728)';
+$plugin->version   = 2016072803;
+$plugin->release   = '1.0.1';
 
 $plugin->requires  = 2013051400;
 

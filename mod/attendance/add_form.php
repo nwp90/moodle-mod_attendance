@@ -125,6 +125,11 @@ class mod_attendance_add_form extends moodleform {
                             array('maxfiles' => EDITOR_UNLIMITED_FILES, 'noclean' => true, 'context' => $modcontext));
         $mform->setType('sdescription', PARAM_RAW);
 
+        $mform->addElement('checkbox', 'calendarevent', '', get_string('calendarevent', 'attendance'));
+        $mform->addHelpButton('calendarevent', 'calendarevent', 'attendance');
+        // XXX - this should be modified to use a different config setting if we keep enablecalendar's current meaning
+        $mform->setDefault('calendarevent', get_config('attendance', 'enablecalendar'));
+
         // If warnings allow selector for reporting.
         if (!empty(get_config('attendance', 'enablewarnings'))) {
             $mform->addElement('checkbox', 'absenteereport', '', get_string('includeabsentee', 'attendance'));
@@ -241,6 +246,26 @@ class mod_attendance_add_form extends moodleform {
 
             $mform->hideif('subnetgrp', 'studentscanmark', 'notchecked');
             $mform->hideif('subnet', 'usedefaultsubnet', 'checked');
+
+            $mgroup3 = array();
+            $mgroup3[] = & $mform->createElement('checkbox', 'preventsharedip', '');
+            $mgroup3[] = & $mform->createElement('text', 'preventsharediptime',
+                get_string('preventsharediptime', 'attendance'), '', 'test');
+            $mgroup3[] = & $mform->createElement('static', 'preventsharediptimedesc', '',
+                get_string('preventsharedipminutes', 'attendance'));
+            $mform->addGroup($mgroup3, 'preventsharedgroup', get_string('preventsharedip', 'attendance'), array(' '), false);
+            $mform->addHelpButton('preventsharedgroup', 'preventsharedip', 'attendance');
+            $mform->setAdvanced('preventsharedgroup');
+            $mform->setType('preventsharediptime', PARAM_INT);
+            $mform->hideif('preventsharedgroup', 'studentscanmark', 'notchecked');
+            $mform->disabledIf('preventsharediptime', 'preventsharedip', 'notchecked');
+            if (isset($pluginconfig->preventsharedip)) {
+                $mform->setDefault('preventsharedip', $pluginconfig->preventsharedip);
+            }
+            if (isset($pluginconfig->preventsharediptime)) {
+                $mform->setDefault('preventsharediptime', $pluginconfig->preventsharediptime);
+            }
+
         } else {
             $mform->addElement('hidden', 'studentscanmark', '0');
             $mform->settype('studentscanmark', PARAM_INT);
@@ -251,6 +276,13 @@ class mod_attendance_add_form extends moodleform {
 
             $mform->addElement('hidden', 'subnet', '');
             $mform->setType('subnet', PARAM_TEXT);
+
+            $mform->addElement('hidden', 'preventsharedip', '0');
+            $mform->setType('preventsharedip', PARAM_INT);
+
+            $sharedtime = isset($pluginconfig->preventsharediptime) ? $pluginconfig->preventsharediptime : null;
+            $mform->addElement('hidden', 'preventsharediptime', $sharedtime);
+            $mform->setType('preventsharediptime', PARAM_INT);
         }
 
         $this->add_action_buttons(true, get_string('add', 'attendance'));
@@ -262,6 +294,7 @@ class mod_attendance_add_form extends moodleform {
      * @param array $files
      */
     public function validation($data, $files) {
+        global $DB;
         $errors = parent::validation($data, $files);
 
         $sesstarttime = $data['sestime']['starthour'] * HOURSECS + $data['sestime']['startminute'] * MINSECS;
@@ -299,6 +332,24 @@ class mod_attendance_add_form extends moodleform {
             $this->_form->setConstant('previoussessiondate', $data['sessiondate']);
         }
 
+        if ($data['automark'] == ATTENDANCE_AUTOMARK_CLOSE) {
+            $cm            = $this->_customdata['cm'];
+            // Check that the selected statusset has a status to use when unmarked.
+            $sql = 'SELECT id
+            FROM {attendance_statuses}
+            WHERE deleted = 0 AND (attendanceid = 0 or attendanceid = ?)
+            AND setnumber = ? AND setunmarked = 1';
+            $params = array($cm->instance, $data['statusset']);
+            if (!$DB->record_exists_sql($sql, $params)) {
+                $errors['automark'] = get_string('noabsentstatusset', 'attendance');
+            }
+        }
+
+        if (!empty($data['studentscanmark']) && !empty($data['preventsharedip']) &&
+                empty($data['preventsharediptime'])) {
+            $errors['preventsharedgroup'] = get_string('iptimemissing', 'attendance');
+
+        }
         return $errors;
     }
 

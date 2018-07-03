@@ -17,8 +17,8 @@
 /**
  * Library of functions and constants of Group selection module
  *
- * @package    mod
- * @subpackage groupselect
+ * @package   mod_groupselect
+ * @copyright 2018 HTW Chur Roger Barras
  * @copyright  2008-2011 Petr Skoda (http://skodak.org)
  * @copyright  2014 Tampere University of Technology, P. Pyykkönen (pirkka.pyykkonen ÄT tut.fi)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -26,10 +26,18 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+// Event types.
+define('GROUPSELECT_EVENT_TYPE_DUE', 'due');
+
 require_once("$CFG->dirroot/group/lib.php");
-//require_once("$CFG->dirroot/group/externallib.php");
 require_once("$CFG->dirroot/mod/groupselect/lib.php");
 
+/**
+ * Get the group description as text
+ *
+ * @param object $group groups record
+ * @return string group description as plain text
+ */
 function groupselect_get_group_info($group) {
     $group = clone($group);
     $context = context_course::instance($group->courseid);
@@ -40,7 +48,7 @@ function groupselect_get_group_info($group) {
     }
     $options = new stdClass;
     $options->overflowdiv = true;
-    return format_text($group->description, $group->descriptionformat, array('filter'=>false, 'overflowdiv'=>true, 'context'=>$context));
+    return format_text($group->description, $group->descriptionformat, array('filter' => false, 'overflowdiv' => true, 'context' => $context));
 }
 
 /**
@@ -65,16 +73,16 @@ function groupselect_is_open($groupselect) {
 function groupselect_group_member_counts($cm, $targetgrouping=0) {
     global $DB;
 
-    //TODO: join into enrolment table
+    // TODO: join into enrolment table
 
     if (empty($targetgrouping)) {
-        //all groups
+        // all groups
         $sql = "SELECT g.id, COUNT(gm.userid) AS usercount
                   FROM {groups_members} gm
                        JOIN {groups} g ON g.id = gm.groupid
                  WHERE g.courseid = :course
               GROUP BY g.id";
-        $params = array('course'=>$cm->course);
+        $params = array('course' => $cm->course);
 
     } else {
         $sql = "SELECT g.id, COUNT(gm.userid) AS usercount
@@ -84,7 +92,7 @@ function groupselect_group_member_counts($cm, $targetgrouping=0) {
                  WHERE g.courseid = :course
                        AND gg.groupingid = :grouping
               GROUP BY g.id";
-        $params = array('course'=>$cm->course, 'grouping'=>$targetgrouping);
+        $params = array('course' => $cm->course, 'grouping' => $targetgrouping);
     }
 
     return $DB->get_records_sql($sql, $params);

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Backup handler for Moodle 1.x Multichoiceset questions
+ *
  * @package    qtype_multichoiceset
  * @copyright  2011 David Mudrak <david@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -24,10 +26,15 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * multichoiceset question type conversion handler
+ *
+ * @copyright  2011 David Mudrak <david@moodle.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class moodle1_qtype_multichoiceset_handler extends moodle1_qtype_handler {
 
     /**
+     * Return the subpaths within a question
+     *
      * @return array
      */
     public function get_question_subpaths() {
@@ -61,16 +68,16 @@ class moodle1_qtype_multichoiceset_handler extends moodle1_qtype_handler {
                 'shownumcorrect'                => 0
             ));
         }
-        $this->write_multichoiceset($data['multichoiceset'], $data['oldquestiontextformat']);
+        $this->write_multichoiceset($data['multichoiceset'], $data['oldqtextformat']);
     }
 
     /**
      * Converts the multichoiceset info and writes it into the question.xml
      *
      * @param array $multichoicesets the grouped structure
-     * @param int $oldquestiontextformat - {@see moodle1_question_bank_handler::process_question()}
+     * @param int $oldqtextformat - (see moodle1_question_bank_handler::process_question())
      */
-    protected function write_multichoiceset(array $multichoicesets, $oldquestiontextformat) {
+    protected function write_multichoiceset(array $multichoicesets, $oldqtextformat) {
         global $CFG;
 
         // The grouped array is supposed to have just one element - let us use foreach anyway
@@ -83,14 +90,14 @@ class moodle1_qtype_multichoiceset_handler extends moodle1_qtype_handler {
             $multichoiceset['correctfeedbackformat']               = 0;
             $multichoiceset['incorrectfeedbackformat']             = 0;
 
-            if ($CFG->texteditors !== 'textarea' and $oldquestiontextformat == FORMAT_MOODLE) {
+            if ($CFG->texteditors !== 'textarea' and $oldqtextformat == FORMAT_MOODLE) {
                 $multichoiceset['correctfeedback']         = text_to_html($multichoiceset['correctfeedback'], false, false, true);
                 $multichoiceset['correctfeedbackformat']   = FORMAT_HTML;
                 $multichoiceset['incorrectfeedback']       = text_to_html($multichoiceset['incorrectfeedback'], false, false, true);
                 $multichoiceset['incorrectfeedbackformat'] = FORMAT_HTML;
             } else {
-                $multichoiceset['correctfeedbackformat']   = $oldquestiontextformat;
-                $multichoiceset['incorrectfeedbackformat'] = $oldquestiontextformat;
+                $multichoiceset['correctfeedbackformat']   = $oldqtextformat;
+                $multichoiceset['incorrectfeedbackformat'] = $oldqtextformat;
             }
 
             $this->write_xml('multichoiceset', $multichoiceset, array('/multichoiceset/id'));

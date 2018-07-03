@@ -44,7 +44,7 @@ class qtype_multichoiceset_walkthrough_test extends qbehaviour_walkthrough_test_
 
     public function test_deferredfeedback_feedback_multichoiceset() {
         // Create a multichoiceset question.
-        $mc = qtype_multichoiceset_test_helper::make_a_multichoiceset_question();
+        $mc = $dd = test_question_maker::make_question('multichoiceset');
         $mc->shuffleanswers = false;
 
         $this->start_attempt_at_question($mc, 'deferredfeedback', 2);
@@ -63,11 +63,11 @@ class qtype_multichoiceset_walkthrough_test extends qbehaviour_walkthrough_test_
                 new question_pattern_expectation('/class="r0 correct"/'),
                 new question_pattern_expectation('/class="r1"/'));
     }
-    
+
     public function test_deferredfeedback_resume_multichoiceset_right_right() {
 
         // Create a multichoiceset question.
-        $mc = qtype_multichoiceset_test_helper::make_a_multichoiceset_question();
+        $mc = $dd = test_question_maker::make_question('multichoiceset');
         $mc->shuffleanswers = false;
 
         $this->start_attempt_at_question($mc, 'deferredfeedback', 2);

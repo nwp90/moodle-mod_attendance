@@ -22,6 +22,13 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Converts the multichoiceset info and writes it into the question.xml
+ *
+ * @param int $oldversion the old (i.e. current) version of Moodle
+ */
 function xmldb_qtype_multichoiceset_upgrade($oldversion) {
     global $CFG, $DB;
 
@@ -211,7 +218,8 @@ function xmldb_qtype_multichoiceset_upgrade($oldversion) {
     if ($oldversion < 2015040100) {
 
         // Fix wrong component for combined feedback files.
-        $params = array('component' => 'qtype_multichoiceset', 'filearea1' => 'correctfeedback', 'filearea2' => 'incorrectfeedback');
+        $params = array('component' => 'qtype_multichoiceset'
+                , 'filearea1' => 'correctfeedback', 'filearea2' => 'incorrectfeedback');
         $sql = "component = :component AND (filearea = :filearea1 OR filearea = :filearea2)";
         $DB->set_field_select('files', 'component', 'question', $sql, $params);
 
@@ -226,6 +234,18 @@ function xmldb_qtype_multichoiceset_upgrade($oldversion) {
     // Put any upgrade step following this.
 
     // Moodle v3.0.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    // Moodle v3.1.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    // Moodle v3.2.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    // Moodle v3.3.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    // Moodle v3.4.0 release upgrade line.
     // Put any upgrade step following this.
 
     return true;

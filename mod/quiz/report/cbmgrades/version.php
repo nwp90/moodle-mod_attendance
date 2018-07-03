@@ -17,6 +17,8 @@
 /**
  * Quiz cbmgrades report version information.
  * Derived by Tony Gardner-Medwin from the responses plugin
+ * Version for grades based on CB Average (up to 300%) 
+ * Adapted 18//5/2018 for GDPR requirements, thanks to J-M Vedrine for help
  * @package   quiz_cbmgrades
  * @copyright 2013, 2014 Tony Gardner-Medwin
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -24,8 +26,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2014082500;
+$plugin->version = 2018051800; //with GDPR requirements, thanks to J-M Vedrine
 $plugin->requires = 2014051200;
 $plugin->component = 'quiz_cbmgrades';
 $plugin->maturity = MATURITY_STABLE; // This is considered as ready for production sites.
-$plugin->release = 'v2.7-r3'; // for Moodle 2.7.x Release 3 25/11/14 with new version no. for correct installation
+$plugin->release = 'v2.7-r4'; 

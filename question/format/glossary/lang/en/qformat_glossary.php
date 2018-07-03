@@ -18,10 +18,11 @@
  * Strings for component 'qformat_glossary'
  *
  * @package    qformat_glossary
- * @copyright  Daniel Thies <dthies@ccal.edu>
+ * @copyright  Daniel Thies <dethies@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 $string['pluginname'] = 'Moodle glossary entries';
 $string['pluginname_help'] = 'This is a format for converting between questions and glossary entry export files';
 $string['pluginname_link'] = 'qformat/glossary';
+$string['privacy:metadata'] = 'The Glossary question import format plugin does not store any personal data.';
