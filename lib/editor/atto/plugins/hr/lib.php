@@ -15,12 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Strings for component 'atto_hr', language 'en'.
+ * Atto text editor integration version file.
  *
  * @package    atto_hr
- * @copyright  2014 Damyon Wiese  <damyon@moodle.com>
+ * @copyright  2018 Damyon Wiese  <damyon@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'Horizontal rule';
-$string['privacy:metadata'] = 'The atto_hr plugin does not store any personal data.';
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Get icon mapping for font-awesome.
+ */
+function atto_hr_get_fontawesome_icon_map() {
+    return [
+        'atto_hr:icon' => 'fa-minus'
+    ];
+}
