@@ -15,20 +15,25 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Group self selection
+ * Add event handlers for the groupselect
  *
  * @package    mod_groupselect
+ * @category   event
  * @copyright  2018 HTW Chur Roger Barras
- * @copyright  2008-2012 Petr Skoda (http://skodak.org)
- * @copyright  2014 Tampere University of Technology, P. Pyykkönen (pirkka.pyykkonen ÄT tut.fi)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
 
-$plugin->version   = 2018051900; // The current module version (Date: YYYYMMDDXX)
-$plugin->requires  = 2017111303; // Requires this Moodle version
-$plugin->cron      = 0;          // Period for cron to check this module (secs)
-$plugin->component = 'mod_groupselect'; // Full name of the plugin (used for diagnostics).
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = "3.15"; // User-friendly version number.
+defined('MOODLE_INTERNAL') || die();
+
+$observers = array(
+
+    array(
+        'eventname' => '\core\event\user_enrolment_deleted',
+        'callback' => '\mod_groupselect\groupselect_observer::user_unenrolled',
+    ),
+    array(
+        'eventname' => '\core\event\group_deleted',
+        'callback' => '\mod_groupselect\groupselect_observer::group_deleted',
+    )
+);

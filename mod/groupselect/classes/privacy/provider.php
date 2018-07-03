@@ -15,28 +15,32 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Group self selection - course module viewed event
+ * The export_link_created event.
  *
- * @package   mod_groupselect
- * @copyright 2018 HTW Chur Roger Barras
- * @copyright 2014 Tampere University of Technology, P. Pyykkönen (pirkka.pyykkonen ÄT tut.fi)
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_groupselect
+ * @copyright  2018 HTW Chur Roger Barras
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_groupselect\event;
+namespace mod_groupselect\privacy;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * The mod_groupselect course module viewed event class.
+ * The mod_groupselect module does not store any data.
  *
- * @copyright 2014 Tampere University of Technology, P. Pyykkönen (pirkka.pyykkonen ÄT tut.fi)
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  2018 HTW Chur Roger Barras
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class course_module_viewed extends \core\event\course_module_viewed
-{
-    protected function init() {
-        $this->data['objecttable'] = 'groupselect';
-        parent::init();
+class provider implements \core_privacy\local\metadata\null_provider {
+
+    /**
+     * Get the language string identifier with the component's language
+     * file to explain why this plugin stores no data.
+     *
+     * @return  string
+     */
+    public static function get_reason() : string {
+        return 'privacy:metadata';
     }
 }
-
