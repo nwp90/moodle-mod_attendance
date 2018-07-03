@@ -1,3 +1,16 @@
+moodle-site-otagounifom (3.4.3.2018062800+0facmed1-1) stretch; urgency=medium
+
+  * New upstream version
+  * All possible plugins updated to latest released versions
+  * Add TurnItIn plugins
+  * Re-fix gpr tracking in line with currently proposed upstream (MDL-59169)
+  * Per-session event creation option for mod_attendance
+  * Fixed link text in assignsubmission_gradereviews
+  * Setting to allow/disallow override of core images by theme
+  * Errr... that's it.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 04 Jul 2018 09:27:17 +1200
+
 moodle-site-otagounifom (3.4.3.2018051700+0facmed5-1) stretch; urgency=medium
 
   * Fixes to cmapcore block, & rebuild AMD code.
