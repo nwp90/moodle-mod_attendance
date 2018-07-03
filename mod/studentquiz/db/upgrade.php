@@ -318,6 +318,28 @@ function xmldb_studentquiz_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2017112406, 'studentquiz');
     }
 
+    // Update capabilities list and permission types, to make sure the defaults are set after this upgrade.
+    if ($oldversion < 2017112602) {
+        // Load current access definition for easier iteration.
+        require_once(dirname(__DIR__) . '/db/access.php');
+        // Load all contexts this has to be defined.
+        // Only system context needed, as by default it's inherited from there.
+        // if someone did make an override, it's intentional.
+        $context = context_system::instance();
+        // And finally update them for every context.
+        foreach ($capabilities as $capname => $capability) {
+            if (!empty($capability['archetypes'])) {
+                foreach ($capability['archetypes'] as $archetype => $captype) {
+                    foreach (get_archetype_roles($archetype) as $role) {
+                        role_change_permission($role->id, $context, $capname, $captype);
+                    }
+                }
+            }
+        }
+
+        upgrade_mod_savepoint(true, 2017112602, 'studentquiz');
+    }
+
     // Rename vote to rate in all occurences.
     if ($oldversion < 2017120201) {
         $table = new xmldb_table('studentquiz_vote');
@@ -362,6 +384,13 @@ function xmldb_studentquiz_upgrade($oldversion) {
         }
 
         upgrade_mod_savepoint(true, 2017120202, 'studentquiz');
+    }
+
+    if ($oldversion < 2018051300) {
+        // Fix wrong parent in question categories if applicable
+        mod_studentquiz_fix_wrong_parent_in_question_categories();
+
+        upgrade_mod_savepoint(true, 2018051300, 'studentquiz');
     }
 
     return true;

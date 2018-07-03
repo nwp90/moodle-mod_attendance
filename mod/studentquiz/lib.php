@@ -53,6 +53,8 @@ function studentquiz_supports($feature) {
             return true;
         case FEATURE_BACKUP_MOODLE2:
             return true;
+        case FEATURE_USES_QUESTIONS:
+            return true;
         default:
             return null;
     }
@@ -100,17 +102,16 @@ function studentquiz_add_instance(stdClass $studentquiz, mod_studentquiz_mod_for
 
     // You may have to add extra stuff in here.
     $studentquiz->id = $DB->insert_record('studentquiz', $studentquiz);
-
     $context = context_module::instance($studentquiz->coursemodule);
 
     // Leverage add capabilities to add questions in StudentQuiz context.
-    mod_studentquiz_add_question_capabilities($context);
+    mod_studentquiz_ensure_question_capabilities($context);
 
-    // Add default category.
-    $questioncategory = question_make_default_categories(array($context));
-    $questioncategory->name .= $studentquiz->name;
-    $questioncategory->parent = 0;
-    $DB->update_record('question_categories', $questioncategory);
+    // early update context in database so default categories know where the instance can be found
+    $DB->set_field('course_modules', 'instance', $studentquiz->id, array('id' => $context->instanceid));
+
+    // Add default module context question category.
+    question_make_default_categories(array($context));
 
     return $studentquiz->id;
 }
@@ -403,4 +404,34 @@ function studentquiz_extend_settings_navigation(settings_navigation $settingsnav
         question_extend_settings_navigation($studentquiznode, $PAGE->cm->context)->trim_if_empty();
     }
 
+}
+
+/**
+ * Called via pluginfile.php -> mod_studentquiz_question_pluginfile to serve files belonging to
+ * a question from a studentquiz activity.
+ *
+ * @package  mod_studentquiz
+ * @category files
+ * @param stdClass $course course settings object
+ * @param stdClass $context context object
+ * @param string   $component the name of the component we are serving files for.
+ * @param string   $filearea the name of the file area.
+ * @param int      $qubaid the attempt usage id.
+ * @param int      $slot the id of a question in this quiz attempt.
+ * @param array    $args the remaining bits of the file path.
+ * @param bool     $forcedownload whether the user must be forced to download the file.
+ * @param array    $options additional options affecting the file serving
+ * @return bool false if file not found, does not return if found - justsend the file
+ */
+function mod_studentquiz_question_pluginfile($course, $context, $component,
+                                            $filearea, $qubaid, $slot, $args, $forcedownload, array $options = array()) {
+
+    $fs = get_file_storage();
+    $relativepath = implode('/', $args);
+    $fullpath = "/$context->id/$component/$filearea/$relativepath";
+    if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
+        send_file_not_found();
+    }
+
+    send_stored_file($file, 0, 0, $forcedownload, $options);
 }
