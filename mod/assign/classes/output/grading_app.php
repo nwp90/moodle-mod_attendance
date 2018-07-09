@@ -120,8 +120,18 @@ class grading_app implements templatable, renderable {
                 }
             }
         }
-
         $export->showreview = $showreview;
+
+        if ($showreview) {
+            $showreview = false;
+            $submissionplugins = $this->assignment->get_submission_plugins();
+            foreach ($submissionplugins as $plugin) {
+                if ($plugin->allow_submissions() && $plugin->is_enabled() && $plugin->is_visible()) {
+                    $showreview = true;
+                }
+            }
+            $export->showreview = $showreview;
+        }
 
         $time = time();
         $export->count = count($export->participants);
