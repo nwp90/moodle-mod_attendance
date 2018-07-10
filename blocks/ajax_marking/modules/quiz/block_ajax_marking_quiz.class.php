@@ -317,16 +317,16 @@ class block_ajax_marking_quiz extends block_ajax_marking_module_base {
                        quiz_attempts.id  AS quizattemptid,
                        question_attempts.questionid,
                        question_attempts.slot
-                FROM   {quiz} moduletable
-                       INNER JOIN {quiz_attempts} quiz_attempts
+                FROM   mdl_quiz moduletable
+                       INNER JOIN mdl_quiz_attempts quiz_attempts
                          ON moduletable.id = quiz_attempts.quiz
-                       INNER JOIN {question_attempts} question_attempts
+                       INNER JOIN mdl_question_attempts question_attempts
                          ON question_attempts.questionusageid = quiz_attempts.uniqueid
-                       INNER JOIN {question_attempt_steps} sub
+                       INNER JOIN mdl_question_attempt_steps sub
                          ON question_attempts.id = sub.questionattemptid
-                       INNER JOIN {question} question
+                       INNER JOIN mdl_question question
                          ON question_attempts.questionid = question.id
-                       INNER JOIN {course_modules} course_modules
+                       INNER JOIN mdl_course_modules course_modules
                          ON course_modules.instance = moduletable.id
                             AND course_modules.module = :quizmoduleid
                 WHERE  quiz_attempts.timefinish > 0
@@ -334,7 +334,7 @@ class block_ajax_marking_quiz extends block_ajax_marking_module_base {
                        AND question_attempts.behaviour = 'manualgraded'
                        AND sub.state = 'needsgrading'
                        AND NOT EXISTS(SELECT 1
-                                      FROM   {question_attempt_steps} st
+                                      FROM   mdl_question_attempt_steps st
                                       WHERE  st.state IN ( 'gradedwrong', 'gradedpartial',
                                                            'gradedright',
                                                            'mangrwrong',
