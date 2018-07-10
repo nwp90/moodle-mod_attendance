@@ -15,27 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Ajax Marking capabilities.
  *
- * @package    block
- * @subpackage ajax_marking
- * @copyright  2013 Matt Gibson
- * @author     Matt Gibson {@link http://moodle.org/user/view.php?id=81450}
+ * @package    block_ajax_marking
+ * @author     Dan Marsden
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-global $CFG;
-
 $capabilities = array(
+
     'block/ajax_marking:addinstance' => array(
-        'riskbitmask' => RISK_PERSONAL | RISK_CONFIG,
+        'riskbitmask' => RISK_SPAM | RISK_XSS,
+
         'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
+        'contextlevel' => CONTEXT_BLOCK,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
             'manager' => CAP_ALLOW
-        )
-    ),
+        ),
 
+        'clonepermissionsfrom' => 'moodle/site:manageblocks'
+    ),
 );
