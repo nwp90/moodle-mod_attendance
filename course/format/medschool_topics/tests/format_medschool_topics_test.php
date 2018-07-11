@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * format_topics related unit tests
+ * format_medschool_topics related unit tests
  *
- * @package    format_topics
+ * @package    format_medschool_topics
  * @copyright  2015 Marina Glancy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -28,16 +28,17 @@ global $CFG;
 require_once($CFG->dirroot . '/course/lib.php');
 
 /**
- * format_topics related unit tests
+ * format_medschool_topics related unit tests
+ * Initially entirely based on format_topics unit tests.
  *
- * @package    format_topics
+ * @package    format_medschool_topics
  * @copyright  2015 Marina Glancy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class format_topics_testcase extends advanced_testcase {
+class format_medschool_topics_testcase extends advanced_testcase {
 
     /**
-     * Tests for format_topics::get_section_name method with default section names.
+     * Tests for format_medschool_topics::get_section_name method with default section names.
      */
     public function test_get_section_name() {
         global $DB;
@@ -46,7 +47,7 @@ class format_topics_testcase extends advanced_testcase {
         // Generate a course with 5 sections.
         $generator = $this->getDataGenerator();
         $numsections = 5;
-        $course = $generator->create_course(array('numsections' => $numsections, 'format' => 'topics'),
+        $course = $generator->create_course(array('numsections' => $numsections, 'format' => 'medschool_topics'),
             array('createsections' => true));
 
         // Get section names for course.
@@ -61,7 +62,7 @@ class format_topics_testcase extends advanced_testcase {
     }
 
     /**
-     * Tests for format_topics::get_section_name method with modified section names.
+     * Tests for format_medschool_topics::get_section_name method with modified section names.
      */
     public function test_get_section_name_customised() {
         global $DB;
@@ -70,7 +71,7 @@ class format_topics_testcase extends advanced_testcase {
         // Generate a course with 5 sections.
         $generator = $this->getDataGenerator();
         $numsections = 5;
-        $course = $generator->create_course(array('numsections' => $numsections, 'format' => 'topics'),
+        $course = $generator->create_course(array('numsections' => $numsections, 'format' => 'medschool_topics'),
             array('createsections' => true));
 
         // Get section names for course.
@@ -93,7 +94,7 @@ class format_topics_testcase extends advanced_testcase {
     }
 
     /**
-     * Tests for format_topics::get_default_section_name.
+     * Tests for format_medschool_topics::get_default_section_name.
      */
     public function test_get_default_section_name() {
         global $DB;
@@ -102,7 +103,7 @@ class format_topics_testcase extends advanced_testcase {
         // Generate a course with 5 sections.
         $generator = $this->getDataGenerator();
         $numsections = 5;
-        $course = $generator->create_course(array('numsections' => $numsections, 'format' => 'topics'),
+        $course = $generator->create_course(array('numsections' => $numsections, 'format' => 'medschool_topics'),
             array('createsections' => true));
 
         // Get section names for course.
@@ -112,10 +113,10 @@ class format_topics_testcase extends advanced_testcase {
         $courseformat = course_get_format($course);
         foreach ($coursesections as $section) {
             if ($section->section == 0) {
-                $sectionname = get_string('section0name', 'format_topics');
+                $sectionname = get_string('section0name', 'format_medschool_topics');
                 $this->assertEquals($sectionname, $courseformat->get_default_section_name($section));
             } else {
-                $sectionname = get_string('sectionname', 'format_topics') . ' ' . $section->section;
+                $sectionname = get_string('sectionname', 'format_medschool_topics') . ' ' . $section->section;
                 $this->assertEquals($sectionname, $courseformat->get_default_section_name($section));
             }
         }
@@ -131,13 +132,13 @@ class format_topics_testcase extends advanced_testcase {
         $this->resetAfterTest();
         $user = $this->getDataGenerator()->create_user();
         $this->setUser($user);
-        $course = $this->getDataGenerator()->create_course(array('numsections' => 5, 'format' => 'topics'),
+        $course = $this->getDataGenerator()->create_course(array('numsections' => 5, 'format' => 'medschool_topics'),
             array('createsections' => true));
         $section = $DB->get_record('course_sections', array('course' => $course->id, 'section' => 2));
 
         // Call webservice without necessary permissions.
         try {
-            core_external::update_inplace_editable('format_topics', 'sectionname', $section->id, 'New section name');
+            core_external::update_inplace_editable('format_medschool_topics', 'sectionname', $section->id, 'New section name');
             $this->fail('Exception expected');
         } catch (moodle_exception $e) {
             $this->assertEquals('Course or activity not accessible. (Not enrolled)',
@@ -148,7 +149,7 @@ class format_topics_testcase extends advanced_testcase {
         $teacherrole = $DB->get_record('role', array('shortname' => 'editingteacher'));
         $this->getDataGenerator()->enrol_user($user->id, $course->id, $teacherrole->id);
 
-        $res = core_external::update_inplace_editable('format_topics', 'sectionname', $section->id, 'New section name');
+        $res = core_external::update_inplace_editable('format_medschool_topics', 'sectionname', $section->id, 'New section name');
         $res = external_api::clean_returnvalue(core_external::update_inplace_editable_returns(), $res);
         $this->assertEquals('New section name', $res['value']);
         $this->assertEquals('New section name', $DB->get_field('course_sections', 'name', array('id' => $section->id)));
@@ -162,7 +163,7 @@ class format_topics_testcase extends advanced_testcase {
 
         $this->resetAfterTest();
         $user = $this->getDataGenerator()->create_user();
-        $course = $this->getDataGenerator()->create_course(array('numsections' => 5, 'format' => 'topics'),
+        $course = $this->getDataGenerator()->create_course(array('numsections' => 5, 'format' => 'medschool_topics'),
             array('createsections' => true));
         $teacherrole = $DB->get_record('role', array('shortname' => 'editingteacher'));
         $this->getDataGenerator()->enrol_user($user->id, $course->id, $teacherrole->id);
@@ -170,8 +171,8 @@ class format_topics_testcase extends advanced_testcase {
 
         $section = $DB->get_record('course_sections', array('course' => $course->id, 'section' => 2));
 
-        // Call callback format_topics_inplace_editable() directly.
-        $tmpl = component_callback('format_topics', 'inplace_editable', array('sectionname', $section->id, 'Rename me again'));
+        // Call callback format_medschool_topics_inplace_editable() directly.
+        $tmpl = component_callback('format_medschool_topics', 'inplace_editable', array('sectionname', $section->id, 'Rename me again'));
         $this->assertInstanceOf('core\output\inplace_editable', $tmpl);
         $res = $tmpl->export_for_template($PAGE->get_renderer('core'));
         $this->assertEquals('Rename me again', $res['value']);
@@ -200,7 +201,7 @@ class format_topics_testcase extends advanced_testcase {
 
         $this->setTimezone('UTC');
 
-        $params = array('format' => 'topics', 'numsections' => 5, 'startdate' => 1445644800);
+        $params = array('format' => 'medschool_topics', 'numsections' => 5, 'startdate' => 1445644800);
         $course = $this->getDataGenerator()->create_course($params);
         $category = $DB->get_record('course_categories', array('id' => $course->category));
 
@@ -236,7 +237,7 @@ class format_topics_testcase extends advanced_testcase {
 
         // Generate a course with two sections (0 and 1) and two modules.
         $generator = $this->getDataGenerator();
-        $course1 = $generator->create_course(array('format' => 'topics'));
+        $course1 = $generator->create_course(array('format' => 'medschool_topics'));
         course_create_sections_if_missing($course1, array(0, 1));
 
         $data = (object)['id' => $course1->id];
