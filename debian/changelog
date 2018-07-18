@@ -1,3 +1,10 @@
+moodle-site-otagounifom (3.4.4.2018070900+0facmed1-1) stretch; urgency=medium
+
+  * New upstream version, security fixes.
+  * Don't show mod_assign review panel when no submissions possible.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 18 Jul 2018 13:07:17 +1200
+
 moodle-site-otagounifom (3.4.3.2018062800+0facmed1-1) stretch; urgency=medium
 
   * New upstream version
