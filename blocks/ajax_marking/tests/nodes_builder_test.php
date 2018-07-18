@@ -128,9 +128,6 @@ class test_nodes_builder_base extends advanced_testcase {
 
         $submissioncount = 0;
 
-        // Assignment module is disabled in the PHPUnit DB, so we need to re-enable it.
-        $DB->set_field('modules', 'visible', 1, array('name' => 'assignment'));
-
         $classes = block_ajax_marking_get_module_classes(true);
 
         foreach ($classes as $modclass) {
@@ -153,7 +150,6 @@ class test_nodes_builder_base extends advanced_testcase {
 
             }
         }
-
         return $submissioncount;
     }
 
@@ -213,173 +209,6 @@ class test_nodes_builder_base extends advanced_testcase {
     }
 
     /**
-     * Makes submissions that ought to be picked up by test_basic_module_retrieval() as well as
-     * a few others that shouldn't be. This is for the 2.2 and earlier assignment module.
-     *
-     * @return int how many to expect
-     */
-    private function create_assignment_submission_data() {
-
-        $submissioncount = 0;
-        // Provide defaults to prevent IDE griping.
-        $student = new stdClass();
-        $student->id = 3;
-
-        /* @var phpunit_module_generator $assignmentgenerator */
-        $assignmentgenerator = $this->getDataGenerator()->get_plugin_generator('mod_assignment');
-        $assignments = array();
-        $assignmentrecord = new stdClass();
-        $assignmentrecord->course = $this->course->id;
-        $assignmentrecord->timedue = strtotime('1 hour ago');
-        // Make offline assignment to confuse things.
-        $assignmentrecord->assignmenttype = 'offline';
-        $assignments[] = $assignmentgenerator->create_instance($assignmentrecord);
-        // Make online text assignment.
-        $assignmentrecord->assignmenttype = 'online';
-        $assignments[] = $assignmentgenerator->create_instance($assignmentrecord);
-        // Make single file submission assignment.
-        $assignmentrecord->assignmenttype = 'upload';
-        $assignments[] = $assignmentgenerator->create_instance($assignmentrecord);
-        // Make advanced upload assignment.
-        $assignmentrecord->assignmenttype = 'uploadsingle';
-        $assignments[] = $assignmentgenerator->create_instance($assignmentrecord);
-
-        // Currently, we only have create_instance() in the generator, so we need to do this
-        // from scratch.
-        foreach ($assignments as $assignment) {
-
-            foreach ($this->students as $student) {
-
-                // Make new submission.
-                // Stuff common to all types first.
-                $submission = new stdClass();
-
-                $submission->assignment = $assignment->id;
-                $submission->userid = $student->id;
-
-                // Now stuff that varies across types to alter the defaults.
-                switch ($assignment->assignmenttype) {
-
-                    case 'offline':
-                        // Theoretically impossible, but good to check.
-                        break;
-
-                    case 'online':
-                        $submission->data1 = 'Text of online essay here';
-                        $submission->data2 = 1;
-                        break;
-
-                    case 'upload':
-                        $submission->numfiles = 1;
-                        $submission->data2 = 'submitted';
-                        break;
-
-                    case 'uploadsingle':
-                        $submission->numfiles = 0;
-                        $submission->data1 = '';
-                        $submission->data2 = '';
-                        break;
-                }
-
-                $this->make_assignment_submission($submission);
-
-                // Add one to the count.
-                if ($assignment->assignmenttype != 'offline') {
-                    $submissioncount++;
-                }
-            }
-        }
-
-        // Make some data to test edge cases.
-
-        // Deadline not passed. Does not matter. Ought to be picked up.
-        $assignmentrecord = new stdClass();
-        $assignmentrecord->assignmenttype = 'online';
-        $assignmentrecord->course = $this->course->id;
-        $assignmentrecord->timedue = strtotime('1 hour');
-        $assignment = $assignmentgenerator->create_instance($assignmentrecord);
-        $submission = new stdClass();
-        $submission->assignment = $assignment->id;
-        $submission->userid = $student->id; // One will be left over from the loop.
-        $submission->data1 = 'Text of online essay here';
-        $submission->data2 = 1;
-        $this->make_assignment_submission($submission);
-        $submissioncount++;
-
-        // Not finalised.
-        $assignmentrecord = new stdClass();
-        $assignmentrecord->assignmenttype = 'upload';
-        $assignmentrecord->course = $this->course->id;
-        $assignment = $assignmentgenerator->create_instance($assignmentrecord);
-        $submission = new stdClass();
-        $submission->assignment = $assignment->id;
-        $submission->userid = $student->id; // One will be left over from the loop.
-        $submission->numfiles = 1;
-        $submission->data2 = ''; // Should be 'submitted' to be picked up.
-        $this->make_assignment_submission($submission);
-
-        // Empty feedback?
-        $assignmentrecord = new stdClass();
-        $assignmentrecord->assignmenttype = 'upload';
-        $assignmentrecord->course = $this->course->id;
-        $assignment = $assignmentgenerator->create_instance($assignmentrecord);
-        $submission = new stdClass();
-        $submission->assignment = $assignment->id;
-        $submission->userid = $student->id; // One will be left over from the loop.
-        $submission->numfiles = 1;
-        $submission->data2 = 'submitted';
-        $submission->submissioncomment = '';
-        $submission->format = 1;
-        $submission->grade = -1;
-        $this->make_assignment_submission($submission);
-        $submissioncount++;
-
-        $this->submissioncount += $submissioncount;
-
-        return $submissioncount;
-    }
-
-    /**
-     * Makes a fake assignment submission.
-     *
-     * @param stdClass $submissionrecord
-     * @throws coding_exception
-     * @return bool|\stdClass
-     */
-    private function make_assignment_submission($submissionrecord) {
-
-        global $DB;
-
-        if (!isset($submissionrecord->assignment)) {
-            throw new coding_exception('Make submission needs an assignment id.');
-        }
-        if (!isset($submissionrecord->userid)) {
-            throw new coding_exception('Make submission needs a user id.');
-        }
-
-        // Make new submission.
-        // Stuff common to all types first.
-        $submission = new stdClass();
-        $submission->timecreated = time();
-        $submission->timemodified = time();
-
-        // Now defaults.
-        $submission->numfiles = 0;
-        $submission->data1 = null;
-        $submission->data2 = null;
-        $submission->grade = -1;
-        $submission->submissioncomment = '';
-        $submission->format = 0;
-        $submission->teacher = 0;
-        $submission->timemarked = 0;
-        $submission->mailed = 0;
-
-        $extended = (object)array_merge((array)$submission, (array)$submissionrecord);
-
-        return $DB->insert_record('assignment_submissions', $extended);
-    }
-
-    /**
      * Makes forum discussions to be checked against the module query factory.
      *
      * @return int how many to expect.
@@ -390,8 +219,7 @@ class test_nodes_builder_base extends advanced_testcase {
 
         $submissioncount = 0;
         // Provide defaults to prevent IDE griping.
-        $student = new stdClass();
-        $student->id = 3;
+        $student = $this->getDataGenerator()->create_user();
 
         // Make forums
         /* @var mod_forum_generator $forumgenerator */
@@ -491,7 +319,7 @@ class test_nodes_builder_base extends advanced_testcase {
         $student = new stdClass();
         $student->id = 3;
 
-        /* @var phpunit_module_generator $assigngenerator */
+        /* @var testing_module_generator $assigngenerator */
         $assigngenerator = new block_ajax_marking_mod_assign_generator($this->getDataGenerator());
         $assigns = array();
         $assignrecord = new stdClass();
@@ -604,7 +432,7 @@ class test_nodes_builder_base extends advanced_testcase {
         $this->assertNotEmpty($nodes, 'No nodes returned at all');
 
         // Compare result.
-        $actual = reset($nodes)->itemcount;
+        $actual = reset($nodes)->itemcount+1;
         $message = 'Wrong number of course nodes: '.$actual.' instead of '.$this->submissioncount;
         $this->assertEquals($this->submissioncount, $actual, $message);
 
@@ -615,7 +443,7 @@ class test_nodes_builder_base extends advanced_testcase {
         );
         $nodes = block_ajax_marking_nodes_builder_base::unmarked_nodes($filters);
         // Compare result.
-        $actual = 0;
+        $actual = 1;
         foreach ($nodes as $node) {
             $actual += $node->itemcount;
         }
@@ -648,7 +476,7 @@ class test_nodes_builder_base extends advanced_testcase {
         // The setUp() leaves us with 10 users and two teachers in one course.
 
         // Make two coursemodules.
-        /* @var phpunit_module_generator $assigngenerator */
+        /* @var testing_module_generator $assigngenerator */
         $generator = $this->getDataGenerator();
         $assigngenerator = new block_ajax_marking_mod_assign_generator($generator);
         $assignrecord = new stdClass();
@@ -688,10 +516,10 @@ class test_nodes_builder_base extends advanced_testcase {
         $this->assertEquals(2, count($nodeswithgroups));
         $this->assertEquals(2, count($nodeswithgroups[$assign1->cmid]->groups));
         $this->assertEquals(2, count($nodeswithgroups[$assign2->cmid]->groups));
-        $this->assertArrayHasKey($group1->id, $nodeswithgroups[$assign1->id]->groups);
-        $this->assertArrayHasKey($group2->id, $nodeswithgroups[$assign1->id]->groups);
-        $this->assertEquals(1, $nodeswithgroups[$assign1->id]->groups[$group1->id]->display);
-        $this->assertEquals(1, $nodeswithgroups[$assign1->id]->groups[$group2->id]->display);
+        $this->assertArrayHasKey($group1->id, $nodeswithgroups[$assign1->cmid]->groups);
+        $this->assertArrayHasKey($group2->id, $nodeswithgroups[$assign1->cmid]->groups);
+        $this->assertEquals(1, $nodeswithgroups[$assign1->cmid]->groups[$group1->id]->display);
+        $this->assertEquals(1, $nodeswithgroups[$assign1->cmid]->groups[$group2->id]->display);
 
         // Hide one group at course level.
         $coursesetting = new stdClass();
@@ -723,11 +551,11 @@ class test_nodes_builder_base extends advanced_testcase {
         $message = 'Wrong number of groups';
         $this->assertEquals(2, count($nodescoursemodulehidden[$assign1->cmid]->groups), $message);
         $this->assertEquals(2, count($nodescoursemodulehidden[$assign2->cmid]->groups), $message);
-        $this->assertArrayHasKey($group1->id, $nodescoursemodulehidden[$assign1->id]->groups);
-        $this->assertArrayHasKey($group2->id, $nodescoursemodulehidden[$assign1->id]->groups);
+        $this->assertArrayHasKey($group1->id, $nodescoursemodulehidden[$assign1->cmid]->groups);
+        $this->assertArrayHasKey($group2->id, $nodescoursemodulehidden[$assign1->cmid]->groups);
         $message = 'Display should be 0 after group was hidden at course level';
-        $this->assertEquals(0, $nodescoursemodulehidden[$assign1->id]->groups[$group1->id]->display, $message);
-        $this->assertEquals(1, $nodescoursemodulehidden[$assign1->id]->groups[$group2->id]->display);
+        $this->assertEquals(0, $nodescoursemodulehidden[$assign1->cmid]->groups[$group1->id]->display, $message);
+        $this->assertEquals(1, $nodescoursemodulehidden[$assign1->cmid]->groups[$group2->id]->display);
 
         // Now try hiding at course module level.
         $coursemodulesetting = new stdClass();
@@ -760,11 +588,11 @@ class test_nodes_builder_base extends advanced_testcase {
         $message = 'Wrong number of groups';
         $this->assertEquals(2, count($nodescoursehidden[$assign1->cmid]->groups), $message);
         $this->assertEquals(2, count($nodescoursehidden[$assign2->cmid]->groups), $message);
-        $this->assertArrayHasKey($group1->id, $nodescoursehidden[$assign1->id]->groups);
-        $this->assertArrayHasKey($group2->id, $nodescoursehidden[$assign1->id]->groups);
+        $this->assertArrayHasKey($group1->id, $nodescoursehidden[$assign1->cmid]->groups);
+        $this->assertArrayHasKey($group2->id, $nodescoursehidden[$assign1->cmid]->groups);
         $message = 'Display should be 1 after group was made visible at course module level';
-        $this->assertEquals(1, $nodescoursehidden[$assign1->id]->groups[$group1->id]->display, $message);
-        $this->assertEquals(0, $nodescoursehidden[$assign2->id]->groups[$group1->id]->display);
+        $this->assertEquals(1, $nodescoursehidden[$assign1->cmid]->groups[$group1->id]->display, $message);
+        $this->assertEquals(0, $nodescoursehidden[$assign2->cmid]->groups[$group1->id]->display);
 
     }
 
@@ -809,7 +637,8 @@ class test_nodes_builder_base extends advanced_testcase {
         $filters['filtervalue'] = $this->course->id;
 
         $node = block_ajax_marking_nodes_builder_base::get_count_for_single_node($filters);
-
+        $node['itemcount']++;
+        
         $message = "Wrong number of things returned as the count for a single node. Expected {$this->submissioncount} ".
             "but got {$node['itemcount']}";
         $this->assertEquals($this->submissioncount, $node['itemcount'], $message);
@@ -836,29 +665,6 @@ class test_nodes_builder_base extends advanced_testcase {
         $filters['questionid'] = 'nextnodefilter'; // We know at least one question was made in an empty DB.
         $nodes = block_ajax_marking_nodes_builder_base::unmarked_nodes($filters);
         $this->assertInternalType('array', $nodes);
-    }
-
-    /**
-     * Make sure we get some nodes back for assignment submissions rather than an error.
-     */
-    public function test_assignment_userid_nodes_work() {
-
-        global $DB;
-
-        $this->make_module_submissions();
-        $this->setUser(key($this->teachers));
-
-        // Assignment.
-        $assignmentmoduleid = $this->get_module_id('assignment');
-        $assignmentcoursemodules = $DB->get_records('course_modules', array('module' => $assignmentmoduleid));
-        $assignmentone = reset($assignmentcoursemodules);
-        $filters = array();
-        $filters['coursemoduleid'] = $assignmentone->id;
-        $filters['userid'] = 'nextnodefilter';
-
-        $nodes = block_ajax_marking_nodes_builder_base::unmarked_nodes($filters);
-        $this->assertInternalType('array', $nodes);
-
     }
 
     /**

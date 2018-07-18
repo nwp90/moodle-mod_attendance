@@ -27,6 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
+require_once($CFG->dirroot.'/lib/testing/generator/module_generator.php');
 
 /**
  * Makes test data for the workshop module for use with phpunit tests.
