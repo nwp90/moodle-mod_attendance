@@ -2663,12 +2663,11 @@ class local_presentation_external extends external_api {
         $returnstats = array();
         $return = array();
         if ($course != '') {
-            $sql = "SELECT concat(courseid, '_', timeend, '_', roleid) 
+            $sql = "SELECT concat(courseid, '_', timeend, '_', roleid)
                     as uniqueid, courseid, roleid, timeend, sum(stat1) as readactivity, sum(stat2) as writeactivity
-                    FROM mdl_stats_monthly 
-                    WHERE stattype='activity' 
-                    AND timeend > MAKEDATE(year(now()),1)  AND timeend <= NOW() 
-                    GROUP BY timeend, roleid, courseid 
+                    FROM mdl_stats_monthly
+                    WHERE stattype='activity'
+                    GROUP BY timeend, roleid, courseid
                     ORDER BY courseid, roleid, timeend
             ";
         }
