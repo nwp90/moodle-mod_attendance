@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') or die();
 
-$plugin->version   = 2016081004;
+$plugin->version   = 2016081007;
 $plugin->requires  = 2013050100;
 $plugin->component = 'local_presentation';
 $plugin->cron      = 60;

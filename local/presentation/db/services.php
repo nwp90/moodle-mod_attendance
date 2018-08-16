@@ -186,6 +186,13 @@ $functions = array(
         'classpath' => 'local/presentation/externallib.php',
         'description' => 'Returns a list of ltis tagged with a provided set of tags.',
         'type' => 'read',
+    ),
+     'local_presentation_get_course_usage_stats' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_course_usage_stats',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns the usage stats of a course by month.',
+        'type' => 'read',
     )
 );
 $services = array(
@@ -213,6 +220,7 @@ $services = array(
             'local_presentation_get_scorms_by_tag',
             'local_presentation_get_glossaries_by_tag',
             'local_presentation_get_ltis_by_tag',
+            'local_presentation_get_course_usage_stats',
         ),
         'restrictedusers' => 0, //if enabled, the Moodle administrator must link some user to this service
         'enabled' => 1, //if enabled, the service can be reachable on a default installation

@@ -2632,4 +2632,86 @@ class local_presentation_external extends external_api {
             )
         );
     }
+
+/*start of kJ*/
+    
+    /**
+     * Describes the parameters for get_ltis_by_tag
+     *
+     * @return external_external_function_parameters
+     * @since Moodle 3.0
+     */
+    public static function get_course_usage_stats_parameters() {
+        return new external_function_parameters (
+            array(
+                'course' => new external_value(PARAM_ALPHANUMEXT, 'course shortname')
+            )
+        );
+    }
+    
+    /**
+     * Returns the usage stats for the year by month for every course
+     *
+     * @param 
+     * @return 
+     * @since Moodle 2.5
+     */
+    public static function get_course_usage_stats($course = '') {
+        global $CFG, $DB;
+        $params = self::validate_parameters(self::get_course_usage_stats_parameters(), array('course' => $course));
+        $course = $params['course'];
+        $returnstats = array();
+        $return = array();
+        if ($course != '') {
+            $sql = "SELECT concat(courseid, '_', timeend, '_', roleid) 
+                    as uniqueid, courseid, roleid, timeend, sum(stat1) as readactivity, sum(stat2) as writeactivity
+                    FROM mdl_stats_monthly 
+                    WHERE stattype='activity' 
+                    AND timeend > MAKEDATE(year(now()),1)  AND timeend <= NOW() 
+                    GROUP BY timeend, roleid, courseid 
+                    ORDER BY courseid, roleid, timeend
+            ";
+        }
+        
+
+        $stats = $DB->get_records_sql($sql, array($course));
+            foreach ($stats as $stat) {
+                $returnstat = new StdClass();
+                $keys = array('uniqueid', 'courseid', 'roleid', 'timeend', 'read', 'write');
+                foreach ($keys as $key) {
+                    $returnstat->$key = $stat->$key;
+                }
+                $returnstats[] = $returnstat;
+            }
+        
+        return $returnstats;
+    }
+
+    /**
+     * Describes the get_course_usage_stats return value.
+     *
+     * @return external_single_structure
+     * @since Moodle 2.5
+     */
+
+    //I have no idea what this is meant to be? Not sure what the thing returns so hard to describe what it returns. 
+    public static function get_course_usage_stats_returns() {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'uniqueid' => new external_value(PARAM_TEXT, 'Statistics unique ID'),
+                    'courseid' => new external_value(PARAM_INT, 'Course ID'),
+                    'roleid' => new external_value(PARAM_INT, 'Moodle Role ID'),
+                    'timeend' => new external_value(PARAM_TEXT, 'Time ?'),
+                    'read' => new external_value(PARAM_INT, 'Read'),
+                    'write' => new external_value(PARAM_INT, 'Write'),
+                ),'stat'
+            )
+        );
+    }
+
+/*end of KJ*/
+
+
+
 }
