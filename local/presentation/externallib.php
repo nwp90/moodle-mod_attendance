@@ -2665,7 +2665,7 @@ class local_presentation_external extends external_api {
         if ($course != '') {
            $sql = "SELECT concat(sm.courseid, '_', sm.timeend, '_', sm.roleid) 
                     as uniqueid, sm.courseid, sm.roleid, sm.timeend, sum(sm.stat1) AS activity_read, sum(sm.stat2) AS activity_write
-                    FROM mdl_stats_daily AS sm JOIN mdl_course AS c ON c.id=sm.courseid JOIN mdl_role AS r ON (sm.roleid = r.id)
+                    FROM mdl_stats_monthly AS sm JOIN mdl_course AS c ON c.id=sm.courseid JOIN mdl_role AS r ON (sm.roleid = r.id)
                     WHERE sm.stattype='activity' AND c.shortname=?
                     GROUP BY sm.timeend, sm.roleid, sm.courseid, r.shortname, r.name, c.id, c.shortname, sm.courseid 
                     ORDER BY sm.courseid, sm.roleid, sm.timeend
