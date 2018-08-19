@@ -2661,13 +2661,13 @@ class local_presentation_external extends external_api {
         $params = self::validate_parameters(self::get_course_usage_stats_parameters(), array('course' => $course));
         $course = $params['course'];
         $returnstats = array();
-        $return = array();
+       // $return = array();
         if ($course != '') {
-            $sql = "SELECT concat(sm.courseid, '_', sm.timeend, '_', sm.roleid) 
-                    as uniqueid, sm.courseid, sm.roleid, sm.timeend, sum(sm.stat1) as readactivity, sum(sm.stat2) as writeactivity
-                    FROM mdl_stats_monthly AS sm JOIN mdl_course AS c ON c.id=sm.courseid 
+           $sql = "SELECT concat(sm.courseid, '_', sm.timeend, '_', sm.roleid) 
+                    as uniqueid, sm.courseid, sm.roleid, sm.timeend, sum(sm.stat1) AS activity_read, sum(sm.stat2) AS activity_write
+                    FROM mdl_stats_daily AS sm JOIN mdl_course AS c ON c.id=sm.courseid JOIN mdl_role AS r ON (sm.roleid = r.id)
                     WHERE sm.stattype='activity' AND c.shortname=?
-                    GROUP BY sm.timeend, sm.roleid, sm.courseid
+                    GROUP BY sm.timeend, sm.roleid, sm.courseid, r.shortname, r.name, c.id, c.shortname, sm.courseid 
                     ORDER BY sm.courseid, sm.roleid, sm.timeend
             ";
         }
@@ -2676,7 +2676,7 @@ class local_presentation_external extends external_api {
         $stats = $DB->get_records_sql($sql, array($course));
             foreach ($stats as $stat) {
                 $returnstat = new StdClass();
-                $keys = array('uniqueid', 'courseid', 'roleid', 'timeend', 'read', 'write');
+                $keys = array('uniqueid', 'courseid', 'roleid', 'timeend', 'activity_read', 'activity_write');
                 foreach ($keys as $key) {
                     $returnstat->$key = $stat->$key;
                 }
@@ -2702,8 +2702,8 @@ class local_presentation_external extends external_api {
                     'courseid' => new external_value(PARAM_INT, 'Course ID'),
                     'roleid' => new external_value(PARAM_INT, 'Moodle Role ID'),
                     'timeend' => new external_value(PARAM_TEXT, 'Time ?'),
-                    'read' => new external_value(PARAM_INT, 'Read'),
-                    'write' => new external_value(PARAM_INT, 'Write'),
+                    'activity_read' => new external_value(PARAM_INT, 'Activity Read'),
+                    'activity_write' => new external_value(PARAM_INT, 'Activity Write'),
                 ),'stat'
             )
         );
