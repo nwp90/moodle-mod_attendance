@@ -2636,44 +2636,62 @@ class local_presentation_external extends external_api {
 /*start of kJ*/
     
     /**
-     * Describes the parameters for get_ltis_by_tag
+     * Describes the parameters for get_stats_activity_monthly_by_coure
      *
      * @return external_external_function_parameters
      * @since Moodle 3.0
      */
-    public static function get_course_usage_stats_parameters() {
+    public static function get_stats_activity_daily_by_course_parameters() {
         return new external_function_parameters (
             array(
-                'course' => new external_value(PARAM_ALPHANUMEXT, 'course shortname')
+                'course' => new external_value(PARAM_ALPHANUMEXT, 'course shortname', false, ''),
+                'starttime' => new external_value(PARAM_INT, 'Stats start time', false, null),
+                'endtime' => new external_value(PARAM_INT, 'Stats end time', false, null)
             )
         );
     }
     
     /**
-     * Returns the usage stats for the year by month for every course
+     * Returns the usage stats by month for every course
      *
      * @param 
      * @return 
      * @since Moodle 2.5
      */
-    public static function get_course_usage_stats($course = '') {
+    public static function get_stats_activity_daily_by_course($course = '', $starttime = null, $endtime = null) {
         global $CFG, $DB;
-        $params = self::validate_parameters(self::get_course_usage_stats_parameters(), array('course' => $course));
+        $params = self::validate_parameters(self::get_stats_activity_daily_by_course_parameters(), array('course' => $course));
         $course = $params['course'];
+        $starttime = $params['starttime'];
+        $endtime = $params['endtime'];
         $returnstats = array();
-       // $return = array();
-        if ($course != '') {
-           $sql = "SELECT concat(sm.courseid, '_', sm.timeend, '_', sm.roleid) 
+        $sql_params = array();
+        $sql = "SELECT concat(sm.courseid, '_', sm.timeend, '_', sm.roleid) 
                     as uniqueid, sm.courseid, sm.roleid, sm.timeend, sum(sm.stat1) AS activity_read, sum(sm.stat2) AS activity_write
-                    FROM mdl_stats_monthly AS sm JOIN mdl_course AS c ON c.id=sm.courseid JOIN mdl_role AS r ON (sm.roleid = r.id)
-                    WHERE sm.stattype='activity' AND c.shortname=?
-                    GROUP BY sm.timeend, sm.roleid, sm.courseid, r.shortname, r.name, c.id, c.shortname, sm.courseid 
-                    ORDER BY sm.courseid, sm.roleid, sm.timeend
-            ";
+                    FROM mdl_stats_daily AS sm JOIN mdl_course AS c ON c.id=sm.courseid JOIN mdl_role AS r ON (sm.roleid = r.id)
+                    WHERE sm.stattype='activity'";
+        
+        if ($course != '') {
+            $sql .= " AND c.shortname=?";
+            array_push($sql_params, $course);
+        }
+
+        if($starttime != null){
+            $sql .= " AND timeend>?";
+            array_push($sql_params, $starttime);
         }
         
-
-        $stats = $DB->get_records_sql($sql, array($course));
+        if($endtime != null){
+            $sql .= " AND timeend<=?";
+            array_push($sql_params, $endtime);
+        }
+        
+        $sql .= " GROUP BY sm.timeend, sm.roleid, sm.courseid, r.shortname, r.name, c.id, c.shortname, sm.courseid 
+                ORDER BY sm.courseid, sm.roleid, sm.timeend";
+        
+        error_log("sql: " . $sql);
+        error_log("params: " . print_r($sql_params, true));
+        $stats = $DB->get_records_sql($sql, $sql_params);
             foreach ($stats as $stat) {
                 $returnstat = new StdClass();
                 $keys = array('uniqueid', 'courseid', 'roleid', 'timeend', 'activity_read', 'activity_write');
@@ -2694,7 +2712,190 @@ class local_presentation_external extends external_api {
      */
 
     //I have no idea what this is meant to be? Not sure what the thing returns so hard to describe what it returns. 
-    public static function get_course_usage_stats_returns() {
+    public static function get_stats_activity_daily_by_course_returns() {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'uniqueid' => new external_value(PARAM_TEXT, 'Statistics unique ID'),
+                    'courseid' => new external_value(PARAM_INT, 'Course ID'),
+                    'roleid' => new external_value(PARAM_INT, 'Moodle Role ID'),
+                    'timeend' => new external_value(PARAM_TEXT, 'Time ?'),
+                    'activity_read' => new external_value(PARAM_INT, 'Activity Read'),
+                    'activity_write' => new external_value(PARAM_INT, 'Activity Write'),
+                ),'stat'
+            )
+        );
+    }
+
+    /**
+     * Describes the parameters for get_stats_activity_monthly_by_coure
+     *
+     * @return external_external_function_parameters
+     * @since Moodle 3.0
+     */
+    public static function get_stats_activity_weekly_by_course_parameters() {
+        return new external_function_parameters (
+            array(
+                'course' => new external_value(PARAM_ALPHANUMEXT, 'course shortname', false, ''),
+                'starttime' => new external_value(PARAM_INT, 'Stats start time', false, null),
+                'endtime' => new external_value(PARAM_INT, 'Stats end time', false, null)
+            )
+        );
+    }
+    
+    /**
+     * Returns the usage stats by month for every course
+     *
+     * @param 
+     * @return 
+     * @since Moodle 2.5
+     */
+    public static function get_stats_activity_weekly_by_course($course = '', $starttime = null, $endtime = null) {
+        global $CFG, $DB;
+        $params = self::validate_parameters(self::get_stats_activity_weekly_by_course_parameters(), array('course' => $course));
+        $course = $params['course'];
+        $starttime = $params['starttime'];
+        $endtime = $params['endtime'];
+        $returnstats = array();
+        $sql_params = array();
+        $sql = "SELECT concat(sm.courseid, '_', sm.timeend, '_', sm.roleid) 
+                    as uniqueid, sm.courseid, sm.roleid, sm.timeend, sum(sm.stat1) AS activity_read, sum(sm.stat2) AS activity_write
+                    FROM mdl_stats_weekly AS sm JOIN mdl_course AS c ON c.id=sm.courseid JOIN mdl_role AS r ON (sm.roleid = r.id)
+                    WHERE sm.stattype='activity'";
+        
+        if ($course != '') {
+            $sql .= " AND c.shortname=?";
+            array_push($sql_params, $course);
+        }
+
+        if($starttime != null){
+            $sql .= " AND timeend>?";
+            array_push($sql_params, $starttime);
+        }
+        
+        if($endtime != null){
+            $sql .= " AND timeend<=?";
+            array_push($sql_params, $endtime);
+        }
+        
+        $sql .= " GROUP BY sm.timeend, sm.roleid, sm.courseid, r.shortname, r.name, c.id, c.shortname, sm.courseid 
+                ORDER BY sm.courseid, sm.roleid, sm.timeend";
+        
+        error_log("sql: " . $sql);
+        error_log("params: " . print_r($sql_params, true));
+        $stats = $DB->get_records_sql($sql, $sql_params);
+            foreach ($stats as $stat) {
+                $returnstat = new StdClass();
+                $keys = array('uniqueid', 'courseid', 'roleid', 'timeend', 'activity_read', 'activity_write');
+                foreach ($keys as $key) {
+                    $returnstat->$key = $stat->$key;
+                }
+                $returnstats[] = $returnstat;
+            }
+        
+        return $returnstats;
+    }
+
+    /**
+     * Describes the get_course_usage_stats return value.
+     *
+     * @return external_single_structure
+     * @since Moodle 2.5
+     */
+
+    //I have no idea what this is meant to be? Not sure what the thing returns so hard to describe what it returns. 
+    public static function get_stats_activity_weekly_by_course_returns() {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'uniqueid' => new external_value(PARAM_TEXT, 'Statistics unique ID'),
+                    'courseid' => new external_value(PARAM_INT, 'Course ID'),
+                    'roleid' => new external_value(PARAM_INT, 'Moodle Role ID'),
+                    'timeend' => new external_value(PARAM_TEXT, 'Time ?'),
+                    'activity_read' => new external_value(PARAM_INT, 'Activity Read'),
+                    'activity_write' => new external_value(PARAM_INT, 'Activity Write'),
+                ),'stat'
+            )
+        );
+    }
+    /**
+     * Describes the parameters for get_stats_activity_monthly_by_coure
+     *
+     * @return external_external_function_parameters
+     * @since Moodle 3.0
+     */
+    public static function get_stats_activity_monthly_by_course_parameters() {
+        return new external_function_parameters (
+            array(
+                'course' => new external_value(PARAM_ALPHANUMEXT, 'course shortname', false, ''),
+                'starttime' => new external_value(PARAM_INT, 'Stats start time', false, null),
+                'endtime' => new external_value(PARAM_INT, 'Stats end time', false, null)
+            )
+        );
+    }
+    
+    /**
+     * Returns the usage stats by month for every course
+     *
+     * @param 
+     * @return 
+     * @since Moodle 2.5
+     */
+    public static function get_stats_activity_monthly_by_course($course = '', $starttime = null, $endtime = null) {
+        global $CFG, $DB;
+        $params = self::validate_parameters(self::get_stats_activity_monthly_by_course_parameters(), array('course' => $course));
+        $course = $params['course'];
+        $starttime = $params['starttime'];
+        $endtime = $params['endtime'];
+        $returnstats = array();
+        $sql_params = array();
+        $sql = "SELECT concat(sm.courseid, '_', sm.timeend, '_', sm.roleid) 
+                    as uniqueid, sm.courseid, sm.roleid, sm.timeend, sum(sm.stat1) AS activity_read, sum(sm.stat2) AS activity_write
+                    FROM mdl_stats_monthly AS sm JOIN mdl_course AS c ON c.id=sm.courseid JOIN mdl_role AS r ON (sm.roleid = r.id)
+                    WHERE sm.stattype='activity'";
+        
+        if ($course != '') {
+            $sql .= " AND c.shortname=?";
+            array_push($sql_params, $course);
+        }
+
+        if($starttime != null){
+            $sql .= " AND timeend>?";
+            array_push($sql_params, $starttime);
+        }
+        
+        if($endtime != null){
+            $sql .= " AND timeend<=?";
+            array_push($sql_params, $endtime);
+        }
+        
+        $sql .= " GROUP BY sm.timeend, sm.roleid, sm.courseid, r.shortname, r.name, c.id, c.shortname, sm.courseid 
+                ORDER BY sm.courseid, sm.roleid, sm.timeend";
+        
+        error_log("sql: " . $sql);
+        error_log("params: " . print_r($sql_params, true));
+        $stats = $DB->get_records_sql($sql, $sql_params);
+            foreach ($stats as $stat) {
+                $returnstat = new StdClass();
+                $keys = array('uniqueid', 'courseid', 'roleid', 'timeend', 'activity_read', 'activity_write');
+                foreach ($keys as $key) {
+                    $returnstat->$key = $stat->$key;
+                }
+                $returnstats[] = $returnstat;
+            }
+        
+        return $returnstats;
+    }
+
+    /**
+     * Describes the get_course_usage_stats return value.
+     *
+     * @return external_single_structure
+     * @since Moodle 2.5
+     */
+
+    //I have no idea what this is meant to be? Not sure what the thing returns so hard to describe what it returns. 
+    public static function get_stats_activity_monthly_by_course_returns() {
         return new external_multiple_structure(
             new external_single_structure(
                 array(
@@ -2710,7 +2911,4 @@ class local_presentation_external extends external_api {
     }
 
 /*end of KJ*/
-
-
-
 }
