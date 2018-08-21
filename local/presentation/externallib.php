@@ -2636,7 +2636,7 @@ class local_presentation_external extends external_api {
 /*start of kJ*/
     
     /**
-     * Describes the parameters for get_stats_activity_monthly_by_coure
+     * Describes the parameters for get_stats_activity_daily_by_course
      *
      * @return external_external_function_parameters
      * @since Moodle 3.0
@@ -2652,7 +2652,7 @@ class local_presentation_external extends external_api {
     }
     
     /**
-     * Returns the usage stats by month for every course
+     * Returns the usage stats by day for every course
      *
      * @param 
      * @return 
@@ -2667,7 +2667,7 @@ class local_presentation_external extends external_api {
         $returnstats = array();
         $sql_params = array();
         $sql = "SELECT concat(sm.courseid, '_', sm.timeend, '_', sm.roleid) 
-                    as uniqueid, sm.courseid, c.shortname, sm.roleid, r.shortname, sm.timeend, sum(sm.stat1) AS activity_read, sum(sm.stat2) AS activity_write
+                    as uniqueid, sm.courseid, c.shortname AS courseshortname, sm.roleid, r.shortname AS roleshortname, sm.timeend, sum(sm.stat1) AS activity_read, sum(sm.stat2) AS activity_write
                     FROM {stats_daily} sm JOIN {course} c ON c.id=sm.courseid JOIN {role} r ON (sm.roleid = r.id)
                     WHERE sm.stattype='activity'";
         
@@ -2694,7 +2694,7 @@ class local_presentation_external extends external_api {
         $stats = $DB->get_records_sql($sql, $sql_params);
             foreach ($stats as $stat) {
                 $returnstat = new StdClass();
-                $keys = array('uniqueid', 'courseid', 'course_short_name', 'roleid', 'role_short_name', 'timeend', 'activity_read', 'activity_write');
+                $keys = array('uniqueid', 'courseid', 'courseshortname', 'roleid', 'roleshortname', 'timeend', 'activity_read', 'activity_write');
                 foreach ($keys as $key) {
                     $returnstat->$key = $stat->$key;
                 }
@@ -2705,7 +2705,7 @@ class local_presentation_external extends external_api {
     }
 
     /**
-     * Describes the get_course_usage_stats return value.
+     * Describes the get_stats_activity_daily_by_course return value.
      *
      * @return external_single_structure
      * @since Moodle 2.5
@@ -2718,10 +2718,10 @@ class local_presentation_external extends external_api {
                 array(
                     'uniqueid' => new external_value(PARAM_TEXT, 'Statistics unique ID'),
                     'courseid' => new external_value(PARAM_INT, 'Course ID'),
-                    'course_short_name' => new external_value(PARAM_TEXT, 'Course Short Name'),
+                    'courseshortname' => new external_value(PARAM_TEXT, 'Course Short Name'),
                     'roleid' => new external_value(PARAM_INT, 'Moodle Role ID'),
-                    'role_short_name' => new external_value(PARAM_TEXT, 'Moodle Short Role Name'),
-                    'timeend' => new external_value(PARAM_TEXT, 'Time ?'),
+                    'roleshortname' => new external_value(PARAM_TEXT, 'Moodle Short Role Name'),
+                    'timeend' => new external_value(PARAM_TEXT, 'Unix time of end of activity accounting period'),
                     'activity_read' => new external_value(PARAM_INT, 'Activity Read'),
                     'activity_write' => new external_value(PARAM_INT, 'Activity Write'),
                 ),'stat'
@@ -2761,9 +2761,7 @@ class local_presentation_external extends external_api {
         $returnstats = array();
         $sql_params = array();
         $sql = "select 
-                    concat(sm.courseid, '_', sm.timeend, '_', sm.roleid) as uniqueid, sm.courseid, sm.roleid, sm.timeend, 
-                    sum(sm.stat1) as activity_read, 
-                    sum(sm.stat2) as activity_write
+                    concat(sm.courseid, '_', sm.timeend, '_', sm.roleid) as uniqueid, sm.courseid, c.shortname AS courseshortname, sm.roleid, r.shortname AS roleshortname, sm.timeend, sum(sm.stat1) AS activity_read, sum(sm.stat2) AS activity_write
                 from 
                     {stats_weekly} sm 
                         join {course} c 
@@ -2795,7 +2793,7 @@ class local_presentation_external extends external_api {
         $stats = $DB->get_records_sql($sql, $sql_params);
             foreach ($stats as $stat) {
                 $returnstat = new StdClass();
-                $keys = array('uniqueid', 'courseid', 'course_short_name', 'roleid', 'rolename', 'timeend', 'activity_read', 'activity_write');
+                $keys = array('uniqueid', 'courseid', 'courseshortname', 'roleid', 'roleshortname', 'timeend', 'activity_read', 'activity_write');
                 foreach ($keys as $key) {
                     $returnstat->$key = $stat->$key;
                 }
@@ -2806,7 +2804,7 @@ class local_presentation_external extends external_api {
     }
 
     /**
-     * Describes the get_course_usage_stats return value.
+     * Describes the get_stats_activity_weekly_by_course return value.
      *
      * @return external_single_structure
      * @since Moodle 2.5
@@ -2819,10 +2817,10 @@ class local_presentation_external extends external_api {
                 array(
                     'uniqueid' => new external_value(PARAM_TEXT, 'Statistics unique ID'),
                     'courseid' => new external_value(PARAM_INT, 'Course ID'),
-                    'course_short_name' => new external_value(PARAM_TEXT, 'Course Short Name'),
+                    'courseshortname' => new external_value(PARAM_TEXT, 'Course Short Name'),
                     'roleid' => new external_value(PARAM_INT, 'Moodle Role ID'),
-                    'rolename' => new external_value(PARAM_TEXT, 'Moodle Role Name'),
-                    'timeend' => new external_value(PARAM_TEXT, 'Time ?'),
+                    'roleshortname' => new external_value(PARAM_TEXT, 'Moodle Short Role Name'),
+                    'timeend' => new external_value(PARAM_TEXT, 'Unix time of end of activity accounting period'),
                     'activity_read' => new external_value(PARAM_INT, 'Activity Read'),
                     'activity_write' => new external_value(PARAM_INT, 'Activity Write'),
                 ),'stat'
@@ -2830,7 +2828,7 @@ class local_presentation_external extends external_api {
         );
     }
     /**
-     * Describes the parameters for get_stats_activity_monthly_by_coure
+     * Describes the parameters for get_stats_activity_monthly_by_course
      *
      * @return external_external_function_parameters
      * @since Moodle 3.0
@@ -2861,7 +2859,7 @@ class local_presentation_external extends external_api {
         $returnstats = array();
         $sql_params = array();
         $sql = "SELECT concat(sm.courseid, '_', sm.timeend, '_', sm.roleid) 
-                    as uniqueid, sm.courseid, sm.roleid, sm.timeend, sum(sm.stat1) AS activity_read, sum(sm.stat2) AS activity_write
+                  as uniqueid, sm.courseid, c.shortname AS courseshortname, sm.roleid, r.shortname AS roleshortname, sm.timeend, sum(sm.stat1) AS activity_read, sum(sm.stat2) AS activity_write
                     FROM {stats_monthly} sm JOIN {course} c ON c.id=sm.courseid JOIN {role} r ON (sm.roleid = r.id)
                     WHERE sm.stattype='activity'";
         
@@ -2888,7 +2886,7 @@ class local_presentation_external extends external_api {
         $stats = $DB->get_records_sql($sql, $sql_params);
             foreach ($stats as $stat) {
                 $returnstat = new StdClass();
-                $keys = array('uniqueid', 'courseid', 'course_short_name', 'roleid', 'rolename', 'timeend', 'activity_read', 'activity_write');
+                $keys = array('uniqueid', 'courseid', 'courseshortname', 'roleid', 'roleshortname', 'timeend', 'activity_read', 'activity_write');
                 foreach ($keys as $key) {
                     $returnstat->$key = $stat->$key;
                 }
@@ -2899,23 +2897,22 @@ class local_presentation_external extends external_api {
     }
 
     /**
-     * Describes the get_course_usage_stats return value.
+     * Describes the get_stats_activity_monthly_by_course return value.
      *
      * @return external_single_structure
      * @since Moodle 2.5
      */
 
-    //I have no idea what this is meant to be? Not sure what the thing returns so hard to describe what it returns. 
     public static function get_stats_activity_monthly_by_course_returns() {
         return new external_multiple_structure(
             new external_single_structure(
                 array(
-                    'uniqueid' => new external_value(PARAM_TEXT, 'Statistics unique ID'),
+                   'uniqueid' => new external_value(PARAM_TEXT, 'Statistics unique ID'),
                     'courseid' => new external_value(PARAM_INT, 'Course ID'),
-                    'course_short_name' => new external_value(PARAM_TEXT, 'Course Short Name'),
+                    'courseshortname' => new external_value(PARAM_TEXT, 'Course Short Name'),
                     'roleid' => new external_value(PARAM_INT, 'Moodle Role ID'),
-                    'rolename' => new external_value(PARAM_TEXT, 'Moodle Role Name'),
-                    'timeend' => new external_value(PARAM_TEXT, 'Time ?'),
+                    'roleshortname' => new external_value(PARAM_TEXT, 'Moodle Short Role Name'),
+                    'timeend' => new external_value(PARAM_TEXT, 'Unix time of end of activity accounting period'),
                     'activity_read' => new external_value(PARAM_INT, 'Activity Read'),
                     'activity_write' => new external_value(PARAM_INT, 'Activity Write'),
                 ),'stat'
