@@ -202,6 +202,9 @@ class quiz_gradingstudents_report extends quiz_default_report {
         echo html_writer::tag('p', html_writer::link($this->list_questions_url(!$includeauto),
                 $linktext), array('class' => 'toggleincludeauto'));
 
+        $shownames = has_capability('quiz/grading:viewstudentnames', $this->context);
+        $showidnumbers = has_capability('quiz/grading:viewidnumber', $this->context);
+
         $data = array();
         foreach ($attempts as $key => $attempt) {
             if ($attempt->all == 0) {
@@ -220,7 +223,12 @@ class quiz_gradingstudents_report extends quiz_default_report {
             }
             $row = array();
             #$row[] = format_string($attempt->idnumber);
-            $row[] = fullname($attempt);
+            if ($shownames) {
+                $row[] = fullname($attempt);
+            }
+            else if ($showidnumbers) {
+                $row[] = format_string($attempt->idnumber);
+            }
             $row[] = $reviewlink;
             $row[] = $this->format_count_for_table($attempt, 'needsgrading', 'grade');
             $row[] = $this->format_count_for_table($attempt, 'manuallygraded', 'updategrade');
@@ -242,7 +250,9 @@ class quiz_gradingstudents_report extends quiz_default_report {
         $table->class = 'generaltable';
         $table->id = 'questionstograde';
 
-        $table->head[] = get_string('student', 'quiz_gradingstudents');
+        if ($shownames || $showidnumbers) {
+            $table->head[] = get_string('student', 'quiz_gradingstudents');
+        }
         $table->head[] = get_string('attempt', 'quiz_gradingstudents');
         $table->head[] = get_string('tograde', 'quiz_gradingstudents');
         $table->head[] = get_string('alreadygraded', 'quiz_gradingstudents');
