@@ -2644,7 +2644,7 @@ class local_presentation_external extends external_api {
     public static function get_stats_activity_daily_by_course_parameters() {
         return new external_function_parameters (
             array(
-                'course' => new external_value(PARAM_ALPHANUMEXT, 'course shortname', false, ''),
+                'course' => new external_value(PARAM_ALPHANUMEXT, 'Course shortname', false, ''),
                 'starttime' => new external_value(PARAM_INT, 'Stats start time', false, null),
                 'endtime' => new external_value(PARAM_INT, 'Stats end time', false, null)
             )
@@ -2656,51 +2656,80 @@ class local_presentation_external extends external_api {
      *
      * @param 
      * @return 
-     * @since Moodle 2.5
+     * @since Moodle 3.6
      */
     public static function get_stats_activity_daily_by_course($course = '', $starttime = null, $endtime = null) {
         global $CFG, $DB;
-        $params = self::validate_parameters(self::get_stats_activity_daily_by_course_parameters(), array('course' => $course));
+        $params = self::validate_parameters(
+            self::get_stats_activity_daily_by_course_parameters(),
+            array(
+                'course' => $course,
+                'starttime' => $starttime,
+                'endtime' => $endtime
+            )
+        );
         $course = $params['course'];
         $starttime = $params['starttime'];
         $endtime = $params['endtime'];
         $returnstats = array();
         $sql_params = array();
-        $sql = "SELECT concat(sm.courseid, '_', sm.timeend, '_', sm.roleid) 
-                    as uniqueid, sm.courseid, c.shortname AS courseshortname, sm.roleid, r.shortname AS roleshortname, sm.timeend, sum(sm.stat1) AS activity_read, sum(sm.stat2) AS activity_write
-                    FROM {stats_daily} sm JOIN {course} c ON c.id=sm.courseid JOIN {role} r ON (sm.roleid = r.id)
-                    WHERE sm.stattype='activity'";
+        $sql = array(
+            "SELECT
+               concat(c.id, '_', sm.timeend, '_', r.id) AS uniqueid,
+               c.id, c.shortname AS courseshortname,
+               r.id, r.shortname AS roleshortname,
+               sm.timeend,
+               sum(sm.stat1) AS activity_read,
+               sum(sm.stat2) AS activity_write
+             FROM
+               {stats_daily} sm
+             JOIN
+               {course} c ON c.id=sm.courseid
+             JOIN
+               {role} r ON (sm.roleid = r.id)
+             WHERE
+               sm.stattype='activity'"
+        );
         
         if ($course != '') {
-            $sql .= " AND c.shortname=?";
+            array_push($sql, "AND c.shortname = ?");
             array_push($sql_params, $course);
         }
 
+        /*
+          timeend is e.g. 00:00:00 day *after* accounting
+          period, so if starttime is 00:00:00, we
+          *don't* want period with that timeend included...
+          On the other hand, if endtime is 00:00:00,
+          we *do* want period ending at that time included.
+        */
         if($starttime != null){
-            $sql .= " AND timeend>?";
+            array_push($sql, "AND timeend > ?");
             array_push($sql_params, $starttime);
         }
-        
         if($endtime != null){
-            $sql .= " AND timeend<=?";
+            array_push($sql, "AND timeend <= ?");
             array_push($sql_params, $endtime);
         }
         
-        $sql .= " GROUP BY sm.timeend, sm.roleid, sm.courseid, r.shortname, r.name, c.id, c.shortname, sm.courseid 
-                ORDER BY sm.courseid, sm.roleid, sm.timeend";
+        array_push($sql, "GROUP BY sm.timeend, r.id, c.id, r.shortname, c.shortname");
+        array_push($sql, "ORDER BY sm.courseid, sm.roleid, sm.timeend");
         
-        error_log("sql: " . $sql);
-        error_log("params: " . print_r($sql_params, true));
-        $stats = $DB->get_records_sql($sql, $sql_params);
-            foreach ($stats as $stat) {
-                $returnstat = new StdClass();
-                $keys = array('uniqueid', 'courseid', 'courseshortname', 'roleid', 'roleshortname', 'timeend', 'activity_read', 'activity_write');
-                foreach ($keys as $key) {
-                    $returnstat->$key = $stat->$key;
-                }
-                $returnstats[] = $returnstat;
+        //error_log("sql: " . print_r($sql, true));
+        //error_log("params: " . print_r($sql_params, true));
+        $stats = $DB->get_records_sql(join(' ', $sql), $sql_params);
+
+        foreach ($stats as $stat) {
+            $returnstat = new StdClass();
+            $keys = array(
+                'uniqueid', 'courseid', 'courseshortname', 'roleid', 'roleshortname',
+                'timeend', 'activity_read', 'activity_write'
+            );
+            foreach ($keys as $key) {
+                $returnstat->$key = $stat->$key;
             }
-        
+            $returnstats[] = $returnstat;
+        }
         return $returnstats;
     }
 
@@ -2721,7 +2750,7 @@ class local_presentation_external extends external_api {
                     'courseshortname' => new external_value(PARAM_TEXT, 'Course Short Name'),
                     'roleid' => new external_value(PARAM_INT, 'Moodle Role ID'),
                     'roleshortname' => new external_value(PARAM_TEXT, 'Moodle Short Role Name'),
-                    'timeend' => new external_value(PARAM_TEXT, 'Unix time of end of activity accounting period'),
+                    'timeend' => new external_value(PARAM_INT, 'Unix time of end of activity accounting period'),
                     'activity_read' => new external_value(PARAM_INT, 'Activity Read'),
                     'activity_write' => new external_value(PARAM_INT, 'Activity Write'),
                 ),'stat'
@@ -2750,56 +2779,80 @@ class local_presentation_external extends external_api {
      *
      * @param 
      * @return 
-     * @since Moodle 2.5
+     * @since Moodle 3.6
      */
     public static function get_stats_activity_weekly_by_course($course = '', $starttime = null, $endtime = null) {
         global $CFG, $DB;
-        $params = self::validate_parameters(self::get_stats_activity_weekly_by_course_parameters(), array('course' => $course));
+        $params = self::validate_parameters(
+            self::get_stats_activity_weekly_by_course_parameters(),
+            array(
+                'course' => $course,
+                'starttime' => $starttime,
+                'endtime' => $endtime
+            )
+        );
         $course = $params['course'];
         $starttime = $params['starttime'];
         $endtime = $params['endtime'];
         $returnstats = array();
         $sql_params = array();
-        $sql = "select 
-                    concat(sm.courseid, '_', sm.timeend, '_', sm.roleid) as uniqueid, sm.courseid, c.shortname AS courseshortname, sm.roleid, r.shortname AS roleshortname, sm.timeend, sum(sm.stat1) AS activity_read, sum(sm.stat2) AS activity_write
-                from 
-                    {stats_weekly} sm 
-                        join {course} c 
-                            on c.id=sm.courseid 
-                        join {role} r 
-                            on (sm.roleid = r.id)
-                where sm.stattype='activity'";
+        $sql = array(
+            "SELECT
+               concat(c.id, '_', sm.timeend, '_', r.id) AS uniqueid,
+               c.id, c.shortname AS courseshortname,
+               r.id, r.shortname AS roleshortname,
+               sm.timeend,
+               sum(sm.stat1) AS activity_read,
+               sum(sm.stat2) AS activity_write
+             FROM
+               {stats_weekly} sm
+             JOIN
+               {course} c ON c.id=sm.courseid
+             JOIN
+               {role} r ON (sm.roleid = r.id)
+             WHERE
+               sm.stattype='activity'"
+        );
         
         if ($course != '') {
-            $sql .= " and c.shortname=?";
+            array_push($sql, "AND c.shortname = ?");
             array_push($sql_params, $course);
         }
 
+        /*
+          timeend is e.g. 00:00:00 on 1st of week *after* accounting
+          period, so if starttime is 00:00:00 on 1st of a week, we
+          *don't* want period with that timeend included...
+          On the other hand, if endtime is 00:00:00 on 1st of a week,
+          we *do* want period ending at that time included.
+        */
         if($starttime != null){
-            $sql .= " and timeend>?";
+            array_push($sql, "AND timeend > ?");
             array_push($sql_params, $starttime);
         }
-        
         if($endtime != null){
-            $sql .= " and timeend<=?";
+            array_push($sql, "AND timeend <= ?");
             array_push($sql_params, $endtime);
         }
         
-        $sql .= " GROUP BY sm.timeend, sm.roleid, sm.courseid, r.shortname, r.name, c.id, c.shortname, sm.courseid 
-                ORDER BY sm.courseid, sm.roleid, sm.timeend";
+        array_push($sql, "GROUP BY sm.timeend, r.id, c.id, r.shortname, c.shortname");
+        array_push($sql, "ORDER BY sm.courseid, sm.roleid, sm.timeend");
         
-        error_log("sql: " . $sql);
-        error_log("params: " . print_r($sql_params, true));
-        $stats = $DB->get_records_sql($sql, $sql_params);
-            foreach ($stats as $stat) {
-                $returnstat = new StdClass();
-                $keys = array('uniqueid', 'courseid', 'courseshortname', 'roleid', 'roleshortname', 'timeend', 'activity_read', 'activity_write');
-                foreach ($keys as $key) {
-                    $returnstat->$key = $stat->$key;
-                }
-                $returnstats[] = $returnstat;
+        //error_log("sql: " . print_r($sql, true));
+        //error_log("params: " . print_r($sql_params, true));
+        $stats = $DB->get_records_sql(join(' ', $sql), $sql_params);
+
+        foreach ($stats as $stat) {
+            $returnstat = new StdClass();
+            $keys = array(
+                'uniqueid', 'courseid', 'courseshortname', 'roleid', 'roleshortname',
+                'timeend', 'activity_read', 'activity_write'
+            );
+            foreach ($keys as $key) {
+                $returnstat->$key = $stat->$key;
             }
-        
+            $returnstats[] = $returnstat;
+        }
         return $returnstats;
     }
 
@@ -2820,7 +2873,7 @@ class local_presentation_external extends external_api {
                     'courseshortname' => new external_value(PARAM_TEXT, 'Course Short Name'),
                     'roleid' => new external_value(PARAM_INT, 'Moodle Role ID'),
                     'roleshortname' => new external_value(PARAM_TEXT, 'Moodle Short Role Name'),
-                    'timeend' => new external_value(PARAM_TEXT, 'Unix time of end of activity accounting period'),
+                    'timeend' => new external_value(PARAM_INT, 'Unix time of end of activity accounting period'),
                     'activity_read' => new external_value(PARAM_INT, 'Activity Read'),
                     'activity_write' => new external_value(PARAM_INT, 'Activity Write'),
                 ),'stat'
@@ -2836,7 +2889,7 @@ class local_presentation_external extends external_api {
     public static function get_stats_activity_monthly_by_course_parameters() {
         return new external_function_parameters (
             array(
-                'course' => new external_value(PARAM_ALPHANUMEXT, 'course shortname', false, ''),
+                'course' => new external_value(PARAM_ALPHANUMEXT, 'Course shortname', false, ''),
                 'starttime' => new external_value(PARAM_INT, 'Stats start time', false, null),
                 'endtime' => new external_value(PARAM_INT, 'Stats end time', false, null)
             )
@@ -2848,51 +2901,80 @@ class local_presentation_external extends external_api {
      *
      * @param 
      * @return 
-     * @since Moodle 2.5
+     * @since Moodle 3.6
      */
     public static function get_stats_activity_monthly_by_course($course = '', $starttime = null, $endtime = null) {
         global $CFG, $DB;
-        $params = self::validate_parameters(self::get_stats_activity_monthly_by_course_parameters(), array('course' => $course));
+        $params = self::validate_parameters(
+            self::get_stats_activity_monthly_by_course_parameters(),
+            array(
+                'course' => $course,
+                'starttime' => $starttime,
+                'endtime' => $endtime
+            )
+        );
         $course = $params['course'];
         $starttime = $params['starttime'];
         $endtime = $params['endtime'];
         $returnstats = array();
         $sql_params = array();
-        $sql = "SELECT concat(sm.courseid, '_', sm.timeend, '_', sm.roleid) 
-                  as uniqueid, sm.courseid, c.shortname AS courseshortname, sm.roleid, r.shortname AS roleshortname, sm.timeend, sum(sm.stat1) AS activity_read, sum(sm.stat2) AS activity_write
-                    FROM {stats_monthly} sm JOIN {course} c ON c.id=sm.courseid JOIN {role} r ON (sm.roleid = r.id)
-                    WHERE sm.stattype='activity'";
+        $sql = array(
+            "SELECT
+               concat(c.id, '_', sm.timeend, '_', r.id) AS uniqueid,
+               c.id, c.shortname AS courseshortname,
+               r.id, r.shortname AS roleshortname,
+               sm.timeend,
+               sum(sm.stat1) AS activity_read,
+               sum(sm.stat2) AS activity_write
+             FROM
+               {stats_monthly} sm
+             JOIN
+               {course} c ON c.id=sm.courseid
+             JOIN
+               {role} r ON (sm.roleid = r.id)
+             WHERE
+               sm.stattype='activity'"
+        );
         
         if ($course != '') {
-            $sql .= " AND c.shortname=?";
+            array_push($sql, "AND c.shortname = ?");
             array_push($sql_params, $course);
         }
 
+        /*
+          timeend is e.g. 00:00:00 on 1st of month *after* accounting
+          period, so if starttime is 00:00:00 on 1st of a month, we
+          *don't* want period with that timeend included...
+          On the other hand, if endtime is 00:00:00 on 1st of a month,
+          we *do* want period ending at that time included.
+        */
         if($starttime != null){
-            $sql .= " AND timeend>?";
+            array_push($sql, "AND timeend > ?");
             array_push($sql_params, $starttime);
         }
-        
         if($endtime != null){
-            $sql .= " AND timeend<=?";
+            array_push($sql, "AND timeend <= ?");
             array_push($sql_params, $endtime);
         }
         
-        $sql .= " GROUP BY sm.timeend, sm.roleid, sm.courseid, r.shortname, r.name, c.id, c.shortname, sm.courseid 
-                ORDER BY sm.courseid, sm.roleid, sm.timeend";
+        array_push($sql, "GROUP BY sm.timeend, r.id, c.id, r.shortname, c.shortname");
+        array_push($sql, "ORDER BY sm.courseid, sm.roleid, sm.timeend");
         
-        error_log("sql: " . $sql);
-        error_log("params: " . print_r($sql_params, true));
-        $stats = $DB->get_records_sql($sql, $sql_params);
-            foreach ($stats as $stat) {
-                $returnstat = new StdClass();
-                $keys = array('uniqueid', 'courseid', 'courseshortname', 'roleid', 'roleshortname', 'timeend', 'activity_read', 'activity_write');
-                foreach ($keys as $key) {
-                    $returnstat->$key = $stat->$key;
-                }
-                $returnstats[] = $returnstat;
+        //error_log("sql: " . print_r($sql, true));
+        //error_log("params: " . print_r($sql_params, true));
+        $stats = $DB->get_records_sql(join(' ', $sql), $sql_params);
+
+        foreach ($stats as $stat) {
+            $returnstat = new StdClass();
+            $keys = array(
+                'uniqueid', 'courseid', 'courseshortname', 'roleid', 'roleshortname',
+                'timeend', 'activity_read', 'activity_write'
+            );
+            foreach ($keys as $key) {
+                $returnstat->$key = $stat->$key;
             }
-        
+            $returnstats[] = $returnstat;
+        }
         return $returnstats;
     }
 
@@ -2907,12 +2989,12 @@ class local_presentation_external extends external_api {
         return new external_multiple_structure(
             new external_single_structure(
                 array(
-                   'uniqueid' => new external_value(PARAM_TEXT, 'Statistics unique ID'),
+                    'uniqueid' => new external_value(PARAM_TEXT, 'Statistics unique ID'),
                     'courseid' => new external_value(PARAM_INT, 'Course ID'),
                     'courseshortname' => new external_value(PARAM_TEXT, 'Course Short Name'),
                     'roleid' => new external_value(PARAM_INT, 'Moodle Role ID'),
                     'roleshortname' => new external_value(PARAM_TEXT, 'Moodle Short Role Name'),
-                    'timeend' => new external_value(PARAM_TEXT, 'Unix time of end of activity accounting period'),
+                    'timeend' => new external_value(PARAM_INT, 'Unix time of end of activity accounting period'),
                     'activity_read' => new external_value(PARAM_INT, 'Activity Read'),
                     'activity_write' => new external_value(PARAM_INT, 'Activity Write'),
                 ),'stat'
