@@ -2713,7 +2713,7 @@ class local_presentation_external extends external_api {
         }
         
         array_push($sql, "GROUP BY sm.timeend, r.id, c.id, r.shortname, c.shortname");
-        array_push($sql, "ORDER BY sm.courseid, sm.roleid, sm.timeend");
+        array_push($sql, "ORDER BY c.id, r.id, sm.timeend");
         
         //error_log("sql: " . print_r($sql, true));
         //error_log("params: " . print_r($sql_params, true));
@@ -2836,7 +2836,7 @@ class local_presentation_external extends external_api {
         }
         
         array_push($sql, "GROUP BY sm.timeend, r.id, c.id, r.shortname, c.shortname");
-        array_push($sql, "ORDER BY sm.courseid, sm.roleid, sm.timeend");
+        array_push($sql, "ORDER BY c.id, r.id, sm.timeend");
         
         //error_log("sql: " . print_r($sql, true));
         //error_log("params: " . print_r($sql_params, true));
@@ -2958,7 +2958,7 @@ class local_presentation_external extends external_api {
         }
         
         array_push($sql, "GROUP BY sm.timeend, r.id, c.id, r.shortname, c.shortname");
-        array_push($sql, "ORDER BY sm.courseid, sm.roleid, sm.timeend");
+        array_push($sql, "ORDER BY c.id, r.id, sm.timeend");
         
         //error_log("sql: " . print_r($sql, true));
         //error_log("params: " . print_r($sql_params, true));
