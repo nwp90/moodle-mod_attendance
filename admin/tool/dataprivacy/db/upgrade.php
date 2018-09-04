@@ -162,5 +162,44 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2017111305, 'tool', 'dataprivacy');
     }
 
+    if ($oldversion < 2017111315) {
+        // Update completed delete requests to new delete status.
+        $query = "UPDATE {tool_dataprivacy_request}
+                     SET status = :setstatus
+                   WHERE type = :type
+                         AND status = :wherestatus";
+        $params = array(
+            'setstatus' => 10, // Request deleted.
+            'type' => 2, // Delete type.
+            'wherestatus' => 5, // Request completed.
+        );
+
+        $DB->execute($query, $params);
+
+        // Update completed data export requests to new download ready status.
+        $params = array(
+            'setstatus' => 8, // Request download ready.
+            'type' => 1, // export type.
+            'wherestatus' => 5, // Request completed.
+        );
+
+        $DB->execute($query, $params);
+
+        upgrade_plugin_savepoint(true, 2017111315, 'tool', 'dataprivacy');
+    }
+
+    if ($oldversion < 2017111316) {
+
+        // Changing precision of field status on table tool_dataprivacy_request to (2).
+        $table = new xmldb_table('tool_dataprivacy_request');
+        $field = new xmldb_field('status', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'requestedby');
+
+        // Launch change of precision for field status.
+        $dbman->change_field_precision($table, $field);
+
+        // Dataprivacy savepoint reached.
+        upgrade_plugin_savepoint(true, 2017111316, 'tool', 'dataprivacy');
+    }
+
     return true;
 }
