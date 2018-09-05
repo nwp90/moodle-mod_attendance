@@ -1,3 +1,12 @@
+moodle-site-otagounifom (3.4.4.2018083100+0facmed1-2) stretch; urgency=medium
+
+  * New upstream version
+  * Local fixes to sitewideuser report and gradingstudents plugins
+  * Update tii plugins
+  * Update mod_subcourse
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 05 Sep 2018 13:27:23 +1200
+
 moodle-site-otagounifom (3.4.4.2018070900+0facmed1-1) stretch; urgency=medium
 
   * New upstream version, security fixes.
