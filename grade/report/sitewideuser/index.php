@@ -39,6 +39,9 @@ $PAGE->requires->css('/grade/report/sitewideuser/checkboxtree/css/checkboxtree.c
 
 // end of insert
 
+// Pick up user report styles
+$PAGE->add_body_class('path-grade-report-user');
+
 $courseid = required_param('id', PARAM_INT);
 $userid = optional_param('userid', $USER->id, PARAM_INT);
 
@@ -46,9 +49,9 @@ $formsubmitted = optional_param('formsubmitted', 0, PARAM_TEXT);
 
 $PAGE->set_url(new moodle_url('/grade/report/sitewideuser/index.php', array('id' => $courseid)));
 
-// basic access checks
+/// basic access checks
 if (!$course = $DB->get_record('course', array('id' => $courseid))) {
-    print_error('nocourseid');
+    print_error('invalidcourseid');
 }
 require_login($course);
 $PAGE->set_pagelayout('report');
@@ -58,6 +61,7 @@ require_capability('gradereport/sitewideuser:view', $context);
 
 if (empty($userid)) {
     require_capability('moodle/grade:viewall', $context);
+
 } else {
     if (!$DB->get_record('user', array('id' => $userid, 'deleted' => 0)) or isguestuser($userid)) {
         print_error('invaliduser');
@@ -68,9 +72,11 @@ $access = false;
 if (has_capability('moodle/grade:viewall', $context)) {
     //ok - can view all course grades
     $access = true;
+
 } else if ($userid == $USER->id and has_capability('moodle/grade:view', $context) and $course->showgrades) {
     //ok - can view own grades
     $access = true;
+
 } else if (has_capability('moodle/grade:viewall', context_user::instance($userid)) and $course->showgrades) {
     // ok - can view grades of this user- parent most probably
     $access = true;
@@ -81,17 +87,17 @@ if (!$access) {
     print_error('nopermissiontoviewgrades', 'error', $CFG->wwwroot . '/course/view.php?id=' . $courseid);
 }
 
-// return tracking object
+/// return tracking object
 $gpr = new grade_plugin_return(array('type' => 'report', 'plugin' => 'sitewideuser', 'courseid' => $courseid, 'userid' => $userid));
 
-// last selected report session tracking
+/// last selected report session tracking
 if (!isset($USER->grade_last_report)) {
     $USER->grade_last_report = array();
 }
 $USER->grade_last_report[$course->id] = 'sitewideuser';
 
-//first make sure we have proper final grades - this must be done before constructing of the grade tree
-grade_regrade_final_grades($courseid);
+// First make sure we have proper final grades.
+grade_regrade_final_grades_if_required($course);
 
 
 $reportname = get_string('modulename', 'gradereport_sitewideuser');
