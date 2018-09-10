@@ -1,6 +1,7 @@
 moodle-site-otagounifom (3.4.5.2018091000+0facmed1-1) stretch; urgency=medium
 
   * New upstream version
+  * Add mi lang file to medschool_topics course format
 
  -- Nick Phillips <nwp@debian.org>  Mon, 10 Sep 2018 16:06:20 +1200
 
