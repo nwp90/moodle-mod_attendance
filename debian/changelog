@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.4.5.2018091400+0facmed1-1) stretch; urgency=high
+
+  * New upstream version, security fixes, incl. RCE with question import.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 18 Sep 2018 10:15:38 +1200
+
 moodle-site-otagounifom (3.4.5.2018091000+0facmed1-1) stretch; urgency=medium
 
   * New upstream version
