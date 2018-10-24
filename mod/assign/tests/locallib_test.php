@@ -3004,7 +3004,7 @@ class mod_assign_locallib_testcase extends advanced_testcase {
      * Testing for comment inline settings
      */
     public function test_feedback_comment_commentinline() {
-        global $CFG;
+        global $CFG, $USER;
 
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course();
@@ -3023,22 +3023,6 @@ External link 2:<img alt=\"Moodle\" src=\"https://moodle.org/logo/logo-240x60.gi
 Internal link 1:<img src='@@PLUGINFILE@@/logo-240x60.gif' alt='Moodle'/>
 Internal link 2:<img alt=\"Moodle\" src=\"@@PLUGINFILE@@logo-240x60.gif\"/>
 Anchor link 1:<a href=\"@@PLUGINFILE@@logo-240x60.gif\" alt=\"bananas\">Link text</a>
-Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
-";
-
-        // Note the internal images have been stripped and the html is purified (quotes fixed in this case).
-        $filteredtext = "Hello!
-
-I'm writing to you from the Moodle Majlis in Muscat, Oman, where we just had several days of Moodle community goodness.
-
-URL outside a tag: https://moodle.org/logo/logo-240x60.gif
-Plugin url outside a tag: @@PLUGINFILE@@/logo-240x60.gif
-
-External link 1:<img src=\"https://moodle.org/logo/logo-240x60.gif\" alt=\"Moodle\" />
-External link 2:<img alt=\"Moodle\" src=\"https://moodle.org/logo/logo-240x60.gif\" />
-Internal link 1:
-Internal link 2:
-Anchor link 1:Link text
 Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
 ";
 
@@ -3067,6 +3051,27 @@ Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
             ];
         $formparams = array($assign, $data, $pagination);
         $mform = new mod_assign_grade_form(null, [$assign, $data, $pagination]);
+
+        // We need to get the URL these will be transformed to.
+        $context = context_user::instance($USER->id);
+        $itemid = $data->assignfeedbackcomments_editor['itemid'];
+        $url = $CFG->wwwroot . '/draftfile.php/' . $context->id . '/user/draft/' . $itemid;
+
+        // Note the internal images have been stripped and the html is purified (quotes fixed in this case).
+        $filteredtext = "Hello!
+
+I'm writing to you from the Moodle Majlis in Muscat, Oman, where we just had several days of Moodle community goodness.
+
+URL outside a tag: https://moodle.org/logo/logo-240x60.gif
+Plugin url outside a tag: $url/logo-240x60.gif
+
+External link 1:<img src=\"https://moodle.org/logo/logo-240x60.gif\" alt=\"Moodle\" />
+External link 2:<img alt=\"Moodle\" src=\"https://moodle.org/logo/logo-240x60.gif\" />
+Internal link 1:<img src=\"$url/logo-240x60.gif\" alt=\"Moodle\" />
+Internal link 2:<img alt=\"Moodle\" src=\"@@PLUGINFILE@@logo-240x60.gif\" />
+Anchor link 1:<a href=\"@@PLUGINFILE@@logo-240x60.gif\">Link text</a>
+Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
+";
 
         $this->assertEquals($filteredtext, $data->assignfeedbackcomments_editor['text']);
     }
@@ -3887,6 +3892,7 @@ Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
         $assign->get_user_grade($student->id, true);
 
         // Set the grade to something errant.
+        // We don't set the grader here, so we expect it to be -1 as a result.
         $DB->set_field(
             'assign_grades',
             'grade',
@@ -3904,6 +3910,7 @@ Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
         // Check that the gradebook was updated with the assign grade. So we can guarentee test results later on.
         $expectedgrade = $grade == -1 ? null : $grade; // Assign sends null to the gradebook for -1 grades.
         $gradegrade = grade_grade::fetch(array('userid' => $student->id, 'itemid' => $assign->get_grade_item()->id));
+        $this->assertEquals(-1, $gradegrade->usermodified);
         $this->assertEquals($expectedgrade, $gradegrade->rawgrade);
 
         // Call fix_null_grades().
@@ -3914,6 +3921,9 @@ Anchor link 2:<a title=\"bananas\" href=\"../logo-240x60.gif\">Link text</a>
         $this->assertSame(true, $result);
 
         $gradegrade = grade_grade::fetch(array('userid' => $student->id, 'itemid' => $assign->get_grade_item()->id));
+
+        $this->assertEquals(-1, $gradegrade->usermodified);
+        $this->assertEquals($gradebookvalue, $gradegrade->finalgrade);
 
         // Check that the grade was updated in the gradebook by fix_null_grades.
         $this->assertEquals($gradebookvalue, $gradegrade->finalgrade);

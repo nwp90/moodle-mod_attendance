@@ -27,33 +27,16 @@ defined('MOODLE_INTERNAL') || die();
 use renderable;
 use renderer_base;
 use templatable;
-use core_completion\progress;
 
-require_once($CFG->dirroot . '/blocks/myoverview/lib.php');
 require_once($CFG->libdir . '/completionlib.php');
 
 /**
  * Class containing data for my overview block.
  *
- * @copyright  2017 Simey Lameze <simey@moodle.com>
+ * @copyright  2018 Bas Brands <bas@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class main implements renderable, templatable {
-
-    /**
-     * @var string The tab to display.
-     */
-    public $tab;
-
-    /**
-     * Constructor.
-     *
-     * @param string $tab The tab to display.
-     */
-    public function __construct($tab) {
-        $this->tab = $tab;
-    }
-
     /**
      * Export this data so it can be used as the context for a mustache template.
      *
@@ -61,51 +44,11 @@ class main implements renderable, templatable {
      * @return stdClass
      */
     public function export_for_template(renderer_base $output) {
-        global $USER;
 
-        $courses = enrol_get_my_courses('*');
-        $coursesprogress = [];
-
-        foreach ($courses as $course) {
-
-            $completion = new \completion_info($course);
-
-            // First, let's make sure completion is enabled.
-            if (!$completion->is_enabled()) {
-                continue;
-            }
-
-            $percentage = progress::get_course_progress_percentage($course);
-            if (!is_null($percentage)) {
-                $percentage = floor($percentage);
-            }
-
-            $coursesprogress[$course->id]['completed'] = $completion->is_course_complete($USER->id);
-            $coursesprogress[$course->id]['progress'] = $percentage;
-        }
-
-        $coursesview = new courses_view($courses, $coursesprogress);
         $nocoursesurl = $output->image_url('courses', 'block_myoverview')->out();
-        $noeventsurl = $output->image_url('activities', 'block_myoverview')->out();
 
-        // Now, set the tab we are going to be viewing.
-        $viewingtimeline = false;
-        $viewingcourses = false;
-        if ($this->tab == BLOCK_MYOVERVIEW_TIMELINE_VIEW) {
-            $viewingtimeline = true;
-        } else {
-            $viewingcourses = true;
-        }
-
-        return [
-            'midnight' => usergetmidnight(time()),
-            'coursesview' => $coursesview->export_for_template($output),
-            'urls' => [
-                'nocourses' => $nocoursesurl,
-                'noevents' => $noeventsurl
-            ],
-            'viewingtimeline' => $viewingtimeline,
-            'viewingcourses' => $viewingcourses
+        return (object) [
+            'nocoursesimg' => $nocoursesurl
         ];
     }
 }

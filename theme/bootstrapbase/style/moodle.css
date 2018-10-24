@@ -4807,6 +4807,21 @@ h3.sectionname .inplaceeditable.inplaceeditingon .editinstructions {
 }
 [data-drag-type="move"] {
   cursor: move;
+  touch-action: none;
+}
+.bg-pulse-grey {
+  animation: bg-pulse-grey 2s infinite linear;
+}
+@keyframes bg-pulse-grey {
+  0% {
+    background-color: #eee;
+  }
+  50% {
+    background-color: #e1e1e1;
+  }
+  100% {
+    background-color: #eee;
+  }
 }
 /* admin.less */
 .formtable tbody th {
@@ -5574,6 +5589,27 @@ img.iconsmall {
 }
 #page-admin-registration-index form .mark {
   background-color: #fcf8e3;
+}
+#page-admin-search .adminpagetitle {
+  margin-bottom: 0;
+  border-bottom: none;
+}
+#page-admin-search .adminpagepath {
+  list-style: none;
+  margin: 0 0 10px 0;
+}
+#page-admin-search .adminpagepath li {
+  color: #999;
+  display: inline;
+  font-size: 11.9px;
+}
+#page-admin-search .adminpagepath li + li:before {
+  content: "◀\00a0";
+  /*rtl:remove*/
+  content: "▶\00a0";
+  /* stylelint-disable-line declaration-block-no-duplicate-properties */
+  color: #ccc;
+  font-size: 11.9px;
 }
 /* calendar.less */
 .calendar_event_category {
@@ -16501,62 +16537,100 @@ body {
   height: 35px;
   width: 35px;
 }
-.block_myoverview {
-  background-color: transparent;
-}
-.block_myoverview .row-fluid [class*="span"] {
-  margin-left: 0;
-}
-.block_myoverview .event-list-item {
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 10px;
-  margin-bottom: 10px;
-}
-.block_myoverview .event-list-item:last-of-type {
-  border-bottom: none;
-  padding-bottom: 0;
-  margin-bottom: 0;
-}
-.block_myoverview .event-list-item .event-icon {
-  vertical-align: middle;
-}
-.block_myoverview .event-list-item .event-icon::before {
-  content: '';
-  display: inline-block;
-  height: 100%;
-  vertical-align: middle;
-}
-.block_myoverview .event-list-item .event-name-container {
-  vertical-align: middle;
-  max-width: calc(100% - 50px);
-}
-.block_myoverview .event-list-item .event-name-container .event-name {
-  display: block;
-}
-.block_myoverview .empty-placeholder-image-sm {
-  height: 50px;
+.block_myoverview *,
+.block_myoverview *::before,
+.block_myoverview *::after {
+  box-sizing: border-box;
 }
 .block_myoverview .empty-placeholder-image-lg {
   height: 125px;
 }
-.block_myoverview .courses-view-course-item {
-  height: 220px;
-  overflow-y: hidden;
+.block_myoverview .course-card {
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: calc(50% - 0.6rem);
 }
-.block_myoverview h4 {
-  font-weight: normal;
+.block_myoverview .course-info-container {
+  flex: 1 1 auto;
+  padding: 0.8rem;
 }
-.block_myoverview .well {
-  background-color: #fff;
-  box-shadow: none;
-  margin: 0 5px 10px;
+.block_myoverview .course-card-footer {
+  padding: 0.8rem;
+  background-color: #f5f5f5;
+  border-top: 1px solid #e3e3e3;
+  -webkit-border-bottom-right-radius: 4px;
+  -moz-border-radius-bottomright: 4px;
+  border-bottom-right-radius: 4px;
+  -webkit-border-bottom-left-radius: 4px;
+  -moz-border-radius-bottomleft: 4px;
+  border-bottom-left-radius: 4px;
+}
+.block_myoverview .progress {
+  height: 0.5rem;
+  margin-bottom: 0;
 }
 .block_myoverview .myoverviewimg {
-  height: 150px;
-}
-.block_myoverview .myoverviewimg.courseimage {
+  height: 7rem;
   background-position: center;
   background-size: cover;
+  -webkit-border-top-right-radius: 4px;
+  -moz-border-radius-topright: 4px;
+  border-top-right-radius: 4px;
+  -webkit-border-top-left-radius: 4px;
+  -moz-border-radius-topleft: 4px;
+  border-top-left-radius: 4px;
+}
+.block_myoverview .list-group {
+  margin: 0;
+}
+.block_myoverview .course-listitem {
+  display: block;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 0.5rem;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+}
+.block_myoverview .course-summaryitem {
+  padding: 0.5rem;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+}
+.block_myoverview .summary img {
+  max-width: 100%;
+}
+@media (max-width: 576px) {
+  .block_myoverview .summaryimage {
+    max-height: 7rem;
+  }
+}
+@media (min-width: 576px) {
+  .block_myoverview .card-deck {
+    display: flex;
+    flex-flow: row wrap;
+    margin-right: -0.25rem;
+    margin-left: -0.25rem;
+  }
+  .block_myoverview .course-card {
+    display: flex;
+    flex-direction: column;
+    margin-right: 0.25rem;
+    margin-left: 0.25rem;
+  }
+}
+@media (min-width: 1200px) {
+  .block_myoverview .course-card {
+    flex-basis: calc(33% - 0.5rem);
+  }
 }
 /**
  * Moodle forms HTML isn't changeable via renderers (yet?) so this
@@ -22088,4 +22162,28 @@ ul.indented-list {
 }
 .w-100 {
   width: 100%;
+}
+.w-75 {
+  width: 75%;
+}
+.w-50 {
+  width: 50%;
+}
+.w-25 {
+  width: 25%;
+}
+.d-flex {
+  display: flex !important;
+}
+.flex-column {
+  flex-direction: column !important;
+}
+.align-self-stretch {
+  align-self: stretch;
+}
+.ml-auto {
+  margin-left: auto;
+}
+.mt-auto {
+  margin-top: auto;
 }

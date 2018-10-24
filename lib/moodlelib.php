@@ -2259,6 +2259,35 @@ function userdate($date, $format = '', $timezone = 99, $fixday = true, $fixhour 
 }
 
 /**
+ * Returns a html "time" tag with both the exact user date with timezone information
+ * as a datetime attribute in the W3C format, and the user readable date and time as text.
+ *
+ * @package core
+ * @category time
+ * @param int $date the timestamp in UTC, as obtained from the database.
+ * @param string $format strftime format. You should probably get this using
+ *        get_string('strftime...', 'langconfig');
+ * @param int|float|string $timezone by default, uses the user's time zone. if numeric and
+ *        not 99 then daylight saving will not be added.
+ *        {@link http://docs.moodle.org/dev/Time_API#Timezone}
+ * @param bool $fixday If true (default) then the leading zero from %d is removed.
+ *        If false then the leading zero is maintained.
+ * @param bool $fixhour If true (default) then the leading zero from %I is removed.
+ * @return string the formatted date/time.
+ */
+function userdate_htmltime($date, $format = '', $timezone = 99, $fixday = true, $fixhour = true) {
+    $userdatestr = userdate($date, $format, $timezone, $fixday, $fixhour);
+    if (CLI_SCRIPT && !PHPUNIT_TEST) {
+        return $userdatestr;
+    }
+    $machinedate = new DateTime();
+    $machinedate->setTimestamp(intval($date));
+    $machinedate->setTimezone(core_date::get_user_timezone_object());
+
+    return html_writer::tag('time', $userdatestr, ['datetime' => $machinedate->format(DateTime::W3C)]);
+}
+
+/**
  * Returns a formatted date ensuring it is UTF-8.
  *
  * If we are running under Windows convert to Windows encoding and then back to UTF-8
@@ -4062,7 +4091,7 @@ function truncate_userinfo(array $info) {
  * @throws coding_exception if invalid $user parameter detected
  */
 function delete_user(stdClass $user) {
-    global $CFG, $DB;
+    global $CFG, $DB, $SESSION;
     require_once($CFG->libdir.'/grouplib.php');
     require_once($CFG->libdir.'/gradelib.php');
     require_once($CFG->dirroot.'/message/lib.php');
@@ -4157,6 +4186,11 @@ function delete_user(stdClass $user) {
     // Remove users customised pages.
     $DB->delete_records('my_pages', array('userid' => $user->id, 'private' => 1));
 
+    // Delete user from $SESSION->bulk_users.
+    if (isset($SESSION->bulk_users[$user->id])) {
+        unset($SESSION->bulk_users[$user->id]);
+    }
+
     // Force logout - may fail if file based sessions used, sorry.
     \core\session\manager::kill_user_sessions($user->id);
 
@@ -4182,8 +4216,8 @@ function delete_user(stdClass $user) {
     // Don't trigger update event, as user is being deleted.
     user_update_user($updateuser, false, false);
 
-    // Now do a final accesslib cleanup - removes all role assignments in user context and context itself.
-    context_helper::delete_instance(CONTEXT_USER, $user->id);
+    // Delete all content associated with the user context, but not the context itself.
+    $usercontext->delete_content();
 
     // Any plugin that needs to cleanup should register this event.
     // Trigger event.
@@ -5349,11 +5383,9 @@ function reset_course_userdata($data) {
     if (!empty($data->reset_roles_overrides)) {
         $children = $context->get_child_contexts();
         foreach ($children as $child) {
-            $DB->delete_records('role_capabilities', array('contextid' => $child->id));
+            $child->delete_capabilities();
         }
-        $DB->delete_records('role_capabilities', array('contextid' => $context->id));
-        // Force refresh for logged in users.
-        $context->mark_dirty();
+        $context->delete_capabilities();
         $status[] = array('component' => $componentstr, 'item' => get_string('deletecourseoverrides', 'role'), 'error' => false);
     }
 
@@ -5362,8 +5394,6 @@ function reset_course_userdata($data) {
         foreach ($children as $child) {
             role_unassign_all(array('contextid' => $child->id));
         }
-        // Force refresh for logged in users.
-        $context->mark_dirty();
         $status[] = array('component' => $componentstr, 'item' => get_string('deletelocalroles', 'role'), 'error' => false);
     }
 
@@ -9841,7 +9871,7 @@ function get_home_page() {
  * Gets the name of a course to be displayed when showing a list of courses.
  * By default this is just $course->fullname but user can configure it. The
  * result of this function should be passed through print_string.
- * @param stdClass|course_in_list $course Moodle course object
+ * @param stdClass|core_course_list_element $course Moodle course object
  * @return string Display name of course (either fullname or short + fullname)
  */
 function get_course_display_name_for_list($course) {
@@ -10151,5 +10181,24 @@ class lang_string {
      */
     public function get_component() {
         return $this->component;
+    }
+}
+
+/**
+ * Get human readable name describing the given callable.
+ *
+ * This performs syntax check only to see if the given param looks like a valid function, method or closure.
+ * It does not check if the callable actually exists.
+ *
+ * @param callable|string|array $callable
+ * @return string|bool Human readable name of callable, or false if not a valid callable.
+ */
+function get_callable_name($callable) {
+
+    if (!is_callable($callable, true, $name)) {
+        return false;
+
+    } else {
+        return $name;
     }
 }

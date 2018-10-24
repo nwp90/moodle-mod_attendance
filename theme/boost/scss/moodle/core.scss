@@ -5,10 +5,12 @@
 // want white default colour.
 $bg-inverse-link-color: #fff !default;
 
-#region-main > .card {
+#region-main {
     overflow-x: auto;
     overflow-y: visible;
-    min-height: 45rem;
+    border: $card-border-width solid $card-border-color;
+    padding: $card-spacer-x;
+    background-color: $body-bg;
 }
 
 .context-header-settings-menu,
@@ -144,6 +146,13 @@ a.autolink.glossary:hover {
 
 .pagelayout-mydashboard.jsenabled .collapsibleregioncaption {
     cursor: pointer;
+}
+
+.pagelayout-mydashboard #region-main {
+    border: 0;
+    padding: 0;
+    background-color: transparent;
+    margin-top: -1px;
 }
 
 .collapsibleregioncaption img {
@@ -1085,17 +1094,6 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
     white-space: nowrap;
     text-align: center;
 }
-
-
-.initialbarlabel {
-    display: inline-block;
-    width: 6em;
-    float: left;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
 
 /* Moodle Dialogue Settings (moodle-core-dialogue)  */
 .moodle-dialogue-base .moodle-dialogue-lightbox {
@@ -2079,6 +2077,7 @@ $footer-link-color: $bg-inverse-link-color !default;
 
 [data-drag-type="move"] {
     cursor: move;
+    touch-action: none;
 }
 
 .clickable {
@@ -2117,3 +2116,36 @@ div.editor_atto_toolbar button .icon {
     width: auto;
 }
 
+.bg-pulse-grey {
+    animation: bg-pulse-grey 2s infinite linear;
+}
+
+@keyframes bg-pulse-grey {
+    0% {
+        background-color: $gray-100;
+    }
+    50% {
+        background-color: darken($gray-100, 5%);
+    }
+    100% {
+        background-color: $gray-100;
+    }
+}
+
+@each $size, $length in $spacers {
+    .line-height-#{$size} {
+        line-height: $length !important; /* stylelint-disable-line declaration-no-important */
+    }
+}
+
+.dir-rtl {
+    .dir-rtl-hide {
+        display: none;
+    }
+}
+
+.dir-ltr {
+    .dir-ltr-hide {
+        display: none;
+    }
+}

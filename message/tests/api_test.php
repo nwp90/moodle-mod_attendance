@@ -102,20 +102,21 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
      * Test count_blocked_users.
      */
     public function test_count_blocked_users() {
+        global $USER;
+
         // Set this user as the admin.
         $this->setAdminUser();
 
-        // Create users to add to the admin's contact list.
+        // Create user to add to the admin's block list.
         $user1 = $this->getDataGenerator()->create_user();
         $user2 = $this->getDataGenerator()->create_user();
 
         $this->assertEquals(0, \core_message\api::count_blocked_users());
 
-        // Add 1 blocked and 1 normal contact to admin's contact list.
-        message_add_contact($user1->id);
-        message_add_contact($user2->id, 1);
+        // Add 1 blocked user to admin's blocked user list.
+        \core_message\api::block_user($USER->id, $user1->id);
 
-        $this->assertEquals(0, \core_message\api::count_blocked_users($user2));
+        $this->assertEquals(0, \core_message\api::count_blocked_users($user1));
         $this->assertEquals(1, \core_message\api::count_blocked_users());
     }
 
@@ -140,7 +141,7 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
         $user2 = self::getDataGenerator()->create_user($user2);
 
         // Block the second user.
-        message_block_contact($user2->id, $user1->id);
+        \core_message\api::block_user($user1->id, $user2->id);
 
         $user3 = new stdClass();
         $user3->firstname = 'User';
@@ -247,14 +248,13 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
         $this->getDataGenerator()->enrol_user($user1->id, $course5->id, $role->id);
 
         // Add some users as contacts.
-        message_add_contact($user2->id, 0, $user1->id);
-        message_add_contact($user3->id, 0, $user1->id);
-        message_add_contact($user4->id, 0, $user1->id);
+        \core_message\api::add_contact($user1->id, $user2->id);
+        \core_message\api::add_contact($user1->id, $user3->id);
+        \core_message\api::add_contact($user1->id, $user4->id);
 
         // Remove the viewparticipants capability from one of the courses.
         $course5context = context_course::instance($course5->id);
         assign_capability('moodle/course:viewparticipants', CAP_PROHIBIT, $role->id, $course5context->id);
-        $course5context->mark_dirty();
 
         // Perform a search.
         list($contacts, $courses, $noncontacts) = \core_message\api::search_users($user1->id, 'search');
@@ -281,25 +281,31 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
         // Create some users.
         $user1 = self::getDataGenerator()->create_user();
         $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
 
         // The person doing the search.
         $this->setUser($user1);
 
         // Send some messages back and forth.
         $time = 1;
-        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time);
-        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 1);
-        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 2);
-        $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 3);
+        $this->send_fake_message($user3, $user1, 'Don\'t block me.', 0, $time);
+        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+
+        // Block user 3.
+        \core_message\api::block_user($user1->id, $user3->id);
 
         // Perform a search.
         $messages = \core_message\api::search_messages($user1->id, 'o');
 
         // Confirm the data is correct.
-        $this->assertEquals(2, count($messages));
+        $this->assertEquals(3, count($messages));
 
         $message1 = $messages[0];
         $message2 = $messages[1];
+        $message3 = $messages[2];
 
         $this->assertEquals($user2->id, $message1->userid);
         $this->assertEquals($user2->id, $message1->useridfrom);
@@ -322,6 +328,315 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
         $this->assertTrue($message2->isread);
         $this->assertFalse($message2->isblocked);
         $this->assertNull($message2->unreadcount);
+
+        $this->assertEquals($user3->id, $message3->userid);
+        $this->assertEquals($user3->id, $message3->useridfrom);
+        $this->assertEquals(fullname($user3), $message3->fullname);
+        $this->assertTrue($message3->ismessaging);
+        $this->assertEquals('Don\'t block me.', $message3->lastmessage);
+        $this->assertNotEmpty($message3->messageid);
+        $this->assertNull($message3->isonline);
+        $this->assertFalse($message3->isread);
+        $this->assertTrue($message3->isblocked);
+        $this->assertNull($message3->unreadcount);
+    }
+
+    /**
+     * Test verifying that favourited conversations can be retrieved.
+     */
+    public function test_get_favourite_conversations() {
+        // Create some users.
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+        $user4 = self::getDataGenerator()->create_user();
+
+        // The person doing the search.
+        $this->setUser($user1);
+
+        // No conversations yet.
+        $this->assertEquals([], \core_message\api::get_conversations($user1->id));
+
+        // Create some conversations for user1.
+        $time = 1;
+        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        $messageid1 = $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+
+        $this->send_fake_message($user1, $user3, 'Booyah', 0, $time + 5);
+        $this->send_fake_message($user3, $user1, 'Whaaat?', 0, $time + 6);
+        $this->send_fake_message($user1, $user3, 'Nothing.', 0, $time + 7);
+        $messageid2 = $this->send_fake_message($user3, $user1, 'Cool.', 0, $time + 8);
+
+        $this->send_fake_message($user1, $user4, 'Hey mate, you see the new messaging UI in Moodle?', 0, $time + 9);
+        $this->send_fake_message($user4, $user1, 'Yah brah, it\'s pretty rad.', 0, $time + 10);
+        $messageid3 = $this->send_fake_message($user1, $user4, 'Dope.', 0, $time + 11);
+
+        // Favourite the first 2 conversations for user1.
+        $convoids = [];
+        $convoids[] = \core_message\api::get_conversation_between_users([$user1->id, $user2->id]);
+        $convoids[] = \core_message\api::get_conversation_between_users([$user1->id, $user3->id]);
+        $user1context = context_user::instance($user1->id);
+        $service = \core_favourites\service_factory::get_service_for_user_context($user1context);
+        foreach ($convoids as $convoid) {
+            $service->create_favourite('core_message', 'message_conversations', $convoid, $user1context);
+        }
+
+        // We should have 3 conversations.
+        $this->assertCount(3, \core_message\api::get_conversations($user1->id));
+
+        // And 2 favourited conversations.
+        $conversations = \core_message\api::get_conversations($user1->id, 0, 20, null, true);
+        $this->assertCount(2, $conversations);
+    }
+
+    /**
+     * Tests retrieving favourite conversations with a limit and offset to ensure pagination works correctly.
+     */
+    public function test_get_favourite_conversations_limit_offset() {
+        // Create some users.
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+        $user4 = self::getDataGenerator()->create_user();
+
+        // The person doing the search.
+        $this->setUser($user1);
+
+        // No conversations yet.
+        $this->assertEquals([], \core_message\api::get_conversations($user1->id));
+
+        // Create some conversations for user1.
+        $time = 1;
+        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        $messageid1 = $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+
+        $this->send_fake_message($user1, $user3, 'Booyah', 0, $time + 5);
+        $this->send_fake_message($user3, $user1, 'Whaaat?', 0, $time + 6);
+        $this->send_fake_message($user1, $user3, 'Nothing.', 0, $time + 7);
+        $messageid2 = $this->send_fake_message($user3, $user1, 'Cool.', 0, $time + 8);
+
+        $this->send_fake_message($user1, $user4, 'Hey mate, you see the new messaging UI in Moodle?', 0, $time + 9);
+        $this->send_fake_message($user4, $user1, 'Yah brah, it\'s pretty rad.', 0, $time + 10);
+        $messageid3 = $this->send_fake_message($user1, $user4, 'Dope.', 0, $time + 11);
+
+        // Favourite the all conversations for user1.
+        $convoids = [];
+        $convoids[] = \core_message\api::get_conversation_between_users([$user1->id, $user2->id]);
+        $convoids[] = \core_message\api::get_conversation_between_users([$user1->id, $user3->id]);
+        $convoids[] = \core_message\api::get_conversation_between_users([$user1->id, $user4->id]);
+        $user1context = context_user::instance($user1->id);
+        $service = \core_favourites\service_factory::get_service_for_user_context($user1context);
+        foreach ($convoids as $convoid) {
+            $service->create_favourite('core_message', 'message_conversations', $convoid, $user1context);
+        }
+
+        // Get all records, using offset 0 and large limit.
+        $this->assertCount(2, \core_message\api::get_conversations($user1->id, 1, 10, null, true));
+
+        // Now, get 10 conversations starting at the second record. We should see 2 conversations.
+        $this->assertCount(2, \core_message\api::get_conversations($user1->id, 1, 10, null, true));
+
+        // Now, try to get favourited conversations using an invalid offset.
+        $this->assertCount(0, \core_message\api::get_conversations($user1->id, 4, 10, null, true));
+    }
+
+    /**
+     * Tests retrieving favourite conversations when a conversation contains a deleted user.
+     */
+    public function test_get_favourite_conversations_with_deleted_user() {
+        // Create some users.
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+
+        // Send some messages back and forth, have some different conversations with different users.
+        $time = 1;
+        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+
+        $this->send_fake_message($user1, $user3, 'Booyah', 0, $time + 5);
+        $this->send_fake_message($user3, $user1, 'Whaaat?', 0, $time + 6);
+        $this->send_fake_message($user1, $user3, 'Nothing.', 0, $time + 7);
+        $this->send_fake_message($user3, $user1, 'Cool.', 0, $time + 8);
+
+        // Favourite the all conversations for user1.
+        $convoids = [];
+        $convoids[] = \core_message\api::get_conversation_between_users([$user1->id, $user2->id]);
+        $convoids[] = \core_message\api::get_conversation_between_users([$user1->id, $user3->id]);
+        $user1context = context_user::instance($user1->id);
+        $service = \core_favourites\service_factory::get_service_for_user_context($user1context);
+        foreach ($convoids as $convoid) {
+            $service->create_favourite('core_message', 'message_conversations', $convoid, $user1context);
+        }
+
+        // Delete the second user.
+        delete_user($user2);
+
+        // Retrieve the conversations.
+        $conversations = \core_message\api::get_conversations($user1->id, 0, 20, null, true);
+
+        // We should only have one conversation because the other user was deleted.
+        $this->assertCount(1, $conversations);
+
+        // Confirm the conversation is from the non-deleted user.
+        $conversation = reset($conversations);
+        $this->assertEquals($user3->id, $conversation->userid);
+    }
+
+    /**
+     * Test confirming that conversations can be marked as favourites.
+     */
+    public function test_set_favourite_conversation() {
+        // Create some users.
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+
+        // Send some messages back and forth, have some different conversations with different users.
+        $time = 1;
+        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+
+        $this->send_fake_message($user1, $user3, 'Booyah', 0, $time + 5);
+        $this->send_fake_message($user3, $user1, 'Whaaat?', 0, $time + 6);
+        $this->send_fake_message($user1, $user3, 'Nothing.', 0, $time + 7);
+        $this->send_fake_message($user3, $user1, 'Cool.', 0, $time + 8);
+
+        // Favourite the first conversation as user 1.
+        $conversationid1 = \core_message\api::get_conversation_between_users([$user1->id, $user2->id]);
+        \core_message\api::set_favourite_conversation($conversationid1, $user1->id);
+
+        // Verify we have a single favourite conversation a user 1.
+        $this->assertCount(1, \core_message\api::get_conversations($user1->id, 0, 20, null, true));
+
+        // Verify we have no favourites as user2, despite being a member in that conversation.
+        $this->assertCount(0, \core_message\api::get_conversations($user2->id, 0, 20, null, true));
+
+        // Try to favourite the same conversation again.
+        $this->expectException(\moodle_exception::class);
+        \core_message\api::set_favourite_conversation($conversationid1, $user1->id);
+    }
+
+    /**
+     * Test verifying that trying to mark a non-existent conversation as a favourite, results in an exception.
+     */
+    public function test_set_favourite_conversation_nonexistent_conversation() {
+        // Create some users.
+        $user1 = self::getDataGenerator()->create_user();
+        // Try to favourite a non-existent conversation.
+        $this->expectException(\moodle_exception::class);
+        \core_message\api::set_favourite_conversation(0, $user1->id);
+    }
+
+    /**
+     * Test verifying that a conversation cannot be marked as favourite unless the user is a member of that conversation.
+     */
+    public function test_set_favourite_conversation_non_member() {
+        // Create some users.
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+
+        // Send some messages back and forth, have some different conversations with different users.
+        $time = 1;
+        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+
+        $this->send_fake_message($user1, $user3, 'Booyah', 0, $time + 5);
+        $this->send_fake_message($user3, $user1, 'Whaaat?', 0, $time + 6);
+        $this->send_fake_message($user1, $user3, 'Nothing.', 0, $time + 7);
+        $this->send_fake_message($user3, $user1, 'Cool.', 0, $time + 8);
+
+        // Try to favourite the first conversation as user 3, who is not a member.
+        $conversationid1 = \core_message\api::get_conversation_between_users([$user1->id, $user2->id]);
+        $this->expectException(\moodle_exception::class);
+        \core_message\api::set_favourite_conversation($conversationid1, $user3->id);
+    }
+
+    /**
+     * Test confirming that those conversations marked as favourites can be unfavourited.
+     */
+    public function test_unset_favourite_conversation() {
+        // Create some users.
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+
+        // Send some messages back and forth, have some different conversations with different users.
+        $time = 1;
+        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+
+        $this->send_fake_message($user1, $user3, 'Booyah', 0, $time + 5);
+        $this->send_fake_message($user3, $user1, 'Whaaat?', 0, $time + 6);
+        $this->send_fake_message($user1, $user3, 'Nothing.', 0, $time + 7);
+        $this->send_fake_message($user3, $user1, 'Cool.', 0, $time + 8);
+
+        // Favourite the first conversation as user 1 and the second as user 3.
+        $conversationid1 = \core_message\api::get_conversation_between_users([$user1->id, $user2->id]);
+        $conversationid2 = \core_message\api::get_conversation_between_users([$user1->id, $user3->id]);
+        \core_message\api::set_favourite_conversation($conversationid1, $user1->id);
+        \core_message\api::set_favourite_conversation($conversationid2, $user3->id);
+
+        // Verify we have a single favourite conversation for both user 1 and user 3.
+        $this->assertCount(1, \core_message\api::get_conversations($user1->id, 0, 20, null, true));
+        $this->assertCount(1, \core_message\api::get_conversations($user3->id, 0, 20, null, true));
+
+        // Now unfavourite the conversation as user 1.
+        \core_message\api::unset_favourite_conversation($conversationid1, $user1->id);
+
+        // Verify we have a single favourite conversation user 3 only, and none for user1.
+        $this->assertCount(1, \core_message\api::get_conversations($user3->id, 0, 20, null, true));
+        $this->assertCount(0, \core_message\api::get_conversations($user1->id, 0, 20, null, true));
+
+        // Try to favourite the same conversation again as user 1.
+        $this->expectException(\moodle_exception::class);
+        \core_message\api::unset_favourite_conversation($conversationid1, $user1->id);
+    }
+
+    /**
+     * Test verifying that a valid conversation cannot be unset as a favourite if it's not marked as a favourite.
+     */
+    public function test_unset_favourite_conversation_not_favourite() {
+        // Create some users.
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        // Send some messages back and forth, have some different conversations with different users.
+        $time = 1;
+        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+
+        // Now try to unfavourite the conversation as user 1.
+        $conversationid1 = \core_message\api::get_conversation_between_users([$user1->id, $user2->id]);
+        $this->expectException(\moodle_exception::class);
+        \core_message\api::unset_favourite_conversation($conversationid1, $user1->id);
+    }
+
+    /**
+     * Test verifying that a non-existent conversation cannot be unset as a favourite.
+     */
+    public function test_unset_favourite_conversation_non_existent_conversation() {
+        // Create some users.
+        $user1 = self::getDataGenerator()->create_user();
+
+        // Now try to unfavourite the conversation as user 1.
+        $this->expectException(\moodle_exception::class);
+        \core_message\api::unset_favourite_conversation(0, $user1->id);
     }
 
     /**
@@ -940,15 +1255,16 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
         $user5 = self::getDataGenerator()->create_user($user5);
 
         // Add some users as contacts.
-        message_add_contact($user2->id, 0, $user1->id);
-        message_add_contact($user3->id, 0, $user1->id);
-        message_add_contact($user4->id, 0, $user1->id);
+        \core_message\api::add_contact($user1->id, $user2->id);
+        \core_message\api::add_contact($user1->id, $user3->id);
+        \core_message\api::add_contact($user1->id, $user4->id);
 
         // Retrieve the contacts.
         $contacts = \core_message\api::get_contacts($user1->id);
 
         // Confirm the data is correct.
         $this->assertEquals(3, count($contacts));
+        usort($contacts, ['static', 'sort_contacts']);
 
         $contact1 = $contacts[0];
         $contact2 = $contacts[1];
@@ -1119,6 +1435,43 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
     }
 
     /**
+     * Tests checking if a user can mark all messages as read.
+     */
+    public function test_can_mark_all_messages_as_read() {
+        // Set as the admin.
+        $this->setAdminUser();
+
+        // Create some users.
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+
+        // Send some messages back and forth.
+        $time = 1;
+        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+
+        $conversationid = \core_message\api::get_conversation_between_users([$user1->id, $user2->id]);
+
+        // The admin can do anything.
+        $this->assertTrue(\core_message\api::can_mark_all_messages_as_read($user1->id, $conversationid));
+
+        // Set as the user 1.
+        $this->setUser($user1);
+
+        // The user can mark the messages as he is in the conversation.
+        $this->assertTrue(\core_message\api::can_mark_all_messages_as_read($user1->id, $conversationid));
+
+        // User 1 can not mark the messages read for user 2.
+        $this->assertFalse(\core_message\api::can_mark_all_messages_as_read($user2->id, $conversationid));
+
+        // This user is not a part of the conversation.
+        $this->assertFalse(\core_message\api::can_mark_all_messages_as_read($user3->id, $conversationid));
+    }
+
+    /**
      * Tests checking if a user can delete a conversation.
      */
     public function test_can_delete_conversation() {
@@ -1129,17 +1482,26 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
         $user1 = self::getDataGenerator()->create_user();
         $user2 = self::getDataGenerator()->create_user();
 
+        // Send some messages back and forth.
+        $time = 1;
+        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+
+        $conversationid = \core_message\api::get_conversation_between_users([$user1->id, $user2->id]);
+
         // The admin can do anything.
-        $this->assertTrue(\core_message\api::can_delete_conversation($user1->id));
+        $this->assertTrue(\core_message\api::can_delete_conversation($user1->id, $conversationid));
 
         // Set as the user 1.
         $this->setUser($user1);
 
         // They can delete their own messages.
-        $this->assertTrue(\core_message\api::can_delete_conversation($user1->id));
+        $this->assertTrue(\core_message\api::can_delete_conversation($user1->id, $conversationid));
 
         // They can't delete someone elses.
-        $this->assertFalse(\core_message\api::can_delete_conversation($user2->id));
+        $this->assertFalse(\core_message\api::can_delete_conversation($user2->id, $conversationid));
     }
 
     /**
@@ -1164,6 +1526,58 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
 
         // Delete the conversation as user 1.
         \core_message\api::delete_conversation($user1->id, $user2->id);
+        $this->assertDebuggingCalled();
+
+        $muas = $DB->get_records('message_user_actions', array(), 'timecreated ASC');
+        $this->assertCount(4, $muas);
+        // Sort by id.
+        ksort($muas);
+
+        $mua1 = array_shift($muas);
+        $mua2 = array_shift($muas);
+        $mua3 = array_shift($muas);
+        $mua4 = array_shift($muas);
+
+        $this->assertEquals($user1->id, $mua1->userid);
+        $this->assertEquals($m1id, $mua1->messageid);
+        $this->assertEquals(\core_message\api::MESSAGE_ACTION_DELETED, $mua1->action);
+
+        $this->assertEquals($user1->id, $mua2->userid);
+        $this->assertEquals($m2id, $mua2->messageid);
+        $this->assertEquals(\core_message\api::MESSAGE_ACTION_DELETED, $mua2->action);
+
+        $this->assertEquals($user1->id, $mua3->userid);
+        $this->assertEquals($m3id, $mua3->messageid);
+        $this->assertEquals(\core_message\api::MESSAGE_ACTION_DELETED, $mua3->action);
+
+        $this->assertEquals($user1->id, $mua4->userid);
+        $this->assertEquals($m4id, $mua4->messageid);
+        $this->assertEquals(\core_message\api::MESSAGE_ACTION_DELETED, $mua4->action);
+    }
+
+    /**
+     * Tests deleting a conversation by conversation id.
+     */
+    public function test_delete_conversation_by_id() {
+        global $DB;
+
+        // Create some users.
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        // The person doing the search.
+        $this->setUser($user1);
+
+        // Send some messages back and forth.
+        $time = 1;
+        $m1id = $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        $m2id = $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        $m3id = $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        $m4id = $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+
+        // Delete the conversation as user 1.
+        $conversationid = \core_message\api::get_conversation_between_users([$user1->id, $user2->id]);
+        \core_message\api::delete_conversation_by_id($user1->id, $conversationid);
 
         $muas = $DB->get_records('message_user_actions', array(), 'timecreated ASC');
         $this->assertCount(4, $muas);
@@ -1256,17 +1670,24 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
         $user1 = self::getDataGenerator()->create_user();
         $user2 = self::getDataGenerator()->create_user();
 
-        // Set as the user 1.
+        // Set as the first user.
         $this->setUser($user1);
 
-        // They can post to someone else.
+        // With the default privacy setting, users can't message them.
+        $this->assertFalse(\core_message\api::can_post_message($user2));
+
+        // Enrol users to the same course.
+        $course = $this->getDataGenerator()->create_course();
+        $this->getDataGenerator()->enrol_user($user1->id, $course->id);
+        $this->getDataGenerator()->enrol_user($user2->id, $course->id);
+        // After enrolling users to the course, they should be able to message them with the default privacy setting.
         $this->assertTrue(\core_message\api::can_post_message($user2));
     }
 
     /**
      * Tests the user can't post a message without proper capability.
      */
-    public function test_can_post_message_without_cap() {
+    public function test_can_post_message_without_sendmessage_cap() {
         global $DB;
 
         // Create some users.
@@ -1286,6 +1707,27 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
     }
 
     /**
+     * Tests the user can post a message when they are contact.
+     */
+    public function test_can_post_message_when_contact() {
+        // Create some users.
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        // Set as the first user.
+        $this->setUser($user1);
+
+        // Check that we can not send user2 a message.
+        $this->assertFalse(\core_message\api::can_post_message($user2));
+
+        // Add users as contacts.
+        \core_message\api::add_contact($user1->id, $user2->id);
+
+        // Check that the return result is now true.
+        $this->assertTrue(\core_message\api::can_post_message($user2));
+    }
+
+    /**
      * Tests the user can't post a message if they are not a contact and the user
      * has requested messages only from contacts.
      */
@@ -1298,7 +1740,7 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
         $this->setUser($user1);
 
         // Set the second user's preference to not receive messages from non-contacts.
-        set_user_preference('message_blocknoncontacts', 1, $user2->id);
+        set_user_preference('message_blocknoncontacts', \core_message\api::MESSAGE_PRIVACY_ONLYCONTACTS, $user2->id);
 
         // Check that we can not send user 2 a message.
         $this->assertFalse(\core_message\api::can_post_message($user2));
@@ -1316,10 +1758,149 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
         $this->setUser($user1);
 
         // Block the second user.
-        message_block_contact($user2->id);
+        \core_message\api::block_user($user1->id, $user2->id);
 
         // Check that the second user can no longer send the first user a message.
         $this->assertFalse(\core_message\api::can_post_message($user1, $user2));
+    }
+
+    /**
+     * Tests the user can post a message when site-wide messaging setting is enabled,
+     * even if they are not a contact and are not members of the same course.
+     */
+    public function test_can_post_message_site_messaging_setting() {
+        // Create some users.
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        // Set as the first user.
+        $this->setUser($user1);
+
+        // By default, user only can be messaged by contacts and members of any of his/her courses.
+        $this->assertFalse(\core_message\api::can_post_message($user2));
+
+        // Enable site-wide messagging privacy setting. The user will be able to receive messages from everybody.
+        set_config('messagingallusers', true);
+
+        // Set the second user's preference to receive messages from everybody.
+        set_user_preference('message_blocknoncontacts', \core_message\api::MESSAGE_PRIVACY_SITE, $user2->id);
+
+        // Check that we can send user2 a message.
+        $this->assertTrue(\core_message\api::can_post_message($user2));
+
+        // Disable site-wide messagging privacy setting. The user will be able to receive messages from contacts
+        // and members sharing a course with her.
+        set_config('messagingallusers', false);
+
+        // As site-wide messaging setting is disabled, the value for user2 will be changed to MESSAGE_PRIVACY_COURSEMEMBER.
+        $this->assertFalse(\core_message\api::can_post_message($user2));
+
+        // Enrol users to the same course.
+        $course = $this->getDataGenerator()->create_course();
+        $this->getDataGenerator()->enrol_user($user1->id, $course->id);
+        $this->getDataGenerator()->enrol_user($user2->id, $course->id);
+        // Check that we can send user2 a message because they are sharing a course.
+        $this->assertTrue(\core_message\api::can_post_message($user2));
+
+        // Set the second user's preference to receive messages only from contacts.
+        set_user_preference('message_blocknoncontacts', \core_message\api::MESSAGE_PRIVACY_ONLYCONTACTS, $user2->id);
+        // Check that now the user2 can't be contacted because user1 is not their contact.
+        $this->assertFalse(\core_message\api::can_post_message($user2));
+
+        // Make contacts user1 and user2.
+        \core_message\api::add_contact($user2->id, $user1->id);
+        // Check that we can send user2 a message because they are contacts.
+        $this->assertTrue(\core_message\api::can_post_message($user2));
+    }
+
+    /**
+     * Tests the user with the messageanyuser capability can post a message.
+     */
+    public function test_can_post_message_with_messageanyuser_cap() {
+        global $DB;
+
+        // Create some users.
+        $teacher1 = self::getDataGenerator()->create_user();
+        $student1 = self::getDataGenerator()->create_user();
+        $student2 = self::getDataGenerator()->create_user();
+
+        // Create users not enrolled in any course.
+        $user1 = self::getDataGenerator()->create_user();
+
+        // Create a course.
+        $course1 = $this->getDataGenerator()->create_course();
+
+        // Enrol the users in the course.
+        $this->getDataGenerator()->enrol_user($teacher1->id, $course1->id, 'editingteacher');
+        $this->getDataGenerator()->enrol_user($student1->id, $course1->id, 'student');
+        $this->getDataGenerator()->enrol_user($student2->id, $course1->id, 'student');
+
+        // Set some student preferences to not receive messages from non-contacts.
+        set_user_preference('message_blocknoncontacts', \core_message\api::MESSAGE_PRIVACY_ONLYCONTACTS, $student1->id);
+
+        // Check that we can send student1 a message because teacher has the messageanyuser cap by default.
+        $this->assertTrue(\core_message\api::can_post_message($student1, $teacher1));
+        // Check that the teacher can't contact user1 because it's not his teacher.
+        $this->assertFalse(\core_message\api::can_post_message($user1, $teacher1));
+
+        // Remove the messageanyuser capability from the course1 for teachers.
+        $coursecontext = context_course::instance($course1->id);
+        $teacherrole = $DB->get_record('role', ['shortname' => 'editingteacher']);
+        assign_capability('moodle/site:messageanyuser', CAP_PROHIBIT, $teacherrole->id, $coursecontext->id);
+        $coursecontext->mark_dirty();
+
+        // Check that we can't send user1 a message because they are not contacts.
+        $this->assertFalse(\core_message\api::can_post_message($student1, $teacher1));
+        // However, teacher can message student2 because they are sharing a course.
+        $this->assertTrue(\core_message\api::can_post_message($student2, $teacher1));
+    }
+
+    /**
+     * Tests get_user_privacy_messaging_preference method.
+     */
+    public function test_get_user_privacy_messaging_preference() {
+        // Create some users.
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+
+        // Enable site-wide messagging privacy setting. The user will be able to receive messages from everybody.
+        set_config('messagingallusers', true);
+
+        // Set some user preferences.
+        set_user_preference('message_blocknoncontacts', \core_message\api::MESSAGE_PRIVACY_SITE, $user1->id);
+        set_user_preference('message_blocknoncontacts', \core_message\api::MESSAGE_PRIVACY_ONLYCONTACTS, $user2->id);
+
+        // Check the returned value for each user.
+        $this->assertEquals(
+            \core_message\api::MESSAGE_PRIVACY_SITE,
+            \core_message\api::get_user_privacy_messaging_preference($user1->id)
+        );
+        $this->assertEquals(
+            \core_message\api::MESSAGE_PRIVACY_ONLYCONTACTS,
+            \core_message\api::get_user_privacy_messaging_preference($user2->id)
+        );
+        $this->assertEquals(
+            \core_message\api::MESSAGE_PRIVACY_SITE,
+            \core_message\api::get_user_privacy_messaging_preference($user3->id)
+        );
+
+        // Disable site-wide messagging privacy setting. The user will be able to receive messages from members of their course.
+        set_config('messagingallusers', false);
+
+        // Check the returned value for each user.
+        $this->assertEquals(
+            \core_message\api::MESSAGE_PRIVACY_COURSEMEMBER,
+            \core_message\api::get_user_privacy_messaging_preference($user1->id)
+        );
+        $this->assertEquals(
+            \core_message\api::MESSAGE_PRIVACY_ONLYCONTACTS,
+            \core_message\api::get_user_privacy_messaging_preference($user2->id)
+        );
+        $this->assertEquals(
+            \core_message\api::MESSAGE_PRIVACY_COURSEMEMBER,
+            \core_message\api::get_user_privacy_messaging_preference($user3->id)
+        );
     }
 
     /**
@@ -1334,20 +1915,35 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
         // Set as the first user.
         $this->setUser($user1);
 
-        // User hasn't sent their preference to block non-contacts, so should return false.
+        // By default, user only can be messaged by contacts and members of any of his/her courses.
+        $this->assertTrue(\core_message\api::is_user_non_contact_blocked($user2));
+        $this->assertDebuggingCalled();
+
+        // Enable all users privacy messaging and check now the default user's preference has been set to allow receiving
+        // messages from everybody.
+        set_config('messagingallusers', true);
+        // Check that the return result is now false because any site user can contact him/her.
         $this->assertFalse(\core_message\api::is_user_non_contact_blocked($user2));
+        $this->assertDebuggingCalled();
 
         // Set the second user's preference to not receive messages from non-contacts.
-        set_user_preference('message_blocknoncontacts', 1, $user2->id);
-
-        // Check that the return result is now true.
+        set_user_preference('message_blocknoncontacts', \core_message\api::MESSAGE_PRIVACY_ONLYCONTACTS, $user2->id);
+        // Check that the return result is still true (because is even more restricted).
         $this->assertTrue(\core_message\api::is_user_non_contact_blocked($user2));
+        $this->assertDebuggingCalled();
 
         // Add the first user as a contact for the second user.
-        message_add_contact($user1->id, 0, $user2->id);
+        \core_message\api::add_contact($user2->id, $user1->id);
 
         // Check that the return result is now false.
         $this->assertFalse(\core_message\api::is_user_non_contact_blocked($user2));
+        $this->assertDebuggingCalled();
+
+        // Set the second user's preference to receive messages from course members.
+        set_user_preference('message_blocknoncontacts', \core_message\api::MESSAGE_PRIVACY_COURSEMEMBER, $user2->id);
+        // Check that the return result is still false (because $user1 is still his/her contact).
+        $this->assertFalse(\core_message\api::is_user_non_contact_blocked($user2));
+        $this->assertDebuggingCalled();
     }
 
     /**
@@ -1364,16 +1960,19 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
 
         // User shouldn't be blocked.
         $this->assertFalse(\core_message\api::is_user_blocked($user1->id, $user2->id));
+        $this->assertDebuggingCalled();
 
         // Block the user.
-        message_block_contact($user2->id);
+        \core_message\api::block_user($user1->id, $user2->id);
 
         // User should be blocked.
         $this->assertTrue(\core_message\api::is_user_blocked($user1->id, $user2->id));
+        $this->assertDebuggingCalled();
 
         // Unblock the user.
-        message_unblock_contact($user2->id);
+        \core_message\api::unblock_user($user1->id, $user2->id);
         $this->assertFalse(\core_message\api::is_user_blocked($user1->id, $user2->id));
+        $this->assertDebuggingCalled();
     }
 
     /**
@@ -1387,13 +1986,14 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
         $this->setUser($user1);
 
         // Block the admin user.
-        message_block_contact(2);
+        \core_message\api::block_user($user1->id, 2);
 
         // Now change to the admin user.
         $this->setAdminUser();
 
         // As the admin you should still be able to send messages to the user.
         $this->assertFalse(\core_message\api::is_user_blocked($user1->id));
+        $this->assertDebuggingCalled();
     }
 
     /*
@@ -1624,13 +2224,12 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
         $user2 = $this->getDataGenerator()->create_user();
 
         // Add users to the admin's contact list.
-        message_add_contact($user1->id);
-        message_add_contact($user2->id, 1);
+        \core_message\api::block_user($USER->id, $user2->id);
 
         $this->assertCount(1, \core_message\api::get_blocked_users($USER->id));
 
         // Block other user.
-        message_block_contact($user1->id);
+        \core_message\api::block_user($USER->id, $user1->id);
         $this->assertCount(2, \core_message\api::get_blocked_users($USER->id));
 
         // Test deleting users.
@@ -1650,9 +2249,8 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
         $user4 = self::getDataGenerator()->create_user();
 
         // Add the users to each of their contacts.
-        message_add_contact($user1->id, 0, $user2->id);
-        message_add_contact($user2->id, 0, $user1->id);
-        message_add_contact($user3->id, 0, $user2->id);
+        \core_message\api::add_contact($user1->id, $user2->id);
+        \core_message\api::add_contact($user2->id, $user3->id);
 
         $this->send_fake_message($user1, $user2);
         $this->send_fake_message($user1, $user2);
@@ -1677,6 +2275,7 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
 
         $messageinfo1 = array_shift($messages);
         $messageinfo2 = array_shift($messages);
+
         $this->assertEquals($user1->id, $messageinfo1->id);
         $this->assertEquals(4, $messageinfo1->messagecount);
         $this->assertEquals($user3->id, $messageinfo2->id);
@@ -1743,7 +2342,7 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
         $user2 = self::getDataGenerator()->create_user();
 
         // Add the users to each of their contacts.
-        message_add_contact($user1->id, 0, $user2->id);
+        \core_message\api::add_contact($user2->id, $user1->id);
 
         // Check we get the correct message count.
         $messages = \core_message\api::get_contacts_with_unread_message_count($user2->id);
@@ -1769,8 +2368,8 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
         $user4 = self::getDataGenerator()->create_user();
 
         // Add a user to the contact list of the users we are testing this function with.
-        message_add_contact($user4->id, 0, $user1->id);
-        message_add_contact($user4->id, 0, $user2->id);
+        \core_message\api::add_contact($user1->id, $user4->id);
+        \core_message\api::add_contact($user2->id, $user4->id);
 
         $this->send_fake_message($user1, $user2);
         $this->send_fake_message($user1, $user2);
@@ -1936,8 +2535,742 @@ class core_message_api_testcase extends core_message_messagelib_testcase {
         $user2 = self::getDataGenerator()->create_user();
 
         $conversationid = \core_message\api::create_conversation_between_users([$user1->id, $user2->id]);
+        $this->assertDebuggingCalled();
 
         $this->assertEquals($conversationid,
             \core_message\api::get_conversation_between_users([$user1->id, $user2->id]));
+    }
+
+    /**
+     * Test count_conversation_members for non existing conversation.
+     */
+    public function test_count_conversation_members_no_existing_conversation() {
+        $this->assertEquals(0,
+            \core_message\api::count_conversation_members(0));
+    }
+
+    /**
+     * Test count_conversation_members for existing conversation.
+     */
+    public function test_count_conversation_members_existing_conversation() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        $conversation = \core_message\api::create_conversation(
+            \core_message\api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
+            [
+                $user1->id,
+                $user2->id
+            ]
+        );
+        $conversationid = $conversation->id;
+
+        $this->assertEquals(2,
+            \core_message\api::count_conversation_members($conversationid));
+    }
+
+    /**
+     * Test add_members_to_conversation for an individual conversation.
+     */
+    public function test_add_members_to_individual_conversation() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+
+        $conversation = \core_message\api::create_conversation(
+            \core_message\api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
+            [
+                $user1->id,
+                $user2->id
+            ]
+        );
+        $conversationid = $conversation->id;
+
+        $this->expectException('moodle_exception');
+        \core_message\api::add_members_to_conversation([$user3->id], $conversationid);
+    }
+
+    /**
+     * Test add_members_to_conversation for existing conversation.
+     */
+    public function test_add_members_to_existing_conversation() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+
+        $conversation = \core_message\api::create_conversation(
+            \core_message\api::MESSAGE_CONVERSATION_TYPE_GROUP,
+            [
+                $user1->id,
+                $user2->id
+            ]
+        );
+        $conversationid = $conversation->id;
+
+        $this->assertNull(\core_message\api::add_members_to_conversation([$user3->id], $conversationid));
+        $this->assertEquals(3,
+            \core_message\api::count_conversation_members($conversationid));
+    }
+
+    /**
+     * Test add_members_to_conversation for non existing conversation.
+     */
+    public function test_add_members_to_no_existing_conversation() {
+        $user1 = self::getDataGenerator()->create_user();
+
+        // Throw dml_missing_record_exception for non existing conversation.
+        $this->expectException('dml_missing_record_exception');
+        \core_message\api::add_members_to_conversation([$user1->id], 0);
+    }
+
+    /**
+     * Test add_member_to_conversation for non existing user.
+     */
+    public function test_add_members_to_no_existing_user() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        $conversation = \core_message\api::create_conversation(
+            \core_message\api::MESSAGE_CONVERSATION_TYPE_GROUP,
+            [
+                $user1->id,
+                $user2->id
+            ]
+        );
+        $conversationid = $conversation->id;
+
+        // Don't throw an error for non existing user, but don't add it as a member.
+        $this->assertNull(\core_message\api::add_members_to_conversation([0], $conversationid));
+        $this->assertEquals(2,
+            \core_message\api::count_conversation_members($conversationid));
+    }
+
+    /**
+     * Test add_members_to_conversation for current conversation member.
+     */
+    public function test_add_members_to_current_conversation_member() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        $conversation = \core_message\api::create_conversation(
+            \core_message\api::MESSAGE_CONVERSATION_TYPE_GROUP,
+            [
+                $user1->id,
+                $user2->id
+            ]
+        );
+        $conversationid = $conversation->id;
+
+        // Don't add as a member a user that is already conversation member.
+        $this->assertNull(\core_message\api::add_members_to_conversation([$user1->id], $conversationid));
+        $this->assertEquals(2,
+            \core_message\api::count_conversation_members($conversationid));
+    }
+
+    /**
+     * Test add_members_to_conversation for multiple users.
+     */
+    public function test_add_members_for_multiple_users() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+        $user4 = self::getDataGenerator()->create_user();
+
+        $conversation = \core_message\api::create_conversation(
+            \core_message\api::MESSAGE_CONVERSATION_TYPE_GROUP,
+            [
+                $user1->id,
+                $user2->id
+            ]
+        );
+        $conversationid = $conversation->id;
+
+        $this->assertNull(\core_message\api::add_members_to_conversation([$user3->id, $user4->id], $conversationid));
+        $this->assertEquals(4,
+            \core_message\api::count_conversation_members($conversationid));
+    }
+
+    /**
+     * Test add_members_to_conversation for multiple users, included non existing and current conversation members
+     */
+    public function test_add_members_for_multiple_not_valid_users() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+
+        $conversation = \core_message\api::create_conversation(
+            \core_message\api::MESSAGE_CONVERSATION_TYPE_GROUP,
+            [
+                $user1->id,
+                $user2->id
+            ]
+        );
+        $conversationid = $conversation->id;
+
+        // Don't throw errors, but don't add as members users don't exist or are already conversation members.
+        $this->assertNull(\core_message\api::add_members_to_conversation([$user3->id, $user1->id, 0], $conversationid));
+        $this->assertEquals(3,
+            \core_message\api::count_conversation_members($conversationid));
+    }
+
+    /**
+     * Test remove_members_from_conversation for individual conversation.
+     */
+    public function test_remove_members_from_individual_conversation() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        $conversation = \core_message\api::create_conversation(
+            \core_message\api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
+            [
+                $user1->id,
+                $user2->id
+            ]
+        );
+        $conversationid = $conversation->id;
+
+        $this->expectException('moodle_exception');
+        \core_message\api::remove_members_from_conversation([$user1->id], $conversationid);
+    }
+
+    /**
+     * Test remove_members_from_conversation for existing conversation.
+     */
+    public function test_remove_members_from_existing_conversation() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        $conversation = \core_message\api::create_conversation(
+            \core_message\api::MESSAGE_CONVERSATION_TYPE_GROUP,
+            [
+                $user1->id,
+                $user2->id
+            ]
+        );
+        $conversationid = $conversation->id;
+
+        $this->assertNull(\core_message\api::remove_members_from_conversation([$user1->id], $conversationid));
+        $this->assertEquals(1,
+            \core_message\api::count_conversation_members($conversationid));
+    }
+
+    /**
+     * Test remove_members_from_conversation for non existing conversation.
+     */
+    public function test_remove_members_from_no_existing_conversation() {
+        $user1 = self::getDataGenerator()->create_user();
+
+        // Throw dml_missing_record_exception for non existing conversation.
+        $this->expectException('dml_missing_record_exception');
+        \core_message\api::remove_members_from_conversation([$user1->id], 0);
+    }
+
+    /**
+     * Test remove_members_from_conversation for non existing user.
+     */
+    public function test_remove_members_for_no_existing_user() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        $conversation = \core_message\api::create_conversation(
+            \core_message\api::MESSAGE_CONVERSATION_TYPE_GROUP,
+            [
+                $user1->id,
+                $user2->id
+            ]
+        );
+        $conversationid = $conversation->id;
+
+        $this->assertNull(\core_message\api::remove_members_from_conversation([0], $conversationid));
+        $this->assertEquals(2,
+            \core_message\api::count_conversation_members($conversationid));
+    }
+
+    /**
+     * Test remove_members_from_conversation for multiple users.
+     */
+    public function test_remove_members_for_multiple_users() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+        $user4 = self::getDataGenerator()->create_user();
+
+        $conversation = \core_message\api::create_conversation(
+            \core_message\api::MESSAGE_CONVERSATION_TYPE_GROUP,
+            [
+                $user1->id,
+                $user2->id
+            ]
+        );
+        $conversationid = $conversation->id;
+
+        $this->assertNull(\core_message\api::add_members_to_conversation([$user3->id, $user4->id], $conversationid));
+        $this->assertNull(\core_message\api::remove_members_from_conversation([$user3->id, $user4->id], $conversationid));
+        $this->assertEquals(2,
+            \core_message\api::count_conversation_members($conversationid));
+    }
+
+    /**
+     * Test remove_members_from_conversation for multiple non valid users.
+     */
+    public function test_remove_members_for_multiple_no_valid_users() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+        $user4 = self::getDataGenerator()->create_user();
+
+        $conversation = \core_message\api::create_conversation(
+            \core_message\api::MESSAGE_CONVERSATION_TYPE_GROUP,
+            [
+                $user1->id,
+                $user2->id
+            ]
+        );
+        $conversationid = $conversation->id;
+
+        $this->assertNull(\core_message\api::add_members_to_conversation([$user3->id], $conversationid));
+        $this->assertNull(
+            \core_message\api::remove_members_from_conversation([$user2->id, $user3->id, $user4->id, 0], $conversationid)
+        );
+        $this->assertEquals(1,
+            \core_message\api::count_conversation_members($conversationid));
+    }
+
+    /**
+     * Test count_conversation_members for empty conversation.
+     */
+    public function test_count_conversation_members_empty_conversation() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        $conversation = \core_message\api::create_conversation(
+            \core_message\api::MESSAGE_CONVERSATION_TYPE_GROUP,
+            [
+                $user1->id,
+                $user2->id
+            ]
+        );
+        $conversationid = $conversation->id;
+
+        $this->assertNull(\core_message\api::remove_members_from_conversation([$user1->id, $user2->id], $conversationid));
+
+        $this->assertEquals(0,
+            \core_message\api::count_conversation_members($conversationid));
+    }
+
+    /**
+     * Test can create a contact request.
+     */
+    public function test_can_create_contact_request() {
+        global $CFG;
+
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        // Disable messaging.
+        $CFG->messaging = 0;
+        $this->assertFalse(\core_message\api::can_create_contact($user1->id, $user2->id));
+
+        // Re-enable messaging.
+        $CFG->messaging = 1;
+
+        // Allow users to message anyone site-wide.
+        $CFG->messagingallusers = 1;
+        $this->assertTrue(\core_message\api::can_create_contact($user1->id, $user2->id));
+
+        // Disallow users from messaging anyone site-wide.
+        $CFG->messagingallusers = 0;
+        $this->assertFalse(\core_message\api::can_create_contact($user1->id, $user2->id));
+
+        // Put the users in the same course so a contact request should be possible.
+        $course = self::getDataGenerator()->create_course();
+        $this->getDataGenerator()->enrol_user($user1->id, $course->id);
+        $this->getDataGenerator()->enrol_user($user2->id, $course->id);
+        $this->assertTrue(\core_message\api::can_create_contact($user1->id, $user2->id));
+    }
+
+    /**
+     * Test creating a contact request.
+     */
+    public function test_create_contact_request() {
+        global $DB;
+
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        \core_message\api::create_contact_request($user1->id, $user2->id);
+
+        $request = $DB->get_records('message_contact_requests');
+
+        $this->assertCount(1, $request);
+
+        $request = reset($request);
+
+        $this->assertEquals($user1->id, $request->userid);
+        $this->assertEquals($user2->id, $request->requesteduserid);
+    }
+
+    /**
+     * Test confirming a contact request.
+     */
+    public function test_confirm_contact_request() {
+        global $DB;
+
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        \core_message\api::create_contact_request($user1->id, $user2->id);
+
+        \core_message\api::confirm_contact_request($user1->id, $user2->id);
+
+        $this->assertEquals(0, $DB->count_records('message_contact_requests'));
+
+        $contact = $DB->get_records('message_contacts');
+
+        $this->assertCount(1, $contact);
+
+        $contact = reset($contact);
+
+        $this->assertEquals($user1->id, $contact->userid);
+        $this->assertEquals($user2->id, $contact->contactid);
+    }
+
+    /**
+     * Test declining a contact request.
+     */
+    public function test_decline_contact_request() {
+        global $DB;
+
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        \core_message\api::create_contact_request($user1->id, $user2->id);
+
+        \core_message\api::decline_contact_request($user1->id, $user2->id);
+
+        $this->assertEquals(0, $DB->count_records('message_contact_requests'));
+        $this->assertEquals(0, $DB->count_records('message_contacts'));
+    }
+
+    /**
+     * Test retrieving contact requests.
+     */
+    public function test_get_contact_requests() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+
+        // Block one user, their request should not show up.
+        \core_message\api::block_user($user1->id, $user3->id);
+
+        \core_message\api::create_contact_request($user2->id, $user1->id);
+        \core_message\api::create_contact_request($user3->id, $user1->id);
+
+        $requests = \core_message\api::get_contact_requests($user1->id);
+
+        $this->assertCount(1, $requests);
+
+        $request = reset($requests);
+
+        $this->assertEquals($user2->id, $request->id);
+        $this->assertEquals($user2->picture, $request->picture);
+        $this->assertEquals($user2->firstname, $request->firstname);
+        $this->assertEquals($user2->lastname, $request->lastname);
+        $this->assertEquals($user2->firstnamephonetic, $request->firstnamephonetic);
+        $this->assertEquals($user2->lastnamephonetic, $request->lastnamephonetic);
+        $this->assertEquals($user2->middlename, $request->middlename);
+        $this->assertEquals($user2->alternatename, $request->alternatename);
+        $this->assertEquals($user2->email, $request->email);
+    }
+
+    /**
+     * Test adding contacts.
+     */
+    public function test_add_contact() {
+        global $DB;
+
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        \core_message\api::add_contact($user1->id, $user2->id);
+
+        $contact = $DB->get_records('message_contacts');
+
+        $this->assertCount(1, $contact);
+
+        $contact = reset($contact);
+
+        $this->assertEquals($user1->id, $contact->userid);
+        $this->assertEquals($user2->id, $contact->contactid);
+    }
+
+    /**
+     * Test removing contacts.
+     */
+    public function test_remove_contact() {
+        global $DB;
+
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        \core_message\api::add_contact($user1->id, $user2->id);
+        \core_message\api::remove_contact($user1->id, $user2->id);
+
+        $this->assertEquals(0, $DB->count_records('message_contacts'));
+    }
+
+    /**
+     * Test blocking users.
+     */
+    public function test_block_user() {
+        global $DB;
+
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        \core_message\api::block_user($user1->id, $user2->id);
+
+        $blockedusers = $DB->get_records('message_users_blocked');
+
+        $this->assertCount(1, $blockedusers);
+
+        $blockeduser = reset($blockedusers);
+
+        $this->assertEquals($user1->id, $blockeduser->userid);
+        $this->assertEquals($user2->id, $blockeduser->blockeduserid);
+    }
+
+    /**
+     * Test unblocking users.
+     */
+    public function test_unblock_user() {
+        global $DB;
+
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        \core_message\api::block_user($user1->id, $user2->id);
+        \core_message\api::unblock_user($user1->id, $user2->id);
+
+        $this->assertEquals(0, $DB->count_records('message_users_blocked'));
+    }
+
+    /**
+     * Test is contact check.
+     */
+    public function test_is_contact() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+
+        \core_message\api::add_contact($user1->id, $user2->id);
+
+        $this->assertTrue(\core_message\api::is_contact($user1->id, $user2->id));
+        $this->assertTrue(\core_message\api::is_contact($user2->id, $user1->id));
+        $this->assertFalse(\core_message\api::is_contact($user2->id, $user3->id));
+    }
+
+    /**
+     * Test get contact.
+     */
+    public function test_get_contact() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        \core_message\api::add_contact($user1->id, $user2->id);
+
+        $contact = \core_message\api::get_contact($user1->id, $user2->id);
+
+        $this->assertEquals($user1->id, $contact->userid);
+        $this->assertEquals($user2->id, $contact->contactid);
+    }
+
+    /**
+     * Test is blocked checked.
+     */
+    public function test_is_blocked() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        $this->assertFalse(\core_message\api::is_blocked($user1->id, $user2->id));
+        $this->assertFalse(\core_message\api::is_blocked($user2->id, $user1->id));
+
+        \core_message\api::block_user($user1->id, $user2->id);
+
+        $this->assertTrue(\core_message\api::is_blocked($user1->id, $user2->id));
+        $this->assertFalse(\core_message\api::is_blocked($user2->id, $user1->id));
+    }
+
+    /**
+     * Test the contact request exist check.
+     */
+    public function test_does_contact_request_exist() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        $this->assertFalse(\core_message\api::does_contact_request_exist($user1->id, $user2->id));
+        $this->assertFalse(\core_message\api::does_contact_request_exist($user2->id, $user1->id));
+
+        \core_message\api::create_contact_request($user1->id, $user2->id);
+
+        $this->assertTrue(\core_message\api::does_contact_request_exist($user1->id, $user2->id));
+        $this->assertTrue(\core_message\api::does_contact_request_exist($user2->id, $user1->id));
+    }
+
+    /**
+     * Test the user in conversation check.
+     */
+    public function test_is_user_in_conversation() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        $conversation = \core_message\api::create_conversation(
+            \core_message\api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
+            [
+                $user1->id,
+                $user2->id
+            ]
+        );
+        $conversationid = $conversation->id;
+
+        $this->assertTrue(\core_message\api::is_user_in_conversation($user1->id, $conversationid));
+    }
+
+    /**
+     * Test the user in conversation check when they are not.
+     */
+    public function test_is_user_in_conversation_when_not() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+
+        $conversation = \core_message\api::create_conversation(
+            \core_message\api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
+            [
+                $user1->id,
+                $user2->id
+            ]
+        );
+        $conversationid = $conversation->id;
+
+        $this->assertFalse(\core_message\api::is_user_in_conversation($user3->id, $conversationid));
+    }
+
+    /**
+     * Test can create a group conversation.
+     */
+    public function test_can_create_group_conversation() {
+        global $CFG;
+
+        $student = self::getDataGenerator()->create_user();
+        $teacher = self::getDataGenerator()->create_user();
+        $course = self::getDataGenerator()->create_course();
+
+        $coursecontext = context_course::instance($course->id);
+
+        $this->getDataGenerator()->enrol_user($student->id, $course->id);
+        $this->getDataGenerator()->enrol_user($teacher->id, $course->id, 'editingteacher');
+
+        // Disable messaging.
+        $CFG->messaging = 0;
+        $this->assertFalse(\core_message\api::can_create_group_conversation($student->id, $coursecontext));
+
+        // Re-enable messaging.
+        $CFG->messaging = 1;
+
+        // Student shouldn't be able to.
+        $this->assertFalse(\core_message\api::can_create_group_conversation($student->id, $coursecontext));
+
+        // Teacher should.
+        $this->assertTrue(\core_message\api::can_create_group_conversation($teacher->id, $coursecontext));
+    }
+
+    /**
+     * Test creating an individual conversation.
+     */
+    public function test_create_conversation_individual() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+
+        $conversation = \core_message\api::create_conversation(
+            \core_message\api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
+            [
+                $user1->id,
+                $user2->id
+            ],
+            'A conversation name'
+        );
+
+        $this->assertEquals(\core_message\api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL, $conversation->type);
+        $this->assertEquals('A conversation name', $conversation->name);
+        $this->assertEquals(\core_message\helper::get_conversation_hash([$user1->id, $user2->id]), $conversation->convhash);
+
+        $this->assertCount(2, $conversation->members);
+
+        $member1 = array_shift($conversation->members);
+        $member2 = array_shift($conversation->members);
+
+        $this->assertEquals($user1->id, $member1->userid);
+        $this->assertEquals($conversation->id, $member1->conversationid);
+
+        $this->assertEquals($user2->id, $member2->userid);
+        $this->assertEquals($conversation->id, $member2->conversationid);
+    }
+
+    /**
+     * Test creating a group conversation.
+     */
+    public function test_create_conversation_group() {
+        $user1 = self::getDataGenerator()->create_user();
+        $user2 = self::getDataGenerator()->create_user();
+        $user3 = self::getDataGenerator()->create_user();
+
+        $conversation = \core_message\api::create_conversation(
+            \core_message\api::MESSAGE_CONVERSATION_TYPE_GROUP,
+            [
+                $user1->id,
+                $user2->id,
+                $user3->id
+            ],
+            'A conversation name'
+        );
+
+        $this->assertEquals(\core_message\api::MESSAGE_CONVERSATION_TYPE_GROUP, $conversation->type);
+        $this->assertEquals('A conversation name', $conversation->name);
+        $this->assertNull($conversation->convhash);
+
+        $this->assertCount(3, $conversation->members);
+
+        $member1 = array_shift($conversation->members);
+        $member2 = array_shift($conversation->members);
+        $member3 = array_shift($conversation->members);
+
+        $this->assertEquals($user1->id, $member1->userid);
+        $this->assertEquals($conversation->id, $member1->conversationid);
+
+        $this->assertEquals($user2->id, $member2->userid);
+        $this->assertEquals($conversation->id, $member2->conversationid);
+
+        $this->assertEquals($user3->id, $member3->userid);
+        $this->assertEquals($conversation->id, $member3->conversationid);
+    }
+
+    /**
+     * Test creating an individual conversation with too many members.
+     */
+    public function test_create_conversation_individual_too_many_members() {
+        $this->expectException('moodle_exception');
+        \core_message\api::create_conversation(\core_message\api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL, [1, 2, 3]);
+    }
+
+    /**
+     * Comparison function for sorting contacts.
+     *
+     * @param stdClass $a
+     * @param stdClass $b
+     * @return bool
+     */
+    protected static function sort_contacts($a, $b) {
+        return $a->userid > $b->userid;
     }
 }

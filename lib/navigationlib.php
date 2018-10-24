@@ -687,6 +687,15 @@ class navigation_node implements renderable {
     }
 
     /**
+     * Used to easily determine if this link in the breadcrumbs is hidden.
+     *
+     * @return boolean
+     */
+    public function is_hidden() {
+        return $this->hidden;
+    }
+
+    /**
      * Gets the CSS class to add to this node to describe its type
      *
      * @return string
@@ -1497,8 +1506,7 @@ class global_navigation extends navigation_node {
     protected function show_my_categories() {
         global $CFG;
         if ($this->showmycategories === null) {
-            require_once('coursecatlib.php');
-            $this->showmycategories = !empty($CFG->navshowmycoursecategories) && coursecat::count_all() > 1;
+            $this->showmycategories = !empty($CFG->navshowmycoursecategories) && core_course_category::count_all() > 1;
         }
         return $this->showmycategories;
     }
@@ -2969,8 +2977,7 @@ class global_navigation extends navigation_node {
             // Array of category IDs that include the categories of the user's courses and the related course categories.
             $fullpathcategoryids = [];
             // Get the course categories for the enrolled courses' category IDs.
-            require_once('coursecatlib.php');
-            $mycoursecategories = coursecat::get_many($categoryids);
+            $mycoursecategories = core_course_category::get_many($categoryids);
             // Loop over each of these categories and build the category tree using each category's path.
             foreach ($mycoursecategories as $mycoursecat) {
                 $pathcategoryids = explode('/', $mycoursecat->path);
@@ -2981,7 +2988,7 @@ class global_navigation extends navigation_node {
             }
 
             // Fetch all of the categories related to the user's courses.
-            $pathcategories = coursecat::get_many($fullpathcategoryids);
+            $pathcategories = core_course_category::get_many($fullpathcategoryids);
             // Loop over each of these categories and build the category tree.
             foreach ($pathcategories as $coursecat) {
                 // No need to process categories that have already been added.
@@ -3038,7 +3045,7 @@ class global_navigation extends navigation_node {
         // Show a link to the course page if there are more courses the user is enrolled in.
         if ($showmorelinkinnav || $showmorelinkinflatnav) {
             // Adding hash to URL so the link is not highlighted in the navigation when clicked.
-            $url = new moodle_url('/my/?myoverviewtab=courses');
+            $url = new moodle_url('/my/');
             $parent = $this->rootnodes['mycourses'];
             $coursenode = $parent->add(get_string('morenavigationlinks'), $url, self::TYPE_CUSTOM, null, self::COURSE_INDEX_PAGE);
 
@@ -3525,11 +3532,10 @@ class navbar extends navigation_node {
     private function get_course_categories() {
         global $CFG;
         require_once($CFG->dirroot.'/course/lib.php');
-        require_once($CFG->libdir.'/coursecatlib.php');
 
         $categories = array();
         $cap = 'moodle/category:viewhiddencategories';
-        $showcategories = coursecat::count_all() > 1;
+        $showcategories = core_course_category::count_all() > 1;
 
         if ($showcategories) {
             foreach ($this->page->categories as $category) {

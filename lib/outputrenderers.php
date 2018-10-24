@@ -1951,12 +1951,23 @@ class core_renderer extends renderer_base {
             throw new coding_exception('The cancel param to $OUTPUT->confirm() must be either a URL (string/moodle_url) or a single_button instance.');
         }
 
-        $output = $this->box_start('generalbox modal modal-dialog modal-in-page show', 'notice');
+        $attributes = [
+            'role'=>'alertdialog',
+            'aria-labelledby'=>'modal-header',
+            'aria-describedby'=>'modal-body',
+            'aria-modal'=>'true'
+        ];
+
+        $output = $this->box_start('generalbox modal modal-dialog modal-in-page show', 'notice', $attributes);
         $output .= $this->box_start('modal-content', 'modal-content');
         $output .= $this->box_start('modal-header p-x-1', 'modal-header');
         $output .= html_writer::tag('h4', get_string('confirm'));
         $output .= $this->box_end();
-        $output .= $this->box_start('modal-body', 'modal-body');
+        $attributes = [
+            'role'=>'alert',
+            'data-aria-autofocus'=>'true'
+        ];
+        $output .= $this->box_start('modal-body', 'modal-body', $attributes);
         $output .= html_writer::tag('p', $message);
         $output .= $this->box_end();
         $output .= $this->box_start('modal-footer', 'modal-footer');
@@ -3007,41 +3018,15 @@ EOD;
     }
 
     /**
-     * Internal implementation of paging bar rendering.
+     * Returns HTML to display the paging bar.
      *
      * @param paging_bar $pagingbar
-     * @return string
+     * @return string the HTML to output.
      */
     protected function render_paging_bar(paging_bar $pagingbar) {
-        $output = '';
-        $pagingbar = clone($pagingbar);
-        $pagingbar->prepare($this, $this->page, $this->target);
-
-        if ($pagingbar->totalcount > $pagingbar->perpage) {
-            $output .= get_string('page') . ':';
-
-            if (!empty($pagingbar->previouslink)) {
-                $output .= ' (' . $pagingbar->previouslink . ') ';
-            }
-
-            if (!empty($pagingbar->firstlink)) {
-                $output .= ' ' . $pagingbar->firstlink . ' ...';
-            }
-
-            foreach ($pagingbar->pagelinks as $link) {
-                $output .= "  $link";
-            }
-
-            if (!empty($pagingbar->lastlink)) {
-                $output .= ' ... ' . $pagingbar->lastlink . ' ';
-            }
-
-            if (!empty($pagingbar->nextlink)) {
-                $output .= '  (' . $pagingbar->nextlink . ')';
-            }
-        }
-
-        return html_writer::tag('div', $output, array('class' => 'paging'));
+        // Any more than 10 is not usable and causes weird wrapping of the pagination.
+        $pagingbar->maxdisplay = 10;
+        return $this->render_from_template('core/paging_bar', $pagingbar->export_for_template($this));
     }
 
     /**
@@ -3431,6 +3416,7 @@ EOD;
         $am->set_menu_trigger(
             $returnstr
         );
+        $am->set_action_label(get_string('usermenu'));
         $am->set_alignment(action_menu::TR, action_menu::BR);
         $am->set_nowrap_on_items();
         if ($withlinks) {
@@ -4208,7 +4194,7 @@ EOD;
 
                 // Check to see if we should be displaying a message button.
                 if (!empty($CFG->messaging) && $USER->id != $user->id && has_capability('moodle/site:sendmessage', $context)) {
-                    $iscontact = !empty(message_get_contact($user->id));
+                    $iscontact = \core_message\api::is_contact($USER->id, $user->id);
                     $contacttitle = $iscontact ? 'removefromyourcontacts' : 'addtoyourcontacts';
                     $contacturlaction = $iscontact ? 'removecontact' : 'addcontact';
                     $contactimage = $iscontact ? 'removecontact' : 'addcontact';
@@ -4414,10 +4400,16 @@ EOD;
      * @return string
      */
     public function render_login(\core_auth\output\login $form) {
+        global $CFG;
+
         $context = $form->export_for_template($this);
 
         // Override because rendering is not supported in template yet.
-        $context->cookieshelpiconformatted = $this->help_icon('cookiesenabled');
+        if ($CFG->rememberusername == 0) {
+            $context->cookieshelpiconformatted = $this->help_icon('cookiesenabledonlysession');
+        } else {
+            $context->cookieshelpiconformatted = $this->help_icon('cookiesenabled');
+        }
         $context->errorformatted = $this->error_text($context->error);
 
         return $this->render_from_template('core/loginform', $context);
