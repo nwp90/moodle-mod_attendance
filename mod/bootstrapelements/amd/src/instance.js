@@ -1,4 +1,7 @@
-/*define(['jquery'], function($) {
+/*
+  need space after define in comment to avoid confusing Moodle's requirejs.php
+
+  define (['jquery'], function($) {
     
     this.displayMyInstance = function() {
         return window.console.log("amd module mod_bootstrapelements/core loaded");
