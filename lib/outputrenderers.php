@@ -4164,6 +4164,7 @@ EOD;
         if (isset($headerinfo['heading'])) {
             $heading = $headerinfo['heading'];
         }
+
         // The user context currently has images and buttons. Other contexts may follow.
         if (isset($headerinfo['user']) || $context->contextlevel == CONTEXT_USER) {
             if (isset($headerinfo['user'])) {
@@ -4256,6 +4257,11 @@ EOD;
       * @return string HTML for the header bar.
       */
     protected function render_context_header(context_header $contextheader) {
+
+        $showheader = empty($this->page->layout_options['nocontextheader']);
+        if (!$showheader) {
+            return '';
+        }
 
         // All the html stuff goes here.
         $html = html_writer::start_div('page-context-header');

@@ -34,21 +34,29 @@
     }
 }}
 
-<ul class="list-group" role="list">
+<ul class="list-group">
 {{#courses}}
-    <li class="list-group-item course-listitem" role="listitem">
+    <li class="list-group-item course-listitem"
+        data-region="course-content"
+        data-course-id="{{{id}}}">
         <div class="row-fluid">
-            <div class="{{#hasprogress}}col-6 span6{{/hasprogress}}{{^hasprogress}}col-12 span12{{/hasprogress}}">
-                <a href="{{viewurl}}">
-                    <span class="sr-only">{{#str}}aria:coursename, block_myoverview{{/str}}</span>
-                    {{{fullname}}}
-                </a>
+            <div class="{{#hasprogress}}col-md-6 span6{{/hasprogress}}{{^hasprogress}}col-md-11 span11{{/hasprogress}} d-flex align-items-center">
+                <div class="d-block">
+                    {{> core_course/favouriteicon }}
+                    <a href="{{viewurl}}" class="coursename">
+                        <span class="sr-only">{{#str}}aria:coursename, core_course{{/str}}</span>
+                        {{{fullname}}}
+                    </a>
+                </div>
             </div>
             {{#hasprogress}}
-            <div class="col-6 span6">
+            <div class="col-md-5 span5 pt-1">
                 {{> block_myoverview/progress-bar}}
             </div>
             {{/hasprogress}}
+            <div class="col-md-1 span1 p-0 d-flex">
+                {{> block_myoverview/course-action-menu }}
+            </div>
         </div>
     </li>
 {{/courses}}

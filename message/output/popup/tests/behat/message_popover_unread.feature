@@ -1,4 +1,4 @@
-@message @message_popup @javascript
+@core_message @message_popup @javascript
 Feature: Message popover unread messages
   In order to be kept informed
   As a user
@@ -16,6 +16,9 @@ Feature: Message popover unread messages
       | user     | course | role           |
       | student1 | C1     | student        |
       | student2 | C1     | student        |
+    And the following config values are set as admin:
+      | messaging | 1 |
+      | messagingallusers | 1 |
     And I log in as "student2"
     And I send "Test message" message to "Student 1" user
     And I log out

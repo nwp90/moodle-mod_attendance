@@ -40,6 +40,15 @@ information provided here is intended especially for developers.
   - core_message_external::delete_conversation(), please use core_message_external::delete_conversations_by_id() instead.
   - core_message_external::core_message_mark_all_messages_as_read(), please use
     core_message_external::core_message_mark_all_conversation_messages_as_read() instead.
+  - core_message_external::data_for_messagearea_conversations(), please use core_message_external::get_conversations()
+    instead
+  - core_message_external::data_for_messagearea_search_users_in_course().
+  - core_message_external::data_for_messagearea_search_users(),
+    please use core_message_external::message_search_users() instead.
+  - core_message_external::data_for_messagearea_contacts().
+  - core_message_external::data_for_messagearea_messages().
+  - core_message_external::data_for_messagearea_get_most_recent_message().
+  - core_message_external::data_for_messagearea_get_profile().
 * The following function has been added for getting the privacy messaging preference:
   - get_user_privacy_messaging_preference()
 

@@ -594,6 +594,11 @@ $CFG->admin = 'admin';
 //
 //      $CFG->keepmessagingallusersenabled = true;
 //
+// Disable login token validation for login pages. Login token validation is enabled
+// by default unless $CFG->alternateloginurl is set.
+//
+//      $CFG->disablelogintoken = true;
+//
 //=========================================================================
 // 7. SETTINGS FOR DEVELOPMENT SERVERS - not intended for production use!!!
 //=========================================================================
@@ -871,6 +876,11 @@ $CFG->admin = 'admin';
 // there are no spaces in the path - if necessary copy the files 'gswin32c.exe'
 // and 'gsdll32.dll' to a new folder without a space in the path)
 //      $CFG->pathtogs = '/usr/bin/gs';
+//
+// Path to PHP CLI.
+// Probably something like /usr/bin/php. If you enter this, cron scripts can be
+// executed from admin web interface.
+// $CFG->pathtophp = '';
 //
 // Path to du.
 // Probably something like /usr/bin/du. If you enter this, pages that display

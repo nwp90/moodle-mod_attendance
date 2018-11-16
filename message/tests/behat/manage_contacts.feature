@@ -1,4 +1,4 @@
-@core @message @javascript
+@core @core_message @javascript
 Feature: Manage contacts
   In order to communicate with fellow users
   As a user
@@ -10,6 +10,9 @@ Feature: Manage contacts
       | user1    | User      | 1        | user1@example.com    |
       | user2    | User      | 2        | user2@example.com    |
       | user3    | User      | 3        | user3@example.com    |
+    And the following config values are set as admin:
+      | messaging | 1 |
+      | messagingallusers | 1 |
     And I log in as "admin"
     And I set the following administration settings values:
       | messagingallusers | 1 |

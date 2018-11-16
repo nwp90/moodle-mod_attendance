@@ -1,4 +1,4 @@
-@core @message @javascript
+@core @core_message @javascript
 Feature: Search messages
   In order to communicate with fellow users
   As a user
@@ -18,6 +18,9 @@ Feature: Search messages
       | user1    | C1     | student        |
       | user2    | C1     | student        |
       | user3    | C1     | student        |
+    And the following config values are set as admin:
+      | messaging | 1 |
+      | messagingallusers | 1 |
     And I log in as "user2"
     And I send "User 2 to User 1" message to "User 1" user
     And I log out

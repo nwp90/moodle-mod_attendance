@@ -1,4 +1,4 @@
-@core @message @javascript
+@core @core_message @javascript
 Feature: Search users
   In order to communicate with fellow users
   As a user
@@ -10,6 +10,9 @@ Feature: Search users
       | user1    | User      | 1        | user1@example.com    |
       | user2    | User      | 2        | user2@example.com    |
       | user3    | User      | 3        | user3@example.com    |
+    And the following config values are set as admin:
+      | messaging | 1 |
+      | messagingallusers | 1 |
 
   Scenario: Search for single user
     When I log in as "user1"
