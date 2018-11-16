@@ -2632,4 +2632,375 @@ class local_presentation_external extends external_api {
             )
         );
     }
+
+/*start of kJ*/
+    
+    /**
+     * Describes the parameters for get_stats_activity_daily_by_course
+     *
+     * @return external_external_function_parameters
+     * @since Moodle 3.0
+     */
+    public static function get_stats_activity_daily_by_course_parameters() {
+        return new external_function_parameters (
+            array(
+                'course' => new external_value(PARAM_ALPHANUMEXT, 'Course shortname', false, ''),
+                'starttime' => new external_value(PARAM_INT, 'Stats start time', false, null),
+                'endtime' => new external_value(PARAM_INT, 'Stats end time', false, null)
+            )
+        );
+    }
+    
+    /**
+     * Returns the usage stats by day for every course
+     *
+     * @param 
+     * @return 
+     * @since Moodle 3.6
+     */
+    public static function get_stats_activity_daily_by_course($course = '', $starttime = null, $endtime = null) {
+        global $CFG, $DB;
+        $params = self::validate_parameters(
+            self::get_stats_activity_daily_by_course_parameters(),
+            array(
+                'course' => $course,
+                'starttime' => $starttime,
+                'endtime' => $endtime
+            )
+        );
+        $course = $params['course'];
+        $starttime = $params['starttime'];
+        $endtime = $params['endtime'];
+        $returnstats = array();
+        $sql_params = array();
+        $sql = array(
+            "SELECT
+               concat(c.id, '_', sm.timeend, '_', r.id) AS uniqueid,
+               c.id, c.shortname AS courseshortname,
+               r.id, r.shortname AS roleshortname,
+               sm.timeend,
+               sum(sm.stat1) AS activity_read,
+               sum(sm.stat2) AS activity_write
+             FROM
+               {stats_daily} sm
+             JOIN
+               {course} c ON c.id=sm.courseid
+             JOIN
+               {role} r ON (sm.roleid = r.id)
+             WHERE
+               sm.stattype='activity'"
+        );
+        
+        if ($course != '') {
+            array_push($sql, "AND c.shortname = ?");
+            array_push($sql_params, $course);
+        }
+
+        /*
+          timeend is e.g. 00:00:00 day *after* accounting
+          period, so if starttime is 00:00:00, we
+          *don't* want period with that timeend included...
+          On the other hand, if endtime is 00:00:00,
+          we *do* want period ending at that time included.
+        */
+        if($starttime != null){
+            array_push($sql, "AND timeend > ?");
+            array_push($sql_params, $starttime);
+        }
+        if($endtime != null){
+            array_push($sql, "AND timeend <= ?");
+            array_push($sql_params, $endtime);
+        }
+        
+        array_push($sql, "GROUP BY sm.timeend, r.id, c.id, r.shortname, c.shortname");
+        array_push($sql, "ORDER BY c.id, r.id, sm.timeend");
+        
+        //error_log("sql: " . print_r($sql, true));
+        //error_log("params: " . print_r($sql_params, true));
+        $stats = $DB->get_records_sql(join(' ', $sql), $sql_params);
+
+        foreach ($stats as $stat) {
+            $returnstat = new StdClass();
+            $keys = array(
+                'uniqueid', 'courseid', 'courseshortname', 'roleid', 'roleshortname',
+                'timeend', 'activity_read', 'activity_write'
+            );
+            foreach ($keys as $key) {
+                $returnstat->$key = $stat->$key;
+            }
+            $returnstats[] = $returnstat;
+        }
+        return $returnstats;
+    }
+
+    /**
+     * Describes the get_stats_activity_daily_by_course return value.
+     *
+     * @return external_single_structure
+     * @since Moodle 2.5
+     */
+
+    //I have no idea what this is meant to be? Not sure what the thing returns so hard to describe what it returns. 
+    public static function get_stats_activity_daily_by_course_returns() {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'uniqueid' => new external_value(PARAM_TEXT, 'Statistics unique ID'),
+                    'courseid' => new external_value(PARAM_INT, 'Course ID'),
+                    'courseshortname' => new external_value(PARAM_TEXT, 'Course Short Name'),
+                    'roleid' => new external_value(PARAM_INT, 'Moodle Role ID'),
+                    'roleshortname' => new external_value(PARAM_TEXT, 'Moodle Short Role Name'),
+                    'timeend' => new external_value(PARAM_INT, 'Unix time of end of activity accounting period'),
+                    'activity_read' => new external_value(PARAM_INT, 'Activity Read'),
+                    'activity_write' => new external_value(PARAM_INT, 'Activity Write'),
+                ),'stat'
+            )
+        );
+    }
+
+    /**
+     * Describes the parameters for get_stats_activity_weekly_by_coure
+     *
+     * @return external_external_function_parameters
+     * @since Moodle 3.0
+     */
+    public static function get_stats_activity_weekly_by_course_parameters() {
+        return new external_function_parameters (
+            array(
+                'course' => new external_value(PARAM_ALPHANUMEXT, 'course shortname', false, ''),
+                'starttime' => new external_value(PARAM_INT, 'Stats start time', false, null),
+                'endtime' => new external_value(PARAM_INT, 'Stats end time', false, null)
+            )
+        );
+    }
+    
+    /**
+     * Returns the usage stats by week for every course
+     *
+     * @param 
+     * @return 
+     * @since Moodle 3.6
+     */
+    public static function get_stats_activity_weekly_by_course($course = '', $starttime = null, $endtime = null) {
+        global $CFG, $DB;
+        $params = self::validate_parameters(
+            self::get_stats_activity_weekly_by_course_parameters(),
+            array(
+                'course' => $course,
+                'starttime' => $starttime,
+                'endtime' => $endtime
+            )
+        );
+        $course = $params['course'];
+        $starttime = $params['starttime'];
+        $endtime = $params['endtime'];
+        $returnstats = array();
+        $sql_params = array();
+        $sql = array(
+            "SELECT
+               concat(c.id, '_', sm.timeend, '_', r.id) AS uniqueid,
+               c.id, c.shortname AS courseshortname,
+               r.id, r.shortname AS roleshortname,
+               sm.timeend,
+               sum(sm.stat1) AS activity_read,
+               sum(sm.stat2) AS activity_write
+             FROM
+               {stats_weekly} sm
+             JOIN
+               {course} c ON c.id=sm.courseid
+             JOIN
+               {role} r ON (sm.roleid = r.id)
+             WHERE
+               sm.stattype='activity'"
+        );
+        
+        if ($course != '') {
+            array_push($sql, "AND c.shortname = ?");
+            array_push($sql_params, $course);
+        }
+
+        /*
+          timeend is e.g. 00:00:00 on 1st of week *after* accounting
+          period, so if starttime is 00:00:00 on 1st of a week, we
+          *don't* want period with that timeend included...
+          On the other hand, if endtime is 00:00:00 on 1st of a week,
+          we *do* want period ending at that time included.
+        */
+        if($starttime != null){
+            array_push($sql, "AND timeend > ?");
+            array_push($sql_params, $starttime);
+        }
+        if($endtime != null){
+            array_push($sql, "AND timeend <= ?");
+            array_push($sql_params, $endtime);
+        }
+        
+        array_push($sql, "GROUP BY sm.timeend, r.id, c.id, r.shortname, c.shortname");
+        array_push($sql, "ORDER BY c.id, r.id, sm.timeend");
+        
+        //error_log("sql: " . print_r($sql, true));
+        //error_log("params: " . print_r($sql_params, true));
+        $stats = $DB->get_records_sql(join(' ', $sql), $sql_params);
+
+        foreach ($stats as $stat) {
+            $returnstat = new StdClass();
+            $keys = array(
+                'uniqueid', 'courseid', 'courseshortname', 'roleid', 'roleshortname',
+                'timeend', 'activity_read', 'activity_write'
+            );
+            foreach ($keys as $key) {
+                $returnstat->$key = $stat->$key;
+            }
+            $returnstats[] = $returnstat;
+        }
+        return $returnstats;
+    }
+
+    /**
+     * Describes the get_stats_activity_weekly_by_course return value.
+     *
+     * @return external_single_structure
+     * @since Moodle 2.5
+     */
+
+    //I have no idea what this is meant to be? Not sure what the thing returns so hard to describe what it returns. 
+    public static function get_stats_activity_weekly_by_course_returns() {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'uniqueid' => new external_value(PARAM_TEXT, 'Statistics unique ID'),
+                    'courseid' => new external_value(PARAM_INT, 'Course ID'),
+                    'courseshortname' => new external_value(PARAM_TEXT, 'Course Short Name'),
+                    'roleid' => new external_value(PARAM_INT, 'Moodle Role ID'),
+                    'roleshortname' => new external_value(PARAM_TEXT, 'Moodle Short Role Name'),
+                    'timeend' => new external_value(PARAM_INT, 'Unix time of end of activity accounting period'),
+                    'activity_read' => new external_value(PARAM_INT, 'Activity Read'),
+                    'activity_write' => new external_value(PARAM_INT, 'Activity Write'),
+                ),'stat'
+            )
+        );
+    }
+    /**
+     * Describes the parameters for get_stats_activity_monthly_by_course
+     *
+     * @return external_external_function_parameters
+     * @since Moodle 3.0
+     */
+    public static function get_stats_activity_monthly_by_course_parameters() {
+        return new external_function_parameters (
+            array(
+                'course' => new external_value(PARAM_ALPHANUMEXT, 'Course shortname', false, ''),
+                'starttime' => new external_value(PARAM_INT, 'Stats start time', false, null),
+                'endtime' => new external_value(PARAM_INT, 'Stats end time', false, null)
+            )
+        );
+    }
+    
+    /**
+     * Returns the usage stats by month for every course
+     *
+     * @param 
+     * @return 
+     * @since Moodle 3.6
+     */
+    public static function get_stats_activity_monthly_by_course($course = '', $starttime = null, $endtime = null) {
+        global $CFG, $DB;
+        $params = self::validate_parameters(
+            self::get_stats_activity_monthly_by_course_parameters(),
+            array(
+                'course' => $course,
+                'starttime' => $starttime,
+                'endtime' => $endtime
+            )
+        );
+        $course = $params['course'];
+        $starttime = $params['starttime'];
+        $endtime = $params['endtime'];
+        $returnstats = array();
+        $sql_params = array();
+        $sql = array(
+            "SELECT
+               concat(c.id, '_', sm.timeend, '_', r.id) AS uniqueid,
+               c.id, c.shortname AS courseshortname,
+               r.id, r.shortname AS roleshortname,
+               sm.timeend,
+               sum(sm.stat1) AS activity_read,
+               sum(sm.stat2) AS activity_write
+             FROM
+               {stats_monthly} sm
+             JOIN
+               {course} c ON c.id=sm.courseid
+             JOIN
+               {role} r ON (sm.roleid = r.id)
+             WHERE
+               sm.stattype='activity'"
+        );
+        
+        if ($course != '') {
+            array_push($sql, "AND c.shortname = ?");
+            array_push($sql_params, $course);
+        }
+
+        /*
+          timeend is e.g. 00:00:00 on 1st of month *after* accounting
+          period, so if starttime is 00:00:00 on 1st of a month, we
+          *don't* want period with that timeend included...
+          On the other hand, if endtime is 00:00:00 on 1st of a month,
+          we *do* want period ending at that time included.
+        */
+        if($starttime != null){
+            array_push($sql, "AND timeend > ?");
+            array_push($sql_params, $starttime);
+        }
+        if($endtime != null){
+            array_push($sql, "AND timeend <= ?");
+            array_push($sql_params, $endtime);
+        }
+        
+        array_push($sql, "GROUP BY sm.timeend, r.id, c.id, r.shortname, c.shortname");
+        array_push($sql, "ORDER BY c.id, r.id, sm.timeend");
+        
+        //error_log("sql: " . print_r($sql, true));
+        //error_log("params: " . print_r($sql_params, true));
+        $stats = $DB->get_records_sql(join(' ', $sql), $sql_params);
+
+        foreach ($stats as $stat) {
+            $returnstat = new StdClass();
+            $keys = array(
+                'uniqueid', 'courseid', 'courseshortname', 'roleid', 'roleshortname',
+                'timeend', 'activity_read', 'activity_write'
+            );
+            foreach ($keys as $key) {
+                $returnstat->$key = $stat->$key;
+            }
+            $returnstats[] = $returnstat;
+        }
+        return $returnstats;
+    }
+
+    /**
+     * Describes the get_stats_activity_monthly_by_course return value.
+     *
+     * @return external_single_structure
+     * @since Moodle 2.5
+     */
+
+    public static function get_stats_activity_monthly_by_course_returns() {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'uniqueid' => new external_value(PARAM_TEXT, 'Statistics unique ID'),
+                    'courseid' => new external_value(PARAM_INT, 'Course ID'),
+                    'courseshortname' => new external_value(PARAM_TEXT, 'Course Short Name'),
+                    'roleid' => new external_value(PARAM_INT, 'Moodle Role ID'),
+                    'roleshortname' => new external_value(PARAM_TEXT, 'Moodle Short Role Name'),
+                    'timeend' => new external_value(PARAM_INT, 'Unix time of end of activity accounting period'),
+                    'activity_read' => new external_value(PARAM_INT, 'Activity Read'),
+                    'activity_write' => new external_value(PARAM_INT, 'Activity Write'),
+                ),'stat'
+            )
+        );
+    }
+
+/*end of KJ*/
 }
