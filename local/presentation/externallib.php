@@ -39,7 +39,7 @@ require_once("$CFG->libdir/externallib.php");
 class local_presentation_external extends external_api {
 
     /**
-     * Describes the parameters for get_tagged_resources_by_course
+     * Describes the parameters for get_course_role_users
      *
      * @return external_external_function_parameters
      * @since Moodle 3.0
