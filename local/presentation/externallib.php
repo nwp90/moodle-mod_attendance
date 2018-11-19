@@ -47,7 +47,7 @@ class local_presentation_external extends external_api {
     public static function get_course_grade_items_parameters() {
         return new external_function_parameters (
             array(
-                'course' => new external_value(PARAM_ALPHANUMEXT, 'course shortname')
+                'course' => new external_value(PARAM_TEXT, 'course shortname')
             )
         );
     }
