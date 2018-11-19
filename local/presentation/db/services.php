@@ -26,6 +26,13 @@
 defined('MOODLE_INTERNAL') or die();
 
 $functions = array(
+    'local_presentation_get_course_grade_items' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_course_grade_items',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of grade items in specified course.',
+        'type' => 'read',
+    ),
     'local_presentation_get_course_role_users' => array(
         'classname' => 'local_presentation_external',
         'methodname' => 'get_course_role_users',
@@ -212,6 +219,8 @@ $functions = array(
 $services = array(
     'presentation' => array( //the name of the web service
         'functions' => array (
+            'local_presentation_get_course_grade_items',
+            'local_presentation_get_course_role_users',
             'local_presentation_get_tagged_resources_by_course',
             'local_presentation_get_tagged_lessons_by_course',
             'local_presentation_get_tagged_quizzes_by_course',

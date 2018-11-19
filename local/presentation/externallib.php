@@ -44,7 +44,7 @@ class local_presentation_external extends external_api {
      * @return external_external_function_parameters
      * @since Moodle 3.0
      */
-    public static function get_course_grade_items() {
+    public static function get_course_grade_items_parameters() {
         return new external_function_parameters (
             array(
                 'course' => new external_value(PARAM_ALPHANUMEXT, 'course shortname')
@@ -59,27 +59,31 @@ class local_presentation_external extends external_api {
      * @return array the resource details
      * @since Moodle 2.5
      */
-    public static function get_course_grade_items($coursename = '') {
+    public static function get_course_grade_items($course = '') {
         global $CFG, $DB, $USER;
-        $params = self::validate_parameters(self::get_course_grade_items_parameters(), array('course' => $coursename));
+        error_log("get_course_grade_items validating params");
+        $params = self::validate_parameters(self::get_course_grade_items_parameters(), array('course' => $course));
+        error_log("get_course_grade_items validated params");
         $course = $params['course'];
         if ($course != '') {
             $courseid = $DB->get_field('course', 'id', array("shortname" => $course));
+            error_log("get_course_grade_items got course id $courseid");
             if ($courseid) {
                 $coursecontext = context_course::instance($courseid);
+                error_log("get_course_grade_items got course context");
                 $girecords = $DB->get_records_sql(
                     "
                     SELECT gi.id, gi.courseid, c.shortname AS courseshortname, gi.categoryid, gc.parent AS categoryparent,
                       gc.fullname AS categoryname, gi.itemname AS gradename, gi.itemtype AS gradeitemtype,
                       gi.itemmodule AS grademodule, gi.idnumber AS gradeidnumber, gi.gradetype,
-                      gi.scaleid, (sc.courseid = 0) AS scaleglobal, sc.name AS scalename, gi.sortorder
+                      gi.scaleid, CASE WHEN sc.courseid = 0 THEN 1 ELSE 0 END AS scaleglobal, sc.name AS scalename, gi.sortorder
                     FROM {grade_items} gi
                     JOIN {course} c ON gi.courseid = c.id
                     LEFT JOIN {grade_categories} gc ON gi.categoryid = gc.id
                     LEFT JOIN {scale} sc ON gi.scaleid = sc.id
                     ORDER BY gi.courseid, gi.sortorder
                     ",
-                    array("gi.courseid" => $courseid),
+                    array("gi.courseid" => $courseid)
                 );
                 return $girecords;
             }
@@ -97,19 +101,19 @@ class local_presentation_external extends external_api {
         return new external_multiple_structure(
             new external_single_structure(
                 array(
-                    'id' => new external_value(PARAM_INT, 'Database ID of grade item')
-                    'courseid' => new external_value(PARAM_INT, 'Database ID of course')
-                    'shortname' => new external_value(PARAM_INT, 'Course shortname')
-                    'categoryid' => new external_value(PARAM_INT, 'Database ID of category')
-                    'categoryparent' => new external_value(PARAM_INT, 'Database ID of category parent')
+                    'id' => new external_value(PARAM_INT, 'Database ID of grade item'),
+                    'courseid' => new external_value(PARAM_INT, 'Database ID of course'),
+                    'courseshortname' => new external_value(PARAM_TEXT, 'Course shortname'),
+                    'categoryid' => new external_value(PARAM_INT, 'Database ID of category'),
+                    'categoryparent' => new external_value(PARAM_INT, 'Database ID of category parent'),
                     'categoryname' => new external_value(PARAM_TEXT, 'Name of category'),
                     'gradename' => new external_value(PARAM_TEXT, 'Name of grade item'),
                     'gradeitemtype' => new external_value(PARAM_TEXT, 'Type of grade item'),
-                    'grademodule' => new external_value(PARAM_INT, 'Grade item module'),
-                    'gradeidnumber' => new external_value(PARAM_INT, 'Grade item idnumber (external ID)'),
+                    'grademodule' => new external_value(PARAM_TEXT, 'Grade item module'),
+                    'gradeidnumber' => new external_value(PARAM_TEXT, 'Grade item "idnumber" (external ID string)'),
                     'gradetype' => new external_value(PARAM_INT, 'Grade item type'),
                     'scaleid' => new external_value(PARAM_INT, 'Grade item scale ID'),
-                    'scaleglobal' => new external_value(PARAM_INT, 'Grade item is global?'),
+                    'scaleglobal' => new external_value(PARAM_BOOL, 'Grade item is global?'),
                     'scalename' => new external_value(PARAM_TEXT, 'Grade item name'),
                     'sortorder' => new external_value(PARAM_INT, 'Grade item sort order')
                 ), 'List of grade item objects, with info on scales and categories'
