@@ -65,14 +65,8 @@ class local_presentation_external extends external_api {
         $params = self::validate_parameters(self::get_course_grade_items_parameters(), array('course' => $course));
         error_log("get_course_grade_items validated params");
         $course = $params['course'];
-        if ($course != '') {
-            $courseid = $DB->get_field('course', 'id', array("shortname" => $course));
-            error_log("get_course_grade_items got course id $courseid");
-            if ($courseid) {
-                $coursecontext = context_course::instance($courseid);
-                error_log("get_course_grade_items got course context");
-                $girecords = $DB->get_records_sql(
-                    "
+        $girecords = $DB->get_records_sql(
+            "
                     SELECT gi.id, gi.courseid, c.shortname AS courseshortname, gi.categoryid, gc.parent AS categoryparent,
                       gc.fullname AS categoryname, gi.itemname AS gradename, gi.itemtype AS gradeitemtype,
                       gi.itemmodule AS grademodule, gi.idnumber AS gradeidnumber, gi.gradetype,
@@ -81,14 +75,12 @@ class local_presentation_external extends external_api {
                     JOIN {course} c ON gi.courseid = c.id
                     LEFT JOIN {grade_categories} gc ON gi.categoryid = gc.id
                     LEFT JOIN {scale} sc ON gi.scaleid = sc.id
+                    WHERE c.shortname = ?
                     ORDER BY gi.courseid, gi.sortorder
-                    ",
-                    array("gi.courseid" => $courseid)
-                );
-                return $girecords;
-            }
-        }
-        return array();
+            ",
+            array($course)
+        );
+        return $girecords;
     }
 
     /**
