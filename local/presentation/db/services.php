@@ -26,6 +26,13 @@
 defined('MOODLE_INTERNAL') or die();
 
 $functions = array(
+    'local_presentation_get_course_grade_items' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_course_grade_items',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns a list of grade items in specified course.',
+        'type' => 'read',
+    ),
     'local_presentation_get_course_role_users' => array(
         'classname' => 'local_presentation_external',
         'methodname' => 'get_course_role_users',
@@ -186,11 +193,34 @@ $functions = array(
         'classpath' => 'local/presentation/externallib.php',
         'description' => 'Returns a list of ltis tagged with a provided set of tags.',
         'type' => 'read',
+    ),
+     'local_presentation_get_stats_activity_daily_by_course' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_stats_activity_daily_by_course',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns the usage stats of a course by day.',
+        'type' => 'read',
+    ),
+     'local_presentation_get_stats_activity_weekly_by_course' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_stats_activity_weekly_by_course',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns the usage stats of a course by week.',
+        'type' => 'read',
+    ),
+     'local_presentation_get_stats_activity_monthly_by_course' => array(
+        'classname' => 'local_presentation_external',
+        'methodname' => 'get_stats_activity_monthly_by_course',
+        'classpath' => 'local/presentation/externallib.php',
+        'description' => 'Returns the usage stats of a course by month.',
+        'type' => 'read',
     )
 );
 $services = array(
     'presentation' => array( //the name of the web service
         'functions' => array (
+            'local_presentation_get_course_grade_items',
+            'local_presentation_get_course_role_users',
             'local_presentation_get_tagged_resources_by_course',
             'local_presentation_get_tagged_lessons_by_course',
             'local_presentation_get_tagged_quizzes_by_course',
@@ -213,6 +243,9 @@ $services = array(
             'local_presentation_get_scorms_by_tag',
             'local_presentation_get_glossaries_by_tag',
             'local_presentation_get_ltis_by_tag',
+            'local_presentation_get_stats_activity_daily_by_course',
+            'local_presentation_get_stats_activity_weekly_by_course',
+            'local_presentation_get_stats_activity_monthly_by_course',
         ),
         'restrictedusers' => 0, //if enabled, the Moodle administrator must link some user to this service
         'enabled' => 1, //if enabled, the service can be reachable on a default installation
