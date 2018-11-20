@@ -176,7 +176,7 @@ class calendar_event_exporter extends event_exporter_base {
 
         if ($event->get_course_module()) {
             $values = array_merge($values, $this->get_module_timestamp_limits($event));
-        } else if ($course && $course->get('id') && $course->get('id') != SITEID && empty($event->get_group())) {
+        } else if ($hascourse && $course->id != SITEID && empty($event->get_group())) {
             // This is a course event.
             $values = array_merge($values, $this->get_course_timestamp_limits($event));
         }
