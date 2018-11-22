@@ -73,7 +73,7 @@ class local_presentation_external extends external_api {
                       gi.scaleid, CASE WHEN sc.courseid = 0 THEN 1 ELSE 0 END AS scaleglobal, sc.name AS scalename, gi.sortorder
                     FROM {grade_items} gi
                     JOIN {course} c ON gi.courseid = c.id
-                    LEFT JOIN {grade_categories} gc ON gi.categoryid = gc.id
+                    LEFT JOIN {grade_categories} gc ON ((gi.categoryid = gc.id) OR (gi.categoryid IS NULL AND gi.iteminstance = gc.id))
                     LEFT JOIN {scale} sc ON gi.scaleid = sc.id
                     WHERE c.shortname = ?
                     ORDER BY gi.courseid, gi.sortorder
@@ -99,7 +99,7 @@ class local_presentation_external extends external_api {
                     'categoryid' => new external_value(PARAM_INT, 'Database ID of category'),
                     'categoryparent' => new external_value(PARAM_INT, 'Database ID of category parent'),
                     'categoryname' => new external_value(PARAM_TEXT, 'Name of category'),
-                    'gradename' => new external_value(PARAM_TEXT, 'Name of grade item'),
+                    'gradename' => new external_value(PARAM_RAW, 'Name of grade item'),
                     'gradeitemtype' => new external_value(PARAM_TEXT, 'Type of grade item'),
                     'grademodule' => new external_value(PARAM_TEXT, 'Grade item module'),
                     'gradeidnumber' => new external_value(PARAM_TEXT, 'Grade item "idnumber" (external ID string)'),
