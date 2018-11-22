@@ -33,6 +33,7 @@ $testsession = optional_param('testsession', 0, PARAM_INT); // test session work
 $anchor      = optional_param('anchor', '', PARAM_RAW);      // Used to restore hash anchor to wantsurl.
 $noredirect  = optional_param('magicpony', 0, PARAM_BOOL); // don't redirect
 $noredirect |= optional_param('noredirect', 0, PARAM_BOOL); // don't redirect
+$logintoken  = optional_param('logintoken', '', PARAM_RAW);       // Used to validate the request.
 
 $context = context_system::instance();
 $PAGE->set_url("$CFG->wwwroot/login/index.php");
@@ -139,7 +140,7 @@ if ($frm and isset($frm->username)) {                             // Login WITH 
         $frm = false;
     } else {
         if (empty($errormsg)) {
-            $user = authenticate_user_login($frm->username, $frm->password, false, $errorcode);
+            $user = authenticate_user_login($frm->username, $frm->password, false, $errorcode, $logintoken);
         }
     }
 
