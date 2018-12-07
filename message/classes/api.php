@@ -100,8 +100,8 @@ class api {
         $ufields2 = \user_picture::fields('u2', array('lastaccess'), 'userto_id', 'userto_');
 
         $sql = "SELECT m.id, m.useridfrom, mcm.userid as useridto, m.subject, m.fullmessage, m.fullmessagehtml, m.fullmessageformat,
-                       m.smallmessage, m.timecreated, 0 as isread, $ufields, mub.id as userfrom_blocked, $ufields2,
-                       mub2.id as userto_blocked
+                       m.smallmessage, m.conversationid, m.timecreated, 0 as isread, $ufields, mub.id as userfrom_blocked,
+                       $ufields2, mub2.id as userto_blocked
                   FROM {messages} m
             INNER JOIN {user} u
                     ON u.id = m.useridfrom
@@ -218,23 +218,22 @@ class api {
         $excludeusers = array($userid, $CFG->siteguest);
         list($exclude, $excludeparams) = $DB->get_in_or_equal($excludeusers, SQL_PARAMS_NAMED, 'param', false);
 
-        $params = array('search' => '%' . $search . '%', 'userid1' => $userid, 'userid2' => $userid, 'userid3' => $userid);
-
         // Ok, let's search for contacts first.
         $contacts = array();
         $sql = "SELECT $ufields, mub.id as isuserblocked
-                FROM {user} u
-                JOIN {message_contacts} mc
-                  ON (u.id = mc.contactid AND mc.userid = :userid1) OR (u.id = mc.userid AND mc.contactid = :userid2)
-           LEFT JOIN {message_users_blocked} mub
-                  ON (mub.userid = :userid3 AND mub.blockeduserid = u.id)
-               WHERE u.deleted = 0
-                 AND u.confirmed = 1
-                 AND " . $DB->sql_like($fullname, ':search', false) . "
-                 AND u.id $exclude
-            ORDER BY " . $DB->sql_fullname();
-
-        if ($users = $DB->get_records_sql($sql, $params + $excludeparams, 0, $limitnum)) {
+                  FROM {user} u
+                  JOIN {message_contacts} mc
+                    ON u.id = mc.contactid
+             LEFT JOIN {message_users_blocked} mub
+                    ON (mub.userid = :userid2 AND mub.blockeduserid = u.id)
+                 WHERE mc.userid = :userid
+                   AND u.deleted = 0
+                   AND u.confirmed = 1
+                   AND " . $DB->sql_like($fullname, ':search', false) . "
+                   AND u.id $exclude
+              ORDER BY " . $DB->sql_fullname();
+        if ($users = $DB->get_records_sql($sql, array('userid' => $userid, 'userid2' => $userid,
+                'search' => '%' . $search . '%') + $excludeparams, 0, $limitnum)) {
             foreach ($users as $user) {
                 $user->blocked = $user->isuserblocked ? 1 : 0;
                 $contacts[] = helper::create_contact($user);
@@ -262,46 +261,22 @@ class api {
             }
         }
 
-        // Let's get those non-contacts.
+        // Let's get those non-contacts. Toast them gears boi.
+        // Note - you can only block contacts, so these users will not be blocked, so no need to get that
+        // extra detail from the database.
         $noncontacts = array();
-        if ($CFG->messagingallusers) {
-            // In case $CFG->messagingallusers is enabled, search for all users site-wide but are not user's contact.
-            $sql = "SELECT $ufields
-                      FROM {user} u
-                 LEFT JOIN {message_users_blocked} mub
-                        ON (mub.userid = :userid1 AND mub.blockeduserid = u.id)
-                     WHERE u.deleted = 0
-                       AND u.confirmed = 1
-                       AND " . $DB->sql_like($fullname, ':search', false) . "
-                       AND u.id $exclude
-                       AND NOT EXISTS (SELECT mc.id
-                                         FROM {message_contacts} mc
-                                        WHERE (mc.userid = u.id AND mc.contactid = :userid2)
-                                           OR (mc.userid = :userid3 AND mc.contactid = u.id))
-                  ORDER BY " . $DB->sql_fullname();
-        } else {
-            // In case $CFG->messagingallusers is disabled, search for users you have a conversation with.
-            // Messaging setting could change, so could exist an old conversation with users you cannot message anymore.
-            $sql = "SELECT $ufields, mub.id as isuserblocked
-                      FROM {user} u
-                 LEFT JOIN {message_users_blocked} mub
-                        ON (mub.userid = :userid1 AND mub.blockeduserid = u.id)
-                INNER JOIN {message_conversation_members} cm
-                        ON u.id = cm.userid
-                INNER JOIN {message_conversation_members} cm2
-                        ON cm.conversationid = cm2.conversationid AND cm2.userid = :userid
-                     WHERE u.deleted = 0
-                       AND u.confirmed = 1
-                       AND " . $DB->sql_like($fullname, ':search', false) . "
-                       AND u.id $exclude
-                       AND NOT EXISTS (SELECT mc.id
-                                         FROM {message_contacts} mc
-                                        WHERE (mc.userid = u.id AND mc.contactid = :userid2)
-                                           OR (mc.userid = :userid3 AND mc.contactid = u.id))
-                  ORDER BY " . $DB->sql_fullname();
-            $params['userid'] = $userid;
-        }
-        if ($users = $DB->get_records_sql($sql,  $params + $excludeparams, 0, $limitnum)) {
+        $sql = "SELECT $ufields
+                  FROM {user} u
+                 WHERE u.deleted = 0
+                   AND u.confirmed = 1
+                   AND " . $DB->sql_like($fullname, ':search', false) . "
+                   AND u.id $exclude
+                   AND u.id NOT IN (SELECT contactid
+                                      FROM {message_contacts}
+                                     WHERE userid = :userid)
+              ORDER BY " . $DB->sql_fullname();
+        if ($users = $DB->get_records_sql($sql,  array('userid' => $userid, 'search' => '%' . $search . '%') + $excludeparams,
+                0, $limitnum)) {
             foreach ($users as $user) {
                 $noncontacts[] = helper::create_contact($user);
             }
@@ -319,8 +294,13 @@ class api {
      * @param int $limitnum
      * @return array
      */
-    public static function message_search_users(int $userid, string $search, int $limitfrom = 0, int $limitnum = 1000) : array {
+    public static function message_search_users(int $userid, string $search, int $limitfrom = 0, int $limitnum = 20) : array {
         global $CFG, $DB;
+
+        // Check if messaging is enabled.
+        if (empty($CFG->messaging)) {
+            throw new \moodle_exception('disabled', 'message');
+        }
 
         // Used to search for contacts.
         $fullname = $DB->sql_fullname();
@@ -343,7 +323,7 @@ class api {
               ORDER BY " . $DB->sql_fullname();
         $foundusers = $DB->get_records_sql_menu($sql, $params + $excludeparams, $limitfrom, $limitnum);
 
-        $orderedcontacs = array();
+        $orderedcontacts = array();
         if (!empty($foundusers)) {
             $contacts = helper::get_member_info($userid, array_keys($foundusers));
             // The get_member_info returns an associative array, so is not ordered in the same way.
@@ -351,47 +331,93 @@ class api {
             foreach ($foundusers as $key => $value) {
                 $contact = $contacts[$key];
                 $contact->conversations = self::get_conversations_between_users($userid, $key, 0, 1000);
-                $orderedcontacs[] = $contact;
+                $orderedcontacts[] = $contact;
             }
         }
 
         // Let's get those non-contacts.
+        // If site wide messaging is enabled, we just fetch any matched users which are non-contacts.
         if ($CFG->messagingallusers) {
-            // In case $CFG->messagingallusers is enabled, search for all users site-wide but are not user's contact.
             $sql = "SELECT u.id
-                      FROM {user} u
-                     WHERE u.deleted = 0
-                       AND u.confirmed = 1
-                       AND " . $DB->sql_like($fullname, ':search', false) . "
-                       AND u.id $exclude
-                       AND NOT EXISTS (SELECT mc.id
-                                         FROM {message_contacts} mc
-                                        WHERE (mc.userid = u.id AND mc.contactid = :userid1)
-                                           OR (mc.userid = :userid2 AND mc.contactid = u.id))
-                  ORDER BY " . $DB->sql_fullname();
-        } else {
-            // In case $CFG->messagingallusers is disabled, search for users you have a conversation with.
-            // Messaging setting could change, so could exist an old conversation with users you cannot message anymore.
-            $sql = "SELECT u.id
-                      FROM {user} u
-                INNER JOIN {message_conversation_members} cm
-                        ON u.id = cm.userid
-                INNER JOIN {message_conversation_members} cm2
-                        ON cm.conversationid = cm2.conversationid AND cm2.userid = :userid
-                     WHERE u.deleted = 0
-                       AND u.confirmed = 1
-                       AND " . $DB->sql_like($fullname, ':search', false) . "
-                       AND u.id $exclude
-                       AND NOT EXISTS (SELECT mc.id
-                                         FROM {message_contacts} mc
-                                        WHERE (mc.userid = u.id AND mc.contactid = :userid1)
-                                           OR (mc.userid = :userid2 AND mc.contactid = u.id))
-                  ORDER BY " . $DB->sql_fullname();
-            $params['userid'] = $userid;
-        }
-        $foundusers = $DB->get_records_sql_menu($sql, $params + $excludeparams, $limitfrom, $limitnum);
+                  FROM {user} u
+                 WHERE u.deleted = 0
+                   AND u.confirmed = 1
+                   AND " . $DB->sql_like($fullname, ':search', false) . "
+                   AND u.id $exclude
+                   AND NOT EXISTS (SELECT mc.id
+                                     FROM {message_contacts} mc
+                                    WHERE (mc.userid = u.id AND mc.contactid = :userid1)
+                                       OR (mc.userid = :userid2 AND mc.contactid = u.id))
+              ORDER BY " . $DB->sql_fullname();
 
-        $orderednoncontacs = array();
+            $foundusers = $DB->get_records_sql($sql, $params + $excludeparams, $limitfrom, $limitnum);
+        } else {
+            require_once($CFG->dirroot . '/user/lib.php');
+            // If site-wide messaging is disabled, then we should only be able to search for users who we are allowed to see.
+            // Because we can't achieve all the required visibility checks in SQL, we'll iterate through the non-contact records
+            // and stop once we have enough matching the 'visible' criteria.
+            // TODO: MDL-63983 - Improve the performance of non-contact searches when site-wide messaging is disabled (default).
+
+            // Use a local generator to achieve this iteration.
+            $getnoncontactusers = function ($limitfrom = 0, $limitnum = 0) use($fullname, $exclude, $params, $excludeparams) {
+                global $DB;
+                $sql = "SELECT u.*
+                      FROM {user} u
+                     WHERE u.deleted = 0
+                       AND u.confirmed = 1
+                       AND " . $DB->sql_like($fullname, ':search', false) . "
+                       AND u.id $exclude
+                       AND NOT EXISTS (SELECT mc.id
+                                         FROM {message_contacts} mc
+                                        WHERE (mc.userid = u.id AND mc.contactid = :userid1)
+                                           OR (mc.userid = :userid2 AND mc.contactid = u.id))
+                  ORDER BY " . $DB->sql_fullname();
+                while ($records = $DB->get_records_sql($sql, $params + $excludeparams, $limitfrom, $limitnum)) {
+                    yield $records;
+                    $limitfrom += $limitnum;
+                }
+            };
+
+            // Fetch in batches of $limitnum * 2 to improve the chances of matching a user without going back to the DB.
+            // The generator cannot function without a sensible limiter, so set one if this is not set.
+            $batchlimit = ($limitnum == 0) ? 20 : $limitnum;
+
+            // We need to make the offset param work with the generator.
+            // Basically, if we want to get say 10 records starting at the 40th record, we need to see 50 records and return only
+            // those after the 40th record. We can never pass the method's offset param to the generator as we need to manage the
+            // position within those valid records ourselves.
+            // See MDL-63983 dealing with performance improvements to this area of code.
+            $noofvalidseenrecords = 0;
+            $returnedusers = [];
+            foreach ($getnoncontactusers(0, $batchlimit) as $users) {
+                foreach ($users as $id => $user) {
+                    $userdetails = \user_get_user_details_courses($user);
+
+                    // Return the user only if the searched field is returned.
+                    // Otherwise it means that the $USER was not allowed to search the returned user.
+                    if (!empty($userdetails) and !empty($userdetails['fullname'])) {
+                        // We know we've matched, but only save the record if it's within the offset area we need.
+                        if ($limitfrom == 0) {
+                            // No offset specified, so just save.
+                            $returnedusers[$id] = $user;
+                        } else {
+                            // There is an offset in play.
+                            // If we've passed enough records already (> offset value), then we can save this one.
+                            if ($noofvalidseenrecords >= $limitfrom) {
+                                $returnedusers[$id] = $user;
+                            }
+                        }
+                        if (count($returnedusers) == $limitnum) {
+                            break 2;
+                        }
+                        $noofvalidseenrecords++;
+                    }
+                }
+            }
+            $foundusers = $returnedusers;
+        }
+
+        $orderednoncontacts = array();
         if (!empty($foundusers)) {
             $noncontacts = helper::get_member_info($userid, array_keys($foundusers));
             // The get_member_info returns an associative array, so is not ordered in the same way.
@@ -399,11 +425,11 @@ class api {
             foreach ($foundusers as $key => $value) {
                 $contact = $noncontacts[$key];
                 $contact->conversations = self::get_conversations_between_users($userid, $key, 0, 1000);
-                $orderednoncontacs[] = $contact;
+                $orderednoncontacts[] = $contact;
             }
         }
 
-        return array($orderedcontacs, $orderednoncontacs);
+        return array($orderedcontacts, $orderednoncontacts);
     }
 
     /**
@@ -551,7 +577,8 @@ class api {
                     ON lastmessage.conversationid = mc.id
             LEFT JOIN {messages} m
                    ON m.id = lastmessage.messageid
-                WHERE mc.id IS NOT NULL $typesql $favouritesql
+                WHERE mc.id IS NOT NULL
+                  AND mc.enabled = 1 $typesql $favouritesql
               ORDER BY (CASE WHEN m.timecreated IS NULL THEN 0 ELSE 1 END) DESC, m.timecreated DESC, id DESC";
 
         $params = array_merge($favouriteparams, ['userid' => $userid, 'action' => self::MESSAGE_ACTION_DELETED,
@@ -559,6 +586,7 @@ class api {
         $conversationset = $DB->get_recordset_sql($sql, $params, $limitfrom, $limitnum);
 
         $conversations = [];
+        $selfconversations = []; // Used to track legacy conversations with one's self (both conv members the same user).
         $members = [];
         $individualmembers = [];
         $groupmembers = [];
@@ -586,6 +614,9 @@ class api {
         //
         // For 'individual' type conversations between 2 users, regardless of who sent the last message,
         // we want the details of the other member in the conversation (i.e. not the current user).
+        // The only exception to the 'not the current user' rule is for 'self' conversations - a legacy construct in which a user
+        // can message themselves via user bulk actions. Subsequently, there are 2 records for the same user created in the members
+        // table.
         //
         // For 'group' type conversations, we want the details of the member who sent the last message, if there is one.
         // This can be the current user or another group member, but for groups without messages, this will be empty.
@@ -626,6 +657,23 @@ class api {
             foreach ($conversationmembers as $mid => $member) {
                 $members[$member->conversationid][$member->userid] = $member->userid;
                 $individualmembers[$member->userid] = $member->userid;
+            }
+
+            // Self conversations: If any of the individual conversations which were missing members are still missing members,
+            // we know these must be 'self' conversations. This is a legacy scenario, created via user bulk actions.
+            // In such cases, the member returned should be the current user.
+            //
+            // NOTE: Currently, these conversations are not returned by this method, however,
+            // identifying them is important for future reference.
+            foreach ($individualconversations as $indconvid) {
+                if (empty($members[$indconvid])) {
+                    // Keep track of the self conversation (for future use).
+                    $selfconversations[$indconvid] = $indconvid;
+
+                    // Set the member to the current user.
+                    $members[$indconvid][$userid] = $userid;
+                    $individualmembers[$userid] = $userid;
+                }
             }
         }
 
@@ -675,7 +723,7 @@ class api {
         // MEMBER COUNT.
         $cids = array_column($conversations, 'id');
         list ($cidinsql, $cidinparams) = $DB->get_in_or_equal($cids, SQL_PARAMS_NAMED, 'convid');
-        $membercountsql = "SELECT conversationid, count(id) AS membercount
+        $membercountsql = "SELECT conversationid, count(DISTINCT userid) AS membercount
                              FROM {message_conversation_members} mcm
                             WHERE mcm.conversationid $cidinsql
                          GROUP BY mcm.conversationid";
@@ -703,12 +751,16 @@ class api {
         // Now, create the final return structure.
         $arrconversations = [];
         foreach ($conversations as $conversation) {
-            // Do not include any individual conversation which:
-            // a) Contains a deleted member or
-            // b) Does not contain a recent message for the user (this happens if the user has deleted all messages).
+            // Do not include any individual conversations which do not contain a recent message for the user.
+            // This happens if the user has deleted all messages.
             // Group conversations with deleted users or no messages are always returned.
             if ($conversation->conversationtype == self::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL
-                    && (isset($deletedmembers[$conversation->id]) || empty($conversation->messageid))) {
+                    && (empty($conversation->messageid))) {
+                continue;
+            }
+
+            // Exclude 'self' conversations for now.
+            if (isset($selfconversations[$conversation->id])) {
                 continue;
             }
 
@@ -776,6 +828,128 @@ class api {
     }
 
     /**
+     * Return a conversation.
+     *
+     * @param int $userid The user id to get the conversation for
+     * @param int $conversationid The id of the conversation to fetch
+     * @param bool $includecontactrequests Should contact requests be included between members
+     * @param bool $includeprivacyinfo Should privacy info be included between members
+     * @param int $memberlimit Limit number of members to load
+     * @param int $memberoffset Offset members by this amount
+     * @param int $messagelimit Limit number of messages to load
+     * @param int $messageoffset Offset the messages
+     * @param bool $newestmessagesfirst Order messages by newest first
+     * @return \stdClass
+     */
+    public static function get_conversation(
+        int $userid,
+        int $conversationid,
+        bool $includecontactrequests = false,
+        bool $includeprivacyinfo = false,
+        int $memberlimit = 0,
+        int $memberoffset = 0,
+        int $messagelimit = 0,
+        int $messageoffset = 0,
+        bool $newestmessagesfirst = true
+    ) {
+        global $USER, $DB;
+
+        $systemcontext = \context_system::instance();
+        $canreadallmessages = has_capability('moodle/site:readallmessages', $systemcontext);
+        if (($USER->id != $userid) && !$canreadallmessages) {
+            throw new \moodle_exception('You do not have permission to perform this action.');
+        }
+
+        $conversation = $DB->get_record('message_conversations', ['id' => $conversationid]);
+        if (!$conversation) {
+            return null;
+        }
+
+        // Get the context of the conversation. This will be used to check whether the conversation is a favourite.
+        // This will be either 'user' (for individual conversations) or, in the case of linked conversations,
+        // the context stored in the record.
+        $userctx = \context_user::instance($userid);
+        $conversationctx = empty($conversation->contextid) ? $userctx : \context::instance_by_id($conversation->contextid);
+
+        $isconversationmember = $DB->record_exists(
+            'message_conversation_members',
+            [
+                'conversationid' => $conversationid,
+                'userid' => $userid
+            ]
+        );
+
+        if (!$isconversationmember && !$canreadallmessages) {
+            throw new \moodle_exception('You do not have permission to view this conversation.');
+        }
+
+        $members = self::get_conversation_members(
+            $userid,
+            $conversationid,
+            $includecontactrequests,
+            $includeprivacyinfo,
+            $memberoffset,
+            $memberlimit
+        );
+        // Strip out the requesting user to match what get_conversations does.
+        $members = array_filter($members, function($member) use ($userid) {
+            return $member->id != $userid;
+        });
+
+        $messages = self::get_conversation_messages(
+            $userid,
+            $conversationid,
+            $messageoffset,
+            $messagelimit,
+            $newestmessagesfirst ? 'timecreated DESC' : 'timecreated ASC'
+        );
+
+        $service = \core_favourites\service_factory::get_service_for_user_context(\context_user::instance($userid));
+        $isfavourite = $service->favourite_exists('core_message', 'message_conversations', $conversationid, $conversationctx);
+
+        $convextrafields = self::get_linked_conversation_extra_fields([$conversation]);
+        $subname = isset($convextrafields[$conversationid]) ? $convextrafields[$conversationid]['subname'] : null;
+        $imageurl = isset($convextrafields[$conversationid]) ? $convextrafields[$conversationid]['imageurl'] : null;
+
+        $unreadcountssql = 'SELECT count(m.id)
+                              FROM {messages} m
+                        INNER JOIN {message_conversations} mc
+                                ON mc.id = m.conversationid
+                         LEFT JOIN {message_user_actions} mua
+                                ON (mua.messageid = m.id AND mua.userid = ? AND
+                                   (mua.action = ? OR mua.action = ?))
+                             WHERE m.conversationid = ?
+                               AND m.useridfrom != ?
+                               AND mua.id is NULL';
+        $unreadcount = $DB->count_records_sql(
+            $unreadcountssql,
+            [
+                $userid,
+                self::MESSAGE_ACTION_READ,
+                self::MESSAGE_ACTION_DELETED,
+                $conversationid,
+                $userid
+            ]
+        );
+
+        $membercount = $DB->count_records('message_conversation_members', ['conversationid' => $conversationid]);
+
+        return (object) [
+            'id' => $conversation->id,
+            'name' => $conversation->name,
+            'subname' => $subname,
+            'imageurl' => $imageurl,
+            'type' => $conversation->type,
+            'membercount' => $membercount,
+            'isfavourite' => $isfavourite,
+            'isread' => empty($unreadcount),
+            'unreadcount' => $unreadcount,
+            'members' => $members,
+            'messages' => $messages['messages']
+        ];
+    }
+
+    /**
      * Mark a conversation as a favourite for the given user.
      *
      * @param int $conversationid the id of the conversation to mark as a favourite.
@@ -784,11 +958,29 @@ class api {
      * @throws \moodle_exception if the user or conversation don't exist.
      */
     public static function set_favourite_conversation(int $conversationid, int $userid) : favourite {
+        global $DB;
+
         if (!self::is_user_in_conversation($userid, $conversationid)) {
             throw new \moodle_exception("Conversation doesn't exist or user is not a member");
         }
-        $ufservice = \core_favourites\service_factory::get_service_for_user_context(\context_user::instance($userid));
-        return $ufservice->create_favourite('core_message', 'message_conversations', $conversationid, \context_system::instance());
+        // Get the context for this conversation.
+        $conversation = $DB->get_record('message_conversations', ['id' => $conversationid]);
+        $userctx = \context_user::instance($userid);
+        if (empty($conversation->contextid)) {
+            // When the conversation hasn't any contextid value defined, the favourite will be added to the user context.
+            $conversationctx = $userctx;
+        } else {
+            // If the contextid is defined, the favourite will be added there.
+            $conversationctx = \context::instance_by_id($conversation->contextid);
+        }
+
+        $ufservice = \core_favourites\service_factory::get_service_for_user_context($userctx);
+
+        if ($favourite = $ufservice->get_favourite('core_message', 'message_conversations', $conversationid, $conversationctx)) {
+            return $favourite;
+        } else {
+            return $ufservice->create_favourite('core_message', 'message_conversations', $conversationid, $conversationctx);
+        }
     }
 
     /**
@@ -799,8 +991,21 @@ class api {
      * @throws \moodle_exception if the favourite does not exist for the user.
      */
     public static function unset_favourite_conversation(int $conversationid, int $userid) {
-        $ufservice = \core_favourites\service_factory::get_service_for_user_context(\context_user::instance($userid));
-        $ufservice->delete_favourite('core_message', 'message_conversations', $conversationid, \context_system::instance());
+        global $DB;
+
+        // Get the context for this conversation.
+        $conversation = $DB->get_record('message_conversations', ['id' => $conversationid]);
+        $userctx = \context_user::instance($userid);
+        if (empty($conversation->contextid)) {
+            // When the conversation hasn't any contextid value defined, the favourite will be added to the user context.
+            $conversationctx = $userctx;
+        } else {
+            // If the contextid is defined, the favourite will be added there.
+            $conversationctx = \context::instance_by_id($conversation->contextid);
+        }
+
+        $ufservice = \core_favourites\service_factory::get_service_for_user_context($userctx);
+        $ufservice->delete_favourite('core_message', 'message_conversations', $conversationid, $conversationctx);
     }
 
     /**
@@ -853,6 +1058,51 @@ class api {
         }
 
         return [];
+    }
+
+    /**
+     * Get the contacts for a given user.
+     *
+     * @param int $userid
+     * @param int $limitfrom
+     * @param int $limitnum
+     * @return array An array of contacts
+     */
+    public static function get_user_contacts(int $userid, int $limitfrom = 0, int $limitnum = 0) {
+        global $DB;
+
+        $sql = "SELECT *
+                  FROM {message_contacts} mc
+                 WHERE mc.userid = ? OR mc.contactid = ?
+              ORDER BY timecreated DESC, id ASC";
+        if ($contacts = $DB->get_records_sql($sql, [$userid, $userid], $limitfrom, $limitnum)) {
+            $userids = [];
+            foreach ($contacts as $contact) {
+                if ($contact->userid == $userid) {
+                    $userids[] = $contact->contactid;
+                } else {
+                    $userids[] = $contact->userid;
+                }
+            }
+            return helper::get_member_info($userid, $userids);
+        }
+
+        return [];
+    }
+
+    /**
+     * Returns the contacts count.
+     *
+     * @param int $userid The user id
+     * @return array
+     */
+    public static function count_contacts(int $userid) : int {
+        global $DB;
+
+        $sql = "SELECT COUNT(id)
+                  FROM {message_contacts}
+                 WHERE userid = ? OR contactid = ?";
+        return $DB->count_records_sql($sql, [$userid, $userid]);
     }
 
     /**
@@ -1005,12 +1255,8 @@ class api {
             }
         }
 
-        $arrmessages = array();
-        if ($messages = helper::get_conversation_messages($userid, $convid, 0, $limitfrom, $limitnum, $sort, $timefrom, $timeto)) {
-            $arrmessages = helper::format_conversation_messages($userid, $convid, $messages);
-        }
-
-        return $arrmessages;
+        $messages = helper::get_conversation_messages($userid, $convid, 0, $limitfrom, $limitnum, $sort, $timefrom, $timeto);
+        return helper::format_conversation_messages($userid, $convid, $messages);
     }
 
     /**
@@ -1236,10 +1482,12 @@ class api {
              LEFT JOIN {message_user_actions} mua
                     ON (mua.messageid = m.id AND mua.userid = ? AND mua.action = ?)
                  WHERE mcm.userid = ?
+                   AND mc.enabled = ?
                    AND mcm.userid != m.useridfrom
                    AND mua.id is NULL";
 
-        return $DB->count_records_sql($sql, [$user->id, self::MESSAGE_ACTION_READ, $user->id]);
+        return $DB->count_records_sql($sql, [$user->id, self::MESSAGE_ACTION_READ, $user->id,
+            self::MESSAGE_CONVERSATION_ENABLED]);
     }
 
     /**
@@ -1268,6 +1516,102 @@ class api {
         }
 
         return false;
+    }
+
+    /**
+     * Returns the count of conversations (collection of messages from a single user) for
+     * the given user.
+     *
+     * @param int $userid The user whose conversations should be counted.
+     * @return array the array of conversations counts, indexed by type.
+     */
+    public static function get_conversation_counts(int $userid) : array {
+        global $DB;
+
+        // Some restrictions we need to be aware of:
+        // - Individual conversations containing soft-deleted user must be counted.
+        // - Individual conversations containing only deleted messages must NOT be counted.
+        // - Individual conversations which are legacy 'self' conversations (2 members, both the same user) must NOT be counted.
+        // - Group conversations with 0 messages must be counted.
+        // - Linked conversations which are disabled (enabled = 0) must NOT be counted.
+        // - Any type of conversation can be included in the favourites count, however, the type counts and the favourites count
+        // are mutually exclusive; any conversations which are counted in favourites cannot be counted elsewhere.
+
+        // First, ask the favourites service to give us the join SQL for favourited conversations,
+        // so we can include favourite information in the query.
+        $usercontext = \context_user::instance($userid);
+        $favservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
+        list($favsql, $favparams) = $favservice->get_join_sql_by_type('core_message', 'message_conversations', 'fav', 'mc.id');
+
+        $sql = "SELECT mc.type, fav.itemtype, COUNT(DISTINCT mc.id) as count
+                  FROM {message_conversations} mc
+            INNER JOIN {message_conversation_members} mcm
+                    ON mcm.conversationid = mc.id
+            INNER JOIN (
+                              SELECT mcm.conversationid, count(distinct mcm.userid) as membercount
+                                FROM {message_conversation_members} mcm
+                               WHERE mcm.conversationid IN (
+                                        SELECT DISTINCT conversationid
+                                          FROM {message_conversation_members} mcm2
+                                         WHERE userid = :userid5
+                                     )
+                            GROUP BY mcm.conversationid
+                       ) uniquemembercount
+                    ON uniquemembercount.conversationid = mc.id
+             LEFT JOIN (
+                              SELECT m.conversationid as convid, MAX(m.timecreated) as maxtime
+                                FROM {messages} m
+                          INNER JOIN {message_conversation_members} mcm
+                                  ON mcm.conversationid = m.conversationid
+                           LEFT JOIN {message_user_actions} mua
+                                  ON (mua.messageid = m.id AND mua.userid = :userid AND mua.action = :action)
+                               WHERE mua.id is NULL
+                                 AND mcm.userid = :userid2
+                            GROUP BY m.conversationid
+                       ) maxvisibleconvmessage
+                    ON maxvisibleconvmessage.convid = mc.id
+               $favsql
+                 WHERE mcm.userid = :userid3
+                   AND mc.enabled = :enabled
+                   AND (
+                          (mc.type = :individualtype AND maxvisibleconvmessage.convid IS NOT NULL AND membercount > 1) OR
+                          (mc.type = :grouptype)
+                       )
+              GROUP BY mc.type, fav.itemtype
+              ORDER BY mc.type ASC";
+
+        $params = [
+            'userid' => $userid,
+            'userid2' => $userid,
+            'userid3' => $userid,
+            'userid4' => $userid,
+            'userid5' => $userid,
+            'action' => self::MESSAGE_ACTION_DELETED,
+            'enabled' => self::MESSAGE_CONVERSATION_ENABLED,
+            'individualtype' => self::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
+            'grouptype' => self::MESSAGE_CONVERSATION_TYPE_GROUP,
+        ] + $favparams;
+
+        // Assemble the return array.
+        $counts = [
+            'favourites' => 0,
+            'types' => [
+                self::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL => 0,
+                self::MESSAGE_CONVERSATION_TYPE_GROUP => 0
+            ]
+        ];
+
+        $countsrs = $DB->get_recordset_sql($sql, $params);
+        foreach ($countsrs as $key => $val) {
+            if (!empty($val->itemtype)) {
+                $counts['favourites'] += $val->count;
+                continue;
+            }
+            $counts['types'][$val->type] = $val->count;
+        }
+        $countsrs->close();
+
+        return $counts;
     }
 
     /**
@@ -1561,7 +1905,7 @@ class api {
      * @return int    The default messaging preference.
      */
     public static function get_user_privacy_messaging_preference(int $userid) : int {
-        global $CFG;
+        global $CFG, $USER;
 
         // When $CFG->messagingallusers is enabled, default value for the messaging preference will be "Anyone on the site";
         // otherwise, the default value will be "My contacts and anyone in my courses".
@@ -1570,7 +1914,12 @@ class api {
         } else {
             $defaultprefvalue = self::MESSAGE_PRIVACY_SITE;
         }
-        $privacypreference = get_user_preferences('message_blocknoncontacts', $defaultprefvalue, $userid);
+        if ($userid == $USER->id) {
+            $user = $USER;
+        } else {
+            $user = $userid;
+        }
+        $privacypreference = get_user_preferences('message_blocknoncontacts', $defaultprefvalue, $user);
 
         // When the $CFG->messagingallusers privacy setting is disabled, MESSAGE_PRIVACY_SITE is
         // also disabled, so it has to be replaced to MESSAGE_PRIVACY_COURSEMEMBER.
@@ -1933,17 +2282,63 @@ class api {
     public static function get_conversation_between_users(array $userids) {
         global $DB;
 
-        $hash = helper::get_conversation_hash($userids);
+        $conversations = self::get_individual_conversations_between_users([$userids]);
+        $conversation = $conversations[0];
 
-        $params = [
-            'type' => self::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
-            'convhash' => $hash
-        ];
-        if ($conversation = $DB->get_record('message_conversations', $params)) {
+        if ($conversation) {
             return $conversation->id;
         }
 
         return false;
+    }
+
+    /**
+     * Returns the conversations between sets of users.
+     *
+     * The returned array of results will be in the same order as the requested
+     * arguments, null will be returned if there is no conversation for that user
+     * pair.
+     *
+     * For example:
+     * If we have 6 users with ids 1, 2, 3, 4, 5, 6 where only 2 conversations
+     * exist. One between 1 and 2 and another between 5 and 6.
+     *
+     * Then if we call:
+     * $conversations = get_individual_conversations_between_users([[1,2], [3,4], [5,6]]);
+     *
+     * The conversations array will look like:
+     * [<conv_record>, null, <conv_record>];
+     *
+     * Where null is returned for the pairing of [3, 4] since no record exists.
+     *
+     * @param array $useridsets An array of arrays where the inner array is the set of user ids
+     * @return stdClass[] Array of conversation records
+     */
+    public static function get_individual_conversations_between_users(array $useridsets) : array {
+        global $DB;
+
+        if (empty($useridsets)) {
+            return [];
+        }
+
+        $hashes = array_map(function($userids) {
+            return  helper::get_conversation_hash($userids);
+        }, $useridsets);
+
+        list($inorequalsql, $params) = $DB->get_in_or_equal($hashes);
+        array_unshift($params, self::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL);
+        $where = "type = ? AND convhash ${inorequalsql}";
+        $conversations = array_fill(0, count($hashes), null);
+        $records = $DB->get_records_select('message_conversations', $where, $params);
+
+        foreach (array_values($records) as $record) {
+            $index = array_search($record->convhash, $hashes);
+            if ($index !== false) {
+                $conversations[$index] = $record;
+            }
+        }
+
+        return $conversations;
     }
 
     /**
@@ -2079,8 +2474,9 @@ class api {
      *
      * @param int $userid The id of the user who is creating the contact request
      * @param int $requesteduserid The id of the user being requested
+     * @return \stdClass the request
      */
-    public static function create_contact_request(int $userid, int $requesteduserid) {
+    public static function create_contact_request(int $userid, int $requesteduserid) : \stdClass {
         global $DB;
 
         $request = new \stdClass();
@@ -2088,32 +2484,9 @@ class api {
         $request->requesteduserid = $requesteduserid;
         $request->timecreated = time();
 
-        $DB->insert_record('message_contact_requests', $request);
+        $request->id = $DB->insert_record('message_contact_requests', $request);
 
-        // Send a notification.
-        $userfrom = \core_user::get_user($userid);
-        $userfromfullname = fullname($userfrom);
-        $userto = \core_user::get_user($requesteduserid);
-        $url = new \moodle_url('/message/pendingcontactrequests.php');
-
-        $subject = get_string('messagecontactrequestsnotificationsubject', 'core_message', $userfromfullname);
-        $fullmessage = get_string('messagecontactrequestsnotification', 'core_message', $userfromfullname);
-
-        $message = new \core\message\message();
-        $message->courseid = SITEID;
-        $message->component = 'moodle';
-        $message->name = 'messagecontactrequests';
-        $message->notification = 1;
-        $message->userfrom = $userfrom;
-        $message->userto = $userto;
-        $message->subject = $subject;
-        $message->fullmessage = text_to_html($fullmessage);
-        $message->fullmessageformat = FORMAT_HTML;
-        $message->fullmessagehtml = $fullmessage;
-        $message->smallmessage = '';
-        $message->contexturl = $url->out(false);
-
-        message_send($message);
+        return $request;
     }
 
 
@@ -2178,6 +2551,24 @@ class api {
         }
 
         return [];
+    }
+
+    /**
+     * Returns the number of contact requests the user has received.
+     *
+     * @param int $userid The ID of the user we want to return the number of received contact requests for
+     * @return int The count
+     */
+    public static function get_received_contact_requests_count(int $userid) : int {
+        global $DB;
+        $sql = "SELECT COUNT(mcr.id)
+                  FROM {message_contact_requests} mcr
+             LEFT JOIN {message_users_blocked} mub
+                    ON mub.userid = mcr.requesteduserid AND mub.blockeduserid = mcr.userid
+                 WHERE mcr.requesteduserid = :requesteduserid
+                   AND mub.id IS NULL";
+        $params = ['requesteduserid' => $userid];
+        return $DB->count_records_sql($sql, $params);
     }
 
     /**
@@ -2325,6 +2716,23 @@ class api {
         global $DB;
 
         return $DB->record_exists('message_users_blocked', ['userid' => $userid, 'blockeduserid' => $blockeduserid]);
+    }
+
+    /**
+     * Get contact requests between users.
+     *
+     * @param int $userid The id of the user who is creating the contact request
+     * @param int $requesteduserid The id of the user being requested
+     * @return \stdClass[]
+     */
+    public static function get_contact_requests_between_users(int $userid, int $requesteduserid) : array {
+        global $DB;
+
+        $sql = "SELECT *
+                  FROM {message_contact_requests} mcr
+                 WHERE (mcr.userid = ? AND mcr.requesteduserid = ?)
+                    OR (mcr.userid = ? AND mcr.requesteduserid = ?)";
+        return $DB->get_records_sql($sql, [$userid, $requesteduserid, $requesteduserid, $userid]);
     }
 
     /**
@@ -2610,22 +3018,78 @@ class api {
      * @param int $userid The user we are returning the conversation members for, used by helper::get_member_info.
      * @param int $conversationid The id of the conversation
      * @param bool $includecontactrequests Do we want to include contact requests with this data?
+     * @param bool $includeprivacyinfo Do we want to include privacy requests with this data?
      * @param int $limitfrom
      * @param int $limitnum
      * @return array
      */
     public static function get_conversation_members(int $userid, int $conversationid, bool $includecontactrequests = false,
-                                                    int $limitfrom = 0, int $limitnum = 0) : array {
+                                                    bool $includeprivacyinfo = false, int $limitfrom = 0,
+                                                    int $limitnum = 0) : array {
         global $DB;
 
         if ($members = $DB->get_records('message_conversation_members', ['conversationid' => $conversationid],
                 'timecreated ASC, id ASC', 'userid', $limitfrom, $limitnum)) {
             $userids = array_keys($members);
-            $members = helper::get_member_info($userid, $userids, $includecontactrequests);
+            $members = helper::get_member_info($userid, $userids, $includecontactrequests, $includeprivacyinfo);
 
             return $members;
         }
 
         return [];
+    }
+
+    /**
+     * Get the unread counts for all conversations for the user, sorted by type, and including favourites.
+     *
+     * @param int $userid the id of the user whose conversations we'll check.
+     * @return array the unread counts for each conversation, indexed by type.
+     */
+    public static function get_unread_conversation_counts(int $userid) : array {
+        global $DB;
+
+        // Get all conversations the user is in, and check unread.
+        $unreadcountssql = 'SELECT conv.id, conv.type, indcounts.unreadcount
+                              FROM {message_conversations} conv
+                        INNER JOIN (
+                                      SELECT m.conversationid, count(m.id) as unreadcount
+                                        FROM {messages} m
+                                  INNER JOIN {message_conversations} mc
+                                          ON mc.id = m.conversationid
+                                  INNER JOIN {message_conversation_members} mcm
+                                          ON m.conversationid = mcm.conversationid
+                                   LEFT JOIN {message_user_actions} mua
+                                          ON (mua.messageid = m.id AND mua.userid = ? AND
+                                             (mua.action = ? OR mua.action = ?))
+                                       WHERE mcm.userid = ?
+                                         AND m.useridfrom != ?
+                                         AND mua.id is NULL
+                                    GROUP BY m.conversationid
+                                   ) indcounts
+                                ON indcounts.conversationid = conv.id
+                             WHERE conv.enabled = 1';
+
+        $unreadcounts = $DB->get_records_sql($unreadcountssql, [$userid, self::MESSAGE_ACTION_READ, self::MESSAGE_ACTION_DELETED,
+            $userid, $userid]);
+
+        // Get favourites, so we can track these separately.
+        $service = \core_favourites\service_factory::get_service_for_user_context(\context_user::instance($userid));
+        $favouriteconversations = $service->find_favourites_by_type('core_message', 'message_conversations');
+        $favouriteconvids = array_flip(array_column($favouriteconversations, 'itemid'));
+
+        // Assemble the return array.
+        $counts = ['favourites' => 0, 'types' => [
+            self::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL => 0,
+            self::MESSAGE_CONVERSATION_TYPE_GROUP => 0
+        ]];
+        foreach ($unreadcounts as $convid => $info) {
+            if (isset($favouriteconvids[$convid])) {
+                $counts['favourites']++;
+                continue;
+            }
+            $counts['types'][$info->type]++;
+        }
+
+        return $counts;
     }
 }

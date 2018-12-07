@@ -86,7 +86,7 @@ class api {
         // Facebook is a custom setup.
         $record = (object) [
             'name' => 'Facebook',
-            'image' => 'https://facebookbrand.com/wp-content/themes/fb-branding/prj-fb-branding/assets/images/fb-art.png',
+            'image' => 'https://facebookbrand.com/wp-content/uploads/2016/05/flogo_rgb_hex-brc-site-250.png',
             'baseurl' => '',
             'loginscopes' => 'public_profile email',
             'loginscopesoffline' => 'public_profile email',
@@ -319,7 +319,9 @@ class api {
     public static function create_endpoints_for_standard_issuer($type, $issuer) {
         require_capability('moodle/site:config', context_system::instance());
         if ($type == 'google') {
-            return self::create_endpoints_for_google($issuer);
+            $issuer = self::create_endpoints_for_google($issuer);
+            self::discover_endpoints($issuer);
+            return $issuer;
         } else if ($type == 'microsoft') {
             return self::create_endpoints_for_microsoft($issuer);
         } else if ($type == 'facebook') {
