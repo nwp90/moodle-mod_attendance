@@ -27,12 +27,12 @@ require_once($CFG->dirroot . '/grade/report/lib.php');
 require_once($CFG->libdir.'/tablelib.php');
 
 //showhiddenitems values
-define("GRADE_REPORT_USER_HIDE_HIDDEN", 0);
-define("GRADE_REPORT_USER_HIDE_UNTIL", 1);
-define("GRADE_REPORT_USER_SHOW_HIDDEN", 2);
+define("GRADE_REPORT_SITEWIDEUSER_HIDE_HIDDEN", 0);
+define("GRADE_REPORT_SITEWIDEUSER_HIDE_UNTIL", 1);
+define("GRADE_REPORT_SITEWIDEUSER_SHOW_HIDDEN", 2);
 
-define("GRADE_REPORT_USER_VIEW_SELF", 1);
-define("GRADE_REPORT_USER_VIEW_USER", 2);
+define("GRADE_REPORT_SITEWIDEUSER_VIEW_SELF", 1);
+define("GRADE_REPORT_SITEWIDEUSER_VIEW_USER", 2);
 
 /**
  * Class providing an API for the user report building and displaying.
@@ -290,8 +290,8 @@ class grade_report_sitewideuser extends grade_report {
         foreach ($element['children'] as $key=>$child) {
             // If category is hidden then do not include it in the rowspan.
             if ($child['type'] == 'category' && $child['object']->is_hidden() && !$this->canviewhidden
-                    && ($this->showhiddenitems == GRADE_REPORT_USER_HIDE_HIDDEN
-                    || ($this->showhiddenitems == GRADE_REPORT_USER_HIDE_UNTIL && !$child['object']->is_hiddenuntil()))) {
+                    && ($this->showhiddenitems == GRADE_REPORT_SITEWIDEUSER_HIDE_HIDDEN
+                    || ($this->showhiddenitems == GRADE_REPORT_SITEWIDEUSER_HIDE_UNTIL && !$child['object']->is_hiddenuntil()))) {
                 // Just calculate the rowspans for children of this category, don't add them to the count.
                 $this->inject_rowspans($element['children'][$key]);
             } else {
@@ -397,8 +397,8 @@ class grade_report_sitewideuser extends grade_report {
 
         // If this is a hidden grade category, hide it completely from the user
         if ($type == 'category' && $grade_object->is_hidden() && !$this->canviewhidden && (
-                $this->showhiddenitems == GRADE_REPORT_USER_HIDE_HIDDEN ||
-                ($this->showhiddenitems == GRADE_REPORT_USER_HIDE_UNTIL && !$grade_object->is_hiddenuntil()))) {
+                $this->showhiddenitems == GRADE_REPORT_SITEWIDEUSER_HIDE_HIDDEN ||
+                ($this->showhiddenitems == GRADE_REPORT_SITEWIDEUSER_HIDE_UNTIL && !$grade_object->is_hiddenuntil()))) {
             return false;
         }
 
@@ -428,8 +428,8 @@ class grade_report_sitewideuser extends grade_report {
             $hide = false;
             // If this is a hidden grade item, hide it completely from the user.
             if ($grade_grade->is_hidden() && !$this->canviewhidden && (
-                    $this->showhiddenitems == GRADE_REPORT_USER_HIDE_HIDDEN ||
-                    ($this->showhiddenitems == GRADE_REPORT_USER_HIDE_UNTIL && !$grade_grade->is_hiddenuntil()))) {
+                    $this->showhiddenitems == GRADE_REPORT_SITEWIDEUSER_HIDE_HIDDEN ||
+                    ($this->showhiddenitems == GRADE_REPORT_SITEWIDEUSER_HIDE_UNTIL && !$grade_grade->is_hiddenuntil()))) {
                 $hide = true;
             } else if (!empty($grade_object->itemmodule) && !empty($grade_object->iteminstance)) {
                 // The grade object can be marked visible but still be hidden if
