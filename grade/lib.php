@@ -1172,7 +1172,7 @@ class grade_plugin_return {
             // groups_get_course_group, which will do some housekeeping as well as
             // give us the correct value.
             $changegroup = optional_param('group', -1, PARAM_INT);
-            if ($changegroup !== -1 or (empty($this->groupid) and !empty($this->courseid))) {
+            if ($changegroup !== -1 or (!isset($this->groupid) and isset($this->courseid))) {
                 if ($course === null) {
                     $course = get_course($this->courseid);
                 }
@@ -1196,29 +1196,29 @@ class grade_plugin_return {
      * @return array options
      */
     public function get_options() {
-        if (empty($this->type)) {
+        if (!isset($this->type)) {
             return array();
         }
 
         $params = array();
 
-        if (!empty($this->plugin)) {
+        if (isset($this->plugin)) {
             $params['plugin'] = $this->plugin;
         }
 
-        if (!empty($this->courseid)) {
+        if (isset($this->courseid)) {
             $params['id'] = $this->courseid;
         }
 
-        if (!empty($this->userid)) {
+        if (isset($this->userid)) {
             $params['userid'] = $this->userid;
         }
 
-        if (!empty($this->groupid)) {
+        if (isset($this->groupid)) {
             $params['group'] = $this->groupid;
         }
 
-        if (!empty($this->page)) {
+        if (isset($this->page)) {
             $params['page'] = $this->page;
         }
 
@@ -1236,34 +1236,34 @@ class grade_plugin_return {
     public function get_return_url($default, $extras=null) {
         global $CFG;
 
-        if (empty($this->type) or empty($this->plugin)) {
+        if (!isset($this->type) or !isset($this->plugin)) {
             return $default;
         }
 
         $url = $CFG->wwwroot.'/grade/'.$this->type.'/'.$this->plugin.'/index.php';
         $glue = '?';
 
-        if (!empty($this->courseid)) {
+        if (isset($this->courseid)) {
             $url .= $glue.'id='.$this->courseid;
             $glue = '&amp;';
         }
 
-        if (!empty($this->userid)) {
+        if (isset($this->userid)) {
             $url .= $glue.'userid='.$this->userid;
             $glue = '&amp;';
         }
 
-        if (!empty($this->groupid)) {
+        if (isset($this->groupid)) {
             $url .= $glue.'group='.$this->groupid;
             $glue = '&amp;';
         }
 
-        if (!empty($this->page)) {
+        if (isset($this->page)) {
             $url .= $glue.'page='.$this->page;
             $glue = '&amp;';
         }
 
-        if (!empty($extras)) {
+        if (isset($extras)) {
             foreach ($extras as $key=>$value) {
                 $url .= $glue.$key.'='.$value;
                 $glue = '&amp;';
@@ -1278,29 +1278,29 @@ class grade_plugin_return {
      * @return string
      */
     public function get_form_fields() {
-        if (empty($this->type)) {
+        if (!isset($this->type)) {
             return '';
         }
 
         $result  = '<input type="hidden" name="gpr_type" value="'.$this->type.'" />';
 
-        if (!empty($this->plugin)) {
+        if (isset($this->plugin)) {
             $result .= '<input type="hidden" name="gpr_plugin" value="'.$this->plugin.'" />';
         }
 
-        if (!empty($this->courseid)) {
+        if (isset($this->courseid)) {
             $result .= '<input type="hidden" name="gpr_courseid" value="'.$this->courseid.'" />';
         }
 
-        if (!empty($this->userid)) {
+        if (isset($this->userid)) {
             $result .= '<input type="hidden" name="gpr_userid" value="'.$this->userid.'" />';
         }
 
-        if (!empty($this->groupid)) {
+        if (isset($this->groupid)) {
             $result .= '<input type="hidden" name="gpr_groupid" value="'.$this->groupid.'" />';
         }
 
-        if (!empty($this->page)) {
+        if (isset($this->page)) {
             $result .= '<input type="hidden" name="gpr_page" value="'.$this->page.'" />';
         }
         return $result;
@@ -1314,34 +1314,34 @@ class grade_plugin_return {
      * @return void
      */
     public function add_mform_elements(&$mform) {
-        if (empty($this->type)) {
+        if (!isset($this->type)) {
             return;
         }
 
         $mform->addElement('hidden', 'gpr_type', $this->type);
         $mform->setType('gpr_type', PARAM_SAFEDIR);
 
-        if (!empty($this->plugin)) {
+        if (isset($this->plugin)) {
             $mform->addElement('hidden', 'gpr_plugin', $this->plugin);
             $mform->setType('gpr_plugin', PARAM_PLUGIN);
         }
 
-        if (!empty($this->courseid)) {
+        if (isset($this->courseid)) {
             $mform->addElement('hidden', 'gpr_courseid', $this->courseid);
             $mform->setType('gpr_courseid', PARAM_INT);
         }
 
-        if (!empty($this->userid)) {
+        if (isset($this->userid)) {
             $mform->addElement('hidden', 'gpr_userid', $this->userid);
             $mform->setType('gpr_userid', PARAM_INT);
         }
 
-        if (!empty($this->groupid)) {
+        if (isset($this->groupid)) {
             $mform->addElement('hidden', 'gpr_groupid', $this->groupid);
             $mform->setType('gpr_groupid', PARAM_INT);
         }
 
-        if (!empty($this->page)) {
+        if (isset($this->page)) {
             $mform->addElement('hidden', 'gpr_page', $this->page);
             $mform->setType('gpr_page', PARAM_INT);
         }
@@ -1355,29 +1355,29 @@ class grade_plugin_return {
      * @return string $url with return tracking params
      */
     public function add_url_params(moodle_url $url) {
-        if (empty($this->type)) {
+        if (!isset($this->type)) {
             return $url;
         }
 
         $url->param('gpr_type', $this->type);
 
-        if (!empty($this->plugin)) {
+        if (isset($this->plugin)) {
             $url->param('gpr_plugin', $this->plugin);
         }
 
-        if (!empty($this->courseid)) {
+        if (isset($this->courseid)) {
             $url->param('gpr_courseid' ,$this->courseid);
         }
 
-        if (!empty($this->userid)) {
+        if (isset($this->userid)) {
             $url->param('gpr_userid', $this->userid);
         }
 
-        if (!empty($this->groupid)) {
+        if (isset($this->groupid)) {
             $url->param('gpr_groupid', $this->groupid);
         }
 
-        if (!empty($this->page)) {
+        if (isset($this->page)) {
             $url->param('gpr_page', $this->page);
         }
 
