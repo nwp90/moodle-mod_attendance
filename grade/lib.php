@@ -1627,11 +1627,12 @@ class grade_structure {
      * @param bool  $withdescription Show description if defined by this item.
      * @param bool  $fulltotal If the item is a category total, returns $categoryname."total"
      *                         instead of "Category total" or "Course total"
+     * @param bool  $newtab Set link target to _blank if true.
      *
      * @return string header
      */
     public function get_element_header(&$element, $withlink = false, $icon = true, $spacerifnone = false,
-        $withdescription = false, $fulltotal = false) {
+    $withdescription = false, $fulltotal = false, $newtab = false) {
         $header = '';
 
         if ($icon) {
@@ -1646,13 +1647,17 @@ class grade_structure {
             return $header;
         }
 
-        if ($withlink && $url = $this->get_activity_link($element)) {
+        if ($withlink && ($url = $this->get_activity_link($element))) {
             $a = new stdClass();
             $a->name = get_string('modulename', $element['object']->itemmodule);
             $a->title = $title;
             $title = get_string('linktoactivity', 'grades', $a);
 
-            $header = html_writer::link($url, $header, array('title' => $title, 'class' => 'gradeitemheader'));
+            $attrs =  array('title' => $title, 'class' => 'gradeitemheader');
+            if ($newtab) {
+                $attrs['target'] = '_blank';
+            }
+            $header = html_writer::link($url, $header, $attrs);
         } else {
             $header = html_writer::span($header, 'gradeitemheader', array('title' => $title, 'tabindex' => '0'));
         }
