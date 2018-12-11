@@ -23,7 +23,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+global $CFG;
+
 require_once(__DIR__.'/fixtures/lib.php');
+require_once($CFG->dirroot . '/grade/lib.php');
 
 
 class core_grade_grade_testcase extends grade_base_testcase {
@@ -193,6 +196,58 @@ class core_grade_grade_testcase extends grade_base_testcase {
 
         $grade->hidden = time()+666;
         $this->assertTrue($grade->is_hidden());
+    }
+
+    public function test_set_hidden_with_gpr() {
+        $this->resetAfterTest(true);
+
+        $course = $this->course;
+        $user1 = $this->user[1];
+        $this->assertTrue($this->getDataGenerator()->enrol_user($user1->id, $course->id, 'student'));
+
+        $group1 = $this->getDataGenerator()->create_group(array('courseid' => $course->id));
+        $group2 = $this->getDataGenerator()->create_group(array('courseid' => $course->id));
+
+        $this->assertTrue($this->getDataGenerator()->create_group_member(
+            array('groupid' => $group1->id, 'userid' => $user1->id)
+        ));
+
+        $quiz1 = $this->getDataGenerator()->create_module(
+            'quiz', array('course' => $course->id, 'name' => 'Quiz One')
+        );
+        $gi = new grade_item(
+            array('courseid' => $course->id, 'itemtype' => 'mod', 'itemmodule' => 'quiz', 'iteminstance' => $quiz1->id)
+        );
+
+        $gpr1 = new grade_plugin_return(
+            array(
+                'type' => 'report',
+                'plugin' => 'grader',
+                'course' => $course,
+                'page' => 1,
+                'groupid' => $group1->id
+            )
+        );
+        $gpr2 = new grade_plugin_return(
+            array(
+                'type' => 'report',
+                'plugin' => 'grader',
+                'course' => $course,
+                'page' => 1,
+                'groupid' => $group2->id
+            )
+        );
+
+        // Create a real grade_grade for $user1 for $gi.
+        $grade = new grade_grade(array('itemid' => $gi->id, 'userid' => $user1->id));
+
+        $grade->set_hidden(1, false, $gpr1);
+        // $grade is for $user1, $gpr1 is for $group1, which includes $user1.
+        $this->assertEquals(1, $grade->hidden);
+
+        // $grade is for $user1, $gpr2 is for $group2, which does not include $user1.
+        $grade->set_hidden(0, false, $gpr2);
+        $this->assertEquals(1, $grade->hidden);
     }
 
     public function test_flatten_dependencies() {

@@ -39,6 +39,173 @@ require_once($CFG->dirroot . '/grade/lib.php');
 class core_grade_lib_test extends advanced_testcase {
 
     /**
+     * Test grade_plugin_return
+     */
+    public function test_grade_tree() {
+        $this->resetAfterTest();
+
+        $generator = $this->getDataGenerator();
+        $course = $generator->create_course();
+        $user1 = $generator->create_user();
+        $user2 = $generator->create_user();
+        $user3 = $generator->create_user();
+        $generator->enrol_user($user1->id, $course->id);
+        $generator->enrol_user($user2->id, $course->id);
+        $generator->enrol_user($user3->id, $course->id);
+        $group1 = $generator->create_group(array('courseid' => $course->id, 'name' => 'Group One'));
+        $group2 = $generator->create_group(array('courseid' => $course->id, 'name' => 'Group Two'));
+
+        $coursecat = grade_category::fetch_course_category($course->id);
+
+        // Add a grade category with default settings.
+        $cat1 = $generator->create_grade_category(
+            array('courseid' => $course->id, 'fullname' => 'Category One')
+        );
+        $cat2 = $generator->create_grade_category(
+            array('courseid' => $course->id, 'fullname' => 'Category Two')
+        );
+        $cat3 = $generator->create_grade_category(
+            array('courseid' => $course->id, 'parent' => $cat2->id, 'fullname' => 'Category Three')
+        );
+        // Grade tree now looks something like:
+        // - Course
+        // -- Category One
+        // -- Category Two
+        // --- Category Three
+
+        $gradetree = new grade_tree($course->id, false, false);
+        $ccateid = $gradetree->get_category_eid($coursecat);
+        $cat1eid = $gradetree->get_category_eid($cat1);
+        $cat2eid = $gradetree->get_category_eid($cat2);
+        $cat3eid = $gradetree->get_category_eid($cat3);
+
+        // Test hidden/shown grade counting...
+
+        $ccatelem = $gradetree->locate_element($ccateid);
+        $cat1elem = $gradetree->locate_element($cat1eid);
+        $cat2elem = $gradetree->locate_element($cat2eid);
+        $cat3elem = $gradetree->locate_element($cat3eid);
+
+        // These keys should not exist until/unless counting helpers are used...
+        $this->assertFalse(array_key_exists('showngrades', $ccatelem));
+        $this->assertFalse(array_key_exists('showngrades', $cat1elem));
+        $this->assertFalse(array_key_exists('showngrades', $cat2elem));
+        $this->assertFalse(array_key_exists('showngrades', $cat3elem));
+        $this->assertFalse(array_key_exists('hiddengrades', $ccatelem));
+        $this->assertFalse(array_key_exists('hiddengrades', $cat1elem));
+        $this->assertFalse(array_key_exists('hiddengrades', $cat2elem));
+        $this->assertFalse(array_key_exists('hiddengrades', $cat3elem));
+
+        // Add counts using counting helpers...
+        $gradetree->addhidden($cat1eid);
+        $gradetree->addshown($cat1eid);
+        $gradetree->addshown($cat1eid);
+        $gradetree->addhidden($cat2eid);
+        $gradetree->addhidden($cat2eid);
+        $gradetree->addshown($cat3eid);
+        $gradetree->addshown($cat3eid);
+
+        // Get updated elements...
+        $ccatelem = $gradetree->locate_element($ccateid);
+        $cat1elem = $gradetree->locate_element($cat1eid);
+        $cat2elem = $gradetree->locate_element($cat2eid);
+        $cat3elem = $gradetree->locate_element($cat3eid);
+
+        // Compare counts to what we expect...
+        $this->assertEquals($cat3elem['showngrades'], 2);
+        $this->assertEquals($cat2elem['showngrades'], 2);
+        $this->assertEquals($cat1elem['showngrades'], 2);
+        $this->assertEquals($ccatelem['showngrades'], 4);
+
+        $this->assertEquals($cat3elem['hiddengrades'], 0);
+        $this->assertEquals($cat2elem['hiddengrades'], 2);
+        $this->assertEquals($cat1elem['hiddengrades'], 1);
+        $this->assertEquals($ccatelem['hiddengrades'], 3);
+
+        // End test hidden/shown grade counting.
+    }
+
+    /**
+     * Test grade_plugin_return
+     */
+    public function test_gpr() {
+        $this->resetAfterTest();
+
+        $generator = $this->getDataGenerator();
+        $course = $generator->create_course();
+        $user1 = $generator->create_user();
+        $user2 = $generator->create_user();
+        $user3 = $generator->create_user();
+        $generator->enrol_user($user1->id, $course->id);
+        $generator->enrol_user($user2->id, $course->id);
+        $generator->enrol_user($user3->id, $course->id);
+        $group1 = $generator->create_group(array('courseid' => $course->id, 'name' => 'Group One'));
+        $group2 = $generator->create_group(array('courseid' => $course->id, 'name' => 'Group Two'));
+        $this->assertTrue($generator->create_group_member(array('groupid' => $group1->id, 'userid' => $user1->id)));
+        $this->assertTrue($generator->create_group_member(array('groupid' => $group2->id, 'userid' => $user2->id)));
+
+        $gpr = new grade_plugin_return(
+            array(
+                'type' => 'report',
+                'plugin' => 'grader',
+                'course' => $course,
+                'page' => 1,
+                'groupid' => $group1->id,
+                'userid' => $user1->id
+            )
+        );
+
+        $this->assertTrue($gpr->includes_user($user1->id));
+        $this->assertFalse($gpr->includes_user($user2->id));
+        $this->assertFalse($gpr->includes_user($user3->id));
+
+        $gpr = new grade_plugin_return(
+            array(
+                'type' => 'report',
+                'plugin' => 'grader',
+                'course' => $course,
+                'page' => 1,
+                'groupid' => null,
+                'userid' => null,
+            )
+        );
+
+        $this->assertTrue($gpr->includes_user($user1->id));
+        $this->assertTrue($gpr->includes_user($user2->id));
+        $this->assertTrue($gpr->includes_user($user3->id));
+
+        $gpr = new grade_plugin_return(
+            array(
+                'type' => 'report',
+                'plugin' => 'grader',
+                'course' => $course,
+                'page' => 1,
+                'groupid' => $group2->id,
+                'userid' => null,
+            )
+        );
+
+        $this->assertFalse($gpr->includes_user($user1->id));
+        $this->assertTrue($gpr->includes_user($user2->id));
+        $this->assertFalse($gpr->includes_user($user3->id));
+
+        $gpr = new grade_plugin_return(
+            array(
+                'type' => 'report',
+                'plugin' => 'grader',
+                'course' => $course,
+                'page' => 1,
+                'groupid' => 0,
+                'userid' => null,
+            )
+        );
+
+        $this->assertTrue($gpr->includes_user($user1->id));
+        $this->assertTrue($gpr->includes_user($user2->id));
+        $this->assertTrue($gpr->includes_user($user3->id));
+    }
+
+    /**
      * Test can_output_item.
      */
     public function test_can_output_item() {

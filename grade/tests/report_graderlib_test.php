@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Unit tests for grade/report/user/lib.php.
+ * Unit tests for grade/report/grader/lib.php.
  *
  * @package  core_grades
  * @category phpunit
@@ -297,6 +297,97 @@ class core_grade_report_graderlib_testcase extends advanced_testcase {
         $this->assertCount(3, $result);
     }
 
+    /**
+     * Tests the load_final_grades function with hidden/shown counting.
+     */
+    public function test_load_final_grades() {
+        global $USER, $DB;
+        $this->resetAfterTest(true);
+
+        // Create manager and student on a course.
+        $generator = $this->getDataGenerator();
+        $manager = $generator->create_user();
+        $student1 = $generator->create_user();
+        $student2 = $generator->create_user();
+        $student3 = $generator->create_user();
+        $course = $generator->create_course();
+        $generator->enrol_user($manager->id, $course->id, 'manager');
+        $generator->enrol_user($student1->id, $course->id, 'student');
+        $generator->enrol_user($student2->id, $course->id, 'student');
+        $generator->enrol_user($student3->id, $course->id, 'student');
+        $group1 = $generator->create_group(array('courseid' => $course->id, 'name' => 'Group One'));
+        $group2 = $generator->create_group(array('courseid' => $course->id, 'name' => 'Group Two'));
+        $generator->create_group_member(array('groupid' => $group1->id, 'userid' => $student1->id));
+        $generator->create_group_member(array('groupid' => $group1->id, 'userid' => $student3->id));
+        $generator->create_group_member(array('groupid' => $group2->id, 'userid' => $student2->id));
+
+        $gpr = new grade_plugin_return(
+            array(
+                'type' => 'report',
+                'plugin' => 'grader',
+                'course' => $course,
+                'page' => 1,
+                'groupid' => $group1->id
+            )
+        );
+
+        // Create a couple of quizzes on the course.
+        $quiz1 = $generator->create_module('quiz', array('course' => $course->id,
+                'name' => 'Quiz One'));
+        $quiz2 = $generator->create_module('quiz', array('course' => $course->id,
+                'name' => 'Quiz Two'));
+
+        // Set current user.
+        $this->setUser($manager);
+
+        // Get the report.
+        $report = $this->create_report($course);
+        $report->load_users();
+        $report->load_final_grades();
+
+        /* Now that load_final_grades has run and created missing grade_grade objects,
+         * we can test hiding and showing grades...
+         */
+        $coursecat = grade_category::fetch_course_category($course->id);
+        $gradetree = new grade_tree($course->id, false, false);
+
+        // Get grade_item for specific quiz
+        $gi = new grade_item(
+            array('courseid' => $course->id, 'itemtype' => 'mod', 'itemmodule' => 'quiz', 'iteminstance' => $quiz1->id)
+        );
+        $gi2 = new grade_item(
+            array('courseid' => $course->id, 'itemtype' => 'mod', 'itemmodule' => 'quiz', 'iteminstance' => $quiz2->id)
+        );
+
+        $ccat = grade_category::fetch_course_category($course->id);
+        $ccateid = $report->gtree->get_category_eid($ccat);
+        $ccatelem = $report->gtree->locate_element($ccateid);
+
+        // Hide a group's grade_grades via grade_item using gpr...
+        $gi->set_hidden(1, true, $gpr);
+
+        // Get grade_grade for all users.
+        $gglist = grade_grade::fetch_users_grades($gi, array($student1->id, $student2->id, $student3->id), true);
+
+        // Check hiddenness of each grade_grade - students in group 1 should have hidden grades...
+        $this->assertTrue($gglist[$student1->id]->is_hidden());
+        $this->assertFalse($gglist[$student2->id]->is_hidden());
+        $this->assertTrue($gglist[$student3->id]->is_hidden());
+
+        // Redo the report (counts are only calculated when report is generated)...
+        $report = $this->create_report($course);
+        $report->load_users();
+        $report->load_final_grades();
+
+        $ccat = grade_category::fetch_course_category($course->id);
+        $ccateid = $report->gtree->get_category_eid($ccat);
+        $ccatelem = $report->gtree->locate_element($ccateid);
+
+        // Two quizzes, three grades each, two hidden at present...
+        $this->assertEquals(4, $ccatelem['showngrades']);
+        $this->assertEquals(2, $ccatelem['hiddengrades']);
+    }
+
     private function create_grade_category($course) {
         static $cnt = 0;
         $cnt++;
@@ -315,4 +406,5 @@ class core_grade_report_graderlib_testcase extends advanced_testcase {
 
         return $report;
     }
+
 }
