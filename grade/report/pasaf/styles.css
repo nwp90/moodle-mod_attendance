@@ -1,0 +1,77 @@
+.path-grade-report-pasaf #graded_users_selector {
+    float: right;
+    margin-bottom: 5px;
+}
+
+.path-grade-report-pasaf .view_users_selector {
+    clear: both;
+    float: right;
+    margin-bottom: 5px;
+}
+
+.path-grade-report-pasaf #graded_users_selector .singleselect label,
+.path-grade-report-pasaf .view_users_selector .singleselect label {
+    display: inline-block;
+}
+
+.path-grade-report-pasaf .user-grade {
+    width: 100%;
+    border: 0px;
+}
+
+.path-grade-report-pasaf .user-grade thead th {
+    vertical-align: bottom;
+}
+
+.path-grade-report-pasaf .user-grade th {
+    text-align: left;
+}
+
+.path-grade-report-pasaf .user-grade td {
+    min-width: 4.5em;
+    vertical-align: top;
+}
+
+.path-grade-report-pasaf .user-grade .b1l {
+    padding: 0;
+    width: 24px;
+    min-width: 24px;
+}
+
+.path-grade-report-pasaf .user-grade tbody .column-itemname {
+    padding-left: 0;
+    padding-right: 8px;
+}
+
+.path-grade-report-pasaf .user-grade .column-itemname.item,
+.path-grade-report-pasaf .user-grade .gradeitemdescription {
+    font-weight: normal;
+    padding-left: 24px;
+}
+
+.path-grade-report-pasaf .user-grade .column-itemname.baggt,
+.path-grade-report-pasaf .user-grade .column-itemname.baggb {
+    padding-left: 24px;
+}
+
+.path-grade-report-pasaf .user-grade .baggt,
+.path-grade-report-pasaf .user-grade .baggb {
+    font-weight: bold;
+}
+
+/* Following from overrides in bootstrapbase theme, needed to make row
+   colouring sane in bootstrapbase-based themes
+ */
+.path-grade-report-pasaf .user-grade {
+    border: none
+}
+
+.path-grade-report-pasaf .user-grade.generaltable .levelodd {
+    background-color: #f9f9f9
+}
+
+.path-grade-report-pasaf .user-grade.generaltable .leveleven {
+    background-color: transparent
+}
+
+/* end bootstrapbase bits */
