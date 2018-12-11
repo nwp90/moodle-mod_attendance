@@ -28,6 +28,7 @@ draftfile.php                  /srv/moodle/otagounifom/moodle/
 enrol                          /srv/moodle/otagounifom/moodle/
 error                          /srv/moodle/otagounifom/moodle/
 favicon.ico		       /srv/moodle/otagounifom/moodle/
+favourites                     /srv/moodle/otagounifom/moodle/
 file.php                       /srv/moodle/otagounifom/moodle/
 files                          /srv/moodle/otagounifom/moodle/
 filter                         /srv/moodle/otagounifom/moodle/
@@ -64,6 +65,7 @@ rss                            /srv/moodle/otagounifom/moodle/
 search                         /srv/moodle/otagounifom/moodle/
 tag                            /srv/moodle/otagounifom/moodle/
 theme                          /srv/moodle/otagounifom/moodle/
+tokenpluginfile.php            /srv/moodle/otagounifom/moodle/
 user                           /srv/moodle/otagounifom/moodle/
 userpix                        /srv/moodle/otagounifom/moodle/
 version.php                    /srv/moodle/otagounifom/moodle/
