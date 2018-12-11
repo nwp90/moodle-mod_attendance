@@ -1,0 +1,101 @@
+Template: moodle-site-otagounifom/db_host
+Type: string
+Default: 
+Description: Database host:
+ Which database host should be used for the moodle sites installed here?
+ You can leave this blank to connect via UNIX sockets
+
+Template: moodle-site-otagounifom/db_port
+Type: string
+Default:
+Description: Database port:
+ Which database port should be used for the moodle sites installed here?
+ You can leave this blank for the default
+
+Template: moodle-site-otagounifom/db_user
+Type: string
+Default: otagounifom-moodle
+Description: Database username:
+ Which username should be used to connect to the database?
+
+Template: moodle-site-otagounifom/db_pass
+Type: string
+Default:
+Description: Database password
+ Password to use to connect to the database.
+
+Template: moodle-site-otagounifom/db_database
+Type: string
+Default: otagounifom-moodle
+Description: Database name
+ Name of the database to use.
+
+Template: moodle-site-otagounifom/servername
+Type: string
+Default: SET_SERVERNAME_HERE
+Description: Server name:
+ This is the servername of the otagounifom moodle install.
+ .
+ Note that this is just the domain name, so for "http://my.site.com" you only
+ need to enter "my.site.com"
+
+Template: moodle-site-otagounifom/serverip
+Type: string
+Default: *
+Description: IP address to serve on:
+ This is the IP address to listen on
+ .
+ Usually best to leave this as '*'.
+ In certain cases (eg https sites), you may need to specify this in the form a.b.c.d
+
+Template: moodle-site-otagounifom/serverport
+Type: string
+Default: 80
+Description: Port to serve on:
+ Usually safe to leave this as 80
+ In certain cases eg https sites, you may want to specify something different eg 443
+
+Template: moodle-site-otagounifom/salt
+Type: string
+Default: 
+Description: Password Salt:
+ What salt should be added to users' passwords before hashing?
+
+Template: moodle-site-otagounifom/usessl
+Type: boolean
+Default: false
+Description: Should this site use ssl
+ Selecting this option configures the site for SSL - in most cases you don't want this.
+ This option employs a redirect to your sitename on port 80
+ and sets the necessary config options to use ssl.
+ If you select this option, you need to supply an SSL certificate in the
+ appropriate place, and check apache is serving on 443.
+
+Template: moodle-site-otagounifom/serverredirects
+Type: string
+Default:
+Description: Server redirects:
+ Comma separated list of domain names that the server should permanently
+ redirect to the server name.
+ .
+ Note that this is just the domain name, so for "http://my.site.com" you only
+ need to enter "my.site.com"
+ The server will redirect any requests to the specified domains on port 80 to
+ the site's url.
+
+Template: moodle-site-otagounifom/serveralias
+Type: string
+Default:
+Description: Server aliases:
+ Comma separated list of domain names that the server should accept as aliases
+ for the site
+ .
+ Note that this is just the domain name, so for "http://my.site.com" you only
+ need to enter "my.site.com"
+
+Template: moodle-site-otagounifom/enabledav
+Type: boolean
+Default: false
+Description: Enable WebDAV Support
+ This enables access to the moodle data directory via the
+ http://sitename/coursedata/ URL.

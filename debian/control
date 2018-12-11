@@ -1,0 +1,18 @@
+Source: moodle-site-otagounifom
+Section: web
+Priority: optional
+Maintainer: Chris Wharton <chrisw@catalyst.net.nz>
+Build-Depends: debhelper (>= 5)
+Standards-Version: 3.7.2
+
+Package: moodle-site-otagounifom
+Architecture: all
+Depends: moodle-base, ${misc:Depends}, apache2, libapache2-mod-php5 (>=5.2.8), php5-pgsql, cron, php5-cli (>=5.2.8), aspell, php5-curl, php5-xmlrpc, php5-gd, php5-intl, pwgen, bash, ghostscript, aexec
+Recommends: postgresql, postgresql-client, clamav, clamav-daemon
+Suggests: php5-imagick
+Pre-Depends: m4, perl
+Description: Course Management System for Online Learning
+ Moodle (Modular Object-Oriented Dynamic Learning Environment) is a course
+ management system - a software package designed to help educators create
+ quality online courses. One of the main advantages of Moodle over other
+ systems is a strong grounding in social constructionist pedagogy.

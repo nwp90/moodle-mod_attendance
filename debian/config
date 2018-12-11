@@ -1,0 +1,33 @@
+#!/bin/bash -e
+
+# Source debconf library.
+. /usr/share/debconf/confmodule
+
+# Decide how important it is for the user to see this message
+PRIORITY=high
+
+db_input $PRIORITY moodle-site-otagounifom/db_host || true
+db_input $PRIORITY moodle-site-otagounifom/db_port || true
+db_input $PRIORITY moodle-site-otagounifom/db_database || true
+db_input $PRIORITY moodle-site-otagounifom/db_user || true
+db_input $PRIORITY moodle-site-otagounifom/db_pass || true
+db_go
+db_input $PRIORITY moodle-site-otagounifom/salt || true
+db_go
+
+db_input $PRIORITY moodle-site-otagounifom/servername || true
+db_input $PRIORITY moodle-site-otagounifom/serveralias || true
+db_input $PRIORITY moodle-site-otagounifom/serverredirects || true
+db_go
+db_input $PRIORITY moodle-site-otagounifom/enabledav || true
+db_input $PRIORITY moodle-site-otagounifom/usessl || true
+db_go
+db_get moodle-site-otagounifom/usessl
+if [ "${RET}" = "true" ]; then
+    db_set moodle-site-otagounifom/serverport 443 || true
+    db_input $PRIORITY moodle-site-otagounifom/serverip || true
+    db_go
+else
+    db_set moodle-site-otagounifom/serverport 80 || true
+    db_set moodle-site-otagounifom/serverip '*' || true
+fi

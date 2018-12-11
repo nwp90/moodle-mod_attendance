@@ -1,0 +1,1057 @@
+moodle-site-otagounifom (3.4.6.2018121000+0facmed1-1) stretch; urgency=medium
+
+  * Update to latest 3.4.6
+  * Add gradereport_pasaf plugin
+  * Tweaks to grade/lib.php as required to enable pasaf report.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 11 Dec 2018 14:53:55 +1300
+
+moodle-site-otagounifom (3.4.6.2018111600+0facmed1-1) stretch; urgency=medium
+
+  * New upstream version
+  * Update local_presentation to have assessment-related WS
+  * Update local_presentation stats WS
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 23 Nov 2018 10:23:57 +1300
+
+moodle-site-otagounifom (3.4.5.2018091400+0facmed1-1) stretch; urgency=high
+
+  * New upstream version, security fixes, incl. RCE with question import.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 18 Sep 2018 10:15:38 +1200
+
+moodle-site-otagounifom (3.4.5.2018091000+0facmed1-1) stretch; urgency=medium
+
+  * New upstream version
+  * Add mi lang file to medschool_topics course format
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 10 Sep 2018 16:06:20 +1200
+
+moodle-site-otagounifom (3.4.4.2018083100+0facmed1-2) stretch; urgency=medium
+
+  * New upstream version
+  * Local fixes to sitewideuser report and gradingstudents plugins
+  * Update tii plugins
+  * Update mod_subcourse
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 05 Sep 2018 13:27:23 +1200
+
+moodle-site-otagounifom (3.4.4.2018070900+0facmed1-1) stretch; urgency=medium
+
+  * New upstream version, security fixes.
+  * Don't show mod_assign review panel when no submissions possible.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 18 Jul 2018 13:07:17 +1200
+
+moodle-site-otagounifom (3.4.3.2018062800+0facmed1-1) stretch; urgency=medium
+
+  * New upstream version
+  * All possible plugins updated to latest released versions
+  * Add TurnItIn plugins
+  * Re-fix gpr tracking in line with currently proposed upstream (MDL-59169)
+  * Per-session event creation option for mod_attendance
+  * Fixed link text in assignsubmission_gradereviews
+  * Setting to allow/disallow override of core images by theme
+  * Errr... that's it.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 04 Jul 2018 09:27:17 +1200
+
+moodle-site-otagounifom (3.4.3.2018051700+0facmed5-1) stretch; urgency=medium
+
+  * Fixes to cmapcore block, & rebuild AMD code.
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 28 May 2018 15:15:03 +1200
+
+moodle-site-otagounifom (3.4.3.2018051700+0facmed4-1) stretch; urgency=medium
+
+  * Fixes to cmapcore block
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 28 May 2018 12:36:06 +1200
+
+moodle-site-otagounifom (3.4.3.2018051700+0facmed3-1) stretch; urgency=medium
+
+  * Update medschool_topics format
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 23 May 2018 12:36:09 +1200
+
+moodle-site-otagounifom (3.4.3.2018051700+0facmed2-1) stretch; urgency=medium
+
+  * Bugfix to medschool_topics format
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 21 May 2018 10:24:36 +1200
+
+moodle-site-otagounifom (3.4.3.2018051700+0facmed1-1) stretch; urgency=medium
+
+  * New upstream version 3.4.3 (security update)
+  * Revert bootstrapbase tweak for FA5, as we can't get it working
+    right with CSS pseudoelements at present.
+  * Add cmapcore block
+  * Tweak medschool_topics format to work with FA5
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 18 May 2018 15:11:46 +1200
+
+moodle-site-otagounifom (3.4.2.2018051500+0facmed1-2) stretch; urgency=medium
+
+  * Re-ran grunt css generation.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 16 May 2018 17:15:10 +1200
+
+moodle-site-otagounifom (3.4.2.2018051500+0facmed1-1) stretch; urgency=medium
+
+  * New upstream version.
+  * Tweak to bootstrapbase to use FA5 (free or pro) pluggably.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 16 May 2018 16:59:12 +1200
+
+moodle-site-otagounifom (3.4.2.2018041200+0facmed1-1) stretch; urgency=medium
+
+  * New upstream version. Such fixes. Very debug. Wow.
+  * Add ereserve plugins (local/ereserve_plus, atto/plugins/ereserve
+    and tinymce/plugins/ereserve)
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 13 Apr 2018 14:20:05 +1200
+
+moodle-site-otagounifom (3.4.2.2018031900+0facmed1-2) stretch; urgency=medium
+
+  * Fix debian/install for new privacy dir at top level.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 21 Mar 2018 12:01:19 +1300
+
+moodle-site-otagounifom (3.4.2.2018031900+0facmed1-1) stretch; urgency=medium
+
+  * Upstream update, 3.4.2, with significant change being privacy API
+  * Also security fixes CVE-2018-1081, CVE-2018-1082
+  * Other standard Moodle stable bugfixes.
+  * Local fix for multigrader report
+  * local_presentation new API function for users in roles in courses,
+    for curriculum map use.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 21 Mar 2018 11:55:34 +1300
+
+moodle-site-otagounifom (3.4.1.2018021600+0facmed4-1) stretch; urgency=medium
+
+  * Fix multigrader report.
+  * Extra API function in local_presentation to get users in roles in
+    given course (needed for curriculum map).
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 21 Mar 2018 10:05:43 +1300
+
+moodle-site-otagounifom (3.4.1.2018021600+0facmed3-1) stretch; urgency=medium
+
+  * Minor fixes to prevent warnings in apache log
+  * Allow unlimited number of events in calendar viewing on Moodle
+    (update to patch for MDL-59650)
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 28 Feb 2018 16:06:41 +1300
+
+moodle-site-otagounifom (3.4.1.2018021600+0facmed2-1) stretch; urgency=medium
+
+  * Fixes to mod_attendance
+  * Use marinaglancy fix for MDL-56635 (likely to become official)
+  * Interim fix for MDL-59650 (export unlimited calendar entries)
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 22 Feb 2018 16:00:46 +1300
+
+moodle-site-otagounifom (3.4.1.2018021600+0facmed1-1) stretch; urgency=medium
+
+  * New upstream version
+  * Updated mod_qcreate to new upstream version
+  * Local fix for MDL-56635 (tag_cron_task cleanup invalid query)
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 16 Feb 2018 14:03:34 +1300
+
+moodle-site-otagounifom (3.4.1.2018020800+0facmed3-1) stretch; urgency=medium
+
+  * Merge markn86/MDL-61375_34 (so mod_chat doesn't break cron)
+  * Fix our previous fix for mod_qcreate (so mod_qcreate doesn't break cron)
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 15 Feb 2018 14:17:47 +1300
+
+moodle-site-otagounifom (3.4.1.2018020800+0facmed2-1) stretch; urgency=medium
+
+  * Fix to fix for MDL-61426; normal users need their group events too!
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 15 Feb 2018 09:52:53 +1300
+
+moodle-site-otagounifom (3.4.1.2018020800+0facmed1-1) stretch; urgency=medium
+
+  * New upstream version
+  * More calendar fixes:
+    - MDL-61426 temporary fix pending integration of MDL-58768;
+      commit 480a88e9ebb6771922f16e07f4206a43ce2bef0a should be reverted
+      once MDL-58768 fix available.
+    - Also via MDL-61426 but not part of MDL-58768, commit
+      278137f9bc74a0ef52e0322fd690017ccae32de8 (which also relies on
+      MDL-61409 fix below) will need replacing when MDL-61409 and MDL-58768
+      are resolved.
+    - Above two temporary fixes cause correct group/user events to be
+      exported via calendar export URL.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 13 Feb 2018 17:02:09 +1300
+
+moodle-site-otagounifom (3.4.1.2018012500+0facmed4-1) stretch; urgency=medium
+
+  * More calendar fixes:
+    - MDL-60958 from Ryan Wyllie
+    - Initial version of fix to event creation (MDL-61409),
+      commits 2d919edce9556f095873a6f5fdeffcfe139d098a,
+      a9c2c56d7b421f63d757e0fcb3800bc87608c30c - to be reverted
+      and replaced with eventual solution to MDL-61409 when available.
+  * Fix mod_qcreate lib.php to import locallib in qcreate_refresh_events
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 12 Feb 2018 10:32:01 +1300
+
+moodle-site-otagounifom (3.4.1.2018012500+0facmed3-1) stretch; urgency=medium
+
+  * Missing version was contingency plan in case calendar speedups were
+    a disaster; they weren't.
+  * But they weren't right either; they have been reverted and replaced
+    by separate versions of the improvements that were included there.
+  * MDL-60959 Remove redundancy in calendar exporters for calendar month view
+  * MDL-60960 Check course enrolment later in event factory early bailout check
+  * MDL-60962 Load the calendar blocks after page load
+  * MDL-60963 Use related cache to load course modules during event export
+  * MDL-60966 Allow contexts to be passed into external format functions
+  * Not yet included - MDL-60958 Stop loading parent record in repeat
+    collection
+  * Wontfix - MDL-60961 Batch load groups in calendar_set_filters
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 31 Jan 2018 08:47:12 +1300
+
+moodle-site-otagounifom (3.4.1.2018012500+0facmed1-1) stretch; urgency=medium
+
+  * New upstream weekly
+  * Ryan Wyllie's calendar speedups (MDL-60402)
+  * Fix to studentquiz db/upgrade.php
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 30 Jan 2018 16:10:04 +1300
+
+moodle-site-otagounifom (3.4.1.2018011700+0facmed5-2) stretch; urgency=medium
+
+  * Fix error in qtype_gapfill update
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 26 Jan 2018 15:17:03 +1300
+
+moodle-site-otagounifom (3.4.1.2018011700+0facmed4-1) stretch; urgency=medium
+
+  * Fix error in admin_presets block update
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 26 Jan 2018 15:09:38 +1300
+
+moodle-site-otagounifom (3.4.1.2018011700+0facmed3-1) stretch; urgency=medium
+
+  * Fix error in mod_publication update.
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 26 Jan 2018 14:26:27 +1300
+
+moodle-site-otagounifom (3.4.1.2018011700+0facmed2-1) stretch; urgency=medium
+
+  * Update plugins.
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 26 Jan 2018 14:10:23 +1300
+
+moodle-site-otagounifom (3.4.1.2018011700+0facmed1-1) stretch; urgency=medium
+
+  * 3.4.1, security update, actually targeting stretch.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 17 Jan 2018 10:57:06 +1300
+
+moodle-site-otagounifom (3.4.0.2017111600+0facmed1-1) jessie; urgency=medium
+
+  * Release!
+  * Would target stretch, as Moodle now requires PHP7, which basically
+    means we can only deploy to stretch... but that needs pbuilder to
+    be ready for it, which means upgrading pbuilder host to stretch,
+    and we're not quite ready for that yet.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 21 Nov 2017 10:17:17 +1300
+
+moodle-site-otagounifom (3.4.0~2017102700+0facmed1-1) jessie; urgency=medium
+
+  * Upstream -> 3.4beta+ (2017102700)
+  * New plugins
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 03 Nov 2017 16:49:02 +1300
+
+moodle-site-otagounifom (3.4.0~2017090700+0facmed5-1) jessie; urgency=medium
+
+  * Fixes from testing mod_bootstrapelements and format_medschool_topics
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 04 Oct 2017 15:54:38 +1300
+
+moodle-site-otagounifom (3.4.0~2017090700+0facmed4-1) jessie; urgency=medium
+
+  * Update format-medschool_topics to latest.
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 02 Oct 2017 14:19:43 +1300
+
+moodle-site-otagounifom (3.4.0~2017090700+0facmed3-1) jessie; urgency=medium
+
+  * Upgrade mod_attendance from git, to get optional calendar entries.
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 02 Oct 2017 09:34:41 +1300
+
+moodle-site-otagounifom (3.4.0~2017090700+0facmed2-1) jessie; urgency=medium
+
+  * Add medschool_topics format, fix mod_bootstrapelements modals
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 19 Sep 2017 13:54:54 +1200
+
+moodle-site-otagounifom (3.4.0~2017090700+0facmed1-2) jessie; urgency=medium
+
+  * Fix packaging (debian/install)
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 18 Sep 2017 08:36:18 +1200
+
+moodle-site-otagounifom (3.4.0~2017090700+0facmed1-1) jessie; urgency=medium
+
+  * Update to latest 3.4dev
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 08 Sep 2017 11:55:15 +1200
+
+moodle-site-otagounifom (3.4.0~2017071400+0facmed1-1) jessie; urgency=medium
+
+  * 3.4 development version, for testing.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 18 Jul 2017 11:57:39 +1200
+
+moodle-site-otagounifom (3.2.3.2017060800+0facmed1-1) jessie; urgency=medium
+
+  * New upstream weekly
+  * Fix for local_presentation web services
+  * MDL-50011, default settings for new multichoice questions
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 15 Jun 2017 10:13:28 +1200
+
+moodle-site-otagounifom (3.2.3.2017060100+0facmed1-1) jessie; urgency=medium
+
+  * Fix sitewideuser fix from previous version
+  * Update qbehaviour_studentquiz to 2017053101
+  * Update mod_checklist to 2017060500
+  * Update gradeexport_checklist to 2017051200
+  * Update mod_hvp to 1.4 (2017060600)
+  * Update mod_poster to 5.0 (2017051200)
+  * Update mod_teambuilder to 2017051900
+  * Update mod_questionnaire to "2016111107" (actually 2017051800)
+  * Update mod_realtimequiz to 2017051201
+  * Update atto_morebackcolors to 2017050100 (version.php only change)
+  * Update atto_morefontcolors to 2017050100
+  * Update assignsubmission_gradereviews to local version 2017060600.
+    Parallel to upstream 2016042207 but with our names for capabilities,
+    which are known to be working.
+  * Update to Moodle 3.2.3+ 20170601, including fixes for: MDL-57313,
+    MDL-49040, MDL-58997, MDL-49988, MDL-54887, MDL-59093, MDL-59094.
+    Most important of these is 49040, truncation of feedback after '&' char.
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 08 Jun 2017 08:59:40 +1200
+
+moodle-site-otagounifom (3.2.3.2017052500+0facmed1-1) jessie; urgency=medium
+
+  * Upgrade to latest upstream weekly stable.
+  * Update studentquiz to latest, with fix for speed issue
+  * Update local_presentation to work with new-style tagging (incomplete!)
+  * Add mod-hvp (H5P) plugin
+  * Attempt to fix MDL-55532 (export category names in grade reports)
+  * Attempt to fix gradereport-sitewideuser for new availabilty API
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 01 Jun 2017 14:41:49 +1200
+
+moodle-site-otagounifom (3.2.3.2017051100+0facmed1-1) jessie; urgency=medium
+
+  * Upstream security update, includes fixes for CVE-2017-7489/MDL-58635,
+    CVE-2017-7490/MDL-58670, CVE-2017-7491/MDL-58740, MDL-58259.
+  * Plugin updates:
+    - mod_studentquiz and qbehaviour_studentquiz to r2.0, 2017040600/1
+    - mod_scheduler to git 20170510 to get fix for CONTRIB-6891
+    - Fix multigrader tree build, indicate hidden courses/categories, ignore max depth.
+    - atto_styles to r3.2-r3
+    - format_grid to 20170509-git (r3.2.1.1 plus one fix)
+    - atto_morebackcolors to r1.2.4
+    - qtype_gapfill to r1.94
+    - block_people to r3.2-r3
+    - mod_questionnaire to 20170509-git (r3.2.4 plus one fix)
+    - mod_publication (student folders) to r3.2.2
+    - mod_lightboxgallery to r2.8.0.10
+    - mod_groupselect to 20170509-git (3.12 plus one fix)
+    - mod_attendance to 20170509-git
+  * Upstream update, 3.2.2 to 3.2.3.
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 11 May 2017 14:26:21 +1200
+
+moodle-site-otagounifom (3.2.2.2017031300+0facmed1-1) jessie; urgency=high
+
+  * Upstream security update, including SQLI for all users.
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 13 Mar 2017 16:13:40 +1300
+
+moodle-site-otagounifom (3.2.1.2017021600+0facmed2-1) jessie; urgency=medium
+
+  * Remove usertours (admin/tool and local) - it's broken.
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 20 Feb 2017 10:33:34 +1300
+
+moodle-site-otagounifom (3.2.1.2017021600+0facmed1-1) jessie; urgency=medium
+
+  * Add restjson webservice plugin
+  * Update to latest upstream, want fix for marker allocation in
+    new grading interface.
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 20 Feb 2017 09:46:13 +1300
+
+moodle-site-otagounifom (3.2.1.2017020200+0facmed2-1) jessie; urgency=medium
+
+  * Fix gradereport-sitewideuser styles.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 08 Feb 2017 15:24:09 +1300
+
+moodle-site-otagounifom (3.2.1.2017020200+0facmed1-1) jessie; urgency=medium
+
+  * Update to 3.2.1+ weekly for 20170202
+  * Fix href="#" bug in bootstrap.js in bootstrapbase theme
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 08 Feb 2017 10:56:34 +1300
+
+moodle-site-otagounifom (3.2.1.2017010900+0facmed7-1) jessie; urgency=medium
+
+  * Get rid of realbootstrapbase & rerun "grunt js --force" to rebuild.
+    Hoping it will fix js problems... :-/
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 31 Jan 2017 09:12:41 +1300
+
+moodle-site-otagounifom (3.2.1.2017010900+0facmed6-1) jessie; urgency=medium
+
+  * Upgrade local_presentation to version currently in use on 3.0
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 26 Jan 2017 10:32:29 +1300
+
+moodle-site-otagounifom (3.2.1.2017010900+0facmed5-1) jessie; urgency=medium
+
+  * Add block_oms_grade plugin properly :-/
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 26 Jan 2017 09:45:40 +1300
+
+moodle-site-otagounifom (3.2.1.2017010900+0facmed4-1) jessie; urgency=medium
+
+  * Update format_board to be higher than currently-in-use version on
+    moodle 3.0 servers, to enable upgrade :-/
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 26 Jan 2017 09:34:40 +1300
+
+moodle-site-otagounifom (3.2.1.2017010900+0facmed3-1) jessie; urgency=medium
+
+  * Add 'block_oms_grade' plugin, local workaround to add gradebook
+    link to course.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 25 Jan 2017 14:54:31 +1300
+
+moodle-site-otagounifom (3.2.1.2017010900+0facmed2-1) jessie; urgency=medium
+
+  * Plugin updates:
+    - mods groupselect, game, activequiz, attendance, lightboxgallery,
+      pcast, questionnaire, scheduler
+    - formats topcoll, grid
+    - various atto plugins
+    - block people
+    - qtype gapfill
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 24 Jan 2017 16:20:27 +1300
+
+moodle-site-otagounifom (3.2.1.2017010900+0facmed1-1) jessie; urgency=medium
+
+  * New upstream version, 3.2.1
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 11 Jan 2017 12:05:12 +1300
+
+moodle-site-otagounifom (3.2.0.2016121500+0facmed1-1) jessie; urgency=medium
+
+  * New upstream version, 3.2 stable.
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 16 Dec 2016 10:26:43 +1300
+
+moodle-site-otagounifom (3.2.0~dev.2016112400+0facmed2-1) jessie; urgency=medium
+
+  * Add media dir to debian/install
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 24 Nov 2016 17:00:10 +1300
+
+moodle-site-otagounifom (3.2.0~dev.2016112400+0facmed1-1) jessie; urgency=medium
+
+  * Update upstream
+  * Add mod icontent
+  * Add mod/qbehaviour studentquiz
+  * Add qformat glossary
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 24 Nov 2016 15:56:21 +1300
+
+moodle-site-otagounifom (3.2.0~dev.2016111100+0facmed1-1) jessie; urgency=medium
+
+  * Update to 3.2beta 2016111100 (security)
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 15 Nov 2016 14:37:23 +1300
+
+moodle-site-otagounifom (3.2.0~dev.2016101400+0facmed2-1) jessie; urgency=medium
+
+  * Remove themes broken by unavailability of suitable base themes
+    (anomaly, brick, sky_high)
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 18 Oct 2016 10:12:00 +1300
+
+moodle-site-otagounifom (3.2.0~dev.2016101400+0facmed1-1) jessie; urgency=medium
+
+  * Update to Moodle 3.2dev
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 17 Oct 2016 15:31:05 +1300
+
+moodle-site-otagounifom (3.1.2.2016091500+0facmed1-1) jessie; urgency=medium
+
+  * Moodle 3.1.2+, includes fix for MDL-16-0022
+  * Add plugin: assignsubmission_gradereviews
+  * Add plugin: gradereport_sitewideuser
+  * Add plugin: gradereport_multigrader
+  * Add plugin: mod_reengagement
+  * Add plugin: local_usertours
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 22 Sep 2016 14:52:27 +1200
+
+moodle-site-otagounifom (3.1.1.2016082500+0facmed1-1) jessie; urgency=medium
+
+  * New upstream weekly release
+  * Upgrade outdated plugins to latest release or github versions
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 31 Aug 2016 16:51:40 +1200
+
+moodle-site-otagounifom (3.1.0.2016072100+0facmed1-1) jessie; urgency=medium
+
+  * Upgrade to latest 3.1 weekly.
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 25 Jul 2016 14:24:21 +1200
+
+moodle-site-otagounifom (3.1.0.2016070100+0facmed1-2) jessie; urgency=medium
+
+  * Fix debian/install for 3.1
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 11 Jul 2016 12:03:19 +1200
+
+moodle-site-otagounifom (3.1.0.2016070100+0facmed1-1) jessie; urgency=medium
+
+  * Initial upgrade to 3.1+ prepared by Pierre, for testing
+  * Cherry pick latest patch for block_ajax_marking
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 11 Jul 2016 11:20:55 +1200
+
+moodle-site-otagounifom (3.0.4.2016062300+0facmed2-1) jessie; urgency=medium
+
+  * Fix MySQL-ism in mod_zoom
+  * Fix block_ajax_marking causing tests to fail
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 04 Jul 2016 16:37:07 +1200
+
+moodle-site-otagounifom (3.0.4.2016062300+0facmed1-1) jessie; urgency=medium
+
+  * New upstream version
+  * Plugin updates
+  * Added plugins:
+    - mod_poster
+    - mod_publication
+    - report_roster
+    - tool_syncgroups
+    - format_board
+    - local_purgequestioncategory
+    - local_quickrenamequestioncategories
+    - local_renumberquestioncategory
+    - local_resortquestioncategory
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 30 Jun 2016 14:13:38 +1200
+
+moodle-site-otagounifom (3.0.4.2016052300+0catalyst1-1) jessie; urgency=medium
+
+  * Add noredirect patch
+  * Remove bootstrap 2.3.2 from lib/js
+
+ -- Pierre Guinoiseau <pierre.guinoiseau@catalyst.net.nz>  Mon, 23 May 2016 10:07:37 +1200
+
+moodle-site-otagounifom (3.0.4.2016050900+0facmed1-1) jessie; urgency=medium
+
+  * New upstream version
+  * Remove block_rate_course, theme_bootstrap
+  * Add more object types to local_presentation webservice for CMap
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 10 May 2016 11:43:20 +1200
+
+moodle-site-otagounifom (3.0.3.2016031500+0facmed3-1) jessie; urgency=medium
+
+  * Add fix for calendar/view.php not displaying all day's events
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 08 Apr 2016 15:18:06 +1200
+
+moodle-site-otagounifom (3.0.3.2016031500+0facmed2-1) jessie; urgency=medium
+
+  * Add fix for completion report ordering.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 16 Mar 2016 13:20:11 +1300
+
+moodle-site-otagounifom (3.0.3.2016031500+0facmed1-1) jessie; urgency=medium
+
+  * New upstream release 3.0.3 with security fixes:
+    - CVE-2016-2151
+    - CVE-2016-2152
+    - CVE-2016-2153
+    - CVE-2016-2154
+    - CVE-2016-2155
+    - CVE-2016-2156
+    - CVE-2016-2157
+    - CVE-2016-2158
+    - MDL-52651
+    - CVE-2016-2159
+  * Added plugins:
+    - mod_qcreate
+    - quizaccess_honestycheck
+    - mod_zoom
+    - mod_game
+    - mod_activequiz
+    - courseformat_menutopic
+    - various atto plugins
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 15 Mar 2016 08:54:02 +1300
+
+moodle-site-otagounifom (3.0.2.2016011100+1catalyst1-1) jessie; urgency=medium
+
+  * Test build, no changes, see WR #253087
+
+ -- Pierre Guinoiseau <pierre.guinoiseau@catalyst.net.nz>  Fri, 26 Feb 2016 10:32:38 +1300
+
+moodle-site-otagounifom (3.0.2.2016011100+0facmed2-1) jessie; urgency=medium
+
+  * Revert to standard Flowplayer
+  * JQuery Expander plugin update
+  * Fix ordering of levels in rubric-based marking
+  * Plugin updates
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 29 Jan 2016 11:03:48 +1300
+
+moodle-site-otagounifom (3.0.2.2016011100+0facmed1-1) jessie; urgency=medium
+
+  * New upstream release 3.0.2, incl security fixes for CVE-2016-0724,
+    CVE-2016-0725.
+  * Add "bootstrap" theme, which seems to be evolution of bootstrapbase,
+    but will coexist with it.
+
+ -- Nick Phillips <nwp@gaston.otago.ac.nz>  Tue, 12 Jan 2016 09:24:39 +1300
+
+moodle-site-otagounifom (3.0.0.2015121000+0facmed2-1) jessie; urgency=medium
+
+  * Fix mod bootstrapelements not to try to pull in fontawesome at all;
+    rely on theme pulling it in (which BCU does, at least).
+
+ -- Nick Phillips <nwp@gaston.otago.ac.nz>  Thu, 17 Dec 2015 09:07:09 +1300
+
+moodle-site-otagounifom (3.0.0.2015121000+0facmed1-1) jessie; urgency=medium
+
+  * Merge upstream changes - 20151210 weekly == v 2015111600.04
+  * Add bootstrapelements plugin, including fontawesome
+  * Fix mod_groupselect over-zealous styles.css
+
+ -- Nick Phillips <nwp@gaston.otago.ac.nz>  Wed, 16 Dec 2015 12:07:21 +1300
+
+moodle-site-otagounifom (3.0.0.20151116+0facmed4-1) jessie; urgency=medium
+
+  * Update PDF feedback plugin, since we haven't got rid of it yet.
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 20 Nov 2015 11:07:33 +1300
+
+moodle-site-otagounifom (3.0.0.20151116+0facmed3-1) jessie; urgency=medium
+
+  * Fix non-3.0 blocks lacking "component" in $plugin in version.php
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 20 Nov 2015 09:23:43 +1300
+
+moodle-site-otagounifom (3.0.0.20151116+0facmed2-1) jessie; urgency=medium
+
+  * Update all locally applied plugins.
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 19 Nov 2015 15:43:50 +1300
+
+moodle-site-otagounifom (3.0.0.20151116+0facmed1-2) jessie; urgency=medium
+
+  * Fix debian/install
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 18 Nov 2015 11:52:46 +1300
+
+moodle-site-otagounifom (3.0.0.20151116+0facmed1-1) jessie; urgency=medium
+
+  * New upstream version, previous local changes merged.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 18 Nov 2015 09:54:21 +1300
+
+moodle-site-otagounifom (2.8.9.20151109+0facmed1-1) jessie; urgency=medium
+
+  * New upstream version, including fix for flowplayer XSS that's been
+    floating around for 12 months.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 10 Nov 2015 11:25:58 +1300
+
+moodle-site-otagounifom (2.8.8.20150914+0facmed2-1) wheezy; urgency=medium
+
+  * Fix for regression introduced in MDL-51090, came as part of 2.8.8 update.
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 21 Sep 2015 14:23:27 +1200
+
+moodle-site-otagounifom (2.8.8.20150914+0facmed1-1) wheezy; urgency=medium
+
+  * New upstream version, includes fixes for security issues.
+  * No local changes.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 15 Sep 2015 13:14:35 +1200
+
+moodle-site-otagounifom (2.8.7.20150703+0facmed2-1) wheezy; urgency=medium
+
+  * Fix bug in grade checklist export plugin
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 06 Aug 2015 13:45:15 +1200
+
+moodle-site-otagounifom (2.8.7.20150703+0facmed1-1) wheezy; urgency=medium
+
+  * New upstream version, with security fixes.
+  * Add atto styles plugin.
+  * Add atto htmlplus plugin.
+  * Add cbmgrades quiz reporting plugin.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 07 Jul 2015 12:26:43 +1200
+
+moodle-site-otagounifom (2.8.6.20150515+0facmed1-1) wheezy; urgency=medium
+
+  * Update to Moodle 2.8.6 (security fixes)
+  * Update topcoll course format to 2015040900 release.
+  * Update grid format to 2015022500 release.
+  * Update qtype gapfill to 1.6 (2006082514) @ 20150515
+  * Update OU qtype and qbehaviours
+  * Update block progress to release 2015051200
+  * Update mod scheduler to 2014090102 release
+  * Update mod realtimequiz to release 2014103001
+  * Update mod questionnaire to version 2014111002 / build 2015031901
+  * Update mod lightboxgallery to release 2.8.0.2 (2015050401)
+  * Update mod_ and block_ checklist from git 20150515
+  * Update mod attendance to git d2c189c9d66ee9b0737a94186d5518a82942a587 (20150515)
+  * Add UNSW teambuilder module "2014082601" (actually 2015050400) for 2.7, 2.8.
+  * Add OU qtype_combined 1.3 for Moodle 2.6+ (2015051000)
+  * Add qbehaviour-deferredfeedbackexplain Version 1.0 for Moodle 2.6+ (2014111000)
+  * Add multichoiceset qtype 1.4 (2015040100) for 2.6-2.9
+  * Upgrade gradingstudents quiz marking plugin to 2015051000 from git and modify
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 15 May 2015 10:57:02 +1200
+
+moodle-site-otagounifom (2.8.5.20150313+0facmed1-1) wheezy; urgency=low
+
+  * Update to upstream 2.8.5+ 20150313 for multiple security updates
+  * Add imagedragdrop plugin for Atto
+  * Add fullscreen plugin for Atto
+  * Add attendance plugin
+  * Add manual grading by student plugin
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 17 Mar 2015 14:08:03 +1300
+
+moodle-site-otagounifom (2.8.3.20150205+0facmed1-1) wheezy; urgency=low
+
+  * Upstream weekly release 2.8.3+ 20150205, needed for security fixes.
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 09 Feb 2015 16:20:55 +1300
+
+moodle-site-otagounifom (2.8.2.20150129+0facmed2-1) wheezy; urgency=low
+
+  * Re-add brick and anomaly themes.
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 30 Jan 2015 13:49:37 +1300
+
+moodle-site-otagounifom (2.8.2.20150129+0facmed1-1) wheezy; urgency=low
+
+  * Upstream weekly release 20150129
+  * Add sky_high theme for OAM.
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 30 Jan 2015 09:29:47 +1300
+
+moodle-site-otagounifom (2.8.2.20150122+0facmed1-1) wheezy; urgency=low
+
+  * Upstream weekly release 20150122
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 29 Jan 2015 17:32:40 +1300
+
+moodle-site-otagounifom (2.8.2.20150115+0facmed2-1) wheezy; urgency=low
+
+  * Fix error in realbootstrapbase theme.
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 29 Jan 2015 16:28:47 +1300
+
+moodle-site-otagounifom (2.8.2.20150115+0facmed1-2) wheezy; urgency=low
+
+  * Fix debconf questioning not to require answers, since we're not
+    going to use the generated config anyway.
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 29 Jan 2015 12:33:27 +1300
+
+moodle-site-otagounifom (2.8.2.20150115+0facmed1-1) wheezy; urgency=low
+
+  * New upstream version, and all plugins updated to latest versions
+    for 2.7/2.8.
+  * Will need subsequent version to remove obsolete plugins.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 21 Jan 2015 11:31:47 +1300
+
+moodle-site-otagounifom (2.8.0.20141110+0facmed1-1) wheezy; urgency=low
+
+  * Update realbootstrapbase theme.
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 04 Dec 2014 12:49:35 +1300
+
+moodle-site-otagounifom (2.8.0.20141110+0facmed0-2) wheezy; urgency=low
+
+  * Fix debian/install -- add availability, favicon.ico, robots.txt, up2date.php
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 03 Dec 2014 15:39:42 +1300
+
+moodle-site-otagounifom (2.8.0.20141110+0facmed0-1) wheezy; urgency=low
+
+  * Initial Debian package of 2.8.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 03 Dec 2014 12:03:09 +1300
+
+moodle-site-otagounifom (2.6.6.0+0facmed2-1) wheezy; urgency=low
+
+  * Remove flowplayer .swf files due to XSS issue.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 11 Nov 2014 15:07:25 +1300
+
+moodle-site-otagounifom (2.6.6.0+0facmed1-1) wheezy; urgency=low
+
+  * Update to 2.6.6.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 11 Nov 2014 13:58:47 +1300
+
+moodle-site-otagounifom (2.6.5.20141028+0facmed2-1) wheezy; urgency=low
+
+  * Fix thinko in previous fix to block_news.
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 30 Oct 2014 12:39:11 +1300
+
+moodle-site-otagounifom (2.6.5.20141028+0facmed1-1) wheezy; urgency=low
+
+  * Give realbootstrapbase theme a language file.
+  * Progress bar block plugin from https://moodle.org/plugins/view.php?id=4
+  * Update ajax_marking to w-i-p from github "develop" branch, which
+    has fixes for post-2.4 moodle use.
+  * Update OU news block to version intended for 2.6.
+  * Add checklist plugin set from https://moodle.org/plugins/browse.php?list=set&id=7
+  * Add export glossary to quiz block from https://moodle.org/plugins/view.php?plugin=block_glossary_export_to_quiz
+  * Add unanswered discussions block from https://moodle.org/plugins/view.php?plugin=block_unanswered_discussions
+  * Miscellaneous bugfixes to core Moodle functionality:
+    - Fix in block_news -- init stdClass->content->text before trying to
+      append to it.
+    - Fix error from get_records_sql caused in tag_get_correlated_tags;
+      see https://tracker.moodle.org/browse/MDL-47721 for more.
+    - Fix error log from block_simple_clock - assign $this->content->text
+      first time it is used rather than appending to it.
+    - Don't warn on all URLs that are too long to log; the DB field is
+      stupidly small more often than the URL is stupidly long.
+    - Increase max permissible time without "progress" during backup, as
+      zip turns out to take longer than previous limit. Grrr.
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 30 Oct 2014 11:39:31 +1300
+
+moodle-site-otagounifom (2.6.5.20140911+0facmed3-1) wheezy; urgency=low
+
+  * Actually update quickmail plugin to latest. Doh.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 01 Oct 2014 14:32:23 +1300
+
+moodle-site-otagounifom (2.6.5.20140911+0facmed2-1) wheezy; urgency=low
+
+  * Multiple plugin updates; several OU,, grid format, admin_presets,
+    quickmail, questionnaire, lightboxgallery.
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 01 Oct 2014 12:01:03 +1300
+
+moodle-site-otagounifom (2.6.5.20140911+0facmed1-1) wheezy; urgency=low
+
+  * Replace people block with correct version for 2.6 (although no
+    actual difference in function).
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 01 Oct 2014 09:09:48 +1300
+
+moodle-site-otagounifom (2.6.5.20140911+0facmed0-1) wheezy; urgency=low
+
+  * New upstream version, for security reasons.
+  * Add topic collapse format
+  * Add people block
+  * Add clozeeditor tinyMCE plugin
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 30 Sep 2014 15:52:58 +1300
+
+moodle-site-otagounifom (2.6.4.20140717+0facmed0-1) wheezy; urgency=low
+
+  * Update to 2.6.4.20140717 for security fixes
+  * Add admin_presets block
+  * Add simple_clock block
+  * Add realbootstrapbase theme
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 21 Jul 2014 16:09:12 +1200
+
+moodle-site-otagounifom (2.6.3.20140515+0facmed1-1) wheezy; urgency=low
+
+  * Set up generic JS dir in lib, move bootstrap there.
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 19 Jun 2014 10:56:15 +1200
+
+moodle-site-otagounifom (2.6.3.20140515+0facmed0-1) wheezy; urgency=low
+
+  * Add bootstrap to "jquery plugins" (!)
+  * Add "responsive image maps" jquery plugin
+  * Add qtype_ddmatch
+  * Add qtype_gapfill
+  * Add qformat_giftmedia
+  * Merge from MOODLE_26_STABLE (2.6.3+, with security fixes - see
+    AusCERT ASB-2014.0062)
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 22 May 2014 11:25:25 +1200
+
+moodle-site-otagounifom (2.6.2.20140314+0facmed2-1) wheezy; urgency=low
+
+  * Update PDF submission + feedback plugins from github to fix
+    backup issues (element name clash with editpdf plugin)
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 07 May 2014 14:27:26 +1200
+
+moodle-site-otagounifom (2.6.2.20140314+0facmed1-1) wheezy; urgency=low
+
+  * Add questionnaire module, add jquery expander plugin, update jquery to 1.11.0
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 17 Apr 2014 16:44:05 +1200
+
+moodle-site-otagounifom (2.6.2.20140314+0facmed0-1) wheezy; urgency=low
+
+  * Merge upstream updates, add new plugins...
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 24 Mar 2014 16:28:09 +1300
+
+moodle-site-otagounifom (2.6.1.20140117+0facmed1-1) wheezy; urgency=low
+
+  * Merge upstream updates, including security fixes.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 21 Jan 2014 17:02:52 +1300
+
+moodle-site-otagounifom (2.6.0.20131224+0facmed2-1) wheezy; urgency=low
+
+  * Fix included version of lightboxgallery mod
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 14 Jan 2014 13:10:14 +1300
+
+moodle-site-otagounifom (2.6.0.20131224+0facmed1-1) wheezy; urgency=low
+
+  * Upgrade to 2.6
+  * Update 3rd-party plugins included in facmed package (OU, mostly if not entirely)
+  * Nothing done re. tagging+api changes at this stage
+  * Local build for wheezy
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 13 Jan 2014 12:34:44 +1300
+
+moodle-site-otagounifom (2.5.3.2013051403.03+0facmed3-1) wheezy; urgency=low
+
+  * Update plugins
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 08 Jan 2014 16:52:54 +1300
+
+moodle-site-otagounifom (2.5.3.2013051403.03+0facmed2-1) wheezy; urgency=low
+
+  * Add patch to lowercase tags to be searched for, from Peter Bulmer
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 02 Dec 2013 09:41:19 +1300
+
+moodle-site-otagounifom (2.5.3.2013051403.03+0facmed1-1) wheezy; urgency=low
+
+  * Upgrade to version 2.5.3+
+  * Upgrade locally-added plugins
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 28 Nov 2013 12:41:50 +1300
+
+moodle-site-otagounifom (2.4.6.20130908+0facmed1-1) squeeze; urgency=low
+
+  * Upgrade to version 2.4.6
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 12 Sep 2013 13:50:55 +1200
+
+moodle-site-otagounifom (2.4.4.20130513) unstable; urgency=low
+
+  * Upgrade to version 2.4.4
+
+ -- Chris Wharton <chrisw@catalyst.net.nz>  Wed, 15 May 2013 09:27:41 +1200
+
+moodle-site-otagounifom (2.4.3.20130318) unstable; urgency=low
+
+  * Upgrade to version 2.4.3
+
+ -- Chris Wharton <chrisw@catalyst.net.nz>  Wed, 20 Mar 2013 11:58:34 +1300
+
+moodle-site-otagounifom (2.4.2.20130311+0facmed0-3) precise; urgency=low
+
+  * Upgrade to version 2.4.2
+
+ -- Eugene Venter <eugene@catalyst.net.nz>  Thu, 14 Mar 2013 11:17:00 +1300
+
+moodle-site-otagounifom (2.4.1.20130114+0facmed5-1) squeeze; urgency=low
+
+  * Add scheduler module.
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 26 Apr 2013 11:12:58 +1200
+
+moodle-site-otagounifom (2.4.1.20130114+0facmed4-1) squeeze; urgency=low
+
+  * Make multianswer (cloze) questions not shuffle answer order by default,
+    and add explicit means to do so if desired.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 05 Mar 2013 14:45:12 +1300
+
+moodle-site-otagounifom (2.4.1.20130114+0facmed3-1) squeeze; urgency=low
+
+  * Further fixes to restore.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 26 Feb 2013 14:58:41 +1300
+
+moodle-site-otagounifom (2.4.1.20130114+0facmed2-1) squeeze; urgency=low
+
+  * Fix another restore bug, this time in forum module.
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 26 Feb 2013 11:45:49 +1300
+
+moodle-site-otagounifom (2.4.1.20130114+0facmed1-0) squeeze; urgency=low
+
+  * Fix '' vs NULL bug in restore. Does anybody test this stuff?
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 25 Feb 2013 22:48:21 +1300
+
+moodle-site-otagounifom (2.4.1.20130114+0facmed0-3) unstable; urgency=low
+
+  * Add plugins for Aviation Medicine site:
+    * mod lightboxgallery
+    * block ajax_marking
+    * block quickmail
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 25 Feb 2013 20:53:01 +1300
+
+moodle-site-otagounifom (2.4.1.20130114+0facmed0-2) unstable; urgency=low
+
+  * Upgrade to version 2.4.1
+
+ -- Chris Wharton <chrisw@catalyst.net.nz>  Wed, 16 Jan 2013 10:28:01 +1300
+
+moodle-site-otagounifom (2.4.0.20121230+0facmed0-1) squeeze; urgency=low
+
+  * Local build for squeeze
+  * Add modules for local use:
+    * selected OU qtype modules and requirements
+    * groupselect
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 10 Jan 2013 15:45:31 +1300
+
+moodle-site-otagounifom (2.4-1) unstable; urgency=low
+
+  * Debianised by Chris Wharton
+
+ -- Chris Wharton <chrisw@catalyst.net.nz>  Thu, 10 Jan 2013 12:11:34 +1300
