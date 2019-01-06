@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.6.1.2018120301+0facmed1-1) stretch; urgency=medium
+
+  * 3.6 - thought I'd already done packages, but it seems not.
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 07 Jan 2019 11:54:53 +1300
+
 moodle-site-otagounifom (3.4.6.2018121001+0facmed1-1) stretch; urgency=medium
 
   * Add current version of patch for MDL-56482
