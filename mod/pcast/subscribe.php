@@ -36,6 +36,7 @@ require_once('../../config.php');
 require_once($CFG->libdir.'/filelib.php');
 require_once($CFG->libdir.'/rsslib.php');
 require_once($CFG->dirroot.'/mod/pcast/rsslib.php');
+$pcastconfig = get_config('mod_pcast');
 
 // RSS feeds must be enabled site-wide.
 if (empty($CFG->enablerssfeeds)) {
@@ -44,7 +45,7 @@ if (empty($CFG->enablerssfeeds)) {
 }
 
 // RSS must be enabled for the module.
-if (empty($CFG->pcast_enablerssfeeds)) {
+if (empty($pcastconfig->enablerssfeeds)) {
     debugging("DISABLED (module configuration)");
     pcast_rss_error();
 }
@@ -183,12 +184,3 @@ if (empty($cachedfilepath) || !file_exists($cachedfilepath)) {
 
 // Send the .pcast file to the user!
 send_file($cachedfilepath, 'rss.pcast', 0, 0, 0, 1);   // DO NOT CACHE.
-
-
-/*
- * Sends an error formatted as an rss file and then dies.
- */
-function pcast_rss_error($error='rsserror', $filename='rss.xml', $lifetime=0) {
-    send_file(rss_geterrorxmlfile($error), $filename, $lifetime, false, true);
-    exit;
-}

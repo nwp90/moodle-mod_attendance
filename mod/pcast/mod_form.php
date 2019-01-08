@@ -29,13 +29,28 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
+require_once(dirname(__FILE__).'/locallib.php');
 
+/**
+ * The main pcast configuration form
+ *
+ * It uses the standard core Moodle formslib. For more info about them, please
+ * visit: http://docs.moodle.org/en/Development:lib/formslib.php
+ *
+ * @package   mod_pcast
+ * @copyright 2010 Stephen Bourget
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class mod_pcast_mod_form extends moodleform_mod {
 
+    /**
+     * The form definition.
+     */
     public function definition() {
 
         global $COURSE, $CFG, $DB;
         $mform =& $this->_form;
+        $pcastconfig = get_config('mod_pcast');
 
         // Adding the "general" fieldset, where all the common settings are showed.
         $mform->addElement('header', 'general', get_string('general', 'form'));
@@ -59,9 +74,14 @@ class mod_pcast_mod_form extends moodleform_mod {
         $mform->addHelpButton('maxbytes', 'maxattachmentsize', 'pcast');
         $mform->setDefault('maxbytes', $COURSE->maxbytes);
 
+        $mform->addElement('filetypes', 'allowedfiletypes', get_string('allowedfiletypes', 'pcast'),
+             ['onlytypes' => ['html_audio', 'web_audio', 'html_video', 'web_video'], 'allowunknown' => true]);
+        $mform->addHelpButton('allowedfiletypes', 'allowedfiletypes', 'pcast');
+        $mform->setDefault('allowedfiletypes', 'web_audio,web_video,html_video,html_audio');
+
         // RSS Settings.
 
-        if ($CFG->enablerssfeeds && isset($CFG->pcast_enablerssfeeds) && $CFG->pcast_enablerssfeeds) {
+        if ($CFG->enablerssfeeds && isset($pcastconfig->enablerssfeeds) && $pcastconfig->enablerssfeeds) {
 
             $mform->addElement('header', 'rss', get_string('rss'));
 
@@ -100,7 +120,7 @@ class mod_pcast_mod_form extends moodleform_mod {
         }
 
         // Itunes.
-        if ($CFG->enablerssfeeds && isset($CFG->pcast_enablerssitunes) && $CFG->pcast_enablerssitunes) {
+        if ($CFG->enablerssfeeds && isset($pcastconfig->enablerssitunes) && $pcastconfig->enablerssitunes) {
 
             // Itunes Tags.
             $mform->addElement('header', 'itunes', get_string('itunes', 'pcast'));
@@ -137,30 +157,8 @@ class mod_pcast_mod_form extends moodleform_mod {
             $mform->disabledIf('keywords', 'enablerssitunes', 'eq', 0);
             $mform->addRule('keywords', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
 
-            $selectelements = array();
-            $topcat = array();
-            // Get categories.
-            if ($topcategories = $DB->get_records("pcast_itunes_categories")) {
-
-                // Construct an array of top categories.
-                foreach ($topcategories as $topcategory) {
-                    $value = (int)$topcategory->id * 1000;
-                    $topcat[(int)$value] = $topcategory->name;
-                    $selectelements[$topcategory->name] = array();
-                }
-            }
-            if ($nestedcategories = $DB->get_records("pcast_itunes_nested_cat")) {
-                foreach ($nestedcategories as $nestedcategory) {
-                    $value = (int)$nestedcategory->topcategoryid * 1000;
-                    $topcatname = $topcat[$value];
-                    $value = $value + (int)$nestedcategory->id;
-
-                    $selectelements[$topcatname][$value] = $nestedcategory->name;
-                }
-            }
-
             // Category form element.
-            $mform->addElement('selectgroups', 'category', get_string('category', 'pcast'), $selectelements);
+            $mform->addElement('selectgroups', 'category', get_string('category', 'pcast'), pcast_get_categories());
             $mform->addHelpButton('category', 'category', 'pcast');
             $mform->disabledIf('category', 'enablerssitunes', 'eq', 0);
 
@@ -266,6 +264,10 @@ class mod_pcast_mod_form extends moodleform_mod {
 
     }
 
+    /**
+     * Function used to edit user data before save.
+     * @param array $defaultvalues
+     */
     public function data_preprocessing(&$defaultvalues) {
         parent::data_preprocessing($defaultvalues);
 
@@ -311,7 +313,7 @@ class mod_pcast_mod_form extends moodleform_mod {
     }
 
     /**
-     * Enable completion rules
+     * Enable completion rules.
      * @param stdcalss $data
      * @return array
      */
@@ -319,6 +321,10 @@ class mod_pcast_mod_form extends moodleform_mod {
         return (!empty($data['completionepisodesenabled']) && $data['completionepisodes'] != 0);
     }
 
+    /**
+     * Used to load form data.
+     * @return object | boolean
+     */
     public function get_data() {
         $data = parent::get_data();
         if (!$data) {

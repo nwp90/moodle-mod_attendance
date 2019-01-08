@@ -50,6 +50,11 @@ class mod_pcast_generator extends testing_module_generator {
         parent::reset();
     }
 
+    /**
+     * Create an instance of mod_pcast with some default settings
+     * @param object $record
+     * @param array $options
+     */
     public function create_instance($record = null, array $options = null) {
         global $CFG;
 
@@ -80,6 +85,12 @@ class mod_pcast_generator extends testing_module_generator {
         return parent::create_instance($record, (array)$options);
     }
 
+    /**
+     * Create a pcast episode (without the attachment)
+     * @param object $pcast
+     * @param array $record
+     * @return type
+     */
     public function create_content($pcast, $record = array()) {
         global $DB, $USER;
         $this->episodecount++;
@@ -116,6 +127,14 @@ class mod_pcast_generator extends testing_module_generator {
         }
 
         $id = $DB->insert_record('pcast_episodes', $record);
+
+        // Tags.
+        if (array_key_exists('tags', $record)) {
+            $tags = is_array($record['tags']) ? $record['tags'] : preg_split('/,/', $record['tags']);
+
+            core_tag_tag::set_item_tags('mod_pcast', 'pcast_episodes', $id,
+                context_module::instance($pcast->cmid), $tags);
+        }
 
         return $DB->get_record('pcast_episodes', array('id' => $id), '*', MUST_EXIST);
     }

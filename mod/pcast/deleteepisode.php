@@ -69,7 +69,7 @@ $PAGE->set_context($context);
 $manageentries = has_capability('mod/pcast:manage', $context);
 
 if (($episode->userid != $USER->id) and !$manageentries) { // Guest id is never matched, no need for special check here.
-    print_error('nopermissiontodelepisode');
+    print_error('nopermissiontodelepisode', 'pcast');
 }
 $ineditperiod = ((time() - $episode->timecreated < $CFG->maxeditingtime));
 if (!$ineditperiod and !$manageentries) {
@@ -101,6 +101,9 @@ if ($confirm and confirm_sesskey()) { // The operation was confirmed.
         require_once($CFG->dirroot.'/mod/pcast/rsslib.php');
         pcast_rss_delete_file($pcast);
     }
+
+    // Remove tags.
+    core_tag_tag::remove_all_item_tags('mod_pcast', 'pcast_episodes', $origionalepisode->id);
 
     $event = \mod_pcast\event\episode_deleted::create(array(
         'context' => $context,

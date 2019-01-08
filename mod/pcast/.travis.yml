@@ -1,17 +1,27 @@
 language: php
 
-sudo: true
+sudo: required
+
+addons:
+  firefox: "47.0.1"
+  postgresql: "9.4"
+  apt:
+    packages:
+      - oracle-java8-installer
+      - oracle-java8-set-default
 
 cache:
   directories:
     - $HOME/.composer/cache
+    - $HOME/.npm
 
 php:
  - 7.0
  - 7.1
+ - 7.2
 
 addons:
-  postgresql: 9.3
+  postgresql: 9.4
 
 env:
  matrix:
@@ -24,7 +34,7 @@ before_install:
   - nvm use 8.9
   - cd ../..
   - composer selfupdate
-  - composer create-project -n --no-dev moodlerooms/moodle-plugin-ci ci ^1
+  - composer create-project -n --no-dev --prefer-dist moodlerooms/moodle-plugin-ci ci ^2
   - export PATH="$(cd ci/bin; pwd):$(cd ci/vendor/bin; pwd):$PATH"
 
 install:
@@ -32,12 +42,12 @@ install:
 
 script:
   - moodle-plugin-ci phplint
-#  - moodle-plugin-ci phpcpd
+  #- moodle-plugin-ci phpcpd
   - moodle-plugin-ci phpmd
   - moodle-plugin-ci codechecker
-  - moodle-plugin-ci csslint
-  - moodle-plugin-ci shifter
-  - moodle-plugin-ci jshint
   - moodle-plugin-ci validate
+  - moodle-plugin-ci savepoints
+  - moodle-plugin-ci mustache
+  - moodle-plugin-ci grunt  
   - moodle-plugin-ci phpunit
-  - moodle-plugin-ci behat
+  #- moodle-plugin-ci behat

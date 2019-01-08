@@ -101,7 +101,7 @@ if ($id) { // If the entry is specified.
 $draftitemid = file_get_submitted_draft_itemid('mediafile');
 file_prepare_draft_area($draftitemid, $context->id, 'mod_pcast', 'episode', $episode->id,
                         array('subdirs' => 0, 'maxbytes' => $pcast->maxbytes, 'maxfiles' => 1,
-                              'filetypes' => array('audio', 'video'))
+                              'accepted_types' => pcast_get_supported_file_types($pcast))
                         );
 
 $episode->mediafile = $draftitemid;
@@ -158,7 +158,7 @@ if ($mform->is_cancelled()) {
 
     file_save_draft_area_files($episode->mediafile, $context->id, 'mod_pcast', 'episode', $episode->id,
                             array('subdirs' => 0, 'maxbytes' => $pcast->maxbytes,
-                                  'maxfiles' => 1, 'filetypes' => array('audio', 'video'))
+                                  'maxfiles' => 1, 'accepted_types' => pcast_get_supported_file_types($pcast))
                             );
 
     // Get the duration if possible.
@@ -180,6 +180,11 @@ if ($mform->is_cancelled()) {
 
     // Store the updated value values.
     $DB->update_record('pcast_episodes', $episode);
+
+    // Deal with tags.
+    if (core_tag_tag::is_enabled('mod_pcast', 'pcast_episodes') && isset($episode->tags)) {
+        core_tag_tag::set_item_tags('mod_pcast', 'pcast_episodes', $episode->id, $context, $episode->tags);
+    }
 
     // Refetch the complete entry.
     $episode = $DB->get_record('pcast_episodes', array('id' => $episode->id));
@@ -220,6 +225,9 @@ $PAGE->set_heading($course->fullname);
 echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($pcast->name));
 
+$episode = new StdClass();
+$episode->tags = core_tag_tag::get_item_tags_array('mod_pcast', 'pcast_episodes', $id);
+$mform->set_data($episode);
 $mform->display();
 
 echo $OUTPUT->footer();

@@ -15,7 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package moodlecore
+ * Define the complete choice structure for backup, with file and id annotations
+ *
+ * @package mod_pcast
  * @subpackage backup-moodle2
  * @copyright 2011 Stephen Bourget
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,9 +27,18 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * Define the complete choice structure for backup, with file and id annotations
+ *
+ * @package mod_pcast
+ * @subpackage backup-moodle2
+ * @copyright 2011 Stephen Bourget
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class backup_pcast_activity_structure_step extends backup_activity_structure_step {
 
+    /**
+     * Defines structure for data backup.
+     * @return object
+     */
     protected function define_structure() {
 
         // To know if we are including userinfo.
@@ -41,7 +52,8 @@ class backup_pcast_activity_structure_step extends backup_activity_structure_ste
             'displayviews', 'image', 'imageheight', 'imagewidth', 'rssepisodes',
             'rsssortorder', 'enablerssfeed', 'enableitunes', 'visible', 'explicit',
             'subtitle', 'keywords', 'topcategory', 'nestedcategory', 'assessed',
-            'assesstimestart', 'assesstimefinish', 'scale', 'timecreated', 'timemodified', 'completionepisodes'));
+            'assesstimestart', 'assesstimefinish', 'scale', 'timecreated', 'timemodified',
+            'completionepisodes', 'allowedfiletypes'));
 
         $episodes = new backup_nested_element('episodes');
 
@@ -60,10 +72,16 @@ class backup_pcast_activity_structure_step extends backup_activity_structure_ste
         $rating = new backup_nested_element('rating', array('id'), array(
             'component', 'ratingarea', 'scaleid', 'value', 'userid', 'timecreated', 'timemodified'));
 
+        $tags = new backup_nested_element('tags');
+        $tag = new backup_nested_element('tag', array('id'), array('itemid', 'rawname'));
+
         // Build the tree.
 
         $pcast->add_child($episodes);
         $episodes->add_child($episode);
+
+        $episode->add_child($tags);
+        $tags->add_child($tag);
 
         $episode->add_child($views);
         $views->add_child($view);
@@ -95,6 +113,18 @@ class backup_pcast_activity_structure_step extends backup_activity_structure_ste
                                                       'component'  => backup_helper::is_sqlparam('mod_pcast'),
                                                       'ratingarea' => backup_helper::is_sqlparam('episode')));
             $rating->set_source_alias('rating', 'value');
+
+            if (core_tag_tag::is_enabled('mod_pcast', 'pcast_episodes')) {
+                $tag->set_source_sql('SELECT t.id, ti.itemid, t.rawname
+                                        FROM {tag} t
+                                        JOIN {tag_instance} ti ON ti.tagid = t.id
+                                       WHERE ti.itemtype = ?
+                                         AND ti.component = ?
+                                         AND ti.contextid = ?', array(
+                    backup_helper::is_sqlparam('pcast_episodes'),
+                    backup_helper::is_sqlparam('mod_pcast'),
+                    backup::VAR_CONTEXTID));
+            }
 
         }
 
