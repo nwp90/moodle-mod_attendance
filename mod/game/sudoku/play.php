@@ -29,23 +29,24 @@ require_once( "../../lib/questionlib.php");
 /**
  * Plays the game Sudoku
  *
- * @param int $id
+ * @param stdClass $cm
  * @param stdClass $game
  * @param stdClass $attempt
  * @param stdClass $sudoku
  * @param boolean $endofgame
  * @param stdClass $context
+ * @param stdClass $course
  */
-function game_sudoku_continue( $id, $game, $attempt, $sudoku, $endofgame, $context) {
+function game_sudoku_continue( $cm, $game, $attempt, $sudoku, $endofgame, $context, $course) {
     global $CFG, $DB, $USER;
 
     if ($endofgame) {
-        game_updateattempts( $game, $attempt, -1, true);
+        game_updateattempts( $game, $attempt, -1, true, $cm, $course);
         $endofgame = false;
     }
 
     if ($attempt != false and $sudoku != false) {
-        return game_sudoku_play( $id, $game, $attempt, $sudoku, false, false, $context);
+        return game_sudoku_play( $cm, $game, $attempt, $sudoku, false, false, $context, $course);
     }
 
     if ($attempt == false) {
@@ -109,7 +110,7 @@ function game_sudoku_continue( $id, $game, $attempt, $sudoku, $endofgame, $conte
         $query->gamekind = $game->gamekind;
         $query->gameid = $game->id;
         $query->userid = $USER->id;
-        $query->col = $closed[ $i++];
+        $query->mycol = $closed[ $i++];
         $query->sourcemodule = $game->sourcemodule;
         $query->questionid = $rec->questionid;
         $query->glossaryentryid = $rec->glossaryentryid;
@@ -121,23 +122,22 @@ function game_sudoku_continue( $id, $game, $attempt, $sudoku, $endofgame, $conte
         game_update_repetitions($game->id, $USER->id, $query->questionid, $query->glossaryentryid);
     }
 
-    game_updateattempts( $game, $attempt, 0, 0);
-
-    game_sudoku_play( $id, $game, $attempt, $newrec, false, false, $context);
+    game_sudoku_play( $cm, $game, $attempt, $newrec, false, false, $context, $course);
 }
 
 /**
  * Plays the game Sudoku
  *
- * @param int $id
+ * @param stdClass $cm
  * @param stdClass $game
  * @param stdClass $attempt
  * @param stdClass $sudoku
  * @param boolean $onlyshow
  * @param boolean $showsolution
  * @param stdClass $context
+ * @param stdClass $course
  */
-function game_sudoku_play( $id, $game, $attempt, $sudoku, $onlyshow, $showsolution, $context) {
+function game_sudoku_play( $cm, $game, $attempt, $sudoku, $onlyshow, $showsolution, $context, $course) {
     $offsetquestions = game_sudoku_compute_offsetquestions( $game->sourcemodule, $attempt, $numbers, $correctquestions);
 
     if ($game->toptext != '') {
@@ -145,15 +145,15 @@ function game_sudoku_play( $id, $game, $attempt, $sudoku, $onlyshow, $showsoluti
     }
 
     game_sudoku_showsudoku( $sudoku->data, $sudoku->guess, true, $showsolution, $offsetquestions,
-        $correctquestions, $id, $attempt, $game);
+        $correctquestions, $cm, $attempt, $game, $course);
     switch ($game->sourcemodule) {
         case 'quiz':
         case 'question':
-            game_sudoku_showquestions_quiz( $id, $game, $attempt, $sudoku, $offsetquestions,
+            game_sudoku_showquestions_quiz( $cm->id, $game, $attempt, $sudoku, $offsetquestions,
                 $numbers, $correctquestions, $onlyshow, $showsolution, $context);
             break;
         case 'glossary':
-            game_sudoku_showquestions_glossary( $id, $game, $attempt, $sudoku, $offsetquestions,
+            game_sudoku_showquestions_glossary( $cm->id, $game, $attempt, $sudoku, $offsetquestions,
                 $numbers, $correctquestions, $onlyshow, $showsolution);
             break;
     }
@@ -174,9 +174,13 @@ function game_sudoku_play( $id, $game, $attempt, $sudoku, $onlyshow, $showsoluti
 function game_sudoku_compute_offsetquestions( $sourcemodule, $attempt, &$numbers, &$correctquestions) {
     global $CFG, $DB;
 
+    $offsetquestions = array();
+    if ($attempt == null) {
+        return $offsetquestions;
+    }
     $select = "attemptid = $attempt->id";
 
-    $fields = 'id, col, score';
+    $fields = 'id, mycol, score';
     switch( $sourcemodule)
     {
         case 'quiz':
@@ -191,14 +195,14 @@ function game_sudoku_compute_offsetquestions( $sourcemodule, $attempt, &$numbers
         $DB->execute( "DELETE FROM {$CFG->prefix}game_sudoku WHERE id={$attempt->id}");
         print_error( 'There are no questions '.$attempt->id);
     }
-    $offsetquestions = array();
+
     $numbers = array();
     $correctquestions = array();
     foreach ($recs as $rec) {
-        $offsetquestions[ $rec->col] = $rec->id2;
-        $numbers[ $rec->id2] = $rec->col;
+        $offsetquestions[ $rec->mycol] = $rec->id2;
+        $numbers[ $rec->id2] = $rec->mycol;
         if ( $rec->score == 1) {
-            $correctquestions[ $rec->col] = 1;
+            $correctquestions[ $rec->mycol] = 1;
         }
     }
 
@@ -262,12 +266,13 @@ function game_sudoku_getclosed( $data) {
  * @param boolean $bshowsolution
  * @param int $offsetquestions
  * @param int $correctquestions
- * @param int $id
+ * @param stdClass $cm
  * @param stdClass $attempt
  * @param stdClass $game
+ * @param stdClass $course
  */
 function game_sudoku_showsudoku( $data, $guess, $bshowlegend, $bshowsolution, $offsetquestions,
-    $correctquestions, $id, $attempt, $game) {
+    $correctquestions, $cm, $attempt, $game, $course) {
     global $CFG, $DB;
 
     $correct = $count = 0;
@@ -327,7 +332,7 @@ function game_sudoku_showsudoku( $data, $guess, $bshowlegend, $bshowsolution, $o
         echo "</tr>";
     }
     echo "</table>\r\n";
-    $href = $CFG->wwwroot.'/mod/game/attempt.php?action=sudokucheckn&id='.$id;
+    $href = $CFG->wwwroot.'/mod/game/attempt.php?action=sudokucheckn&id='.$cm->id;
 
 ?>
     <script language="javascript">
@@ -353,19 +358,22 @@ function game_sudoku_showsudoku( $data, $guess, $bshowlegend, $bshowsolution, $o
         return $count;
     }
 
-    if (! $cm = $DB->get_record( 'course_modules', array( 'id' => $id))) {
-        print_error( "Course Module ID was incorrect id=$id");
-    }
-
     echo '<B><br>'.get_string( 'win', 'game').'</B><BR>';
     echo '<br>';
-    echo "<a href=\"$CFG->wwwroot/mod/game/attempt.php?id=$id\">".
+    echo "<a href=\"$CFG->wwwroot/mod/game/attempt.php?id={$cm->id}&finishattempt=1\">".
         get_string( 'nextgame', 'game').'</a> &nbsp; &nbsp; &nbsp; &nbsp; ';
     echo "<a href=\"$CFG->wwwroot/course/view.php?id=$cm->course\">".get_string( 'finish', 'game').'</a> ';
 
-    game_updateattempts( $game, $attempt, 1, 1);
+    game_updateattempts( $game, $attempt, 1, game_sudoku_check_found_all_numbers(), $cm, $course);
 
     return $count;
+}
+
+/**
+ * Check that all numbers are found
+ */
+function game_sudoku_check_found_all_numbers() {
+    return false;
 }
 
 /**
@@ -593,10 +601,6 @@ function game_sudoku_showquestions_glossary( $id, $game, $attempt, $sudoku, $off
  * @param stdClass $sudoku
  */
 function game_sudoku_showquestion_onfinish( $id, $game, $attempt, $sudoku) {
-    if (!set_field( 'game_attempts', 'finish', 1, 'id', $attempt->id)) {
-        print_error( "game_sudoku_showquestion_onfinish: Can't update game_attempts id=$attempt->id");
-    }
-
     echo '<B>'.get_string( 'win', 'game').'</B><BR>';
     echo '<br>';
     echo "<a href=\"{$CFG->wwwroot}/mod/game/attempt.php?id=$id\">".
@@ -616,14 +620,15 @@ function game_sudoku_checkanswers() {
 /**
  * Checks questions
  *
- * @param int $id
+ * @param stdClass $cm
  * @param stdClass $game
  * @param stdClass $attempt
  * @param stdClass $sudoku
  * @param boolean $finishattempt
  * @param stdClass $course
+ * @param stdClass $context
  */
-function game_sudoku_check_questions( $id, $game, $attempt, $sudoku, $finishattempt, $course) {
+function game_sudoku_check_questions( $cm, $game, $attempt, $sudoku, $finishattempt, $course, $context) {
     global $DB;
 
     $responses = data_submitted();
@@ -659,20 +664,20 @@ function game_sudoku_check_questions( $id, $game, $attempt, $sudoku, $finishatte
         game_update_queries( $game, $attempt, $query, 1, $answertext);
     }
 
-    game_sudoku_check_last( $id, $game, $attempt, $sudoku, $finishattempt, $course);
+    game_sudoku_check_last( $cm, $game, $attempt, $sudoku, $finishattempt, $course);
 }
 
 /**
  * Check glossary entries
  *
- * @param int $id
+ * @param stdClass $cm
  * @param stdClass $game
  * @param stdClass $attempt
  * @param stdClass $sudoku
  * @param boolean $finishattempt
- * @param string $course
+ * @param stdClass $course
  */
-function game_sudoku_check_glossaryentries( $id, $game, $attempt, $sudoku, $finishattempt, $course) {
+function game_sudoku_check_glossaryentries( $cm, $game, $attempt, $sudoku, $finishattempt, $course) {
     global $DB;
 
     $responses = data_submitted();
@@ -700,7 +705,7 @@ function game_sudoku_check_glossaryentries( $id, $game, $attempt, $sudoku, $fini
         }
         // Correct answer.
         $select = "attemptid=$attempt->id";
-        $select .= " AND glossaryentryid=$entry->id AND col>0";
+        $select .= " AND glossaryentryid=$entry->id AND mycol>0";
         // Check the student guesses not source glossary entry.
         $select .= " AND questiontext is null";
 
@@ -713,7 +718,7 @@ function game_sudoku_check_glossaryentries( $id, $game, $attempt, $sudoku, $fini
         game_update_queries( $game, $attempt, $query, 1, $answer);
     }
 
-    game_sudoku_check_last( $id, $game, $attempt, $sudoku, $finishattempt, $course);
+    game_sudoku_check_last( $cm, $game, $attempt, $sudoku, $finishattempt, $course);
 
     return true;
 }
@@ -721,25 +726,25 @@ function game_sudoku_check_glossaryentries( $id, $game, $attempt, $sudoku, $fini
 /**
  * This is the last function after submiting the answers.
  *
- * @param int $id
+ * @param stdClass $cm
  * @param stdClass $game
  * @param stdClass $attempt
  * @param stdClass $sudoku
  * @param boolean $finishattempt
  * @param stdClass $course
  */
-function game_sudoku_check_last( $id, $game, $attempt, $sudoku, $finishattempt, $course) {
+function game_sudoku_check_last( $cm, $game, $attempt, $sudoku, $finishattempt, $course) {
     global $CFG, $DB;
 
     $correct = $DB->get_field_select( 'game_queries', 'COUNT(*) AS c', "attemptid=$attempt->id AND score > 0.9");
     $all = $DB->get_field_select( 'game_queries', 'COUNT(*) AS c', "attemptid=$attempt->id");
 
     if ($all) {
-        $grade = $correct / $all;
+        $score = $correct / $all;
     } else {
-        $grade = 0;
+        $score = 0;
     }
-    game_updateattempts( $game, $attempt, $grade, $finishattempt);
+    game_updateattempts( $game, $attempt, $score, $finishattempt, $cm, $course);
 }
 
 /**
@@ -757,7 +762,6 @@ function game_sudoku_check_number( $id, $game, $attempt, $sudoku, $pos, $num, $c
     global $DB;
 
     $correct = game_substr( $sudoku->data, $pos - 1, 1);
-
     if ($correct != $num) {
         game_sudoku_play( $id, $game, $attempt, $sudoku, false, false, $context);
         return;

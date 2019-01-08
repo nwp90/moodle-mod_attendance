@@ -1,3 +1,33 @@
+Changes in version 2018-12-01 (20181201)
+- Book with questions works again
+
+Changes in version 2018-11-30 (20181130)
+- GDPR compliant
+- The game "Book with questions" is now hidden by default
+
+Changes in version 2018-11-28-02 (2018112802)
+- CSS of crossword in a different file
+- Square cell on crossword by changing the css
+
+Changes in version 2018-11-20 (2018112000)
+- CSS of crossword in a different file
+- Square cell on crossword by changing the css
+
+Changes in version 2018-11-18 (2018111800)
+- Completion support
+
+Changes in version 2018-07-07 (2018070701)
+- Fix in hangmang with glossary that contains attached imaged image files
+
+Changes in version 2018-07-07 (2018070701)
+- Fix in cryptex when contains audio files
+
+Changes in version 2018-07-04 (2018070402)
+- Fix in high score
+- New image set on hangman
+- New image set on "Snakes and Ladders"
+- New language string header_footer_options
+
 Changes in version 2017-08-11 (2017081103)
 - New: High score
 

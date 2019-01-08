@@ -29,7 +29,7 @@ if ($ADMIN->fulltree) {
     // General settings.
 
     $settings->add(new admin_setting_configcheckbox('game/hidebookquiz',
-        get_string('hidebookquiz', 'game'), get_string('confighidebookquiz', 'game'), 0));
+        get_string('hidebookquiz', 'game'), get_string('confighidebookquiz', 'game'), 1));
 
     $settings->add(new admin_setting_configcheckbox('game/hidecross',
         get_string('hidecross', 'game'), get_string('confighidecross', 'game'), 0));
@@ -53,6 +53,6 @@ if ($ADMIN->fulltree) {
         get_string('hidesudoku', 'game'), get_string('confighidesudoku', 'game'), 0));
 
     $settings->add(new admin_setting_configtext('game/hangmanimagesets', get_string('hangmanimagesets', 'game'),
-            get_string('confighangmanimagesets', 'game'), 1, PARAM_INT));
+            get_string('confighangmanimagesets', 'game'), 2, PARAM_INT));
 
 }
