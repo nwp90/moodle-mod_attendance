@@ -97,8 +97,8 @@ function realtimequiz_set_running(running) {
  * Set up the basic layout of the student view
  **************************************************/
 function realtimequiz_init_student_view() {
-    var msg="<center><input type='button' onclick='realtimequiz_join_quiz();' value='"+realtimequiz.text['joinquiz']+"' />"
-    msg += "<p id='status'>"+realtimequiz.text['joininstruct']+"</p></center>"
+    var msg="<center><input type='button' onclick='realtimequiz_join_quiz();' value='"+realtimequiz.text['joinquiz']+"' />";
+    msg += "<p id='status'>"+realtimequiz.text['joininstruct']+"</p></center>";
     document.getElementById('questionarea').innerHTML = msg;
 }
 
@@ -107,9 +107,11 @@ function realtimequiz_init_question_view() {
         return;
     }
     if (realtimequiz.controlquiz) {
-        document.getElementById("questionarea").innerHTML = "<h1><span id='questionnumber'>"+realtimequiz.text['waitstudent']+"</span></h1><div id='questionimage'></div><div id='questiontext'>"+realtimequiz.text['clicknext']+"</div><ul id='answers'></ul><p><span id='status'></span> <span id='timeleft'></span></p>";
+        document.getElementById("questionarea").innerHTML = "<h1><span id='questionnumber'>"+realtimequiz.text['waitstudent']+"</span></h1><div id='numberstudents'></div><div id='questionimage'></div><div id='questiontext'>"+realtimequiz.text['clicknext']+"</div><ul id='answers'></ul><p><span id='status'></span> <span id='timeleft'></span></p>";
         document.getElementById("questionarea").innerHTML += "<div id='questioncontrols'></div><br style='clear: both;' />";
         realtimequiz_update_next_button(true);
+        // To trigger the periodic sending to get the number of students
+        realtimequiz_get_question();
     } else {
         document.getElementById("questionarea").innerHTML = "<h1><span id='questionnumber'>"+realtimequiz.text['waitfirst']+"</span></h1><div id='questionimage'></div><div id='questiontext'></div><ul id='answers'></ul><p><span id='status'></span> <span id='timeleft'></span></p><br style='clear: both;' />";
         realtimequiz_get_question();
@@ -153,7 +155,7 @@ function realtimequiz_set_answer(id, text, position) {
     }
 
     var letter = String.fromCharCode(65 + realtimequiz.answernumber);        //ASCII 'A'
-    var newanswer = '<li id="answer'+id+'" data-position="'+position+'"><input ';
+    var newanswer = '<li id="answer'+id+'" class="realtimequiz-answer-pos-'+position+'"><input ';
     if (realtimequiz.controlquiz) {
         newanswer += 'disabled=disabled ';
     }
@@ -325,7 +327,7 @@ function realtimequiz_create_request(parameters) {
         return;
     }
 
-    // Sending a new request, so forget about resending an old request	
+    // Sending a new request, so forget about resending an old request
     if (realtimequiz.resendtimer != null) {
         clearTimeout(realtimequiz.resendtimer);
         realtimequiz.resendtimer = null;
@@ -416,7 +418,7 @@ function realtimequiz_join_quiz() {
 function realtimequiz_process_contents(httpRequest) {
     if (httpRequest.readyState == 4) {
 
-        // We've heard back from the server, so do not need to resend the request 
+        // We've heard back from the server, so do not need to resend the request
         if (realtimequiz.resendtimer != null) {
             clearTimeout(realtimequiz.resendtimer);
             realtimequiz.resendtimer = null;
@@ -441,6 +443,8 @@ function realtimequiz_process_contents(httpRequest) {
 
                 var quizstatus = node_text(quizresponse.getElementsByTagName('status').item(0));
                 if (quizstatus == 'showquestion') {
+                    if (document.getElementById("numberstudents"))
+                        document.getElementById("numberstudents").style.display = 'none' ;
                     realtimequiz.questionxml = quizresponse.getElementsByTagName('question').item(0);
                     if (!realtimequiz.questionxml) {
                         alert(realtimequiz.text['noquestion']+httpRequest.responseHTML);
@@ -517,7 +521,14 @@ function realtimequiz_process_contents(httpRequest) {
                     } else {
                         waittime = 600;
                     }
-
+                    var number_of_students = quizresponse.getElementsByTagName('numberstudents').item(0) ;
+                    if (number_of_students && document.getElementById("numberstudents")) {
+                        if (node_text(number_of_students) == '1') {
+                            document.getElementById("numberstudents").innerHTML = node_text(number_of_students)+' '+realtimequiz.text['studentconnected'] ;
+                        } else {
+                            document.getElementById("numberstudents").innerHTML = node_text(number_of_students)+' '+realtimequiz.text['studentsconnected'] ;
+                        }
+                    }
                     realtimequiz_delayed_request("realtimequiz_get_question()", waittime);
 
                 } else if (quizstatus == 'waitforresults') {
@@ -552,18 +563,35 @@ function realtimequiz_process_contents(httpRequest) {
                     }
                 }
             }
-        } else {
-            // Server responded with anything other than OK
-            // Decided just to silently resend the request - if the connection dies altoghether, the user can navigate
-            // to another page to stop the requests
+            return;
+        } else if (httpRequest.status == 403 || httpRequest.status == 500) {
+            var jsonresp;
+            try {
+                jsonresp = JSON.parse(httpRequest.responseText);
+            } catch (e) {
+                jsonresp = {errorcode: 'unknown'};
+            }
 
-            //alert(realtimequiz.text['httperror']+httpRequest.status);
-            //if (confirm(realtimequiz.text['tryagain'])) {
-            realtimequiz_delayed_request("realtimequiz_resend_request()", 700);
-            //} else {
-            //realtimequiz_return_course();
-            // }
+            // In the event a users sesskey is invalid (like when their user
+            // session times out), then no amount of polling is going to result
+            // in a good outcome - and we should let the user know they need to
+            // log in again.
+            if (jsonresp.errorcode == 'invalidsesskey' || jsonresp.errorcode == 'requireloginerror') {
+                alert(jsonresp.error);
+                return;
+            }
         }
+
+        // Server responded with anything other than OK
+        // Decided just to silently resend the request - if the connection dies altoghether, the user can navigate
+        // to another page to stop the requests
+
+        //alert(realtimequiz.text['httperror']+httpRequest.status);
+        //if (confirm(realtimequiz.text['tryagain'])) {
+        realtimequiz_delayed_request("realtimequiz_resend_request()", 700);
+        //} else {
+        //realtimequiz_return_course();
+        // }
     }
 }
 
