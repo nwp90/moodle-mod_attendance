@@ -1,4 +1,78 @@
-### Date:	2018-August-28
+### Date:		2018-December-21
+### Release:	v2018122101
+
+#### :wrench: Fixes and enhancements
+
+---
+
+#### Grade categories are now migrated between V1 and V2
+
+When you migrate from Moodle Direct V1 to Moodle Direct V2, we’ll now keep the grading category associated with the V1 assignment when we perform the transition.
+
+---
+
+### Date:		2018-December-18
+### Release:	v2018121801
+
+#### :zap: What's new
+
+---
+
+#### We now support Moodle 3.6
+
+Getting a head start on the new year by upgrading your Moodle instance? We’ve got you covered. Our Moodle Direct v2 plugin now supports Moodle 3.6. Check out [Check out our guide](https://www.turnitin.com/support/download-integrations) for a full list of the version of Moodle we support.
+
+#### :wrench: Fixes and enhancements
+
+---
+
+#### You can now set ETS as a default setting
+
+Are you a fan of ETS e-rater? Us too! To help you take advantage of it, you can now enable ETS e-rater as a default setting for your assignments.
+
+#### A new warning message when you try to change the Marks Available column
+
+A new warning message when you try to change the Marks Available column - We’ve added this notification just to make sure that editing this field is what you want to do. Editing this field after you’ve finished grading, can change entries in the Moodle gradebook. Don’t worry, you can still edit this field should you need to!
+
+#### A couple of backend security fixes.
+
+---
+
+### Date:		2018-October-26
+### Release:	v2018102601
+
+#### Fixes and enhancements
+
+---
+
+#### The course restoration tool has now been restored for use!
+
+Were you previously using Turnitin.com or TurnitinUK.com before making the switch over to Moodle? The course restoration tool allows you to take your old classes and assignments with you by recreating them within Moodle. Previously, a bug had prevented this functionality from working as intended. Want to learn more? [Check out our guide](https://help.turnitin.com/Feedback_Studio/Moodle/Direct%20V2/Administrator/Administrator%20Category.htm#Turnitinclassrestoration).
+
+---
+
+### Date:		2018-October-19
+### Release:	v2018101901
+
+#### Fixes and enhancements
+
+---
+
+#### Assignments now display correctly on Moodle’s timeline
+
+We’ve made three separate fixes following Moodle’s new timeline support:
+
+- When creating a V2 assignment using course reset and the “use new dates” option, your assignment now displays correctly on the timeline.
+- By changing the due date of the assignment, this now will update on the timeline.
+- Providing that the assignment’s due date hasn’t already passed, any assignments created prior to our previous fix in v2018082801 will now appear on the timeline after an instructor accesses the assignment.
+
+#### Thanks to Paul Damiani and Rossco Hellmans
+
+We've received some invaluable bug fixes, in the form of pull requests, to help us improve Moodle V2. We’re really grateful!
+
+---
+
+### Date:		2018-August-28
 ### Release:	v2018082801
 
 ### :wrench: Fixes and enhancements
@@ -26,6 +100,7 @@ Moodle has superseded this update checker with a tool that not only checks for T
 You can find Moodle's **Check for available updates** button by visiting: Site administration > Plugins > Plugins overview.
 
 ---
+
 ### Date:	2018-May-23
 ### Release:	v2018052301
 

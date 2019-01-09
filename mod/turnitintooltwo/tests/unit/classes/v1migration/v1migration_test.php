@@ -837,7 +837,7 @@ class mod_turnitintooltwo_v1migration_testcase extends test_lib {
             }
         }
         // Create our output array.
-        $assignments = $DB->get_records('turnitintool', NULL, "name ASC", "id, name, migrated", $_POST["iDisplayStart"], $_POST["iDisplayLength"]);
+        $assignments = $DB->get_records('turnitintool', NULL, NULL, "id, name, migrated");
         $outputrows = array();
         foreach ($assignments as $key => $value) {
             if ($value->migrated == 1) {
@@ -858,44 +858,8 @@ class mod_turnitintooltwo_v1migration_testcase extends test_lib {
         }
         $expectedoutput = array("aaData"               => $outputrows,
                                 "sEcho"                => $_POST["sEcho"],
-                                "iTotalRecords"        => $_POST["iDisplayLength"],
+                                "iTotalRecords"        => $numAssignments,
                                 "iTotalDisplayRecords" => $numAssignments);
-        $this->assertEquals($_POST["iDisplayLength"], count($assignments));
-        $response = v1migration::turnitintooltwo_getassignments();
-
-        $this->assertEquals($expectedoutput, $response);
-        // Do a second test for the search box.
-        $_POST["sSearch"] = "coursework";
-        $query = "SELECT id, name, migrated FROM {turnitintool}
-                  WHERE LOWER(name) LIKE LOWER(:search_term_2)
-                  ORDER BY name asc";
-        $queryparams = array("search_term_2" => "%".$_POST["sSearch"]."%");
-        $assignments = $DB->get_records_sql($query, $queryparams, $_POST["iDisplayStart"], $_POST["iDisplayLength"]);
-        $totalassignments = count($DB->get_records_sql($query, $queryparams));
-
-        $outputrows = array();
-        foreach ($assignments as $key => $value) {
-            if ($value->migrated == 1) {
-                $checkbox = '<input class="browser_checkbox" type="checkbox" value="'.$value->id.'" name="assignmentids[]" />';
-                $sronly = html_writer::tag('span', get_string('yes', 'turnitintooltwo'), array('class' => 'sr-only'));
-                $migrationValue = html_writer::tag('span', $sronly, array('class' => 'fa fa-check'));
-
-                $assignmenttitle = format_string($value->name);
-            } else {
-                $checkbox = "";
-                $sronly = html_writer::tag('span', get_string('no', 'turnitintooltwo'), array('class' => 'sr-only'));
-                $migrationValue = html_writer::tag('span', $sronly, array('class' => 'fa fa-times'));
-
-                $assignmentlink = new moodle_url('/mod/turnitintool/view.php', array('a' => $value->id, 'id' => '0'));
-                $assignmenttitle = html_writer::link($assignmentlink, format_string($value->name), array('target' => '_blank' ));
-            }
-            $outputrows[] = array($checkbox, $value->id, $assignmenttitle, $migrationValue);
-        }
-        $expectedoutput = array("aaData"               => $outputrows,
-                                "sEcho"                => $_POST["sEcho"],
-                                "iTotalRecords"        => $_POST["iDisplayLength"],
-                                "iTotalDisplayRecords" => $totalassignments);
-        $this->assertEquals($_POST["iDisplayLength"], count($assignments));
         $response = v1migration::turnitintooltwo_getassignments();
 
         $this->assertEquals($expectedoutput, $response);
@@ -955,17 +919,7 @@ class mod_turnitintooltwo_v1migration_testcase extends test_lib {
         set_config('turnitin_account_id', 1234);
 
         // Set Account Id for v2.
-        $updatev2 = $DB->get_record('config_plugins', array('plugin' => 'turnitintooltwo', 'name' => 'accountid'));
-        if (!$updatev2) {
-            $updatev2 = new stdClass();
-            $updatev2->plugin = "turnitintooltwo";
-            $updatev2->name = "accountid";
-            $updatev2->value = 1234;
-            $DB->insert_record('config_plugins', $updatev2);
-        } else {
-            $updatev2->value = 1234;
-            $DB->update_record('config_plugins', $updatev2);
-        }
+        set_config('accountid', '1234', 'turnitintooltwo');
 
         // Account IDs should be the same.
         $enabled = v1migration::check_account_ids();

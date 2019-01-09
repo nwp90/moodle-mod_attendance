@@ -36,7 +36,7 @@ jQuery(document).ready(function($) {
     $('#unlinkUserTable').dataTable({
         "bDestroy": true,
         "bProcessing": true,
-        "bServerSide": true,
+        "bServerSide": false,
         "oLanguage": dataTablesLang,
         "aaSorting": [[ 2, "asc" ]],
         "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
@@ -92,11 +92,11 @@ jQuery(document).ready(function($) {
     $('#migrationTable').dataTable({
         "bDestroy": true,
         "bProcessing": true,
-        "bServerSide": true,
+        "bServerSide": false,
         "oLanguage": dataTablesLangMigration,
         "aaSorting": [[ 2, "asc" ]],
         "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-        "sAjaxSource": "ajax.php?action=get_assignments",
+        "sAjaxSource": "ajax.php?action=get_migration_assignments",
         "sDom": '<"top"lf>rt<"bottom"irp><"clear">',
         "aoColumns": [
                         {"bSortable": false, "bSearchable": false,
@@ -117,7 +117,7 @@ jQuery(document).ready(function($) {
     $('#filesTable').dataTable( {
         "bDestroy": true,
         "bProcessing": true,
-        "bServerSide": true,
+        "bServerSide": false,
         "oLanguage": dataTablesLang,
         "sAjaxSource": "ajax.php?action=get_files",
         "aoColumns": [

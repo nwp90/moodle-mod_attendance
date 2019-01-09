@@ -60,6 +60,11 @@ class mod_turnitintooltwo_mod_form extends moodleform_mod {
         $instructor->set_user_values_from_tii();
         $instructorrubrics = $instructor->get_instructor_rubrics();
 
+        // Decode the assignment name.
+        if (isset($this->current->name)) {
+            $this->current->name = html_entity_decode($this->current->name);
+        }
+
         // Get rubrics that are shared on the account.
         $turnitinclass = new turnitintooltwo_class($course->id);
         $turnitinclass->read_class_from_tii();
@@ -132,7 +137,7 @@ class mod_turnitintooltwo_mod_form extends moodleform_mod {
             $script .= html_writer::tag('script', '', array("type" => "text/javascript",
                                                 "src" => $CFG->wwwroot."/mod/turnitintooltwo/jquery/jquery-1.8.2.min.js"));
             $script .= html_writer::tag('script', '', array("id" => "plugin_turnitin_script", "type" => "text/javascript",
-                                            "src" => $CFG->wwwroot."/mod/turnitintooltwo/jquery/turnitintooltwo-2018082301.min.js"));
+                                            "src" => $CFG->wwwroot."/mod/turnitintooltwo/jquery/turnitintooltwo-2018102601.min.js"));
             $script .= html_writer::tag('script', '', array("type" => "text/javascript",
                                             "src" => $CFG->wwwroot."/mod/turnitintooltwo/jquery/jquery-ui-1.10.4.custom.min.js"));
             $script .= html_writer::tag('script', '', array("type" => "text/javascript",
