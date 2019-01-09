@@ -5,7 +5,7 @@ Feature: Import and export combined questions
   I need to be able to import and export them
 
   Background:
-     Given the following "users" exist:
+    Given the following "users" exist:
       | username | firstname | lastname | email                |
       | teacher1 | T1        | Teacher1 | teacher1@moodle.com  |
     And the following "courses" exist:
@@ -15,12 +15,12 @@ Feature: Import and export combined questions
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
     And I log in as "teacher1"
-    And I follow "Course 1"
+    And I am on "Course 1" course homepage
 
   @javascript
   Scenario: Import and export combined questions
     # Import sample file.
-    When I navigate to "Import" node in "Course administration > Question bank"
+    When I navigate to "Question bank > Import" in current page administration
     And I set the field "id_format_xml" to "1"
     And I upload "question/type/combined/tests/fixtures/testquestion.moodle.xml" file to "Import" filemanager
     And I press "id_submitbutton"
@@ -31,7 +31,8 @@ Feature: Import and export combined questions
     And I should see "Imported Combined 001"
 
     # Now export again.
-    When I navigate to "Export" node in "Course administration > Question bank"
+    When I am on "Course 1" course homepage
+    And I navigate to "Question bank > Export" in current page administration
     And I set the field "id_format_xml" to "1"
     And I press "Export questions to file"
     Then following "click here" should download between "6000" and "7000" bytes

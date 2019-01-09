@@ -23,7 +23,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-
 defined('MOODLE_INTERNAL') || die();
 
 
@@ -120,7 +119,7 @@ class qtype_combined_question extends question_graded_automatically_with_countba
             }
         } else if ($component == 'question' && in_array($filearea,
                                                      array('correctfeedback', 'partiallycorrectfeedback', 'incorrectfeedback'))) {
-            return $this->check_combined_feedback_file_access($qa, $options, $filearea);
+            return $this->check_combined_feedback_file_access($qa, $options, $filearea, $args);
         } else {
             return parent::check_file_access($qa, $options, $component, $filearea,
                     $args, $forcedownload);
@@ -180,7 +179,7 @@ class qtype_combined_question extends question_graded_automatically_with_countba
             list($subqpartscorrect, $subqnumparts) = $numpartscorrect;
             if (is_null($subqpartscorrect) && is_null($subqnumparts)) {
                 list (, $state) = $this->combiner->call_subq($subqno, 'grade_response', $subqresponses);
-                $subqpartscorrect = ($state === question_state::$gradedright)?1:0;
+                $subqpartscorrect = ($state === question_state::$gradedright) ? 1 : 0;
                 $subqnumparts = 1;
             }
             $totalpartscorrect += $subqpartscorrect;

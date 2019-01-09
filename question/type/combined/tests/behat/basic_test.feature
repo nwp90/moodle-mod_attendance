@@ -1,5 +1,5 @@
 @ou @ou_vle @qtype @qtype_combined
-Feature: Test all the basic functionality of this question type
+Feature: Test all the basic functionality of combined question type
   In order to evaluate students responses, As a teacher I need to
   create and preview combined (Combined) questions.
 
@@ -17,11 +17,11 @@ Feature: Test all the basic functionality of this question type
   @javascript
   Scenario: Create, edit and preview a combined question.
     Given I log in as "teacher1"
-    And I follow "Course 1"
-    And I navigate to "Question bank" node in "Course administration"
+    And I am on "Course 1" course homepage
+    And I navigate to "Question bank" in current page administration
     Then I press "Create a new question ..."
     And I set the field "Combined" to "1"
-    And I press "Add"
+    And I click on "Add" "button" in the "Choose a question type to add" "dialogue"
     Then I should see "Adding a combined question"
     And I set the field "Question name" to "Combined 001"
     And I set the field "Question text" to "What is the pH of a 0.1M solution? [[1:numeric:__10__]]. <br/>What is the IUPAC name of the molecule? [[2:pmatch:__20__]]. <br/>Which elements are shown? [[3:multiresponse]]. <br/>When a solution is combined with oil the result is a [[4:selectmenu:2]]"
@@ -47,17 +47,20 @@ Feature: Test all the basic functionality of this question type
 
     # Multiresponse part.
     Then I follow "'multiresponse' input '3'"
+    And I click on "Expand all" "link"
+    And I press "Blanks for 3 more choices"
     And I set the following fields to these values:
-      | id_subqmultiresponse3defaultmark     | 25%      |
-      | id_subqmultiresponse3answer_0        | carbon   |
-      | id_subqmultiresponse3correctanswer_0 | 1        |
-      | id_subqmultiresponse3answer_1        | hydrogen |
-      | id_subqmultiresponse3correctanswer_1 | 1        |
-      | id_subqmultiresponse3answer_2        | oxygen   |
-      | id_subqmultiresponse3correctanswer_2 | 1        |
-      | id_subqmultiresponse3answer_3        | nitrogen |
-      | id_subqmultiresponse3answer_4        | fluorine |
-      | id_subqmultiresponse3answer_5        | chlorine |
+      | id_subqmultiresponse3defaultmark     | 25%                                              |
+      | id_subqmultiresponse3answer_0        | carbon                                           |
+      | id_subqmultiresponse3correctanswer_0 | 1                                                |
+      | id_subqmultiresponse3answer_1        | hydrogen                                         |
+      | id_subqmultiresponse3correctanswer_1 | 1                                                |
+      | id_subqmultiresponse3answer_2        | oxygen                                           |
+      | id_subqmultiresponse3correctanswer_2 | 1                                                |
+      | id_subqmultiresponse3answer_3        | nitrogen                                         |
+      | id_subqmultiresponse3answer_4        | fluorine                                         |
+      | id_subqmultiresponse3answer_5        | chlorine                                         |
+      | id_subqmultiresponse3answer_6        | <b>bromine</b>                                   |
       | id_subqmultiresponse3generalfeedback | Your choice of elements is not entirely correct. |
 
     # Selectmenu part.
@@ -81,7 +84,6 @@ Feature: Test all the basic functionality of this question type
     # Preview it.
     When I click on "Preview" "link" in the "Combined 001" "table_row"
     And I switch to "questionpreview" window
-    Then I should see "Preview question: Combined 001"
 
     # Set display and behaviour options
     And I set the following fields to these values:
@@ -93,9 +95,11 @@ Feature: Test all the basic functionality of this question type
     And I press "Start again with these options"
 
     # Attempt the question
-    And I set the part "1:answer" to "2.88" in the combined question
-    And I set the part "2:answer" to "ethanoic acid" in the combined question
-    And I set the part "4:p1" to "Vinagrette" in the combined question
+    # Test html editor for answer field in Combined MultiResponse.
+    And "//label/b[contains(text(), 'bromine')]" "xpath_element" should be visible
+    And I set the field "Answer 1" to "2.88"
+    And I set the field "Answer 2" to "ethanoic acid"
+    And I set the field "Answer 4" to "Vinagrette"
     And I press "Check"
     Then I should see "Part of your answer requires attention :"
     And I should see "Input 3 (check box group) - Please select at least one answer."
@@ -124,7 +128,7 @@ Feature: Test all the basic functionality of this question type
     When I restore "test_backup.mbz" backup into a new course using this options:
       | Schema | Course name | Course 2 |
     Then I should see "Course 2"
-    When I navigate to "Question bank" node in "Course administration"
+    When I navigate to "Question bank" in current page administration
     Then I should see "Combined 001"
 
     # Edit the copy and verify the form field contents.
@@ -143,17 +147,18 @@ Feature: Test all the basic functionality of this question type
       | id_subqpmatch2answer_0        | match_mw (ethanoic acid)           |
       | id_subqpmatch2generalfeedback | You have the incorrect IUPAC name. |
 
-      | id_subqmultiresponse3defaultmark     | 25%      |
-      | id_subqmultiresponse3answer_0        | carbon   |
-      | id_subqmultiresponse3correctanswer_0 | 1        |
-      | id_subqmultiresponse3answer_1        | hydrogen |
-      | id_subqmultiresponse3correctanswer_1 | 1        |
-      | id_subqmultiresponse3answer_2        | oxygen   |
-      | id_subqmultiresponse3correctanswer_2 | 1        |
-      | id_subqmultiresponse3answer_3        | nitrogen |
-      | id_subqmultiresponse3answer_4        | fluorine |
-      | id_subqmultiresponse3answer_5        | chlorine |
-      | id_subqmultiresponse3generalfeedback | Your choice of elements is not entirely correct. |
+      | id_subqmultiresponse3defaultmark     | 25%                                                                                                                                                                                                                                                         |
+      | id_subqmultiresponse3answer_0        | carbon                                                                                                                                                                                                                                                      |
+      | id_subqmultiresponse3correctanswer_0 | 1                                                                                                                                                                                                                                                           |
+      | id_subqmultiresponse3answer_1        | hydrogen                                                                                                                                                                                                                                                    |
+      | id_subqmultiresponse3correctanswer_1 | 1                                                                                                                                                                                                                                                           |
+      | id_subqmultiresponse3answer_2        | oxygen                                                                                                                                                                                                                                                      |
+      | id_subqmultiresponse3correctanswer_2 | 1                                                                                                                                                                                                                                                           |
+      | id_subqmultiresponse3answer_3        | nitrogen                                                                                                                                                                                                                                                    |
+      | id_subqmultiresponse3answer_4        | fluorine                                                                                                                                                                                                                                                    |
+      | id_subqmultiresponse3answer_5        | chlorine                                                                                                                                                                                                                                                    |
+      | id_subqmultiresponse3answer_6        | <b>bromine</b>                                                                                                                                                                                                                                              |
+      | id_subqmultiresponse3generalfeedback | Your choice of elements is not entirely correct.                                                                                                                                                                                                            |
 
       | id_subqselectmenu4defaultmark        | 25%           |
       | id_subqselectmenu4answer_0           | Wine          |
@@ -169,3 +174,99 @@ Feature: Test all the basic functionality of this question type
       | Question name | Edited question name |
     And I press "id_submitbutton"
     Then I should see "Edited question name"
+
+  @javascript
+  Scenario: Test pmatch combine question for convert and synonyms.
+    Given I log in as "teacher1"
+    When I am on "Course 1" course homepage
+    And I navigate to "Question bank" in current page administration
+    And I press "Create a new question ..."
+    And I set the field "Combined" to "1"
+    And I click on "Add" "button" in the "Choose a question type to add" "dialogue"
+    And I should see "Adding a combined question"
+    And I set the field "Question name" to "Combined 001"
+    And I set the field "Question text" to "[[1:pmatch]]"
+    And I press "Verify the question text and update the form"
+    And I follow "'pmatch' input '1'"
+    And I set the following fields to these values:
+      | Weighting                           | 100%              |
+      | Check spelling of student           | No                |
+      | Answer                              | match(number ten) |
+      | Feedback for any incorrect response | General feedback  |
+      | Word                                | ten               |
+      | Synonyms                            | 10                |
+    And I press "Save changes and continue editing"
+    # Preview it.
+    And I follow "Preview"
+    # Check entering the correct answer.
+    And I switch to "questionpreview" window
+    And I set the field "Answer 1" to "number ten"
+    And I press "Submit and finish"
+    Then I should see "Your answer is correct."
+    # Check entering using synonyms feature.
+    When I press "Start again"
+    And I set the field "Answer 1" to "number 10"
+    And I press "Submit and finish"
+    Then I should see "Your answer is correct."
+    # Check entering using convert to space feature.
+    When I press "Start again"
+    And I set the field "Answer 1" to "number;ten"
+    And I press "Submit and finish"
+    Then I should see "Your answer is correct."
+    # Check entering incorrect answer.
+    When I press "Start again"
+    And I set the field "Answer 1" to "number_ten"
+    And I press "Submit and finish"
+    And I should see "Your answer is incorrect."
+    And I switch to the main window
+
+  @javascript
+  Scenario: Test duplicating a combined question and editing subquestions before saving
+    Given I log in as "teacher1"
+    When I am on "Course 1" course homepage
+    And I navigate to "Question bank" in current page administration
+    And I press "Create a new question ..."
+    And I set the field "Combined" to "1"
+    And I click on "Add" "button" in the "Choose a question type to add" "dialogue"
+    And I should see "Adding a combined question"
+    And I set the field "Question name" to "Duplication test"
+    And I set the field "Question text" to "Cat: [[1:selectmenu:1]], Dog: [[2:selectmenu:1]]"
+    And I press "Verify the question text and update the form"
+    And I expand all fieldsets
+    And I set the following fields to these values:
+      | id_subqselectmenu1defaultmark | 50%     |
+      | id_subqselectmenu1answer_0    | Kitten  |
+      | id_subqselectmenu1answer_1    | Tadpole |
+      | id_subqselectmenu2defaultmark | 50%     |
+      | id_subqselectmenu2answer_0    | Puppy   |
+      | id_subqselectmenu2answer_1    | Foal    |
+    And I press "id_submitbutton"
+    And I click on "Duplicate" "link" in the "Duplication test" "table_row"
+    And I set the field "Question name" to "The new question"
+    And I set the field "Question text" to "[[1:selectmenu:1]]"
+    And I expand all fieldsets
+    And I set the following fields to these values:
+      | id_subqselectmenu1defaultmark | 100%    |
+      | id_subqselectmenu1answer_0    | Kitten  |
+      | id_subqselectmenu1answer_1    | Tadpole |
+      | id_subqselectmenu2defaultmark | 50%     |
+      | id_subqselectmenu2answer_0    | Puppy   |
+      | id_subqselectmenu2answer_1    | Foal    |
+    And I press "id_submitbutton"
+    Then I should see "One or more embedded questions have been removed from the question text"
+    And I press "id_submitbutton"
+    And I click on "Preview" "link" in the "Duplication test" "table_row"
+    # Check entering the correct answer for original question.
+    And I switch to "questionpreview" window
+    And I set the field "Answer 1" to "Kitten"
+    And I set the field "Answer 2" to "Puppy"
+    And I press "Submit and finish"
+    And I should see "Your answer is correct."
+    And I switch to the main window
+    And I click on "Preview" "link" in the "The new question" "table_row"
+    # Check entering the correct answer for original question.
+    And I switch to "questionpreview" window
+    And I set the field "Answer 1" to "Kitten"
+    And I press "Submit and finish"
+    And I should see "Your answer is correct."
+    And I switch to the main window
