@@ -1,5 +1,5 @@
-@ou @ou_vle @qtype @qtype_varnumeric
-Feature: Test all the basic functionality of this question type
+@ou @ou_vle @qtype @qtype_varnumeric @_switch_window @javascript
+Feature: Test all the basic functionality of varnumeric question type
   In order evaluate students calculating ability
   As an teacher
   I need to create and preview variable numeric questions.
@@ -15,10 +15,9 @@ Feature: Test all the basic functionality of this question type
       | user    | course | role           |
       | teacher | C1     | editingteacher |
     And I log in as "teacher"
-    And I follow "Course 1"
-    And I navigate to "Question bank" node in "Course administration"
+    And I am on "Course 1" course homepage
+    And I navigate to "Question bank" in current page administration
 
-  @javascript
   Scenario: Create, edit then preview a variable numeric question.
     # Create a new question.
     And I add a "Variable numeric" question filling the form with:
@@ -65,7 +64,7 @@ Feature: Test all the basic functionality of this question type
     When I restore "test_backup.mbz" backup into a new course using this options:
       | Schema | Course name | Course 2 |
     Then I should see "Course 2"
-    When I navigate to "Question bank" node in "Course administration"
+    When I navigate to "Question bank" in current page administration
     Then I should see "My first variable numeric question"
 
     # Edit the copy and verify the form field contents.
