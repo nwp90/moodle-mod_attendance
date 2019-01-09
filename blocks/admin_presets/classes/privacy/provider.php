@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of The Course Module Navigation Block
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,26 +14,23 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Admin presets block main controller
- *
- * @package          blocks/admin_presets
- * @copyright        2017 Digidago <contact@digidago.com><www.digidago.com>
- * @author           Jordan Kesraoui | DigiDago
- * @orignalauthor    David Monllaó <david.monllao@urv.cat>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+namespace block_admin_presets\privacy;
 
 defined('MOODLE_INTERNAL') || die();
 
-$capabilities = array(
-    'block/admin_presets:addinstance' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-            'manager' => CAP_ALLOW
-        )
-    )
-);
+use core_privacy\local\metadata\null_provider;
 
+class provider implements
+    // This plugin does not store any personal user data.
+    null_provider {
 
+    /**
+     * Get the language string identifier with the component's language
+     * file to explain why this plugin stores no data.
+     *
+     * @return  string
+     */
+    public static function get_reason() : string {
+        return 'privacy:null_reason';
+    }
+}
