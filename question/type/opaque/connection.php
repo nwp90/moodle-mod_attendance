@@ -66,8 +66,10 @@ class qtype_opaque_connection {
             $class = 'qtype_opaque_soap_client_with_timeout';
         }
 
-        $this->soapclient = new $class($url . '?wsdl', array(
+        $this->soapclient = new $class(__DIR__ . '/opaque.wsdl', array(
+                    'location'           => $url,
                     'soap_version'       => SOAP_1_1,
+                    'cache_wsdl'         => WSDL_CACHE_NONE,
                     'exceptions'         => true,
                     'connection_timeout' => $engine->timeout,
                     'features'           => SOAP_SINGLE_ELEMENT_ARRAYS,
@@ -139,8 +141,8 @@ class qtype_opaque_soap_client_with_timeout extends SoapClient {
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST => true,
         CURLOPT_HEADER => false,
-        CURLOPT_SSL_VERIFYPEER => false,
-        CURLOPT_SSL_VERIFYHOST => false,
+        CURLOPT_SSL_VERIFYHOST => 2,     // This verifies the certificate matches the host.
+        CURLOPT_SSL_VERIFYPEER => false, // We don't verify the certificate authority to allow self-signed.
     );
 
     /** @var array standard HTTP headers to send. */
@@ -165,7 +167,7 @@ class qtype_opaque_soap_client_with_timeout extends SoapClient {
      * (non-PHPdoc)
      * @see SoapClient::__doRequest()
      */
-    public function __doRequest($request, $location, $action, $version, $oneway = false) {
+    public function __doRequest($request, $location, $action, $version, $oneway = false) { // @codingStandardsIgnoreLine
 
         $headers = $this->headers;
         if ($action) {
@@ -217,19 +219,19 @@ class qtype_opaque_soap_client_with_logging extends qtype_opaque_soap_client_wit
         }
     }
 
-    protected function __write_to_log($message) {
+    protected function __write_to_log($message) { // @codingStandardsIgnoreLine
         global $CFG;
         file_put_contents($CFG->dataroot . '/temp/opaquelog.txt', $message . "\n",
                 FILE_APPEND | LOCK_EX);
     }
 
-    protected function __write_to_short_log($message) {
+    protected function __write_to_short_log($message) { // @codingStandardsIgnoreLine
         global $CFG;
         file_put_contents($CFG->dataroot . '/temp/opaqueshortlog.txt', $message . "\n",
                 FILE_APPEND | LOCK_EX);
     }
 
-    protected function __log_arguments($function, $arguments) {
+    protected function __log_arguments($function, $arguments) { // @codingStandardsIgnoreLine
         $this->__log_rule();
         $this->__write_to_log("$function called with arguments:");
         foreach ($arguments as $arg) {
@@ -238,7 +240,7 @@ class qtype_opaque_soap_client_with_logging extends qtype_opaque_soap_client_wit
         }
     }
 
-    protected function __log_result($function, $result, $timetaken) {
+    protected function __log_result($function, $result, $timetaken) { // @codingStandardsIgnoreLine
         $this->__log_thin_rule();
         $this->__write_to_log("$function returned after {$this->__format_time($timetaken)}s. Value:");
         $this->__log_thin_rule();
@@ -248,31 +250,31 @@ class qtype_opaque_soap_client_with_logging extends qtype_opaque_soap_client_wit
         $this->__write_to_short_log("Call to $function succeeded after {$this->__format_time($timetaken)}s.");
     }
 
-    protected function __log_exception($function, $e, $timetaken) {
+    protected function __log_exception($function, $e, $timetaken) { // @codingStandardsIgnoreLine
         $this->__log_thin_rule();
         $this->__write_to_log("$function failed after {$this->__format_time($timetaken)}s. Exception:");
         $this->__log_thin_rule();
-        $this->__log_object($result);
+        $this->__log_object($e);
         $this->__log_rule();
 
         $this->__write_to_short_log("Call to $function failed after {$this->__format_time($timetaken)}s.");
     }
 
-    protected function __log_object($o) {
+    protected function __log_object($o) { // @codingStandardsIgnoreLine
         $this->__write_to_log(print_r($o, true));
     }
 
-    protected function __log_rule() {
+    protected function __log_rule() { // @codingStandardsIgnoreLine
         $this->__write_to_log(
                 "================================================================================");
     }
 
-    protected function __log_thin_rule() {
+    protected function __log_thin_rule() { // @codingStandardsIgnoreLine
         $this->__write_to_log(
                 "--------------------------------------------------------------------------------");
     }
 
-    protected function __format_time($timetaken) {
+    protected function __format_time($timetaken) { // @codingStandardsIgnoreLine
         return format_float($timetaken, 4);
     }
 }

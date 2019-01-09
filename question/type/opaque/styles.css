@@ -10,11 +10,27 @@
 .que .im-controls .opaqueerror {
     color: #800;
     padding: 7em 1em;
-    background: #eeeeee;
+    background: #eee;
 }
 
 .que.opaque .question_aborted {
     padding: 7em 1em;
     text-align: center;
-    background: #eeeeee;
+    background: #eee;
+}
+
+/* Override some unwanted bootstrap CSS that happens to match the OpanMark HTML structure. */
+.que.opaque .radio,
+.que.opaque .checkbox {
+    min-height: 0;
+}
+.que.opaque .radio input[type="radio"],
+.que.opaque .checkbox input[type="checkbox"] {
+    float: none;
+    margin: 0 4px 0 0;
+}
+
+/* Prevent firefox on window is not showing outline when using .focus(). */
+body.gecko .que.opaque input.questionflagimage:focus {
+    outline: 1px dotted;
 }
