@@ -15,10 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Representing the preview column
+ * Representing the question name column
  *
  * @package    mod_studentquiz
- * @copyright  2017 HSR (http://www.hsr.ch)
+ * @copyright  2018 HSR (http://www.hsr.ch)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -27,17 +27,16 @@ namespace mod_studentquiz\bank;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * A column type for preview link to mod_studentquiz_preview
+ * A column type for the name of the question name.
  *
  * @package    mod_studentquiz
- * @copyright  2017 HSR (http://www.hsr.ch)
+ * @copyright  2018 HSR (http://www.hsr.ch)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class preview_column extends \core_question\bank\preview_action_column {
+class question_name_column extends \core_question\bank\question_name_column {
 
     protected $renderer;
     protected $context;
-    protected $previewtext;
 
     /**
      * Loads config of current userid and can see
@@ -46,7 +45,6 @@ class preview_column extends \core_question\bank\preview_action_column {
         global $PAGE;
         $this->renderer = $PAGE->get_renderer('mod_studentquiz');
         $this->context = $this->qbank->get_most_specific_context();
-        $this->previewtext = get_string('preview');
     }
 
     /**
@@ -55,18 +53,8 @@ class preview_column extends \core_question\bank\preview_action_column {
      * @param string $rowclasses
      */
     protected function display_content($question, $rowclasses) {
-        if ($this->can_preview($question)) {
-            echo $this->renderer->question_preview_link($question, $this->context, false, $this->previewtext);
-        }
+        $labelfor = $this->label_for($question);
+        echo $this->renderer->render_question_name_column($question, $rowclasses, $labelfor);
     }
 
-    /**
-     * Look up if current user is allowed to preview this question
-     * @param object $question The current question object
-     * @return boolean
-     */
-    private function can_preview($question) {
-        global $USER;
-        return ($question->createdby == $USER->id) || has_capability('mod/studentquiz:previewothers', $this->context);
-    }
 }
