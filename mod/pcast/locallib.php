@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-
 /**
  * Internal library of functions for module pcast
  *
@@ -32,12 +31,9 @@ require_once($CFG->libdir . '/filelib.php');
 /**
  * Function to get information from media files
  * used for <itunes::duration>
- * @global stdClass $CFG
  * @param string $filename
  * @return array
  */
-
-
 function pcast_get_media_information($filename) {
     global $CFG;
     include_once($CFG->dirroot.'/mod/pcast/lib/getid3/getid3/getid3.php');
@@ -50,7 +46,6 @@ function pcast_get_media_information($filename) {
     return $mp3info;  // Playtime in minutes:seconds, formatted string.
 
 }
-
 
 /**
  * Prints the approval menu
@@ -78,11 +73,12 @@ function pcast_print_approval_menu($cm, $pcast, $mode, $hook, $sortkey = '', $so
  * Prints the alphabet menu
  * @param object $cm
  * @param object $pcast
+ * @param string $mode
  * @param string $hook
  * @param string $sortkey
  * @param string $sortorder
  */
-function pcast_print_alphabet_menu($cm, $pcast, $mode, $hook, $sortkey='', $sortorder = '') {
+function pcast_print_alphabet_menu($cm, $pcast, $mode, $hook, $sortkey = '', $sortorder = '') {
 
     echo html_writer::start_tag('div', array('class' => 'pcast-links')). "\n";
     echo html_writer::tag('div', get_string("explainalphabet", "pcast"), array('class' => 'pcastexplain'));
@@ -104,7 +100,7 @@ function pcast_print_alphabet_menu($cm, $pcast, $mode, $hook, $sortkey='', $sort
  * @param string $sortkey
  * @param string $sortorder
  */
-function pcast_print_date_menu($cm, $pcast, $mode, $hook, $sortkey='', $sortorder = '') {
+function pcast_print_date_menu($cm, $pcast, $mode, $hook, $sortkey = '', $sortorder = '') {
     pcast_print_sorting_links($cm, $mode, $sortkey, $sortorder, $hook);
 }
 
@@ -112,7 +108,7 @@ function pcast_print_date_menu($cm, $pcast, $mode, $hook, $sortkey='', $sortorde
  * Prints the author menu link
  * @param object $cm
  * @param object $pcast
- * @param string mode
+ * @param string $mode
  * @param string $hook
  * @param string $sortkey
  * @param string $sortorder
@@ -137,16 +133,14 @@ function pcast_print_author_menu($cm, $pcast, $mode, $hook, $sortkey = '', $sort
 
 /**
  * Prints the category menu
- * @global stdClass $DB
- * @global stdClass $OUTPUT
+ * @todo This should use html_writer::tag()
+ * @todo These styles should not be hard coded
  * @param object $cm
  * @param object $pcast
  * @param string $hook
  * @param object $category
- * @todo This should use html_writer::tag()
- * @todo These styles should not be hard coded
  */
-function pcast_print_categories_menu($cm, $pcast, $hook=PCAST_SHOW_ALL_CATEGORIES) {
+function pcast_print_categories_menu($cm, $pcast, $hook = PCAST_SHOW_ALL_CATEGORIES) {
      global $DB, $OUTPUT;
 
      echo '<table border="0" width="100%">';
@@ -260,6 +254,7 @@ function pcast_print_special_links($cm, $pcast, $mode, $hook) {
 
 /**
  * Prints the individual letter links used to sort the episodes.
+ * @param object $cm
  * @param object $pcast
  * @param string $mode
  * @param string $hook
@@ -295,11 +290,11 @@ function pcast_print_alphabet_links($cm, $pcast, $mode, $hook, $sortkey, $sortor
 
 /**
  * Prints the sort by ASC / DSC links on the view page.
- * @global stdClass $OUTPUT
  * @param object $cm
  * @param string $mode
  * @param string $sortkey
  * @param string $sortorder
+ * @param string $hook
  */
 function pcast_print_sorting_links($cm, $mode, $sortkey = '', $sortorder = '', $hook='') {
     global $OUTPUT;
@@ -475,12 +470,8 @@ function pcast_print_sorting_links($cm, $mode, $sortkey = '', $sortorder = '', $
 
 }
 
-
 /**
  * Function to display Pcast episodes
- * @global stdClass $OUTPUT
- * @global stdClass $DB
- * @global stdClass $USER
  * @param object $pcast
  * @param object $cm
  * @param int $groupmode
@@ -490,7 +481,6 @@ function pcast_print_sorting_links($cm, $mode, $sortkey = '', $sortorder = '', $
  * @param int $page
  * @return boolean
  */
-
 function pcast_display_standard_episodes($pcast, $cm, $groupmode = 0, $hook='', $sortkey='', $sortorder='asc', $page = 0) {
     global $DB, $USER, $OUTPUT;
 
@@ -561,21 +551,7 @@ function pcast_display_standard_episodes($pcast, $cm, $groupmode = 0, $hook='', 
             $count++;
         }
     }
-
-    if ($count > $pcast->episodesperpage) {
-        // Print a paging bar here.
-        $url = new moodle_url('/mod/pcast/view.php',
-                array('id' => $cm->id,
-                      'mode' => PCAST_STANDARD_VIEW,
-                      'hook' => $hook,
-                      'sortkey' => $sortkey,
-                      'sortorder' => $sortorder)
-                );
-
-        echo html_writer::start_tag('div', array('class' => 'pcast-paging'));
-        echo $OUTPUT->paging_bar($count, $page, $pcast->episodesperpage, $url);
-        echo html_writer::end_tag('div');
-    }
+    pcast_display_paging_bar($pcast, $cm, $count, $page, PCAST_STANDARD_VIEW, $hook, $sortkey, $sortorder);
     return true;
 }
 
@@ -642,9 +618,6 @@ function pcast_episode_allowed_viewing($episode, $cm, $groupmode) {
 
 /**
  * Function to display episodes by category
- * @global stdClass $OUTPUT
- * @global stdClass $DB
- * @global stdClass $USER
  * @param object $pcast
  * @param object $cm
  * @param int $groupmode
@@ -722,25 +695,12 @@ function pcast_display_category_episodes($pcast, $cm, $groupmode = 0, $hook = PC
         }
     }
 
-    if ($count > $pcast->episodesperpage) {
-        // Print a paging bar here.
-        $url = new moodle_url('/mod/pcast/view.php',
-                array('id' => $cm->id,
-                      'mode' => PCAST_CATEGORY_VIEW,
-                      'hook' => $hook)
-                );
+    pcast_display_paging_bar($pcast, $cm, $count, $page, PCAST_CATEGORY_VIEW, $hook);
 
-        echo html_writer::start_tag('div', array('class' => 'pcast-paging'));
-        echo $OUTPUT->paging_bar($count, $page, $pcast->episodesperpage, $url);
-        echo html_writer::end_tag('div');
-    }
 }
 
 /**
  * Display all episodes that sorted by date
- * @global stdClass $OUTPUT
- * @global stdClass $DB
- * @global stdClass $USER
  * @param object $pcast
  * @param object $cm
  * @param int $groupmode
@@ -814,27 +774,11 @@ function pcast_display_date_episodes($pcast, $cm, $groupmode = 0, $hook='',
         }
     }
 
-    if ($count > $pcast->episodesperpage) {
-        // Print a paging bar here.
-        $url = new moodle_url('/mod/pcast/view.php',
-                array('id' => $cm->id,
-                      'mode' => PCAST_DATE_VIEW,
-                      'hook' => $hook,
-                      'sortkey' => $sortkey,
-                      'sortorder' => $sortorder)
-                );
-
-        echo html_writer::start_tag('div', array('class' => 'pcast-paging'));
-        echo $OUTPUT->paging_bar($count, $page, $pcast->episodesperpage, $url);
-        echo html_writer::end_tag('div');
-    }
+    pcast_display_paging_bar($pcast, $cm, $count, $page, PCAST_DATE_VIEW, $hook, $sortkey, $sortorder);
 }
 
 /**
  * Display all episodes that sorted by author
- * @global stdClass $OUTPUT
- * @global stdClass $DB
- * @global stdClass $USER
  * @param object $pcast
  * @param object $cm
  * @param int $groupmode
@@ -931,26 +875,11 @@ function pcast_display_author_episodes($pcast, $cm, $groupmode = 0, $hook='', $s
         }
     }
 
-    if ($count > $pcast->episodesperpage) {
-        // Print a paging bar here.
-        $url = new moodle_url('/mod/pcast/view.php',
-                array('id' => $cm->id,
-                      'mode' => PCAST_AUTHOR_VIEW,
-                      'hook' => $hook,
-                      'sortkey' => $sortkey,
-                      'sortorder' => $sortorder)
-                );
-
-        echo html_writer::start_tag('div', array('class' => 'pcast-paging'));
-        echo $OUTPUT->paging_bar($count, $page, $pcast->episodesperpage, $url);
-        echo html_writer::end_tag('div');
-    }
+    pcast_display_paging_bar($pcast, $cm, $count, $page, PCAST_AUTHOR_VIEW, $hook, $sortkey, $sortorder);
 }
 
 /**
  * Display all episodes that have not yet been approved
- * @global stdClass $OUTPUT
- * @global stdClass $DB
  * @param object $pcast
  * @param object $cm
  * @param int $groupmode
@@ -1030,20 +959,7 @@ function pcast_display_approval_episodes($pcast, $cm, $groupmode = 0, $hook='', 
         }
     }
 
-    if ($count > $pcast->episodesperpage) {
-        // Print a paging bar here.
-        $url = new moodle_url('/mod/pcast/view.php',
-                array('id' => $cm->id,
-                      'mode' => PCAST_APPROVAL_VIEW,
-                      'hook' => $hook,
-                      'sortkey' => $sortkey,
-                      'sortorder' => $sortorder)
-                );
-
-        echo html_writer::start_tag('div', array('class' => 'pcast-paging'));
-        echo $OUTPUT->paging_bar($count, $page, $pcast->episodesperpage, $url);
-        echo html_writer::end_tag('div');
-    }
+    pcast_display_paging_bar($pcast, $cm, $count, $page, PCAST_APPROVAL_VIEW, $hook, $sortkey, $sortorder);
 
 }
 
@@ -1104,15 +1020,13 @@ function pcast_get_episode_sql() {
 
 /**
  * Function to print overview of the episode
- * @global stdClass $CFG
- * @global stdClass $DB
- * @param type $episode
- * @param type $cm
- * @param type $showmedia
- * @param type $showlinks
+ * @param object $episode
+ * @param object $cm
+ * @param bool $showmedia
+ * @param bool $showlinks
  */
 function pcast_display_episode_brief($episode, $cm, $showmedia= true, $showlinks = true) {
-    global $CFG, $DB;
+    global $CFG, $DB, $OUTPUT;
 
     $context = context_module::instance($cm->id);
 
@@ -1169,6 +1083,12 @@ function pcast_display_episode_brief($episode, $cm, $showmedia= true, $showlinks
 
     // Updated.
     $table->data[] = array (get_string("updated", "pcast"), userdate($episode->timemodified));
+
+    // Tags.
+    if (core_tag_tag::is_enabled('mod_pcast', 'pcast_episodes')) {
+        $tags = $OUTPUT->tag_list(core_tag_tag::get_item_tags('mod_pcast', 'pcast_episodes', $episode->id), null, 'pcast-tags');
+        $table->data[] = array (get_string("tags", "tag"), $tags);
+    }
 
     // Calculate editing period.
     $ineditingperiod = ((time() - $episode->timecreated < $CFG->maxeditingtime));
@@ -1231,15 +1151,12 @@ function pcast_display_episode_brief($episode, $cm, $showmedia= true, $showlinks
 
 /**
  * Display the full pcast episode
- * @global stdClass $CFG
- * @global stdClass $DB
- * @global stdClass $USER
  * @param object $episode
  * @param object $cm
  * @param object $course
  */
 function pcast_display_episode_full($episode, $cm, $course) {
-    global $CFG, $DB, $USER;
+    global $CFG, $DB, $USER, $OUTPUT;
 
     $context = context_module::instance($cm->id);
 
@@ -1337,6 +1254,12 @@ function pcast_display_episode_full($episode, $cm, $course) {
         $table->data[] = array (get_string("totalratings", "pcast"), pcast_get_episode_rating_count($episode, $cm));
     }
 
+    // Tags.
+    if (core_tag_tag::is_enabled('mod_pcast', 'pcast_episodes')) {
+        $tags = $OUTPUT->tag_list(core_tag_tag::get_item_tags('mod_pcast', 'pcast_episodes', $episode->id), null, 'pcast-tags');
+        $table->data[] = array (get_string("tags", "tag"), $tags);
+    }
+
     // Calculate editing period.
     $ineditingperiod = ((time() - $episode->timecreated < $CFG->maxeditingtime));
     $manage = '';
@@ -1393,7 +1316,6 @@ function pcast_display_episode_full($episode, $cm, $course) {
 
 /**
  * Displays all views for a single episode
- * @global stdClass $DB
  * @param object $episode
  * @param object $cm
  */
@@ -1436,7 +1358,6 @@ function pcast_display_episode_views($episode, $cm) {
 
 /**
  * Displays all comments for a single episode
- * @global stdClass $CFG
  * @param object $episode
  * @param object $cm
  * @param object $course
@@ -1486,10 +1407,6 @@ function pcast_display_episode_comments($episode, $cm, $course) {
 
 /**
  * Displays the ratingsfor a specific episode
- * @global stdClass $CFG
- * @global stdClass $USER
- * @global stdClass $DB
- * @global stdClass $OUTPUT
  * @param object $episode
  * @param object $cm
  * @param object $course
@@ -1548,7 +1465,6 @@ function pcast_display_episode_ratings($episode, $cm, $course) {
 
 /**
  * Get the total number of views for a specific episode
- * @global stdClass $DB
  * @param object $episode
  * @return string
  */
@@ -1570,7 +1486,6 @@ function pcast_get_episode_view_count($episode) {
 
 /**
  * Get the total number of comments for a specific episode
- * @global stdClass $DB
  * @param object $episode
  * @param object $cm
  * @return string
@@ -1589,7 +1504,6 @@ function pcast_get_episode_comment_count($episode, $cm) {
 
 /**
  * Get the total number of ratings for a specific episode
- * @global stdClass $DB
  * @param object $episode
  * @param object $cm
  * @return string
@@ -1610,13 +1524,10 @@ function pcast_get_episode_rating_count($episode, $cm) {
 /**
  * Print the podcast attachment and the media player if appropriate
  *
- * @global stdClass $CFG
- * @global stdClass $OUTPUT
  * @param object $episode
  * @param object $cm
  * @return string image string or nothing depending on $type param
  */
-
 function pcast_display_mediafile_link($episode, $cm) {
 
     global $CFG, $OUTPUT;
@@ -1652,7 +1563,199 @@ function pcast_display_mediafile_link($episode, $cm) {
     return $templink;
 }
 
+/**
+ * Helper function used to generate allowed file types.
+ * @param object $pcast
+ * @return array
+ */
+function pcast_get_supported_file_types($pcast) {
+    $defaultallowed = array('html_audio', 'web_audio', 'html_video', 'web_video');
+    $filetypesutil = new \core_form\filetypes_util();
 
+    if (empty($pcast->allowedfiletypes)) {
+            // If not configured, limit to audio / video only.
+        return $filetypesutil->normalize_file_types($defaultallowed);
+    }
+    // Use the teachers list.
+    return $filetypesutil->normalize_file_types($pcast->allowedfiletypes);
+
+}
+
+/**
+ * Helper function, builds an array of categories.
+ * @todo cache results using MUC.
+ * @return array
+ */
+function pcast_get_categories() {
+    global $DB;
+    $selectelements = array();
+    $topcat = array();
+    // Get categories.
+    if ($topcategories = $DB->get_records("pcast_itunes_categories")) {
+
+        // Construct an array of top categories.
+        foreach ($topcategories as $topcategory) {
+            $value = (int)$topcategory->id * 1000;
+            $topcat[(int)$value] = $topcategory->name;
+            $selectelements[$topcategory->name] = array();
+        }
+    }
+    if ($nestedcategories = $DB->get_records("pcast_itunes_nested_cat")) {
+        foreach ($nestedcategories as $nestedcategory) {
+            $value = (int)$nestedcategory->topcategoryid * 1000;
+            $topcatname = $topcat[$value];
+            $value = $value + (int)$nestedcategory->id;
+
+            $selectelements[$topcatname][$value] = $nestedcategory->name;
+        }
+    }
+    return $selectelements;
+}
+
+/**
+ * Helper function used to create paging bars.
+ * @param object $pcast
+ * @param object $cm
+ * @param int $count
+ * @param int $page
+ * @param int $mode
+ * @param string $hook
+ * @param string $sortkey
+ * @param string $sortorder
+ */
+function pcast_display_paging_bar($pcast, $cm, $count, $page, $mode, $hook, $sortkey='', $sortorder='') {
+    global $OUTPUT;
+    if ($count > $pcast->episodesperpage) {
+        // Print a paging bar here.
+        $url = new moodle_url('/mod/pcast/view.php',
+                array('id' => $cm->id,
+                      'mode' => $mode,
+                      'hook' => $hook,
+                      'sortkey' => $sortkey,
+                      'sortorder' => $sortorder)
+                );
+
+        echo html_writer::start_tag('div', array('class' => 'pcast-paging'));
+        echo $OUTPUT->paging_bar($count, $page, $pcast->episodesperpage, $url);
+        echo html_writer::end_tag('div');
+    }
+}
+
+
+/**
+ * Returns pcast episodes tagged with a specified tag.
+ *
+ * This is a callback used by the tag area mod_pcast/pcast_episodes to search for pcast episodes
+ * tagged with a specific tag.
+ *
+ * @param core_tag_tag $tag
+ * @param bool $exclusivemode if set to true it means that no other entities tagged with this tag
+ *             are displayed on the page and the per-page limit may be bigger
+ * @param int $fromctx context id where the link was displayed, may be used by callbacks
+ *            to display items in the same context first
+ * @param int $ctx context id where to search for records
+ * @param bool $rec search in subcontexts as well
+ * @param int $page 0-based number of page being displayed
+ * @return \core_tag\output\tagindex
+ */
+function mod_pcast_get_tagged_episodes($tag, $exclusivemode = false, $fromctx = 0, $ctx = 0, $rec = 1, $page = 0) {
+    global $OUTPUT;
+    $perpage = $exclusivemode ? 20 : 5;
+
+    // Build the SQL query.
+    $ctxselect = context_helper::get_preload_record_columns_sql('ctx');
+    $query = "SELECT pe.id, pe.name, pe.pcastid, pe.approved,
+                    cm.id AS cmid, c.id AS courseid, c.shortname, c.fullname, $ctxselect
+                FROM {pcast_episodes} pe
+                JOIN {pcast} p ON p.id = pe.pcastid
+                JOIN {modules} m ON m.name='pcast'
+                JOIN {course_modules} cm ON cm.module = m.id AND cm.instance = p.id
+                JOIN {tag_instance} tt ON pe.id = tt.itemid
+                JOIN {course} c ON cm.course = c.id
+                JOIN {context} ctx ON ctx.instanceid = cm.id AND ctx.contextlevel = :coursemodulecontextlevel
+               WHERE tt.itemtype = :itemtype AND tt.tagid = :tagid AND tt.component = :component
+                 AND cm.deletioninprogress = 0
+                 AND pe.id %ITEMFILTER% AND c.id %COURSEFILTER%";
+
+    $params = array('itemtype' => 'pcast_episodes', 'tagid' => $tag->id, 'component' => 'mod_pcast',
+                    'coursemodulecontextlevel' => CONTEXT_MODULE);
+
+    if ($ctx) {
+        $context = $ctx ? context::instance_by_id($ctx) : context_system::instance();
+        $query .= $rec ? ' AND (ctx.id = :contextid OR ctx.path LIKE :path)' : ' AND ctx.id = :contextid';
+        $params['contextid'] = $context->id;
+        $params['path'] = $context->path.'/%';
+    }
+
+    $query .= " ORDER BY ";
+    if ($fromctx) {
+        // In order-clause specify that modules from inside "fromctx" context should be returned first.
+        $fromcontext = context::instance_by_id($fromctx);
+        $query .= ' (CASE WHEN ctx.id = :fromcontextid OR ctx.path LIKE :frompath THEN 0 ELSE 1 END),';
+        $params['fromcontextid'] = $fromcontext->id;
+        $params['frompath'] = $fromcontext->path.'/%';
+    }
+    $query .= ' c.sortorder, cm.id, pe.id';
+
+    $totalpages = $page + 1;
+
+    // Use core_tag_index_builder to build and filter the list of items.
+    $builder = new core_tag_index_builder('mod_pcast', 'pcast_episodes', $query, $params, $page * $perpage, $perpage + 1);
+    while ($item = $builder->has_item_that_needs_access_check()) {
+        context_helper::preload_from_record($item);
+        $courseid = $item->courseid;
+        if (!$builder->can_access_course($courseid)) {
+            $builder->set_accessible($item, false);
+            continue;
+        }
+        $modinfo = get_fast_modinfo($builder->get_course($courseid));
+        // Set accessibility of this item and all other items in the same course.
+        $builder->walk(function ($taggeditem) use ($courseid, $modinfo, $builder) {
+            if ($taggeditem->courseid == $courseid) {
+                $accessible = false;
+                if (($cm = $modinfo->get_cm($taggeditem->cmid)) && $cm->uservisible) {
+                    if ($taggeditem->approved) {
+                        $accessible = true;
+                    } else {
+                        $accessible = has_capability('mod/pcast:approve', context_module::instance($cm->id));
+                    }
+                }
+                $builder->set_accessible($taggeditem, $accessible);
+            }
+        });
+    }
+
+    $items = $builder->get_items();
+    if (count($items) > $perpage) {
+        $totalpages = $page + 2; // We don't need exact page count, just indicate that the next page exists.
+        array_pop($items);
+    }
+
+    // Build the display contents.
+    if ($items) {
+        $tagfeed = new core_tag\output\tagfeed();
+        foreach ($items as $item) {
+            context_helper::preload_from_record($item);
+            $modinfo = get_fast_modinfo($item->courseid);
+            $cm = $modinfo->get_cm($item->cmid);
+            $pageurl = new moodle_url('/mod/pcast/showepisode.php', array('eid' => $item->id));
+            $pagename = format_string($item->name, true, array('context' => context_module::instance($item->cmid)));
+            $pagename = html_writer::link($pageurl, $pagename);
+            $courseurl = course_get_url($item->courseid, $cm->sectionnum);
+            $cmname = html_writer::link($cm->url, $cm->get_formatted_name());
+            $coursename = format_string($item->fullname, true, array('context' => context_course::instance($item->courseid)));
+            $coursename = html_writer::link($courseurl, $coursename);
+            $icon = html_writer::link($pageurl, html_writer::empty_tag('img', array('src' => $cm->get_icon_url())));
+            $tagfeed->add($icon, $pagename, $cmname.'<br>'.$coursename);
+        }
+
+        $content = $OUTPUT->render_from_template('core_tag/tagfeed',
+            $tagfeed->export_for_template($OUTPUT));
+
+        return new core_tag\output\tagindex($tag, 'mod_pcast', 'pcast_episodes', $content,
+            $exclusivemode, $fromctx, $ctx, $rec, $page, $totalpages);
+    }
+}
 
 /**
  * Class representing the virtual node with all itemids in the file browser
@@ -1661,7 +1764,6 @@ function pcast_display_mediafile_link($episode, $cm) {
  * @copyright 2012 Stephen Bourget
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class pcast_file_info_container extends file_info {
     /** @var file_browser */
     protected $browser;
@@ -1700,6 +1802,7 @@ class pcast_file_info_container extends file_info {
     }
 
     /**
+     * Helper function that loads parameters.
      * @return array with keys contextid, filearea, itemid, filepath and filename
      */
     public function get_params() {

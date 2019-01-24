@@ -21,7 +21,7 @@
  * It uses the standard core Moodle formslib. For more info about them, please
  * visit: http://docs.moodle.org/en/Development:lib/formslib.php
  *
- * @package   mod-pcast
+ * @package   mod_pcast
  * @copyright 2010 Stephen Bourget
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -31,11 +31,25 @@ if (!defined('MOODLE_INTERNAL')) {
 }
 
 require_once($CFG->dirroot.'/lib/formslib.php');
+require_once(dirname(__FILE__).'/locallib.php');
 
+/**
+ * The pcast episode configuration form
+ *
+ * It uses the standard core Moodle formslib. For more info about them, please
+ * visit: http://docs.moodle.org/en/Development:lib/formslib.php
+ *
+ * @package   mod_pcast
+ * @copyright 2010 Stephen Bourget
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class mod_pcast_entry_form extends moodleform {
 
+    /**
+     * Mform definition.
+     */
     public function definition() {
-        global $DB, $CFG, $pcast;
+        global $CFG, $pcast;
 
         $mform =& $this->_form;
         $cm = $this->_customdata['cm'];
@@ -61,18 +75,18 @@ class mod_pcast_entry_form extends moodleform {
         $mform->addRule('summary', get_string('required'), 'required', null, 'client');
 
         // Attachment.
-
         $mform->addElement('header', 'attachments', get_string('attachment', 'pcast'));
+
+        // Media File.
         $mform->addElement('filemanager', 'mediafile', get_string('pcastmediafile', 'pcast'), null,
             array('subdirs' => 0,
                 'maxfiles' => 1,
                 'maxbytes' => $pcast->maxbytes,
-                'filetypes' => array('audio', 'video'),
+                'accepted_types' => pcast_get_supported_file_types($pcast),
                 'return_types' => FILE_INTERNAL | FILE_EXTERNAL,
                 'returnvalue' => 'ref_id')
             );
 
-        // Media File.
         $mform->addRule('mediafile', get_string('required'), 'required', null, 'client');
 
         // ITunes Settings.
@@ -93,35 +107,11 @@ class mod_pcast_entry_form extends moodleform {
 
         // Disable if turned off on module settings page.
         if ($pcast->userscancategorize) {
-
-            $selectelements = array();
-            $topcat = array();
-            // Get categories.
-            if ($topcategories = $DB->get_records("pcast_itunes_categories")) {
-
-                // Construct an array of top categories.
-                foreach ($topcategories as $topcategory) {
-                    $value = (int)$topcategory->id * 1000;
-                    $topcat[(int)$value] = $topcategory->name;
-                    $selectelements[$topcategory->name] = array();
-                }
-            }
-            if ($nestedcategories = $DB->get_records("pcast_itunes_nested_cat")) {
-                foreach ($nestedcategories as $nestedcategory) {
-                    $value = (int)$nestedcategory->topcategoryid * 1000;
-                    $topcatname = $topcat[$value];
-                    $value = $value + (int)$nestedcategory->id;
-
-                    $selectelements[$topcatname][$value] = $nestedcategory->name;
-                }
-            }
-
             // Category form element, Set the default to the podcast category.
-            $mform->addElement('selectgroups', 'category', get_string('category', 'pcast'), $selectelements);
+            $mform->addElement('selectgroups', 'category', get_string('category', 'pcast'), pcast_get_categories());
             $mform->setDefault('category', (($pcast->topcategory * 1000) + $pcast->nestedcategory));
             $mform->addHelpButton('category', 'category', 'pcast');
             $mform->disabledIf('category', 'enablerssitunes', 'eq', 0);
-
         }
 
         // Content.
@@ -133,8 +123,15 @@ class mod_pcast_entry_form extends moodleform {
         $mform->addHelpButton('explicit', 'explicit', 'pcast');
         $mform->setDefault('explicit', 2);
 
-        // Hidden.
+        // Tags.
+        if (core_tag_tag::is_enabled('mod_pcast', 'pcast_episodes')) {
+            $mform->addElement('header', 'tagshdr', get_string('tags', 'tag'));
 
+            $mform->addElement('tags', 'tags', get_string('tags'),
+                array('itemtype' => 'pcast_episodes', 'component' => 'mod_pcast'));
+        }
+
+        // Hidden.
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
         $mform->addElement('hidden', 'cmid');

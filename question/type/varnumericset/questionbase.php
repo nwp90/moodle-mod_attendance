@@ -22,10 +22,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 require_once($CFG->dirroot . '/question/type/questionbase.php');
 require_once($CFG->dirroot . '/question/type/varnumericset/number_interpreter.php');
-
-defined('MOODLE_INTERNAL') || die();
 
 
 /**
@@ -64,8 +64,9 @@ class qtype_varnumeric_question_base extends question_graded_automatically_with_
     }
 
     public function get_question_summary() {
-        return $this->html_to_text($this->calculator->evaluate_variables_in_text(
-                $this->questiontext), $this->questiontextformat);
+        return trim($this->html_to_text($this->calculator->evaluate_variables_in_text(
+                $this->questiontext), $this->questiontextformat),
+                "\n\r \t");
     }
 
     public function summarise_response(array $response) {

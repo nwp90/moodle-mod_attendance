@@ -73,7 +73,7 @@ class qtype_varnumeric_statistics_from_steps_testcase extends mod_quiz_attempt_w
         $this->report = new quiz_statistics_report();
         $whichattempts = QUIZ_GRADEAVERAGE;
         $whichtries = question_attempt::LAST_TRY;
-        $groupstudents = array();
+        $groupstudents = new \core\dml\sql_join();
         $questions = $this->report->load_and_initialise_questions_for_calculations($this->quiz);
         list($quizstats, $questionstats) = $this->report->get_all_stats_and_analysis(
                 $this->quiz, $whichattempts, $whichtries, $groupstudents, $questions);
@@ -111,10 +111,20 @@ class qtype_varnumeric_statistics_from_steps_testcase extends mod_quiz_attempt_w
         $this->assertEquals(25, $total);
 
         $this->assertEquals(25, $questionstats->for_slot(1)->s);
-        $this->assertEquals(null, $questionstats->for_slot(1, 1));
-        $this->assertEquals(null, $questionstats->for_slot(1, 2));
-        $this->assertEquals(null, $questionstats->for_slot(1, 3));
-        $this->assertEquals(null, $questionstats->for_slot(1, 4));
-        $this->assertEquals(null, $questionstats->for_slot(1, 5));
+        $this->expectException('coding_exception');
+        $this->expectExceptionMessage('Reference to unknown slot 1 variant 1');
+        $questionstats->for_slot(1, 1);
+        $this->expectException('coding_exception');
+        $this->expectExceptionMessage('Reference to unknown slot 1 variant 2');
+        $questionstats->for_slot(1, 2);
+        $this->expectException('coding_exception');
+        $this->expectExceptionMessage('Reference to unknown slot 1 variant 3');
+        $questionstats->for_slot(1, 3);
+        $this->expectException('coding_exception');
+        $this->expectExceptionMessage('Reference to unknown slot 1 variant 4');
+        $questionstats->for_slot(1, 4);
+        $this->expectException('coding_exception');
+        $this->expectExceptionMessage('Reference to unknown slot 1 variant 5');
+        $questionstats->for_slot(1, 5);
     }
 }

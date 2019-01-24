@@ -103,23 +103,39 @@ class boolean extends base {
         }
         $params[] = 'y';
 
-        $sql = 'SELECT response_id as rid, COUNT(response_id) AS score ' .
+        $feedbackscores = false;
+        $sql = 'SELECT response_id, choice_id ' .
             'FROM {'.$this->response_table().'} ' .
-            'WHERE question_id= ? ' . $rsql . ' AND choice_id = ? ' .
-            'GROUP BY response_id ' .
+            'WHERE question_id= ? ' . $rsql . ' ' .
             'ORDER BY response_id ASC';
-        return $DB->get_recordset_sql($sql, $params);
+        if ($responses = $DB->get_recordset_sql($sql, $params)) {
+            $feedbackscores = [];
+            foreach ($responses as $rid => $response) {
+                $feedbackscores[$rid] = new \stdClass();
+                $feedbackscores[$rid]->rid = $rid;
+                $feedbackscores[$rid]->score = ($response->choice_id == 'y') ? 1 : 0;
+            }
+        }
+        return $feedbackscores;
     }
 
     /**
+     * Provide a template for results screen if defined.
+     * @return mixed The template string or false/
+     */
+    public function results_template() {
+        return 'mod_questionnaire/results_choice';
+    }
+
+    /**
+     * Return the JSON structure required for the template.
+     *
      * @param bool $rids
      * @param string $sort
      * @param bool $anonymous
      * @return string
      */
     public function display_results($rids=false, $sort='', $anonymous=false) {
-        $output = '';
-
         if (empty($this->stryes)) {
             $this->stryes = get_string('yes');
             $this->strno = get_string('no');
@@ -130,8 +146,10 @@ class boolean extends base {
         } else if (is_int($rids)) {
             $prtotal = 0;
         }
+        $numresps = count($rids);
 
-         $this->counts = array($this->stryes => 0, $this->strno => 0);
+        $this->counts = [$this->stryes => 0, $this->strno => 0];
+        $numrespondents = 0;
         if ($rows = $this->get_results($rids, $anonymous)) {
             foreach ($rows as $row) {
                 $this->choice = $row->choice_id;
@@ -142,13 +160,13 @@ class boolean extends base {
                     $this->choice = $this->strno;
                 }
                 $this->counts[$this->choice] = intval($count);
+                $numrespondents += $this->counts[$this->choice];
             }
-            $output .= \mod_questionnaire\response\display_support::mkrespercent($this->counts, count($rids),
-                $this->question->precise, $prtotal, $sort = '');
+            $pagetags = $this->get_results_tags($this->counts, $numresps, $numrespondents, $prtotal, '');
         } else {
-            $output .= '<p class="generaltable">&nbsp;'.get_string('noresponsedata', 'questionnaire').'</p>';
+            $pagetags = new \stdClass();
         }
-        return $output;
+        return $pagetags;
     }
 
     /**
@@ -171,9 +189,6 @@ class boolean extends base {
         $records = $DB->get_records_sql($sql, [$rid]);
         foreach ($records as $qid => $row) {
             $choice = $row->choice_id;
-            if (isset ($row->name) && $row->name == '') {
-                $noname = true;
-            }
             unset ($row->id);
             unset ($row->choice_id);
             $row = (array)$row;
@@ -215,8 +230,8 @@ class boolean extends base {
         // while all others are an integer. So put the boolean response in "response" field instead (CONTRIB-6436).
         // NOTE - the actual use of "boolean" should probably change to not use "choice_id" at all, or use it as
         // numeric zero and one instead.
-        $extraselect = '0 AS choice_id, ' . $DB->sql_order_by_text('qrb.choice_id', 1000) . ' AS response, 0 AS rank';
         $alias = 'qrb';
+        $extraselect = '0 AS choice_id, ' . $DB->sql_order_by_text('qrb.choice_id', 1000) . ' AS response, 0 AS rankvalue';
 
         return "
             SELECT " . $DB->sql_concat_join("'_'", ['qr.id', "'".$this->question->helpname()."'", $alias.'.id']) . " AS id,

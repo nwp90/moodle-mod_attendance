@@ -396,9 +396,9 @@ class mod_game_mod_form extends moodleform_mod {
         }
 
         // Header/Footer options.
-        $mform->addElement('header', 'headerfooteroptions', 'Header/Footer Options');
-        $mform->addElement('htmleditor', 'toptext', get_string('toptext', 'game'));
-        $mform->addElement('htmleditor', 'bottomtext', get_string('bottomtext', 'game'));
+        $mform->addElement('header', 'headerfooteroptions', get_string('header_footer_options', 'game'));
+        $mform->addElement('editor', 'toptext', get_string('toptext', 'game'));
+        $mform->addElement('editor', 'bottomtext', get_string('bottomtext', 'game'));
 
         $features = new stdClass;
         $this->standard_coursemodule_elements($features);
@@ -493,6 +493,23 @@ class mod_game_mod_form extends moodleform_mod {
     }
 
     /**
+     * data_preprocessing
+     *
+     * @param stdClass $toform
+     */
+    public function data_preprocessing(&$toform) {
+        if (isset($toform['grade'])) {
+            // Convert to a real number, so we don't get 0.0000.
+            $toform['grade'] = $toform['grade'] + 0;
+        }
+
+        // Completion settings check.
+        if (empty($toform['completionusegrade'])) {
+            $toform['completionpass'] = 0; // Forced unchecked.
+        }
+    }
+
+    /**
      * validation
      *
      * @param stdClass $data
@@ -547,16 +564,17 @@ class mod_game_mod_form extends moodleform_mod {
      *
      * @param array $defaultvalues
      */
-    public function set_data($defaultvalues) {
+    public function set_data( $defaultvalues) {
         global $DB;
 
         if (isset( $defaultvalues->type)) {
             // Default values for every game.
             if ($defaultvalues->type == 'hangman') {
                 $defaultvalues->param10 = 6;    // Maximum number of wrongs.
+                $defaultvalues->param3 = 2;
             } else if ($defaultvalues->type == 'snakes') {
                 $defaultvalues->gamekind = $defaultvalues->type;
-                $defaultvalues->param3 = 1;
+                $defaultvalues->param3 = 3;
                 $defaultvalues->questioncategoryid = 0;
             } else if ($defaultvalues->type == 'millionaire') {
                 $defaultvalues->shuffle = 1;
@@ -619,7 +637,19 @@ class mod_game_mod_form extends moodleform_mod {
             }
         }
 
-        parent::set_data($defaultvalues);
+        if (isset( $defaultvalues->toptext)) {
+            $a = array();
+            $a[ 'text'] = $defaultvalues->toptext;
+            $defaultvalues->toptext = $a;
+        }
+
+        if (isset( $defaultvalues->bottomtext)) {
+            $a = array();
+            $a[ 'text'] = $defaultvalues->bottomtext;
+            $defaultvalues->bottomtext = $a;
+        }
+
+        parent::set_data( $defaultvalues);
     }
 
     /**
@@ -634,7 +664,7 @@ class mod_game_mod_form extends moodleform_mod {
         $group = array();
         $group[] = $mform->createElement('advcheckbox', 'completionpass', null, get_string('completionpass', 'quiz'),
                 array('group' => 'cpass'));
-
+        $mform->disabledIf('completionpass', 'completionusegrade', 'notchecked');
         $group[] = $mform->createElement('advcheckbox', 'completionattemptsexhausted', null,
                 get_string('completionattemptsexhausted', 'quiz'),
                 array('group' => 'cattempts'));

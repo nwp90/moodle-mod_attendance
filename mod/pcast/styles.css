@@ -20,7 +20,7 @@
     width: 75%;
 }
 .pcast-comments {
-    margin:0 auto;
+    margin: 0 auto;
     text-align: center;
 }
 
@@ -29,29 +29,33 @@
 }
 
 .pcast-menu20 {
-    text-align:center;
-    width:20%;
+    text-align: center;
+    width: 20%;
 }
 
 .pcast-menu60 {
-    text-align:center;
-    width:60%;
+    text-align: center;
+    width: 60%;
 }
 
 .pcast-links {
-    text-align:center;
+    text-align: center;
 }
 
 .pcast-episode-notice {
-    margin:0 auto;
+    margin: 0 auto;
     text-align: center;
 }
 
 .pcast-paging {
-    text-align:center;
+    text-align: center;
 }
 
-.pcast-media .mediaplugin div{
-    margin-left:0;
-    margin-right:auto;
+.pcast-media .mediaplugin div {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+.pcast-tags b {
+    display: none;
 }

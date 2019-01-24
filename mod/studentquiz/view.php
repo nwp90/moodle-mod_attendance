@@ -73,9 +73,13 @@ if (data_submitted()) {
     }
 }
 
+$renderer = $PAGE->get_renderer('mod_studentquiz', 'overview');
+$renderer->init_question_table_wanted_columns();
+
 // Load view.
-$view = new mod_studentquiz_view($course, $context, $cm, $studentquiz, $USER->id);
 $report = new mod_studentquiz_report($cmid);
+$view = new mod_studentquiz_view($course, $context, $cm, $studentquiz, $USER->id, $report);
+
 
 $PAGE->set_url($view->get_pageurl());
 $PAGE->set_title($view->get_title());
@@ -87,16 +91,13 @@ $view->process_actions();
 // Fire view event for completion API and event API.
 mod_studentquiz_overview_viewed($course, $cm, $context);
 
-$renderer = $PAGE->get_renderer('mod_studentquiz', 'overview');
-
-$regions = $PAGE->blocks->get_regions();
-$PAGE->blocks->add_fake_block($renderer->render_stat_block($report), reset($regions));
-$regions = $PAGE->blocks->get_regions();
-$PAGE->blocks->add_fake_block($renderer->render_ranking_block($report), reset($regions));
+$renderer->add_fake_block($report);
 
 echo $OUTPUT->header();
 // Render view.
 echo $renderer->render_overview($view);
+
+$PAGE->requires->js_init_code($renderer->render_bar_javascript_snippet());
 
 echo $OUTPUT->footer();
 

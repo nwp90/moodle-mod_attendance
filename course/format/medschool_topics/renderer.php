@@ -310,7 +310,7 @@ class format_medschool_topics_renderer extends format_section_renderer_base {
         if ($course->coursebannerdisplay) {
             foreach ($course->get_course_overviewfiles() as $file) {
                 $isimage = $file->is_valid_image();
-                $isHeader = !strcmp($file->get_filename(),'Header.jpg');
+                $isHeader = !strcmp($file->get_filename(),'Header.jpg'); 
                 if ($isimage && $isHeader) {
                     $banner_url = file_encode_url(
                         $CFG->wwwroot . '/pluginfile.php',
@@ -322,11 +322,12 @@ class format_medschool_topics_renderer extends format_section_renderer_base {
                     break;
                 }
             }
-            if($course->coursebannerheight > 0){
-                $attrs = [ 'style' => 'height:80px; background-image:url(' . $banner_url . ');' ];
-            }
-            else{
-                $attrs = [ 'style' => 'background-image:url(' . $banner_url . ');' ];
+            if($course->coursebannerheight == 1){
+                $attrs = [ 'style' => 'height:80px; background-size:cover; background-image:url(' . $banner_url . ');' ];
+            }else if($course->coursebannerheight == 2){
+                $attrs = [ 'style' => 'height:180px; background-size:cover; background-image:url(' . $banner_url . ');' ];
+            }else{
+                $attrs = [ 'style' => 'background-size:cover; background-image:url(' . $banner_url . ');' ];
             }
             $section0->summary = html_writer::span('', 'header-image', $attrs) . $navbar . $section0->summary;
         }

@@ -59,6 +59,7 @@ $string['coursebannerheight'] = 'Course Banner height';
 $string['coursebannerheight_help'] = 'Displays the course banner image at 80px or 120px.';
 $string['wide'] = 'Wide';
 $string['narrow'] = 'Narrow';
+$string['vwide'] = 'Extra wide';
 $string['navigationsectionlink'] = 'Navigation to link to single section?';
 $string['navigationsectionlink_help'] = 'If set to yes navigation buttons will link to just individual section instead of displaying all sections in one page.';
 $string['auto'] = 'Auto';

@@ -315,7 +315,8 @@ class format_medschool_topics extends format_base {
                     'element_attributes' => array(
                         array(
                             0 => new lang_string('wide', 'format_medschool_topics'),
-                            1 => new lang_string('narrow', 'format_medschool_topics')
+                            1 => new lang_string('narrow', 'format_medschool_topics'),
+                            2 => new lang_string('vwide', 'format_medschool_topics')
                         )
                     ),
                     'help' => 'coursebannerheight',
@@ -495,7 +496,7 @@ class format_medschool_topics extends format_base {
      * @return bool
      */
     public function supports_news() {
-        return false;
+        return true;
     }
 
     /**
@@ -527,7 +528,19 @@ class format_medschool_topics extends format_base {
         $rv['section_availability'] = $renderer->section_availability($this->get_section($section));
         return $rv;
     }
+
+    /**
+     * Return the plugin configs for external functions.
+     *
+     * @return array the list of configuration settings
+     * @since Moodle 3.5
+     */
+    public function get_config_for_external() {
+        // Return everything (nothing to hide).
+        return $this->get_format_options();
+    }
 }
+
 
 /**
  * Implements callback inplace_editable() allowing to edit values in-place

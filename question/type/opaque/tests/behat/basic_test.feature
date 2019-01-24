@@ -1,5 +1,5 @@
 @ou @ou_vle @qtype @qtype_opaque
-Feature: Test all the basic functionality of this question type
+Feature: Test all the basic functionality of opaque question type
   In order evaluate students calculating ability
   As an teacher
   I need to create and preview variable numeric questions.
@@ -16,8 +16,8 @@ Feature: Test all the basic functionality of this question type
       | teacher | C1     | editingteacher |
     And I set up Opaque using the test configuration
     And I log in as "teacher"
-    And I follow "Course 1"
-    And I navigate to "Question bank" node in "Course administration"
+    And I am on "Course 1" course homepage
+    And I navigate to "Question bank" in current page administration
 
   @javascript
   Scenario: Create, edit then preview an Opaque question.
@@ -36,12 +36,12 @@ Feature: Test all the basic functionality of this question type
     And I press "Start again with these options"
     Then I should see "A catalyst speeds up a reaction"
     And the state of "A catalyst speeds up a reaction" question is shown as "You have 3 tries."
-    When I set the field "q3:1_omval_input" to "Lubrication"
+    When I set the field with xpath "//input[contains(@id, '_omval_input')]" to "Lubrication"
     And I press "Check"
     Then I should see "Your answer is  incorrect."
     When I press "Try again"
     Then the state of "A catalyst speeds up a reaction" question is shown as "You have 2 tries left."
-    When I set the field "q3:1_omval_input" to "Heat"
+    When I set the field with xpath "//input[contains(@id, '_omval_input')]" to "Heat"
     And I press "Check"
     Then I should see "Increasing temperature always speeds up a reaction."
     And the state of "A catalyst speeds up a reaction" question is shown as "Correct"
@@ -56,7 +56,7 @@ Feature: Test all the basic functionality of this question type
     When I restore "test_backup.mbz" backup into a new course using this options:
       | Schema | Course name | Course 2 |
     Then I should see "Course 2"
-    When I navigate to "Question bank" node in "Course administration"
+    When I navigate to "Question bank" in current page administration
     Then I should see "Test Opaque question"
 
     # Edit the copy and verify the form field contents.
@@ -71,5 +71,5 @@ Feature: Test all the basic functionality of this question type
     Then I should see "Edited question name"
 
     # Verify that the engine definition was reused, not duplicated.
-    When I navigate to "Opaque" node in "Site administration > Plugins > Question types"
+    When I navigate to "Plugins > Question types > Opaque" in site administration
     Then I should see "Opaque engine for tests (Used by 2 questions)"

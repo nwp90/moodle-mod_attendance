@@ -30,8 +30,6 @@ defined('MOODLE_INTERNAL') || die();
  * This function is the main entry point to pcast
  * rss feeds generation.
  *
- * @global object $CFG
- * @global object $DB
  * @param string? $context
  * @param array $args
  * @return string (path)
@@ -39,7 +37,9 @@ defined('MOODLE_INTERNAL') || die();
 function pcast_rss_get_feed($context, $args) {
     global $CFG, $DB;
 
-    if (empty($CFG->pcast_enablerssfeeds)) {
+    $pcastconfig = get_config('mod_pcast');
+
+    if (empty($pcastconfig->enablerssfeeds)) {
         debugging("DISABLED (module configuration)");
         return null;
     }
@@ -311,7 +311,6 @@ function pcast_rss_delete_file($pcast) {
 
 /**
  * Looks up the author information from the id
- * @global object $DB
  * @param int $userid
  * @return object
  */
@@ -323,7 +322,6 @@ function pcast_rss_author_lookup($userid) {
 
 /**
  * Lookup the names of the category for this podcast or episode
- * @global object $DB
  * @param object $pcast
  * @return \stdClass
  */
@@ -338,9 +336,6 @@ function pcast_rss_category_lookup($pcast) {
 
 /**
  * This function return all the headers for every pcast rss feed.
- * @global object $CFG
- * @global stdclass $USER
- * @global stdclass $OUTPUT
  * @param string $title
  * @param string $link
  * @param string $description
@@ -498,7 +493,6 @@ function pcast_rss_header($title = null, $link = null, $description = null, $pca
  * item->pubdate: The pubdate of the item
  * item->link: The link url of the item
  * item->description: The content of the item
- * @global object $CFG
  * @param stdclass $context
  * @param object $items
  * @param boolean $itunes
@@ -508,6 +502,7 @@ function pcast_rss_header($title = null, $link = null, $description = null, $pca
 function pcast_rss_add_items($context, $items, $itunes=false, $currentgroup =0) {
 
     global $CFG;
+    $pcastconfig = get_config('mod_pcast');
 
     $result = '';
 
@@ -532,7 +527,7 @@ function pcast_rss_add_items($context, $items, $itunes=false, $currentgroup =0) 
                 $result .= rss_full_tag('pubDate', 3, false, gmdate('D, d M Y H:i:s', $item->pubdate).' GMT');  // MDL-12563.
 
                 // Rewrite the URLs for the description fields.
-                if ($CFG->pcast_allowhtmlinsummary) {
+                if ($pcastconfig->allowhtmlinsummary) {
                     // Re-write the url paths to be valid.
                     $description = file_rewrite_pluginfile_urls($item->description,
                                    'pluginfile.php', $context->id, 'mod_pcast', 'summary', $item->id);
@@ -578,8 +573,6 @@ function pcast_rss_add_items($context, $items, $itunes=false, $currentgroup =0) 
 
 /**
  * Generates the enclosure tags for the media files.
- * @global object $CFG
- * @global object $DB
  * @param object $item
  * @return string
  */
@@ -631,18 +624,14 @@ function pcast_rss_footer($title = null, $link = null, $description = null) {
     return $result;
 }
 
-
-
-
 /**
  * This function returns the URL for the RSS XML file.
  *
- * @global object
+ * @todo THIS WILL NOT WORK WITH SLASHARGS DISABLED
  * @param int contextid the course id
  * @param int userid the current user id
- * @param string modulename the name of the current module. For example "forum"
+ * @param string componentname the name of the current module.
  * @param string $additionalargs For modules, module instance id
- * @todo THIS WILL NOT WORK WITH SLASHARGS DISABLED
  */
 function pcast_rss_get_url($contextid, $userid, $componentname, $additionalargs) {
     global $CFG;
@@ -654,10 +643,8 @@ function pcast_rss_get_url($contextid, $userid, $componentname, $additionalargs)
 
 }
 
-
 /**
  * Generates the file path to the .pcast file
- * @global object $CFG
  * @param string $componentname
  * @param string $filename
  * @return string URL
@@ -702,10 +689,10 @@ function pcast_build_pcast_file($pcast, $url) {
 /**
  * This function saves to file the rss feed specified in the parameters
  *
- * @global object
  * @param string $componentname the module name ie forum. Used to create a cache directory.
  * @param string $filename the name of the file to be created ie "1234"
  * @param string $contents the data to be written to the file
+ * @param bool $expandfilename used to get the full file name.
  */
 function pcast_rss_save_file($componentname, $filename, $contents, $expandfilename=true) {
 
@@ -731,4 +718,16 @@ function pcast_rss_save_file($componentname, $filename, $contents, $expandfilena
         }
     }
     return $status;
+}
+
+/**
+ * Sends an error formatted as an rss file and then dies.
+ *
+ * @param string $error
+ * @param string $filename
+ * @param int $lifetime
+ */
+function pcast_rss_error($error = 'rsserror', $filename = 'rss.xml', $lifetime = 0) {
+    send_file(rss_geterrorxmlfile($error), $filename, $lifetime, false, true);
+    exit;
 }

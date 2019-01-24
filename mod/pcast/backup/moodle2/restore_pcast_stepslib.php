@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package moodlecore
+ * Structure step to restore one pcast activity.
+ * @package mod_pcast
  * @subpackage backup-moodle2
  * @copyright 2011 Stephen Bourget
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,9 +26,17 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * Structure step to restore one pcast activity.
+ *
+ * @package mod_pcast
+ * @subpackage backup-moodle2
+ * @copyright 2011 Stephen Bourget
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class restore_pcast_activity_structure_step extends restore_activity_structure_step {
 
+    /**
+     * DB structure for a podcast.
+     */
     protected function define_structure() {
 
         $paths = array();
@@ -36,6 +45,7 @@ class restore_pcast_activity_structure_step extends restore_activity_structure_s
         $paths[] = new restore_path_element('pcast', '/activity/pcast');
         if ($userinfo) {
             $paths[] = new restore_path_element('pcast_episode', '/activity/pcast/episodes/episode');
+            $paths[] = new restore_path_element('pcast_tag', '/activity/pcast/episodes/episode/tags/tag');
             $paths[] = new restore_path_element('pcast_view', '/activity/pcast/episodes/episode/views/view');
             $paths[] = new restore_path_element('pcast_rating', '/activity/pcast/episodes/episode/ratings/rating');
 
@@ -45,6 +55,10 @@ class restore_pcast_activity_structure_step extends restore_activity_structure_s
         return $this->prepare_activity_structure($paths);
     }
 
+    /**
+     * Function to restore Podcast activity
+     * @param class $data
+     */
     protected function process_pcast($data) {
         global $DB;
 
@@ -55,7 +69,6 @@ class restore_pcast_activity_structure_step extends restore_activity_structure_s
         $data->userid = $this->get_mappingid('user', $data->userid);
         $data->assesstimestart = $this->apply_date_offset($data->assesstimestart);
         $data->assesstimefinish = $this->apply_date_offset($data->assesstimefinish);
-        $data->timemodified = $this->apply_date_offset($data->timemodified);
 
         // Insert the pcast record.
         $newitemid = $DB->insert_record('pcast', $data);
@@ -64,6 +77,10 @@ class restore_pcast_activity_structure_step extends restore_activity_structure_s
         $this->set_mapping('pcast', $oldid, $newitemid);
     }
 
+    /**
+     * Function to restore a single episode
+     * @param class $data
+     */
     protected function process_pcast_episode($data) {
         global $DB;
 
@@ -78,6 +95,10 @@ class restore_pcast_activity_structure_step extends restore_activity_structure_s
         $this->set_mapping('pcast_episode', $oldid, $newitemid, true); // Files by this itemname.
     }
 
+    /**
+     * Function to restore a user view records for  single episode
+     * @param class $data
+     */
     protected function process_pcast_view($data) {
         global $DB;
 
@@ -92,6 +113,10 @@ class restore_pcast_activity_structure_step extends restore_activity_structure_s
 
     }
 
+    /**
+     * Function to restore user ratings
+     * @param class $data
+     */
     protected function process_pcast_rating($data) {
         global $DB;
 
@@ -107,8 +132,7 @@ class restore_pcast_activity_structure_step extends restore_activity_structure_s
         }
         $data->rating = $data->value;
         $data->userid = $this->get_mappingid('user', $data->userid);
-        $data->timecreated = $this->apply_date_offset($data->timecreated);
-        $data->timemodified = $this->apply_date_offset($data->timemodified);
+        // Any changes to the list of dates that needs to be rolled should be same during course restore and course reset.
 
         // Make sure that we have both component and ratingarea set. These were added in 2.1.
         // Prior to that all ratings were for entries so we know what to set them too.
@@ -123,7 +147,30 @@ class restore_pcast_activity_structure_step extends restore_activity_structure_s
 
     }
 
+    /**
+     * Function to restore user tags
+     * @param class $data
+     */
+    protected function process_pcast_tag($data) {
 
+        $data = (object)$data;
+        if (!core_tag_tag::is_enabled('mod_pcast', 'pcast_episodes')) { // Tags disabled in server, nothing to process.
+            return;
+        }
+
+        $tag = $data->rawname;
+        if (!$itemid = $this->get_mappingid('pcast_episode', $data->itemid)) {
+            // Some orphaned tag, we could not find the pcast episodes for it - ignore.
+            return;
+        }
+
+        $context = context_module::instance($this->task->get_moduleid());
+        core_tag_tag::add_item_tag('mod_pcast', 'pcast_episodes', $itemid, $context, $tag);
+    }
+
+    /**
+     * After restore hook, process file attachments.
+     */
     protected function after_execute() {
         // Add pcast related files, no need to match by itemname (just internally handled context).
         $this->add_related_files('mod_pcast', 'intro', null);

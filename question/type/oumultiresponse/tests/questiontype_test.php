@@ -99,15 +99,15 @@ class qtype_oumultiresponse_test extends question_testcase {
             2 => new question_answer(2, 'B', 0, '', FORMAT_HTML),
             3 => new question_answer(3, 'C', 0, '', FORMAT_HTML),
         );
-        $this->assertEquals(1/3,
+        $this->assertEquals(1 / 3,
                 $this->qtype->get_random_guess_score($questiondata), '', 0.000001);
 
         $questiondata->options->answers[2]->fraction = 1;
-        $this->assertEquals(2/3,
+        $this->assertEquals(2 / 3,
                 $this->qtype->get_random_guess_score($questiondata), '', 0.000001);
 
         $questiondata->options->answers[4] = new question_answer(4, 'D', 0, '', FORMAT_HTML);
-        $this->assertEquals(1/2,
+        $this->assertEquals(1 / 2,
                 $this->qtype->get_random_guess_score($questiondata), '', 0.000001);
     }
 
@@ -380,6 +380,7 @@ class qtype_oumultiresponse_test extends question_testcase {
     <defaultgrade>6</defaultgrade>
     <penalty>0.3333333</penalty>
     <hidden>0</hidden>
+    <idnumber></idnumber>
     <shuffleanswers>true</shuffleanswers>
     <answernumbering>123</answernumbering>
     <correctfeedback format="html">
@@ -428,6 +429,11 @@ class qtype_oumultiresponse_test extends question_testcase {
     </hint>
   </question>
 ';
+
+        // Hack so the test passes in both 3.5 and 3.6.
+        if (strpos($xml, 'idnumber') === false) {
+            $expectedxml = str_replace("    <idnumber></idnumber>\n", '', $expectedxml);
+        }
 
         $this->assert_same_xml($expectedxml, $xml);
     }

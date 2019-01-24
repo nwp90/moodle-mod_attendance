@@ -1,3 +1,12 @@
+### 7.1.1 ###
+
+* Do not call a method deprecated in Moodle 3.6
+* Updated Behat tests to work in Moodle 3.6
+
+### 7.1.0 ###
+
+* Improved handling of hidden grade items in the referenced course (issue #28).
+
 ### 7.0.0 ###
 
 * Progress in the referenced course is displayed.
