@@ -1,3 +1,11 @@
+moodle-site-otagounifom (3.6.2.2019011800+0facmed1-1) stretch; urgency=medium
+
+  * New upstream version
+  * New version of medschool_topics course format
+  * Plugins updated to latest versions @20190110
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 25 Jan 2019 12:35:08 +1300
+
 moodle-site-otagounifom (3.6.1.2018120301+0facmed1-1) stretch; urgency=medium
 
   * 3.6 - thought I'd already done packages, but it seems not.
