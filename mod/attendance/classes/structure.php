@@ -96,6 +96,10 @@ class mod_attendance_structure {
     /** @var array of sessionid. */
     private $sessioninfo = array();
 
+    /** @var float number [0..1], the threshold for student to be shown at low grade report */
+    private $lowgradethreshold;
+
+
     /**
      * Initializes the attendance API instance using the data from DB
      *
@@ -500,7 +504,9 @@ class mod_attendance_structure {
             if (!isset($sess->preventsharediptime)) {
                 $sess->preventsharediptime = '';
             }
-
+            if (!isset($sess->includeqrcode)) {
+                $sess->includeqrcode = 0;
+            }
             $event->add_record_snapshot('attendance_sessions', $sess);
             $event->trigger();
         }
@@ -540,6 +546,7 @@ class mod_attendance_structure {
         $sess->automarkcompleted = 0;
         $sess->preventsharedip = 0;
         $sess->preventsharediptime = '';
+        $sess->includeqrcode = 0;
         if (!empty(get_config('attendance', 'enablewarnings'))) {
             $sess->absenteereport = empty($formdata->absenteereport) ? 0 : 1;
         }
@@ -565,6 +572,9 @@ class mod_attendance_structure {
             }
             if (!empty($formdata->preventsharediptime)) {
                 $sess->preventsharediptime = $formdata->preventsharediptime;
+            }
+            if (!empty($formdata->includeqrcode)) {
+                $sess->includeqrcode = $formdata->includeqrcode;
             }
 
         }
@@ -725,28 +735,6 @@ class mod_attendance_structure {
         $event->add_record_snapshot('course_modules', $this->cm);
         $event->add_record_snapshot('attendance_sessions', $session);
         $event->trigger();
-
-        $group = 0;
-        if ($this->pageparams->grouptype != self::SESSION_COMMON) {
-            $group = $this->pageparams->grouptype;
-        } else {
-            if ($this->pageparams->group) {
-                $group = $this->pageparams->group;
-            }
-        }
-
-        $totalusers = count_enrolled_users(context_module::instance($this->cm->id), 'mod/attendance:canbelisted', $group);
-        $usersperpage = $this->pageparams->perpage;
-
-        if (!empty($this->pageparams->page) && $this->pageparams->page && $totalusers && $usersperpage) {
-            $numberofpages = ceil($totalusers / $usersperpage);
-            if ($this->pageparams->page < $numberofpages) {
-                $params['page'] = $this->pageparams->page + 1;
-                redirect($this->url_take($params), get_string('moreattendance', 'attendance'));
-            }
-        }
-
-        redirect($this->url_manage(), get_string('attendancesuccess', 'attendance'));
     }
 
     /**
@@ -833,6 +821,7 @@ class mod_attendance_structure {
             $enrolments = $DB->get_records_sql($sql, $params);
 
             foreach ($users as $user) {
+                $users[$user->id]->fullname = fullname($user);
                 $users[$user->id]->enrolmentstatus = $enrolments[$user->id]->status;
                 $users[$user->id]->enrolmentstart = $enrolments[$user->id]->mintime;
                 $users[$user->id]->enrolmentend = $enrolments[$user->id]->maxtime;
@@ -1271,5 +1260,26 @@ class mod_attendance_structure {
             }
         }
         return;
+    }
+
+    /**
+     * Gets the lowgrade threshold to use.
+     *
+     */
+    public function get_lowgrade_threshold() {
+        if (!isset($this->lowgradethreshold)) {
+            $this->lowgradethreshold = 1;
+
+            if ($this->grade > 0) {
+                $gradeitem = grade_item::fetch(array('courseid' => $this->course->id, 'itemtype' => 'mod',
+                    'itemmodule' => 'attendance', 'iteminstance' => $this->id));
+                if ($gradeitem->gradepass > 0 && $gradeitem->grademax != $gradeitem->grademin) {
+                    $this->lowgradethreshold = ($gradeitem->gradepass - $gradeitem->grademin) /
+                        ($gradeitem->grademax - $gradeitem->grademin);
+                }
+            }
+        }
+
+        return $this->lowgradethreshold;
     }
 }
