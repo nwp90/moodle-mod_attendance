@@ -58,6 +58,7 @@ $att = new mod_attendance_structure($att, $cm, $course, $context, $pageparams);
 $PAGE->set_url($att->url_sessions(array('action' => $pageparams->action)));
 $PAGE->set_title($course->shortname. ": ".$att->name);
 $PAGE->set_heading($course->fullname);
+$PAGE->force_settings_menu(true);
 $PAGE->set_cacheable(true);
 $PAGE->navbar->add($att->name);
 
@@ -93,6 +94,7 @@ switch ($att->pageparams->action) {
         $url = $att->url_sessions(array('action' => mod_attendance_sessions_page_params::ACTION_UPDATE, 'sessionid' => $sessionid));
         $formparams['sessionid'] = $sessionid;
         $mform = new mod_attendance_update_form($url, $formparams);
+
         if ($mform->is_cancelled()) {
             redirect($att->url_manage());
         }
