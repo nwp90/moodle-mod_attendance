@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.6.2.2019011800+0facmed2-1) stretch; urgency=medium
+
+  * Upgrade mod_attendance, forgotten in previous update.
+
+ -- Nick Phillips <nwp@debian.org>  Fri, 25 Jan 2019 15:53:06 +1300
+
 moodle-site-otagounifom (3.6.2.2019011800+0facmed1-1) stretch; urgency=medium
 
   * New upstream version
