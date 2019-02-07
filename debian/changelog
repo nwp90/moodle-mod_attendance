@@ -1,3 +1,11 @@
+moodle-site-otagounifom (3.6.2.2019020100+0facmed1-1) stretch; urgency=medium
+
+  * Latest weekly, includes fix for group performance MDL-64521
+  * Update turnitin plugins (mod and plagiarism) to fix issue with
+    EULA presentation.
+
+ -- Nick Phillips <nwp@debian.org>  Thu, 07 Feb 2019 15:36:20 +1300
+
 moodle-site-otagounifom (3.6.2.2019011800+0facmed2-1) stretch; urgency=medium
 
   * Upgrade mod_attendance, forgotten in previous update.
