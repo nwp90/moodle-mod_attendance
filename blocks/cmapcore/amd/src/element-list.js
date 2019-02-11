@@ -61,7 +61,7 @@ define([
       
     if (shortname && mapbase) {
       // currently, page_size=all gets rid of count, next, prev etc...
-      var elementUrl = mapbase + '/api/modules/' + shortname + '/' + config[elementtype].linkname + '/?format=json&linkage=strong&page_size=999';
+      var elementUrl = mapbase + '/cmapapi/modules/' + shortname + '/' + config[elementtype].linkname + '/?format=json&linkage=strong&page_size=999';
 
       var elementdivstring = '#cmap-' + config[elementtype].abbrev + '-div';
       var elementdiv = $(elementdivstring);
@@ -117,7 +117,7 @@ define([
 	// Ideally this would probably be done in the block PHP, and we would
 	// never even get called when the module doesn't make sense.
 	//
-	var courseUrl = mapbase + '/api/modules/' + shortname + '/';
+	var courseUrl = mapbase + '/cmapapi/modules/' + shortname + '/';
 	var cmapcore = $(".block.block_cmapcore:not(.block_with_controls)");
 	$.ajax({
 	  url: courseUrl,
