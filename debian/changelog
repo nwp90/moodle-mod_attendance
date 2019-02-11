@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.6.2.2019020100+0facmed2-1) stretch; urgency=medium
+
+  * Update js for cmap block
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 11 Feb 2019 15:26:38 +1300
+
 moodle-site-otagounifom (3.6.2.2019020100+0facmed1-1) stretch; urgency=medium
 
   * Latest weekly, includes fix for group performance MDL-64521
