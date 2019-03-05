@@ -1,3 +1,13 @@
+moodle-site-otagounifom (3.6.2.2019022200+0facmed1-1) stretch; urgency=medium
+
+  * New upstream version
+  * Fix calendar issue MDL-59650 (again)
+  * Update mod_attendance to 2019022500
+  * Fix click for "set all" in attendance mod too easy to override existing
+  * Update ereserve plugins to 20190221
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 05 Mar 2019 13:51:36 +1300
+
 moodle-site-otagounifom (3.6.2.2019020100+0facmed2-1) stretch; urgency=medium
 
   * Update js for cmap block
