@@ -275,10 +275,6 @@
     padding-left: 5px;
 }
 
-.attendancereporttable div#attendance-sessions-header {
-    width: max-content;
-}
-
 /* CSS for old clean based themes with docks etc. */
 #page-mod-attendance-report.has-region-side-pre .attendancereporttable .headcol {
     left: 370px;

@@ -656,7 +656,12 @@ class mod_attendance_renderer extends plugin_renderer_base {
             $PAGE->requires->js_amd_inline("
                 require(['jquery'], function($) {
                     $('#radiocheckstatus".$st->id."').click(function(e) {
-                        $('#attendancetakeform').find('.st".$st->id."').prop('checked', true);
+                        if (e.shiftKey) {
+                            $('#attendancetakeform').find('.st".$st->id."').prop('checked', true);
+                        }
+                        else {
+                            $('#attendancetakeform').find('input:indeterminate.st".$st->id."').prop('checked', true);
+                        }
                     });
                 });");
         }
@@ -1101,7 +1106,7 @@ class mod_attendance_renderer extends plugin_renderer_base {
                 $row->cells[] = format_float($status->grade, 1, true, true) . ' / ' .
                                     format_float($statussetmaxpoints[$status->setnumber], 1, true, true);
                 $row->cells[] = $sess->remarks;
-            } else if ($sess->sessdate < $userdata->user->enrolmentstart) {
+            } else if (($sess->sessdate + $sess->duration) < $userdata->user->enrolmentstart) {
                 $cell = new html_table_cell(get_string('enrolmentstart', 'attendance',
                                             userdate($userdata->user->enrolmentstart, '%d.%m.%Y')));
                 $cell->colspan = 3;
@@ -1510,7 +1515,6 @@ class mod_attendance_renderer extends plugin_renderer_base {
             $text = $OUTPUT->action_icon($url, new pix_icon('t/left', get_string('moveleft', 'attendance')), null, null) . $text;
         }
 
-        $text = "<div id=\"attendance-sessions-header\">$text</div>";
         $row->cells[] = $this->build_header_cell($text, '', true, $colspan);
         $rows[] = $row;
 
