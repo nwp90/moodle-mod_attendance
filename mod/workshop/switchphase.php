@@ -48,6 +48,7 @@ if ($confirm) {
         print_error('errorswitchingphase', 'workshop', $workshop->view_url());
     }
     redirect($workshop->view_url());
+
 }
 
 $PAGE->set_title($workshop->name);
