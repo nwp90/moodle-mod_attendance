@@ -3653,6 +3653,17 @@ class workshop_user_plan implements renderable {
             }
             $phase->tasks['examples'] = $task;
         }
+        if (has_capability('moodle/course:manageactivities', $workshop->context, $userid)) {
+            $task = new stdclass();
+            $task->title = 'Create dummy submissions';
+            $task->link = new moodle_url('/mod/workshop/dummysubmissions.php', array('cmid' => $workshop->cm->id));
+            if ($workshop->count_potential_authors(true) == $workshop->count_potential_authors(false)) {
+                $task->completed = true;
+            } elseif ($workshop->phase >= workshop::PHASE_SUBMISSION) {
+                $task->completed = false;
+            }
+            $phase->tasks['dummysubmissions'] = $task;
+        }
         if (has_capability('mod/workshop:submit', $workshop->context, $userid, false)) {
             $task = new stdclass();
             $task->title = get_string('tasksubmit', 'workshop');

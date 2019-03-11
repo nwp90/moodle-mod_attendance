@@ -1153,11 +1153,12 @@ function data_delete_instance($id) {    // takes the dataid
         $event->delete();
     }
 
-    // Delete the instance itself
-    $result = $DB->delete_records('data', array('id'=>$id));
-
     // cleanup gradebook
     data_grade_item_delete($data);
+
+    // Delete the instance itself
+    // We must delete the module record after we delete the grade item.
+    $result = $DB->delete_records('data', array('id'=>$id));
 
     return $result;
 }
@@ -3160,6 +3161,11 @@ function data_get_exportdata($dataid, $fields, $selectedfields, $currentgroup=0,
     $exportdata = array();
 
     // populate the header in first row of export
+    if ($userdetails) {
+        $exportdata[0][] = get_string('user');
+        $exportdata[0][] = get_string('username');
+        $exportdata[0][] = get_string('email');
+    }
     foreach($fields as $key => $field) {
         if (!in_array($field->field->id, $selectedfields)) {
             // ignore values we aren't exporting
@@ -3170,11 +3176,6 @@ function data_get_exportdata($dataid, $fields, $selectedfields, $currentgroup=0,
     }
     if ($tags) {
         $exportdata[0][] = get_string('tags', 'data');
-    }
-    if ($userdetails) {
-        $exportdata[0][] = get_string('user');
-        $exportdata[0][] = get_string('username');
-        $exportdata[0][] = get_string('email');
     }
     if ($time) {
         $exportdata[0][] = get_string('timeadded', 'data');
@@ -3198,6 +3199,12 @@ function data_get_exportdata($dataid, $fields, $selectedfields, $currentgroup=0,
         }
 
         if( $content = $DB->get_records_sql($select, $where) ) {
+            if ($userdetails) { // Add user details to the export data
+                $userdata = get_complete_user_data('id', $record->userid);
+                $exportdata[$line][] = fullname($userdata);
+                $exportdata[$line][] = $userdata->username;
+                $exportdata[$line][] = $userdata->email;
+            }
             foreach($fields as $field) {
                 $contents = '';
                 if(isset($content[$field->field->id])) {
@@ -3208,12 +3215,6 @@ function data_get_exportdata($dataid, $fields, $selectedfields, $currentgroup=0,
             if ($tags) {
                 $itemtags = \core_tag_tag::get_item_tags_array('mod_data', 'data_records', $record->id);
                 $exportdata[$line][] = implode(', ', $itemtags);
-            }
-            if ($userdetails) { // Add user details to the export data
-                $userdata = get_complete_user_data('id', $record->userid);
-                $exportdata[$line][] = fullname($userdata);
-                $exportdata[$line][] = $userdata->username;
-                $exportdata[$line][] = $userdata->email;
             }
             if ($time) { // Add time added / modified
                 $exportdata[$line][] = userdate($record->timecreated);
