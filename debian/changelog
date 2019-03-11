@@ -1,3 +1,12 @@
+moodle-site-otagounifom (3.6.3.2019031100+0facmed1-1) stretch; urgency=medium
+
+  * New upstream version 3.6.3
+  * Reorder export from db mod to put user details first
+  * Enable creation of dummy submissions in workshop
+  * Update mod_zoom to v2.0.1 (2018092200)
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 11 Mar 2019 16:37:53 +1300
+
 moodle-site-otagounifom (3.6.2.2019022200+0facmed1-1) stretch; urgency=medium
 
   * New upstream version
