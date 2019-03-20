@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.6.3.2019031500+0facmed1-1) stretch; urgency=medium
+
+  * Upstream security update
+
+ -- Nick Phillips <nwp@debian.org>  Wed, 20 Mar 2019 15:42:44 +1300
+
 moodle-site-otagounifom (3.6.3.2019031100+0facmed1-2) stretch; urgency=medium
 
   * Fix deps for php7(!)
