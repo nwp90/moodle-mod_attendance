@@ -498,6 +498,8 @@ $this->showedit = grade_get_setting($this->courseid, 'report_pasaf_showedit',
 
         $required = $this->element_required($element);
 
+        $tmpnam = $element['object']->get_name();
+
         // If this is a hidden grade category, hide it completely from the user
         if ($type == 'category' && $grade_object->is_hidden() && !$this->canviewhidden && (
                 $this->showhiddenitems == GRADE_REPORT_PASAF_HIDE_HIDDEN ||
@@ -549,16 +551,23 @@ $this->showedit = grade_get_setting($this->courseid, 'report_pasaf_showedit',
                     ($this->showhiddenitems == GRADE_REPORT_PASAF_HIDE_UNTIL && !$grade_grade->is_hiddenuntil()))) {
                 $hide = true;
             } else if (!empty($grade_object->itemmodule) && !empty($grade_object->iteminstance)) {
-                // We want to know availability to student, not to us...
+                // We want to know availability to student as well as to us...
                 if (isset($this->usermodinfo)) {
-                    $modinfo = $this->usermodinfo;
+                    // viewing as self
+                    $studentmodinfo = $this->usermodinfo;
+                    $viewermodinfo = $this->modinfo;
                 } else {
-                    $modinfo = $this->modinfo;
+                    // viewing as student
+                    $studentmodinfo = null;
+                    $viewermodinfo = $this->modinfo;
                 }
+                // If not available to student, don't show. If available but not visible,
+                // show if it's visible to us.
+
                 // The grade object can be marked visible but still be hidden if
                 // the student cannot see the activity due to conditional access
                 // and it's set to be hidden entirely.
-                $instances = $modinfo->get_instances_of($grade_object->itemmodule);
+                $instances = $viewermodinfo->get_instances_of($grade_object->itemmodule);
                 if (!empty($instances[$grade_object->iteminstance])) {
                     $cm = $instances[$grade_object->iteminstance];
                     $gradeitemdata['cmid'] = $cm->id;
@@ -567,6 +576,16 @@ $this->showedit = grade_get_setting($this->courseid, 'report_pasaf_showedit',
                         // out and not entirely hidden.
                         if (!$cm->availableinfo) {
                             $hide = true;
+                        }
+                    }
+                    else if (isset($this->usermodinfo)) {
+                        $instances = $studentmodinfo->get_instances_of($grade_object->itemmodule);
+                        if (!empty($instances[$grade_object->iteminstance])) {
+                            $cm = $instances[$grade_object->iteminstance];
+                            $gradeitemdata['cmid'] = $cm->id;
+                            if (!$cm->available) {
+                                $hide = true;
+                            }
                         }
                     }
                 }
