@@ -121,7 +121,7 @@ if (has_capability('moodle/grade:viewall', $context)) { //Teachers will see all 
 
     $asmapapi = new gradereport_pasaf\api(
         new gradereport_pasaf\transport(
-            'https://medmap.otago.ac.nz/asmapapi/api',
+            'https://hootkloot.otago.ac.nz/asmapapi/api',
             null
         )
     );
