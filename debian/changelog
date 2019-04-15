@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.6.3.2019041500+0facmed1-1) stretch; urgency=medium
+
+  * Update PASAF gradereport plugin
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 15 Apr 2019 21:30:53 +1200
+
 moodle-site-otagounifom (3.6.3.2019031500+0facmed1-1) stretch; urgency=medium
 
   * Upstream security update
