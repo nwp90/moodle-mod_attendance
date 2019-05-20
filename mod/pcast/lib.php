@@ -990,6 +990,7 @@ function pcast_pluginfile($course, $cm, $context, $filearea, $args, $forcedownlo
  * @param stdClass $pcast
  * @param stdClass $episode
  * @param string $userid
+ * @param stdClass $context Moodle Context.
  * @return bool false if error else true
  */
 function pcast_add_view_instance($pcast, $episode, $userid, $context) {
@@ -1088,10 +1089,10 @@ function pcast_reset_course_form_defaults($course) {
 }
 
 /**
- * Removes all grades from gradebook
+ * Removes all grades from grade book
  *
  * @param int $courseid
- * @param string optional type
+ * @param string $type (optional)
  */
 function pcast_reset_gradebook($courseid, $type='') {
     global $DB;
@@ -1542,15 +1543,29 @@ function pcast_rating_validate($params) {
  *
  * @param calendar_event $event
  * @param \core_calendar\action_factory $factory
+ * @param int $userid
  * @return \core_calendar\local\event\entities\action_interface|null
  */
 function mod_pcast_core_calendar_provide_event_action(calendar_event $event,
-                                                      \core_calendar\action_factory $factory) {
-    $cm = get_fast_modinfo($event->courseid)->instances['pcast'][$event->instance];
+                                                      \core_calendar\action_factory $factory,
+                                                      int $userid = 0) {
 
+    global $USER;
+
+    if (!$userid) {
+        $userid = $USER->id;
+    }
+
+    $cm = get_fast_modinfo($event->courseid, $userid)->instances['pcast'][$event->instance];
+
+    if (!$cm->uservisible) {
+        // The module is not visible to the user.
+        return null;
+
+    }
     $completion = new \completion_info($cm->get_course());
 
-    $completiondata = $completion->get_data($cm, false);
+    $completiondata = $completion->get_data($cm, false, $userid);
 
     if ($completiondata->completionstate != COMPLETION_INCOMPLETE) {
         return null;
@@ -1617,10 +1632,9 @@ function mod_pcast_get_completion_active_rule_descriptions($cm) {
     foreach ($cm->customdata['customcompletionrules'] as $key => $val) {
         switch ($key) {
             case 'completionepisodes':
-                if (empty($val)) {
-                    continue;
+                if (!empty($val)) {
+                    $descriptions[] = get_string('completionepisodes', 'pcast', $val);
                 }
-                $descriptions[] = get_string('completionepisodes', 'pcast', $val);
                 break;
             default:
                 break;

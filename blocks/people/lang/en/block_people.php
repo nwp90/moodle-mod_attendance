@@ -40,10 +40,15 @@ $string['setting_hideblock'] = 'Hiding the block';
 $string['setting_hideblock_desc'] = 'By enabling this setting, the block can be hidden by users.<br/>
 Important notice:<br/>
 Disabling this setting will entirely remove the showing / hiding the block menu item. This means, that users cannot hide this block anymore, but on the other hand, blocks that are already hidden cannot be shown anymore, too. If you want to enable this feature, consider using the following function to reset the visibility for all "block_people" instances.';
+$string['setting_multipleroles'] = 'Show multiple roles';
+$string['setting_multipleroles_desc'] = 'This setting allows you to control if users who have more than one of the roles configured above are listed once or multiple times in this block. If this setting is disabled, users will be only listed with the first role they have according to the global role sort order. If this setting is enabled, users will be listed within each of their roles.';
 $string['setting_resetvisibility'] = 'Reset visibility';
 $string['setting_resetvisibility_desc'] = 'By enabling this checkbox, the visibility of all existing "block_people" instances will be set to visible (again).<br/>
 Please note: <br/>
 After saving this option, the database operations for resetting the visibility will be triggered and this checkbox will be unticked again. The next enabling and saving of this feature will trigger the database operations for resetting the visibility again. ';
+$string['setting_rolesheading'] = 'Roles';
+$string['setting_roles'] = 'Show these roles';
+$string['setting_roles_desc'] = 'This setting allows you to control which users appear in this block. Users need to have at least one of these roles in a course to be shown in the block.';
 
 // Notifications.
 $string['resetvisibilitysuccess'] = 'Success! All "block_people" instances are visible (again). <br/> The setting "Reset visibility" has been reset.';

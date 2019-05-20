@@ -25,7 +25,8 @@
 
 define(['jquery'], function($) {
     return {
-        initialise: function() {
+        initialise: function(forcerating, forcecommenting) {
+
             // Ajax request POST on CLICK for add comment.
             $('.studentquiz_behaviour .add_comment').off('click').on('click', function() {
                 var $comments = $(this).closest('.comments');
@@ -35,12 +36,21 @@ define(['jquery'], function($) {
                 var cmid = $cmidfield.attr('value');
                 var $commentlist = $comments.children('.comment_list');
 
-                $.post($('#baseurlmoodle').val() + '/mod/studentquiz/save.php',
+                if ($field.val() == "") {
+                    return;
+                }
+
+                $.post(M.cfg.wwwroot + '/mod/studentquiz/save.php',
                     {save: 'comment', cmid: cmid, questionid: questionid, sesskey: M.cfg.sesskey, text: $field.val()},
                     function() {
                         $field.val('');
-                        get_comment_list(questionid, $commentlist, cmid);
-                    });
+                        $field.trigger("keyup");
+                        getCommentList(questionid, $commentlist, cmid);
+
+                        $('.studentquiz_behaviour > .comments > .comment_error').addClass('hide');
+                    }
+                );
+                return;
             });
 
             // Ajax request POST on CLICK for add rating.
@@ -49,7 +59,7 @@ define(['jquery'], function($) {
                 var $that = $(this);
                 var $cmidfield = $(this).closest('form').find('.cmid_field');
                 var cmid = $cmidfield.attr('value');
-                $.post($('#baseurlmoodle').val() + '/mod/studentquiz/save.php',
+                $.post(M.cfg.wwwroot + '/mod/studentquiz/save.php',
                     {save: 'rate', cmid: cmid, questionid: $(this).attr('data-questionid'), sesskey: M.cfg.sesskey, rate: rate},
                     function() {
                         var $ratingStars = $that.closest('.rating').children('span');
@@ -62,33 +72,38 @@ define(['jquery'], function($) {
                             }
                         });
 
-                        $('.studentquiz_behaviour > .rate > .error').addClass('hide');
-                    });
+                        $('.studentquiz_behaviour > .rate > .rate_error').addClass('hide');
+                    }
+                );
             });
 
             // On CLICK check if student submitted result and has rated if not abort and show error for rating.
             $('input[name="next"], input[name="previous"], input[name="finish"]').off('click').on('click', function() {
                 var $that = $(this);
 
-                if (
-                    !$('.im-controls input[type="submit"]').length ||
+                var afterquestion = !$('.im-controls input[type="submit"]').length ||
                     $('.im-controls input[type="submit"]').filter(function() {
-                        return this.name.match(/^q.+\-submit$/);
-                    }).is(':disabled')
-                ) {
-                    var has_rated = false;
-                    $('.rating span').each(function() {
-                        if ($(this).hasClass('star')) {
-                            has_rated = true;
-                        }
-                    });
+                        return this.name.match(/^q.+-submit$/);
+                    }).is(':disabled');
+                if (afterquestion) {
+                    var hasrated = $('.rating span').hasClass('star');
+                    var hascommented = $('.studentquiz_behaviour .comment_list > div').hasClass('fromcreator');
 
-                    if (has_rated) {
+                    if (forcerating) {
+                        if (!hasrated) {
+                            $('.studentquiz_behaviour > .rate > .rate_error').removeClass('hide');
+                        }
+                    }
+                    if (forcecommenting) {
+                        if (!hascommented) {
+                            $('.studentquiz_behaviour > .comments > .comment_error').removeClass('hide');
+                        }
+                    }
+
+                    if ((!forcerating || hasrated) && (!forcecommenting || hascommented)) {
                         $that.submit();
                         return true;
                     }
-
-                    $('.studentquiz_behaviour > .rate > .error').removeClass('hide');
                     return false;
                 } else {
                     $that.submit();
@@ -96,15 +111,17 @@ define(['jquery'], function($) {
                 }
             });
 
+            $('.add_comment_field').on('keyup', ensurePreventUnload);
+
             // Bind the show more and show less buttons
-            bind_buttons();
+            bindButtons();
         }
     };
 
     /**
      * Binding action buttons after refresh comment list.
      */
-    function bind_buttons() {
+    function bindButtons() {
         $('.studentquiz_behaviour .show_more').off('click').on('click', function() {
             $('.studentquiz_behaviour .comment_list div').removeClass('hidden');
             $(this).addClass('hidden');
@@ -112,8 +129,8 @@ define(['jquery'], function($) {
         });
 
         $('.studentquiz_behaviour .show_less').off('click').on('click', function() {
-            $('.studentquiz_behaviour .comment_list div').each(function(index) {
-                if (index > 1 && !$(this).hasClass('button_controls')) {
+            $('.studentquiz_behaviour .comment_list > div').each(function(index) {
+                if (index > 10 && !$(this).hasClass('button_controls')) {
                     $(this).addClass('hidden');
                 }
             });
@@ -127,24 +144,66 @@ define(['jquery'], function($) {
             var cmid = $cmidfield.attr('value');
             var questionid = $(this).attr('data-question_id');
             var $commentlist = $(this).closest('.comments').children('.comment_list');
-            $.post($('#baseurlmoodle').val() + '/mod/studentquiz/remove.php',
-                {id: $(this).attr('data-id'), cmid: cmid, sesskey: M.cfg.sesskey}, function() {
-                    get_comment_list(questionid, $commentlist, cmid);
-                });
+            $.post(M.cfg.wwwroot + '/mod/studentquiz/remove.php',
+                {id: $(this).attr('data-id'), cmid: cmid, sesskey: M.cfg.sesskey},
+                function() {
+                    getCommentList(questionid, $commentlist, cmid);
+                }
+            );
         });
     }
 
     /**
      * Ajax request GET to get comment list
-     * @param {int}    questionid Question id
+     * @param {int}           questionid Question id
+     * @param {jQueryElement} $commentlist jQuery HtmlElement for comments list div
+     * @param {int}           cmid course module id
      */
-    function get_comment_list(questionid, $commentlist, cmid) {
-        var commentlisturl = $('#baseurlmoodle').val() + '/mod/studentquiz/comment_list.php?questionid=';
+    function getCommentList(questionid, $commentlist, cmid) {
+        var commentlisturl = M.cfg.wwwroot + '/mod/studentquiz/comment_list.php?questionid=';
         commentlisturl += questionid + '&cmid=' + cmid + '&sesskey=' + M.cfg.sesskey;
         $.get(commentlisturl,
             function(data) {
                 $commentlist.html(data);
-                bind_buttons();
-            });
+                bindButtons();
+            }
+        );
+    }
+
+    /**
+     * Kindly ask to prevent leaving page when there's a unsaved comment
+     * 
+     * Note: Only in preview is the commenting visible without answering the question. If someone has filled the
+     * textarea and afterwards answers the question, he'll get the dialogue, which is fine.
+     */
+
+    /**
+     * Enable the unload prevention conditionally by comment textarea
+     */
+    function ensurePreventUnload() {
+        if ($('.add_comment_field').val() != "") {
+            enablePreventUnload();
+        } else {
+            disablePreventUnload();
+        }
+    }
+
+    /**
+     * Set the beforeunload event.
+     */
+    function enablePreventUnload() {
+        // Kindly warn user when he tries to leave page while he has still input in the comment textarea
+        $(window).on('beforeunload', function() {
+            $('.studentquiz_behaviour > .comments > .comment_error_unsaved').removeClass('hide');
+            return true;
+        });
+    }
+
+    /**
+     * Remove the beforeunload event.
+     */
+    function disablePreventUnload() {
+        $('.studentquiz_behaviour > .comments > .comment_error_unsaved').addClass('hide');
+        $(window).off('beforeunload');
     }
 });

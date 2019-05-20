@@ -131,8 +131,7 @@ class mod_studentquiz_renderer extends plugin_renderer_base {
     public function render_ranking_block($report) {
         $ranking = $report->get_user_ranking_table(0, 10);
         $currentuserid = $report->get_user_id();
-        $anonymname = get_string('creator_anonym_firstname', 'studentquiz') . ' '
-                        . get_string('creator_anonym_lastname', 'studentquiz');
+        $anonymname = get_string('creator_anonym_fullname', 'studentquiz');
         $anonymise = $report->is_anonymized();
         $studentquiz = mod_studentquiz_load_studentquiz($report->get_cm_id(), $this->page->context->id);
         // We need to check this instead of using $report->is_anonymized()
@@ -144,7 +143,8 @@ class mod_studentquiz_renderer extends plugin_renderer_base {
         $rank = 1;
         foreach ($ranking as $row) {
             if ($currentuserid == $row->userid || !$anonymise) {
-                $name = $row->firstname .' ' . $row->lastname;
+                $author = user_get_users_by_id(array($row->userid))[$row->userid];
+                $name = fullname($author);
             } else {
                 $name = $anonymname;
             }
@@ -261,9 +261,9 @@ class mod_studentquiz_renderer extends plugin_renderer_base {
         $percentone = round(100 * ($info->one / $info->total));
 
         if (!empty($texttotal)) {
-            $text = '<text xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif"'
-             .' font-size="12" font-weight="bold" id="svg_text" x="50%" y="50%" alignment-baseline="middle"'
-             .' text-anchor="middle" stroke-width="0" stroke="#000" fill="#000000">' . $texttotal . '</text>';
+            $text = html_writer::tag('text', $texttotal, array('xml:space' => 'preserve', 'text-anchor' => 'start', 'font-family' => 'Helvetica, Arial, sans-serif',
+            'font-size' => '12', 'font-weight' => 'bold', 'id' => 'svg_text', 'x' => '50%', 'y' => '50%', 'alignment-baseline' => 'middle', 'text-anchor' => 'middle',
+            'stroke-width' => '0', 'stroke' => '#000', 'fill' => '#000'));
         } else {
             $text = '';
         }
@@ -339,13 +339,10 @@ class mod_studentquiz_renderer extends plugin_renderer_base {
             $output .= html_writer::empty_tag('br');
             $output .= html_writer::tag('span', $date, ['class' => 'date']);
         } else {
-            if (!empty($question->creatorfirstname) && !empty($question->creatorlastname)) {
-                $u = new stdClass();
-                $u = username_load_fields_from_object($u, $question, 'creator');
-                $output .= fullname($u);
-                $output .= html_writer::empty_tag('br');
-                $output .= html_writer::tag('span', $date, ['class' => 'date']);
-            }
+            $author = user_get_users_by_id(array($question->createdby))[$question->createdby];
+            $output .= fullname($author);
+            $output .= html_writer::empty_tag('br');
+            $output .= html_writer::tag('span', $date, ['class' => 'date']);
         }
 
         return $output;
@@ -632,17 +629,13 @@ class mod_studentquiz_renderer extends plugin_renderer_base {
      * @return string
      */
     public function render_tag($tag) {
-        $output = '';
-
-        $output .= html_writer::tag('span', (strlen($tag->rawname) > 10 ? (substr($tag->rawname, 0, 8) . '...') : $tag->rawname), [
+        $output = html_writer::tag('span', (strlen($tag->rawname) > 10 ? (substr($tag->rawname, 0, 8) . '...') : $tag->rawname), [
                 'role' => 'listitem',
                 'data-value' => 'HELLO',
                 'aria-selected' => 'true',
                 'class' => 'tag tag-success '
         ]);
-
-        $output .= '&nbsp;';
-
+        $output .= ' ';
         return $output;
     }
 
@@ -1064,10 +1057,10 @@ class mod_studentquiz_overview_renderer extends mod_studentquiz_renderer {
                 $(this).append("n.a.");
             }else{
                 if(rate === undefined) {
-                    difficultylevel = 0;
+                    rate = 0;
                 }
                 if(myrate === undefined) {
-                    mydifficulty = 0;
+                    myrate = 0;
                 }
                 $(this).append(createStarBar(myrate,rate));
             }
@@ -1095,13 +1088,23 @@ EOT;
         $output .= html_writer::tag('strong', '&nbsp;' . get_string('withselected', 'question') . ':');
         $output .= html_writer::empty_tag('br');
 
+        $studentquiz = mod_studentquiz_load_studentquiz($this->page->url->get_param('cmid'), $this->page->context->id);
+        list($message, $answeringallow) = mod_studentquiz_check_availability(
+                $studentquiz->openansweringfrom, $studentquiz->closeansweringfrom, 'answering');
+
         if ($hasquestionincategory) {
-            $output .= html_writer::empty_tag('input', [
-                'class' => 'btn btn-primary form-submit',
-                'type' => 'submit',
-                'name' => 'startquiz',
-                'value' => get_string('start_quiz_button', 'studentquiz')
-            ]);
+            $params = [
+                    'class' => 'btn btn-primary form-submit',
+                    'type' => 'submit',
+                    'name' => 'startquiz',
+                    'value' => get_string('start_quiz_button', 'studentquiz')
+            ];
+
+            if (!$answeringallow) {
+                $params['disabled'] = 'disabled';
+            }
+
+            $output .= html_writer::empty_tag('input', $params);
         }
 
         if ($caneditall) {
@@ -1132,6 +1135,9 @@ EOT;
             ob_end_clean();
         }
 
+        if (!empty($message)) {
+            $output .= $this->render_availability_message($message, 'mod_studentquiz_answering_info');
+        }
         $output .= html_writer::end_div();
 
         return $output;
@@ -1238,20 +1244,39 @@ EOT;
         return $output;
     }
 
+    /**
+     * Render the availability message
+     *
+     * @param string $message Message to show
+     * @param string $class Class of the message
+     * @return string HTML string
+     */
+    public function render_availability_message($message, $class) {
+        $output = '';
+
+        if (!empty($message)) {
+            $icon = new \pix_icon('info', get_string('info'), 'studentquiz');
+            $output = \html_writer::div($this->output->render($icon) . $message, $class);
+        }
+
+        return $output;
+    }
+
 }
 
 class mod_studentquiz_attempt_renderer extends mod_studentquiz_renderer {
     /**
      * Generate some HTML to display comment list
-     * @param array $comments comments joined by user.firstname and user.lastname, ordered by createdby ASC
+     * @param array $comments comments ordered by createdby ASC
      * @param int $userid viewing user id
+     * @param int $cmid course module id
      * @param bool $anonymize users can't see other comment authors user names except ismoderator
      * @param bool $ismoderator can delete all comments, can see all usernames
      * @return string HTML fragment
      * TODO: move mod_studentquiz_comment_renderer in here!
      */
-    public function comment_list($comments, $userid, $anonymize = true, $ismoderator = false) {
-        return mod_studentquiz_comment_renderer($comments, $userid, $anonymize, $ismoderator);
+    public function comment_list($comments, $userid, $cmid, $anonymize = true, $ismoderator = false) {
+        return mod_studentquiz_comment_renderer($comments, $userid, $cmid, $anonymize, $ismoderator);
     }
 
     /**
@@ -1263,7 +1288,7 @@ class mod_studentquiz_attempt_renderer extends mod_studentquiz_renderer {
      *
      * @param question_definition $question the current question.
      * @param question_display_options $options controls what should and should not be displayed.
-     * @param array $comments comments joined by user.firstname and user.lastname, ordered by createdby ASC
+     * @param array $comments comments ordered by createdby ASC
      * @param int $userid viewing user id
      * @param bool $anonymize users can't see other comment authors user names except ismoderator
      * @param bool $ismoderator can delete all comments, can see all usernames
@@ -1274,12 +1299,8 @@ class mod_studentquiz_attempt_renderer extends mod_studentquiz_renderer {
                              question_display_options $options, $cmid,
                              $comments, $userid, $anonymize = true, $ismoderator = false) {
         global $CFG;
-        return html_writer::div($this->render_rate($question->id)
-            . $this->render_comment($cmid, $question->id, $comments, $userid, $anonymize, $ismoderator), 'studentquiz_behaviour')
-            . html_writer::tag('input', '', array('type' => 'hidden', 'name' => 'baseurlmoodle'
-            , 'id' => 'baseurlmoodle', 'value' => $CFG->wwwroot))
-            . html_writer::start_div('none')
-            . html_writer::start_div('none');
+        return $this->render_rate($question->id)
+            . $this->render_comment($cmid, $question->id, $comments, $userid, $anonymize, $ismoderator);
     }
 
     /**
@@ -1319,7 +1340,7 @@ class mod_studentquiz_attempt_renderer extends mod_studentquiz_renderer {
         return html_writer::tag('label', get_string('rate_title', 'mod_studentquiz'), array('for' => 'rate_field'))
             . $this->output->help_icon('rate_help', 'mod_studentquiz') . ': '
             . html_writer::div($choices, 'rating')
-            . html_writer::div(get_string('rate_error', 'mod_studentquiz'), 'hide error');
+            . html_writer::div(get_string('rate_error', 'mod_studentquiz'), 'hide error rate_error');
     }
 
     /**
@@ -1334,6 +1355,8 @@ class mod_studentquiz_attempt_renderer extends mod_studentquiz_renderer {
             . html_writer::tag('p', html_writer::tag(
                 'textarea', '',
                 array('id' => 'add_comment_field', 'class' => 'add_comment_field form-control', 'name' => 'q' . $questionid)))
+                . html_writer::div(get_string('comment_error', 'mod_studentquiz'), 'hide error comment_error')
+                . html_writer::div(get_string('comment_error_unsaved', 'mod_studentquiz'), 'hide error comment_error_unsaved')
             . html_writer::tag('p', html_writer::tag(
                 'button',
                 get_string('add_comment', 'mod_studentquiz'),
@@ -1346,14 +1369,14 @@ class mod_studentquiz_attempt_renderer extends mod_studentquiz_renderer {
      * Generate some HTML to display rating
      *
      * @param  int $questionid Question id
-     * @param array $comments comments joined by user.firstname and user.lastname, ordered by createdby ASC
+     * @param array $comments comments ordered by createdby ASC
      * @param int $userid viewing user id
      * @param bool $anonymize users can't see other comment authors user names except ismoderator
      * @param bool $ismoderator can delete all comments, can see all usernames
      * @return string HTML fragment
      * @return string HTML fragment
      */
-    protected function render_rate($questionid) {
+    public function render_rate($questionid) {
         global $DB, $USER;
 
         $value = -1; $readonly = false;
@@ -1363,7 +1386,10 @@ class mod_studentquiz_attempt_renderer extends mod_studentquiz_renderer {
             $readonly = true;
         }
 
-        return html_writer::div($this->rate_choices($questionid, $value , $readonly), 'rate');
+        return html_writer::div(
+            html_writer::div($this->rate_choices($questionid, $value , $readonly), 'rate'),
+            'studentquiz_behaviour'
+        );
     }
 
     /**
@@ -1372,11 +1398,17 @@ class mod_studentquiz_attempt_renderer extends mod_studentquiz_renderer {
      * @param  int $questionid Question id
      * @return string HTML fragment
      */
-    protected function render_comment($cmid, $questionid, $comments, $userid, $anonymize = true, $ismoderator = false) {
+    public function render_comment($cmid, $questionid, $comments, $userid, $anonymize = true, $ismoderator = false) {
         return html_writer::div(
-            $this->comment_form($questionid, $cmid)
-            . html_writer::div($this->comment_list($comments, $userid, $anonymize, $ismoderator),
-                'comment_list'), 'comments');
+            html_writer::div(
+                $this->comment_form($questionid, $cmid)
+                . html_writer::div(
+                    $this->comment_list($comments, $userid, $cmid, $anonymize, $ismoderator),
+                    'comment_list'
+                ),
+                'comments'),
+            'studentquiz_behaviour'
+        );
     }
 }
 
@@ -1650,10 +1682,10 @@ class mod_studentquiz_ranking_renderer extends mod_studentquiz_renderer {
                     }
                 }
             }
-            $username = $ur->firstname . ' ' . $ur->lastname;
+            $author = user_get_users_by_id(array($ur->userid))[$ur->userid];
+            $username = fullname($author);
             if ($report->is_anonymized() && $ur->userid != $userid) {
-                $username = get_string('creator_anonym_firstname', 'studentquiz') . ' '
-                    . get_string('creator_anonym_lastname', 'studentquiz');
+                $username = get_string('creator_anonym_fullname', 'studentquiz');
             }
             $celldata[] = array(
                 $rank, // Row: Rank

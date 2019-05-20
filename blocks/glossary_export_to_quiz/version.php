@@ -17,16 +17,15 @@
 /**
  * Version details
  *
- * @package    block
- * @subpackage glossary_export_to_quiz
+ * @package    block_glossary_export_to_quiz
  * @copyright  Joseph Rézeau moodle@rezeau.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2014051200;        // The current plugin version (Date: YYYYMMDDXX)
-$plugin->requires  = 2014050800;        // Requires this Moodle version
+$plugin->version   = 2018120900;        // The current plugin version (Date: YYYYMMDDXX)
+$plugin->requires  = 2018050800;        // Requires this Moodle version
 $plugin->component = 'block_glossary_export_to_quiz';  // Full name of the plugin (used for diagnostics).
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '2.7.0 for moodle 2.7';
+$plugin->release = '3.6.0 for moodle 3.6';

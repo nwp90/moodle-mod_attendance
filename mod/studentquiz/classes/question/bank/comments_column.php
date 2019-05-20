@@ -53,10 +53,18 @@ class comment_column extends \core_question\bank\column_base {
     }
 
     /**
-     * Get title
+     * Get title to return the very short column name
      * @return string column title
      */
     protected function get_title() {
+        return get_string('comment_veryshort', 'studentquiz');
+    }
+
+    /**
+     * Get title tip to return the full column name
+     * @return string column title
+     */
+    protected function get_title_tip() {
         return get_string('comment_column_name', 'studentquiz');
     }
 
@@ -75,9 +83,11 @@ class comment_column extends \core_question\bank\column_base {
      * @return array modified select left join
      */
     public function get_extra_joins() {
-        return array('co' => 'LEFT JOIN ('
-            . 'SELECT COUNT(comment) as comment'
-            . ', questionid FROM {studentquiz_comment} GROUP BY questionid) co ON co.questionid = q.id');
+        return array('co' => "LEFT JOIN (
+                                          SELECT COUNT(comment) AS comment, questionid
+                                            FROM {studentquiz_comment}
+                                        GROUP BY questionid
+                                        ) co ON co.questionid = q.id");
     }
 
     /**

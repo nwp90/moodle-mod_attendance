@@ -1,15 +1,7 @@
-/* Don't get font-awesome ourselves; require that theme does so, as we
-   require support in theme anyway in order to be useful... */
-/* @import url("/lib/css/font-awesome.min.css"); */
-/* @import url("//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"); */
+@import url("//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css");
 
 .mod-bootstrapelements-toggle {
     min-width: 200px;
-}
-
-.mod-bootstrapelements-toggle .panel-heading a span {
-    width: 100%;
-    display: inline-block;
 }
 
 .mod-bootstrapelements-toggle .panel-heading a {
@@ -18,23 +10,22 @@
     display: inline;
 }
 
-.mod-bootstrapelements-toggle .panel-heading .accordion-toggle span:after {
+.panel-heading .accordion-toggle:after {
     font-family: 'FontAwesome';
     content: "\f062";
-    margin-left: -1em;
+    margin-left: 5px;
     color: grey;
     float: right;
 }
 
-.mod-bootstrapelements-toggle .panel-heading .accordion-toggle:hover {
+.panel-heading .accordion-toggle:hover {
     text-decoration: none;
 }
 
-.mod-bootstrapelements-toggle .panel-heading .accordion-toggle.collapsed span:after {
+.panel-heading .accordion-toggle.collapsed:after {
     content: "\f063";
 }
 
-/* ?? */
 .bootstrapelements .fa {
     margin-right: 5px;
 }

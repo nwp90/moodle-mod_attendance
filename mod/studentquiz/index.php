@@ -22,8 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(dirname(__DIR__)).'/config.php');
-require_once(__DIR__ .'/lib.php');
+require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/lib.php');
 
 $id = required_param('id', PARAM_INT);
 if (!$course = $DB->get_record('course', array('id' => $id))) {
@@ -31,12 +31,6 @@ if (!$course = $DB->get_record('course', array('id' => $id))) {
 }
 $coursecontext = context_course::instance($id);
 require_login($course);
-
-$params = array(
-    'context' => $coursecontext
-);
-$event = \mod_studentquiz\event\course_module_instance_list_viewed::create($params);
-$event->trigger();
 
 $strname = get_string('modulenameplural', 'mod_studentquiz');
 $PAGE->set_url('/mod/studentquiz/index.php', array('id' => $id));
@@ -95,10 +89,10 @@ foreach ($studentquizzes as $studentquiz) {
     // Link to the instance.
     $class = '';
     if (!$studentquiz->visible) {
-        $class = ' class="dimmed"';
+        $class = 'dimmed';
     }
-    $data[] = "<a$class href=\"view.php?id=$studentquiz->coursemodule\">" .
-        format_string($studentquiz->name, true) . '</a>';
+    $data[] = html_writer::tag('a', format_string($studentquiz->name, true), array(
+        'href' => "view.php?id=" . $studentquiz->coursemodule, 'class' => $class));
 
     $table->data[] = $data;
 } // End of loop over studentquiz instances.
@@ -108,3 +102,6 @@ echo html_writer::table($table);
 
 // Finish the page.
 echo $OUTPUT->footer();
+
+// Trigger instance list viewed event.
+mod_studentquiz_instancelist_viewed($coursecontext);

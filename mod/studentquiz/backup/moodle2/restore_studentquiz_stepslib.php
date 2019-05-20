@@ -124,10 +124,19 @@ class restore_studentquiz_activity_structure_step extends restore_questions_acti
             $data->incorrectanswerquantifier = get_config('studentquiz', 'incorrectanswered');
         }
         if (empty($data->allowedqtypes)) {
-            $data->allowedqtypes = 'ALL';
+            $data->allowedqtypes = get_config('studentquiz', 'defaultqtypes');
         }
         if (empty($data->aggregated)) {
             $data->aggregated = "1";
+        }
+        if (empty($data->excluderoles)) {
+            $data->excluderoles = get_config('studentquiz', 'excluderoles');
+        }
+        if (empty($data->forcerating)) {
+            $data->forcerating = get_config('studentquiz', 'forcerating');
+        }
+        if (empty($data->forcecommenting)) {
+            $data->forcecommenting = get_config('studentquiz', 'forcecommenting');
         }
         // Create the StudentQuiz instance.
         $newitemid = $DB->insert_record('studentquiz', $data);
@@ -197,7 +206,9 @@ class restore_studentquiz_activity_structure_step extends restore_questions_acti
      * Post-execution actions per activity after whole restore
      */
     protected function after_restore() {
-        // Fix wrong parent in question categories if applicable
+        parent::after_execute();
+
+        // Fix wrong parent in question categories if applicable.
         mod_studentquiz_fix_wrong_parent_in_question_categories();
         // Migrate old quiz usage if needed (the function does the checking).
         mod_studentquiz_migrate_old_quiz_usage($this->get_courseid());

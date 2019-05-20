@@ -13,13 +13,13 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-// $Id: insert_cloze.php,v 1.4 2013/18/03
+// $Id: insert_cloze.php,v 1.4 2013/18/03.
 
 
 /**
  * Dialog for cloze editor for tinymce editor.
  *
- * @package    tinymce_colzeeditor
+ * @package    tinymce_clozeeditor
  * @copyright  2013 Andreas Glombitza/Achim Skuta
  * @copyright  2018 onward Germán Valero <gvalero@unam.mx>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
