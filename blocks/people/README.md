@@ -9,7 +9,7 @@ Moodle block which displays all teachers of a course with contact quicklinks, as
 Requirements
 ------------
 
-This plugin requires Moodle 3.4+
+This plugin requires Moodle 3.6+
 
 
 Motivation for this plugin
@@ -35,9 +35,20 @@ After installing the plugin, it can be directly used by users and can be added t
 To configure the plugin and its behaviour, please visit: 
 Site administration -> Plugins -> Blocks -> People.
 
-There, you find three settings:
+There, you find three sections:
 
-### 1. Participants page
+### 1. Roles
+
+#### Show these roles
+
+This setting allows you to control which users appear in this block. Users need to have at least one of these roles in a course to be shown in the block.
+
+#### Show multiple roles
+
+This setting allows you to control if users who have more than one of the roles configured above are listed once or multiple times in this block. If this setting is disabled, users will be only listed with the first role they have according to the global role sort order. If this setting is enabled, users will be listed within each of their roles.
+
+
+### 2. Participants page
 
 #### Show link to the participants page
 
@@ -48,7 +59,7 @@ If the user does not hold this capability, a hint "Viewing the participants list
 See http://docs.moodle.org/en/Capabilities/moodle/course:viewparticipants for details on this capability.
 
 
-### 2. Hiding the block
+### 3. Hiding the block
 
 #### Hiding the block
 
@@ -67,11 +78,7 @@ After saving this option, the database operations for resetting the visibility w
 Fixed Behaviours
 ----------------
 
-### 1. List of teachers
-
-block_people gets the list of teacher roles from $CFG->coursecontact. With this Moodle core setting, you can define which roles are displayed in block_people's list of teachers.
-
-### 2. Links
+### 1. Links
 
 block_people only allows to view the teacher's profile if the user has the capability moodle/user:viewdetails
 See http://docs.moodle.org/en/Capabilities/moodle/user:viewdetails for details on this capability
@@ -79,7 +86,7 @@ See http://docs.moodle.org/en/Capabilities/moodle/user:viewdetails for details o
 block_people only shows a quicklink to the message system if the user has the capability moodle/site:sendmessage and if the Moodle message system is turned on ($CFG->messaging)
 See http://docs.moodle.org/en/Capabilities/moodle/site:sendmessage for details on this capability and http://docs.moodle.org/en/Messaging for details on the messaging system
 
-### 3. Roles sort order
+### 2. Roles sort order
 
 block_people shows teacher role groups in the order defined in /admin/roles/manage.php. Please visit this settings page if you want to modify the sort order
 
@@ -96,7 +103,8 @@ Theme support
 -------------
 
 This plugin should work with all Bootstrap based Moodle themes.
-It has been developed on and tested with Moodle Core's Clean and Boost themes.
+It has been developed on and tested only with Moodle Core's Boost theme.
+While this plugin should also work with Moodle Core's legacy Clean theme or third party themes, we can't support any other theme than Boost.
 
 
 Plugin repositories

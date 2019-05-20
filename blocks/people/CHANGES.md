@@ -4,6 +4,26 @@ moodle-block_people
 Changes
 -------
 
+### v3.6-r1
+
+* 2019-01-16 - Check compatibility for Moodle 3.6, no functionality change.
+* 2018-12-05 - Changed travis.yml due to upstream changes.
+
+### v3.5-r3
+
+* 2018-07-25 - Changed CSS font-weight rule due to displaying issues.
+* 2018-07-17 - Remove unneeded string from language pack.
+
+### v3.5-r2
+
+* 2018-07-17 - Add the possibility to control if users are listed with multiple roles in the block + respect the global roles sort order when building the teacher list - Credits to David Knuplesch.
+* 2018-07-17 - Clean up appearance of teacher list.
+* 2018-07-17 - Add the possibility to control the roles to be shown in this block instead of using $CFG->coursecontact.
+
+### v3.5-r1
+
+* 2018-05-29 - Check compatibility for Moodle 3.5, no functionality change.
+
 ### v3.4-r2
 
 * 2018-05-16 - Implement Privacy API.
