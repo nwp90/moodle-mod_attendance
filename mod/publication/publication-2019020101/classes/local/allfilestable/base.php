@@ -177,9 +177,7 @@ class base extends \table_sql {
 
         $useridentity = get_extra_user_fields($this->context);
         foreach ($useridentity as $cur) {
-            if (!(get_config('publication', 'hideidnumberfromstudents') && $cur == "idnumber" &&
-                            !has_capability('mod/publication:approve', $this->context))
-                    && !($cur != "idnumber" && !has_capability('mod/publication:approve', $this->context))) {
+            if (has_capability('mod/publication:approve', $this->context)) {
                 $columns[] = $cur;
                 $headers[] = ($cur == 'phone1') ? get_string('phone') : get_string($cur);
                 $helpicons[] = null;
@@ -188,6 +186,7 @@ class base extends \table_sql {
 
         $columns[] = 'timemodified';
         $headers[] = get_string('lastmodified');
+        $helpicons[] = null;
 
         // Import and upload tables will enhance this list! Import from teamassignments will overwrite it!
         return [$columns, $headers, $helpicons];

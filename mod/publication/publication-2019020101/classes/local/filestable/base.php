@@ -76,7 +76,7 @@ class base extends \html_table {
     public function init() {
         $files = $this->get_files();
 
-        if (count($files) == 0 && has_capability('mod/publication:upload', $this->publication->get_context())) {
+        if ((!$files || count($files) == 0) && has_capability('mod/publication:upload', $this->publication->get_context())) {
             return 0;
         }
 
@@ -162,7 +162,8 @@ class base extends \html_table {
      * @return bool
      */
     public function changepossible() {
-        return $this->changepossible ? true : false;
+        return ($this->changepossible ? true : false) && has_capability('mod/publication:upload',
+                        $this->publication->get_context());
     }
 
 }

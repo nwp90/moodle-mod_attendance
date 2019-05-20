@@ -15,13 +15,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Unit tests for mod_publication's allfilestable classes.
+ * Base class with common logic for some unit tests.
  *
  * @package   mod_publication
  * @author    Philipp Hager
- * @copyright 2017 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
+ * @copyright 2014 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+namespace mod_publication\local\tests;
+
+use advanced_testcase;
+use stdClass;
+use mod_assign_testable_assign;
+use context_module;
+use mod_assign_test_generator;
 
 if (!defined('MOODLE_INTERNAL')) {
     die('Direct access to this script is forbidden.'); // It must be included from a Moodle page!
@@ -30,16 +38,23 @@ if (!defined('MOODLE_INTERNAL')) {
 // Make sure the code being tested is accessible.
 global $CFG;
 require_once($CFG->dirroot . '/mod/publication/locallib.php'); // Include the code to test!
+require_once($CFG->dirroot . '/mod/assign/tests/generator.php'); // Include assign's generator helper trait!
 
 /**
- * This class contains the test cases for the formular validation.
+ * This base class contains common logic for tests.
  *
  * @package   mod_publication
  * @author    Philipp Hager
- * @copyright 2017 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
+ * @copyright 2014 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class publication_allfilestable_test extends advanced_testcase {
+abstract class base extends advanced_testcase {
+    // Import assign's generator helper trait to be able to easily add assign instances and submissions!
+    use mod_assign_test_generator {
+        create_instance as public create_assign;
+        add_submission as public;
+    }
+
     /** Default number of students to create */
     const DEFAULT_STUDENT_COUNT = 50;
     /** Default number of teachers to create */
@@ -141,120 +156,62 @@ class publication_allfilestable_test extends advanced_testcase {
      * Convenience function to create a testable instance of a publication instance.
      *
      * @param array $params Array of parameters to pass to the generator
-     * @return testable_publication Testable wrapper around the publication class.
+     * @return publication Testable wrapper around the publication class.
      */
     protected function create_instance($params = []) {
         $generator = self::getDataGenerator()->get_plugin_generator('mod_publication');
-        $params['course'] = $this->course->id;
+        if (!isset($params['course'])) {
+            $params['course'] = $this->course->id;
+        }
         $instance = $generator->create_instance($params);
         $cm = get_coursemodule_from_instance('publication', $instance->id);
         $context = context_module::instance($cm->id);
 
-        return new testable_publication($cm, $this->course, $context);
+        return new publication($cm, $this->course, $context);
     }
 
     /**
-     * Tests the basic creation of a publication instance with standardized settings!
+     * Simulate a file upload
+     *
+     * @param int $userid
+     * @param int $publicationid
+     * @param string $filename
+     * @param string $content
+     * @return bool|int
+     * @throws \coding_exception
+     * @throws \dml_exception
+     * @throws \file_exception
+     * @throws \stored_file_creation_exception
      */
-    public function test_create_instance() {
-        self::assertNotEmpty($this->create_instance());
+    protected function create_upload($userid, $publicationid, $filename, $content) {
+        global $DB;
+
+        $cm = get_coursemodule_from_instance('publication', $publicationid);
+        $context = context_module::instance($cm->id);
+        $fs = get_file_storage();
+
+        // We gotta create a new one!
+        $filerecord = (object)[
+            'contextid' => $context->id,
+            'component' => 'mod_publication',
+            'filearea' => 'attachment',
+            'itemid' => $userid,
+            'userid' => $userid,
+            'filename' => $filename,
+            'filepath' => '/',
+        ];
+        $file = $fs->create_file_from_string($filerecord, $content);
+
+        $dataobject = new stdClass();
+        $dataobject->publication = $publicationid;
+        $dataobject->userid = $userid;
+        $dataobject->timecreated = $file->get_timecreated();
+        $dataobject->fileid = $file->get_id();
+        $dataobject->studentapproval = 1; // Upload always means user approves.
+        $dataobject->filename = $file->get_filename();
+        $dataobject->type = PUBLICATION_MODE_UPLOAD;
+
+        return $DB->insert_record('publication_file', $dataobject);
     }
-
-    /**
-     * Tests if we can create an allfilestable without uploaded files
-     */
-    public function test_allfilestable_upload() {
-        // Setup fixture!
-        $publication = $this->create_instance([
-                'mode' => PUBLICATION_MODE_UPLOAD,
-                'obtainteacherapproval' => 0,
-                'obtainstudentapproval' => 0
-        ]);
-
-        // Exercise SUT!
-        try {
-            ob_start();
-            $publication->display_allfilesform();
-            $output = ob_get_contents();
-            ob_end_clean();
-            self::assertFalse(strpos($output, "Nothing to display"));
-        } catch (Exception $e) {
-            throw $e;
-        }
-
-        // Teardown fixture!
-        $publication = null;
-    }
-
-    /**
-     * Tests if we can create an allfilestable without imported files
-     */
-    public function test_allfilestable_import() {
-        // Setup fixture!
-        $generator = self::getDataGenerator()->get_plugin_generator('mod_assign');
-        $params['course'] = $this->course->id;
-        $assign = $generator->create_instance($params);
-        $publication = $this->create_instance([
-                'mode' => PUBLICATION_MODE_IMPORT,
-                'importfrom' => $assign->id,
-                'obtainteacherapproval' => 0,
-                'obtainstudentapproval' => 0
-        ]);
-
-        // Exercise SUT!
-        try {
-            ob_start();
-            $publication->display_allfilesform();
-            $output = ob_get_contents();
-            ob_end_clean();
-            self::assertFalse(strpos($output, "Nothing to display"));
-        } catch (Exception $e) {
-            throw $e;
-        }
-
-        // Teardown fixture!
-        $publication = null;
-    }
-
-    /**
-     * Tests if we can create an allfilestable without imported group-files
-     */
-    public function test_allfilestable_group() {
-        // Setup fixture!
-        $generator = self::getDataGenerator()->get_plugin_generator('mod_assign');
-        $params['course'] = $this->course->id;
-        $params['teamsubmission'] = 1;
-        $params['preventsubmissionnotingroup'] = 0;
-        $assign = $generator->create_instance($params);
-        $publication = $this->create_instance([
-                'mode' => PUBLICATION_MODE_IMPORT,
-                'importfrom' => $assign->id
-        ]);
-
-        // Exercise SUT!
-        try {
-            ob_start();
-            $publication->display_allfilesform();
-            $output = ob_get_contents();
-            ob_end_clean();
-            self::assertFalse(strpos($output, "Nothing to display"));
-        } catch (Exception $e) {
-            throw $e;
-        }
-
-        // Teardown fixture!
-        $publication = null;
-    }
-
 }
 
-/**
- * Test subclass that makes all the protected methods we want to test public.
- *
- * @package   mod_publication
- * @author    Philipp Hager
- * @copyright 2017 Academic Moodle Cooperation {@link http://www.academic-moodle-cooperation.org}
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class testable_publication extends publication {
-}

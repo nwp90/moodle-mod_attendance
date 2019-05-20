@@ -43,8 +43,6 @@ $string['name'] = 'Student folder name';
 $string['obtainstudentapproval'] = 'Obtain approval';
 $string['saveapproval'] = 'save approval';
 $string['configobtainstudentapproval'] = 'Documents are visible after the student´s consent.';
-$string['hideidnumberfromstudents'] = 'Hide ID-Number';
-$string['hideidnumberfromstudents_desc'] = 'Hide column ID-Number in Public Files table for students';
 $string['obtainteacherapproval'] = 'Approved by default';
 $string['configobtainteacherapproval'] = 'Documents of students are by default visible for all other participants.';
 $string['maxfiles'] = 'Maximum number of attachments';
@@ -83,8 +81,8 @@ $string['modeupload'] = 'students can upload documents';
 $string['modeimport'] = 'take documents from an assignment';
 
 $string['courseuploadlimit'] = 'Course upload limit';
-$string['allowedfiletypes'] = 'Allowed filetypes (;)';
-$string['allowedfiletypes_help'] = 'Accepted file types can be restricted by entering a semicolon-separated list of mimetypes, e.g. \'video/mp4; audio/mp3; image/png; image/jpeg\', or file extensions including a dot, e.g. \'.png; .jpg\'. If the field is left empty, then all file types are allowed.';
+$string['allowedfiletypes'] = 'Accepted file types';
+$string['allowedfiletypes_help'] = 'Accepted file types can be restricted by entering a comma-separated list of mimetypes, e.g. \'video/mp4, audio/mp3, image/png, image/jpeg\', or file extensions including a dot, e.g. \'.png, .jpg\'. If the field is left empty, then all file types are allowed.';
 $string['allowedfiletypes_err'] = 'Check input! Invalid file extensions or seperators';
 $string['obtainteacherapproval_help'] = 'Decide if files will be made visible immediately upon upload or not: <br><ul><li> yes - all files will be visible to everyone right away</li><li> no - files will be published only after the teacher approved</li></ul>';
 $string['assignment'] = 'Assignment';
@@ -96,8 +94,8 @@ $string['nonexistentfiletypes'] = 'The following file types were not recognised:
 
 $string['groupapprovalmode'] = 'Groupapproval mode';
 $string['groupapprovalmode_help'] = 'Here you decide if approval of all group members or just approval of at least one group member is required for files to be visible. The files will only be visible after approval by all group members or at least one group member.';
-$string['groupapprovalmode_all'] = '<strong>ALL</strong> members of the group have to approve';
-$string['groupapprovalmode_single'] = 'at least <strong>ONE</strong> member has to approve';
+$string['groupapprovalmode_all'] = 'ALL members of the group have to approve';
+$string['groupapprovalmode_single'] = 'at least ONE member has to approve';
 
 $string['warning_changefromobtainteacherapproval'] = 'After activating this setting, all uploaded files will be visible to other participants. All uploaded will become visible. You can manually make files invisible to certain students.';
 $string['warning_changetoobtainteacherapproval'] = 'After deactivating this setting uploaded files will not be visible to other participants automatically. You will have to determine which files are visible. Already visible files will become invisible.';
@@ -199,6 +197,29 @@ $string['save_changes'] = 'Save changes';
 // Strings for JS...
 $string['total'] = 'total';
 $string['details'] = 'Details';
+
+// Privacy strings...
+$string['privacy:metadata:publicationperpage'] = 'How many entries should be displayed on a single table page!';
+$string['privacy:path:files'] = 'files';
+$string['privacy:path:resources'] = 'resources';
+$string['privacy:type:upload'] = 'uploaded file';
+$string['privacy:type:import'] = 'imported file';
+$string['privacy:type:onlinetext'] = 'imported onlinetext';
+$string['privacy:metadata:groupapproval'] = 'Stores information about group members\' approval or rejection of files imported from group\'s submission.';
+$string['privacy:metadata:publicationfileexplanation'] = 'Files and converted onlinetext-submissions for this plugin get stored via Moodle\'s file API.';
+$string['privacy:metadata:extduedates'] = 'Stores information about overridden/extended due dates for mod_publication.';
+$string['privacy:metadata:files'] = 'Stores information (identifier, whom it belongs, where it came from, hash of content, file name and if approved by teacher and/or student) about the files uploaded/imported into mod_publication.';
+$string['privacy:metadata:fileid'] = 'Identifier of the file.';
+$string['privacy:metadata:userid'] = 'Identifier of the user.';
+$string['privacy:metadata:timecreated'] = 'The time and date the data record was created.';
+$string['privacy:metadata:timemodified'] = 'The most recent time and date the data record got updated/modified.';
+$string['privacy:metadata:approval'] = 'Whether or not the group member approved or rejected the file.';
+$string['privacy:metadata:studentapproval'] = 'Whether or not the student approved or rejected the file.';
+$string['privacy:metadata:teacherapproval'] = 'Whether or not the teacher approved or rejected the file.';
+$string['privacy:metadata:type'] = 'Marks the origin of the file (uploaded by student, imported from assignment submission or converted onlinetext from assignment submission).';
+$string['privacy:metadata:contenthash'] = 'SHA1 hash of the file\'s content, used to determine if the file changed.';
+$string['privacy:metadata:filename'] = 'The file\'s name.';
+$string['privacy:metadata:extensionduedate'] = 'The due date effective for the user due to it being overridden/extended.';
 
 // Deprecated since Moodle 2.9!
 $string['requiremodintro'] = 'Require activity description';

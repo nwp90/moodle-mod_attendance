@@ -33,6 +33,7 @@ define('PUBLICATION_MODE_ONLINETEXT', 2);
 
 define('PUBLICATION_APPROVAL_ALL', 0);
 define('PUBLICATION_APPROVAL_SINGLE', 1);
+require_once($CFG->dirroot . '/mod/publication/mod_publication_allfiles_form.php');
 
 /**
  * publication class contains much logic used in mod_publication
@@ -46,15 +47,15 @@ define('PUBLICATION_APPROVAL_SINGLE', 1);
 class publication {
     // TODO replace $instance with proper properties + PHPDoc comments?!?
     /** @var object instance */
-    private $instance;
+    protected $instance;
     /** @var object context */
-    private $context;
+    protected $context;
     /** @var object course */
-    private $course;
+    protected $course;
     /** @var object coursemodule */
-    private $coursemodule;
+    protected $coursemodule;
     /** @var bool requiregroup if mode = import and group membership is required for submission in assign to import from */
-    private $requiregroup = 0;
+    protected $requiregroup = 0;
 
     /**
      * Constructor
@@ -263,6 +264,10 @@ class publication {
     public function is_open() {
         global $USER;
 
+        if (!has_capability('mod/publication:upload', $this->get_context())) {
+            return false;
+        }
+
         $now = time();
 
         $from = $this->get_instance()->allowsubmissionsfromdate;
@@ -413,6 +418,8 @@ class publication {
 
     /**
      * Display form with table containing all files
+     *
+     * TODO: for Moodle 3.6 we should replace old form classes with a nice bootstrap based form layout!
      */
     public function display_allfilesform() {
         global $CFG, $DB;
@@ -456,7 +463,9 @@ class publication {
         echo html_writer::tag('div', $title, ['class' => 'legend']);
         echo html_writer::start_div('fcontainer clearfix');
 
-        echo groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/publication/view.php?id=' . $cm->id, true);
+        $f = groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/publication/view.php?id=' . $cm->id, true);
+        $mf = new mod_publication_allfiles_form(null, array('form' => $f));
+        $mf->display();
 
         if ($this->get_instance()->mode == PUBLICATION_MODE_UPLOAD) {
             $table = new \mod_publication\local\allfilestable\upload('mod-publication-allfiles', $this);
@@ -494,8 +503,9 @@ class publication {
         }
 
         if (count($options) > 0) {
+            echo html_writer::start_div('form-row');
             if (has_capability('mod/publication:approve', $context)) {
-                echo html_writer::empty_tag('input', [
+                $buttons = html_writer::empty_tag('input', [
                         'type' => 'reset',
                         'name' => 'resetvisibility',
                         'value' => get_string('reset', 'publication'),
@@ -504,32 +514,35 @@ class publication {
 
                 if ($this->get_instance()->mode == PUBLICATION_MODE_IMPORT &&
                         $this->get_instance()->obtainstudentapproval) {
-                    echo html_writer::empty_tag('input', [
+                    $buttons .= html_writer::empty_tag('input', [
                             'type' => 'submit',
                             'name' => 'savevisibility',
                             'value' => get_string('saveapproval', 'publication'),
-                            'class' => 'visibilitysaver btn btn-primary'
+                            'class' => 'visibilitysaver btn btn-primary m-x-1'
                     ]);
                 } else {
-                    echo html_writer::empty_tag('input', [
+                    $buttons .= html_writer::empty_tag('input', [
                             'type' => 'submit',
                             'name' => 'savevisibility',
                             'value' => get_string('saveteacherapproval', 'publication'),
                             'class' => 'visibilitysaver btn btn-primary'
                     ]);
                 }
+            } else {
+                $buttons = '';
             }
 
-            echo html_writer::start_div('withselection') .
-                    html_writer::span(get_string('withselected', 'publication')) .
-                    html_writer::select($options, 'action') .
-                    html_writer::empty_tag('input', [
-                            'type' => 'submit',
-                            'name' => 'submitgo',
-                            'value' => get_string('go', 'publication'),
-                            'class' => 'btn btn-primary'
-                    ]) .
-                    html_writer::end_div();
+            echo html_writer::start_div('withselection col-7').
+                 html_writer::span(get_string('withselected', 'publication')).
+                 html_writer::select($options, 'action').
+                 html_writer::empty_tag('input', [
+                    'type' => 'submit',
+                    'name' => 'submitgo',
+                    'value' => get_string('go', 'publication'),
+                    'class' => 'btn btn-primary'
+                 ]).html_writer::end_div().
+                 html_writer::div($buttons, 'col');
+
         }
 
         // Select all/none.
