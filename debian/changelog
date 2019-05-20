@@ -1,3 +1,10 @@
+moodle-site-otagounifom (3.6.4.2019051900+0facmed1-1) stretch; urgency=medium
+
+  * New upstream minor version
+  * All possible plugins updated
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 21 May 2019 11:12:19 +1200
+
 moodle-site-otagounifom (3.6.3.2019041500+0facmed2-1) stretch; urgency=medium
 
   * Fix PASAF gradereport asmap url (oops!)
