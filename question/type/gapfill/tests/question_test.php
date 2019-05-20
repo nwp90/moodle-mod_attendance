@@ -44,6 +44,12 @@ class qtype_gapfill_question_test extends advanced_testcase {
         $this->assertEquals($question->get_expected_data(), $expecteddata);
     }
 
+    public function test_get_size() {
+        $question = qtype_gapfill_test_helper::make_question('gapfill');
+        $answer = "123|12345";
+        $this->assertEquals($question->get_size($answer), 5);
+    }
+
     public function test_field() {
         $question = qtype_gapfill_test_helper::make_question('gapfill');
         $this->assertEquals($question->field('1'), 'p1');
@@ -96,7 +102,7 @@ class qtype_gapfill_question_test extends advanced_testcase {
         $response = array('p1' => 'cat', 'p2' => 'cat');
         $ddresponse = $question->discard_duplicates($response);
         $numpartsright = $question->get_num_parts_right($ddresponse);
-        $this->assertEquals($numpartsright, 1);
+        $this->assertEquals($numpartsright[0], 1);
     }
 
 
