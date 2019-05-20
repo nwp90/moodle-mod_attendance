@@ -97,7 +97,7 @@ function bootstrapelements_delete_instance($id) {
  * @return cached_cm_info|null
  */
 function bootstrapelements_get_coursemodule_info($coursemodule) {
-    global $DB, $PAGE;
+    global $DB;
 
     if ($bootstrapelements = $DB->get_record('bootstrapelements', array('id' => $coursemodule->instance),
             'id, name, intro, introformat, title, bootstraptype, bootstrapicon')) {
@@ -129,16 +129,13 @@ function bootstrapelements_get_coursemodule_info($coursemodule) {
                         format_module_intro('bootstrapelements', $bootstrapelements, $coursemodule->id, false),
                         $bootstrapelements->bootstrapicon);
             break;
-        
+
             case 3:
                 $info->content = bootstrapelements_blockquote($bootstrapelements->name, $bootstrapelements->title,
                         format_module_intro('bootstrapelements', $bootstrapelements, $coursemodule->id, false),
                         $bootstrapelements->bootstrapicon);
             break;
         }
-
-        // font-awesome is already pulled in, either by the stylesheet that this module
-        // provides, or in our case by the theme. It should not be needed *again*.
 
         $info->name  = $bootstrapelements->name;
         return $info;
@@ -180,26 +177,50 @@ function bootstrapelements_get_extra_capabilities() {
  */
 function bootstrapelements_supports($feature) {
     switch($feature) {
-        case FEATURE_IDNUMBER:                return false;
-        case FEATURE_GROUPS:                  return false;
-        case FEATURE_GROUPINGS:               return false;
-        case FEATURE_GROUPMEMBERSONLY:        return true;
-        case FEATURE_MOD_INTRO:               return true;
-        case FEATURE_COMPLETION_TRACKS_VIEWS: return false;
-        case FEATURE_GRADE_HAS_GRADE:         return false;
-        case FEATURE_GRADE_OUTCOMES:          return false;
-        case FEATURE_MOD_ARCHETYPE:           return MOD_ARCHETYPE_RESOURCE;
-        case FEATURE_BACKUP_MOODLE2:          return true;
-        case FEATURE_NO_VIEW_LINK:            return true;
+        case FEATURE_IDNUMBER: {
+            return false;
+        }
+        case FEATURE_GROUPS: {
+            return false;
+        }
+        case FEATURE_GROUPINGS: {
+            return false;
+        }
+        case FEATURE_GROUPMEMBERSONLY: {
+            return true;
+        }
+        case FEATURE_MOD_INTRO: {
+            return true;
+        }
+        case FEATURE_COMPLETION_TRACKS_VIEWS: {
+            return false;
+        }
+        case FEATURE_GRADE_HAS_GRADE: {
+            return false;
+        }
+        case FEATURE_GRADE_OUTCOMES: {
+            return false;
+        }
+        case FEATURE_MOD_ARCHETYPE: {
+            return MOD_ARCHETYPE_RESOURCE;
+        }
+        case FEATURE_BACKUP_MOODLE2: {
+            return true;
+        }
+        case FEATURE_NO_VIEW_LINK: {
+            return true;
+        }
 
-        default: return null;
+        default: {
+            return null;
+        }
     }
 }
 
 function bootstrapelements_standard($name, $title, $content, $icon) {
     $output = html_writer::start_tag('div');
 
-    $output .= html_writer::tag('h4', '<i class="fa '.$icon.'"></i>&nbsp;'.$title);
+    $output .= html_writer::tag('h4', '<i class="fa '.$icon.'"></i>'.$title);
 
     $output .= html_writer::tag('div', $content);
 
@@ -221,12 +242,7 @@ function bootstrapelements_toggle_outline($togglename, $toggletitle, $togglecont
         'class' => 'panel-title'
     ));
 
-    $linktext = html_writer::span(
-        html_writer::tag('i', '', ['class' => "fa ".$icon]) .
-        html_writer::end_tag('i') . '&nbsp;'.$toggletitle
-    );
-
-    $output .= html_writer::tag('a', $linktext, array(
+    $output .= html_writer::tag('a', '<i class="fa '.$icon.'"></i>'.$toggletitle, array(
         'data-toggle' => 'collapse',
         'class' => 'accordion-toggle collapsed',
         'href' => '#'.$togglename
@@ -277,8 +293,8 @@ function bootstrapelements_modal_outline($modalname, $modaltitle, $modalcontent,
         'class' => 'modal-title'
     ));
 
-    $output .= '<i class="fa '.$icon.'"></i>&nbsp;';
-    
+    $output .= '<i class="fa '.$icon.'"></i>';
+
     $output .= $modaltitle;
 
     $output .= html_writer::end_tag('h4');
@@ -316,7 +332,7 @@ function bootstrapelements_modal_outline($modalname, $modaltitle, $modalcontent,
     $output .= html_writer::end_tag('div');
 
     $output .= html_writer::start_tag('div', array(
-        'class' => 'text-center'
+        'class' => 'text-left'
     ));
 
     return $output;
@@ -328,7 +344,7 @@ function bootstrapelements_modal_button($modalname, $modaltitle, $icon) {
         'data-toggle' => 'modal',
         'data-target' => '#'.$modalname
     ));
-    $output .= '<i class="fa '.$icon.'"></i>&nbsp;';
+    $output .= '<i class="fa '.$icon.'"></i>';
     $output .= $modaltitle;
     $output .= html_writer::end_tag('button');
     $output .= html_writer::end_tag('div');
@@ -337,11 +353,11 @@ function bootstrapelements_modal_button($modalname, $modaltitle, $icon) {
 
 function bootstrapelements_blockquote($name, $title, $content, $icon) {
     $output = html_writer::start_tag('blockquote');
-    
-    $output .= html_writer::tag('h4', '<i class="fa '.$icon.'"></i>&nbsp;'.$title);
-    
+
+    $output .= html_writer::tag('h4', '<i class="fa '.$icon.'"></i>'.$title);
+
     $output .= $content;
-    
+
     $output .= html_writer::end_tag('blockquote');
     return $output;
 }
