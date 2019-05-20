@@ -17,8 +17,7 @@
 /**
  * Version details
  *
- * @package    block
- * @subpackage glossary_export_to_quiz
+ * @package    block_glossary_export_to_quiz
  * @copyright  Joseph Rézeau moodle@rezeau.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -29,14 +28,21 @@
 require_once("../../config.php");
 
 $id = required_param('id', PARAM_INT);      // Course Module ID.
-
 $cat = optional_param('cat', 0, PARAM_ALPHANUM);
 $questiontype = optional_param('questiontype', 0, PARAM_ALPHANUM);
-$limitnum = optional_param('limitnum', 0, PARAM_ALPHANUM);
+$limitnum = optional_param('limitnum', '', PARAM_ALPHANUM);
 $sortorder = optional_param('sortorder', 0, PARAM_ALPHANUM);
 $entriescount = optional_param('entriescount', 0, PARAM_ALPHANUM);
-$questiontype =  optional_param('questiontype', 0, PARAM_ALPHANUMEXT);
-$url = new moodle_url('/mod/glossary/export.php', array('id'=>$id));
+$nbchoices = optional_param('nbchoices', '', PARAM_ALPHANUM);
+$usecase = optional_param('usecase', '', PARAM_ALPHANUM);
+$answernumbering = optional_param('answernumbering', '', PARAM_ALPHANUM);
+$shuffleanswers = optional_param('shuffleanswers', '', PARAM_ALPHANUM);
+$answerdisplay = optional_param('answerdisplay', '', PARAM_ALPHANUM);
+$numquestions = optional_param('numquestions', '', PARAM_ALPHANUM);
+$questiontype = optional_param('questiontype', 0, PARAM_ALPHANUMEXT);
+$exportmediafiles = optional_param('exportmediafiles', '', PARAM_ALPHANUM);
+$extrawronganswer = optional_param('extrawronganswer', '', PARAM_ALPHANUM);
+$url = new moodle_url('/mod/glossary/export.php', array('id' => $id));
 if ($cat !== 0) {
     $url->param('cat', $cat);
 }
@@ -47,11 +53,11 @@ if (! $cm = get_coursemodule_from_id('glossary', $id)) {
     print_error('invalidcoursemodule');
 }
 
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
+if (! $course = $DB->get_record("course", array("id" => $cm->course))) {
     print_error('coursemisconf');
 }
 
-if (! $glossary = $DB->get_record("glossary", array("id"=>$cm->instance))) {
+if (! $glossary = $DB->get_record("glossary", array("id" => $cm->instance))) {
     print_error('invalidid', 'glossary');
 }
 
@@ -60,7 +66,7 @@ require_login($course->id, false, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/glossary:export', $context);
 
-$strglossary = get_string("modulename", "glossary");
+
 $strexportfile = get_string("exportfile", "glossary");
 $strexportentries = get_string('exportentriestoxml', 'block_glossary_export_to_quiz');
 
@@ -68,7 +74,7 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading($strexportentries);
 echo $OUTPUT->box_start('glossarydisplay generalbox');
 
-echo '
+echo ('
     <form action="exportfile_to_quiz.php" method="post">
     <table border="0" cellpadding="6" cellspacing="6" width="100%">
     <tr><td align="center">
@@ -83,10 +89,17 @@ echo '
     <input type="hidden" name="questiontype" value='.$questiontype.' />
     <input type="hidden" name="sortorder" value='.$sortorder.' />
     <input type="hidden" name="entriescount" value='.$entriescount.' />
+    <input type="hidden" name="nbchoices" value='.$nbchoices.' />
+    <input type="hidden" name="usecase" value='.$usecase.' />
+    <input type="hidden" name="answernumbering" value='.$answernumbering.' />
+    <input type="hidden" name="shuffleanswers" value='.$shuffleanswers.' />
+    <input type="hidden" name="answerdisplay" value='.$answerdisplay.' />
+    <input type="hidden" name="numquestions" value='.$numquestions.' />
+    <input type="hidden" name="exportmediafiles" value='.$exportmediafiles.' />
+    <input type="hidden" name="extrawronganswer" value='.$extrawronganswer.' />
     </div>
     </form>
-';
-
+');
 
     $courseurl = new moodle_url("/course/view.php", array('id' => $course->id));
     echo html_writer::start_tag('div', array('class' => 'buttons'));
