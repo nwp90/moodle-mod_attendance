@@ -36,6 +36,11 @@ require_once($CFG->dirroot . '/question/format/xml/format.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_multichoiceset extends question_type {
+    /**
+     * Can the answer fields contain HTML?
+     * 
+     * @return bool return true if restore_decode_content_links_worker should be called.
+     */
     public function has_html_answers() {
         return true;
     }
@@ -50,7 +55,46 @@ class qtype_multichoiceset extends question_type {
         global $DB, $OUTPUT;
         $question->options = $DB->get_record('qtype_multichoiceset_options',
                 array('questionid' => $question->id), '*', MUST_EXIST);
+        if ($question->options === false) {
+            // If this has happened, then we have a problem.
+            // For the user to be able to edit or delete this question, we need options.
+            debugging("Question ID {$question->id} was missing an options record. Using default.", DEBUG_DEVELOPER);
+
+            $question->options = $this->create_default_options($question);
+        }
+
         parent::get_question_options($question);
+    }
+
+    /**
+     * Create a default options object for the provided question.
+     *
+     * @param object $question The queston we are working with.
+     * @return object The options object.
+     */
+    protected function create_default_options($question) {
+        // Create a default question options record.
+        $options = new stdClass();
+        $options->questionid = $question->id;
+
+        // Get the default strings and just set the format.
+        $options->correctfeedback = get_string('correctfeedbackdefault', 'question');
+        $options->correctfeedbackformat = FORMAT_HTML;
+        $options->partiallycorrectfeedback = get_string('partiallycorrectfeedbackdefault', 'question');;
+        $options->partiallycorrectfeedbackformat = FORMAT_HTML;
+        $options->incorrectfeedback = get_string('incorrectfeedbackdefault', 'question');
+        $options->incorrectfeedbackformat = FORMAT_HTML;
+
+        $config = get_config('qtype_multichoice');
+        $options->single = $config->answerhowmany;
+        if (isset($question->layout)) {
+            $options->layout = $question->layout;
+        }
+        $options->answernumbering = $config->answernumbering;
+        $options->shuffleanswers = $config->shuffleanswers;
+        $options->shownumcorrect = 1;
+
+        return $options;
     }
 
     /**
@@ -152,7 +196,7 @@ class qtype_multichoiceset extends question_type {
      * Save all hints.
      *
      * @param stdObject $formdata form data of question
-     * @param boolean $withparts whether the question has parts
+     * @param bool $withparts whether the question has parts
      * @return stdObject
      */
     public function save_hints($formdata, $withparts = false) {
@@ -259,7 +303,7 @@ class qtype_multichoiceset extends question_type {
     /**
      * Initialise the question instance.
      *
-     * @param stdObject $question the question
+     * @param question_definition $question the question_definition we are creating
      * @param stdObject $questiondata the question data
      * @return void
      */
@@ -344,8 +388,8 @@ class qtype_multichoiceset extends question_type {
         foreach ($questiondata->options->answers as $aid => $answer) {
             $parts[$aid] = array($aid => new question_possible_response(
                             html_to_text(format_text(
-                    $answer->answer, $answer->answerformat, array('noclean' => true)),
-                    0, false), $answer->fraction));
+                            $answer->answer, $answer->answerformat, array('noclean' => true)),
+                            0, false), $answer->fraction));
         }
 
         return $parts;
@@ -355,7 +399,7 @@ class qtype_multichoiceset extends question_type {
      * Get the available question numbering styles.
      *
      * @return array of the numbering styles supported. For each one, there
-     *      should be a lang string answernumberingxxx in teh qtype_multichoice
+     *      should be a lang string answernumberingxxx in the qtype_multichoice
      *      language file, and a case in the switch statement in number_in_style,
      *      and it should be listed in the definition of this column in install.xml.
      */
@@ -411,7 +455,7 @@ class qtype_multichoiceset extends question_type {
      * Provide export functionality for xml format.
      *
      * @param stdObject $question the question object
-     * @param stdObject $format the format object so that helper methods can be used
+     * @param qformat_xml $format the format object so that helper methods can be used
      * @param mixed $extra any additional format specific data that may be passed by the format (see format code for info)
      * @return string the data to append to the output buffer or false if error
      */
@@ -449,7 +493,7 @@ class qtype_multichoiceset extends question_type {
      *
      * @param mixed $data the segment of data containing the question
      * @param stdObject $question question object processed (so far) by standard import code
-     * @param stdObject $format the format object so that helper methods can be used (in particular error())
+     * @param qformat_xml $format the format object so that helper methods can be used (in particular error())
      * @param mixed $extra any additional format specific data that may be passed by the format (see format code for info)
      * @return stdObject question object suitable for save_options() call or false if cannot handle
      */
@@ -544,7 +588,7 @@ class qtype_multichoiceset extends question_type {
      * cf. https://moodle.org/plugins/pluginversions.php?plugin=qformat_wordtable
      *
      * @param stdObject $question the question object
-     * @param stdObject $format the format object so that helper methods can be used
+     * @param qformat_xml $format the format object so that helper methods can be used
      * @param mixed $extra any additional format specific data that may be passed by the format (see format code for info)
      * @return string the data to append to the output buffer or false if error
      */
@@ -560,7 +604,7 @@ class qtype_multichoiceset extends question_type {
      *
      * @param mixed $data the segment of data containing the question
      * @param stdObject $question question object processed (so far) by standard import code
-     * @param stdObject $format the format object so that helper methods can be used (in particular error())
+     * @param qformat_xml $format the format object so that helper methods can be used (in particular error())
      * @param mixed $extra any additional format specific data that may be passed by the format (see format code for info)
      * @return stdObject question object suitable for save_options() call or false if cannot handle
      */
@@ -575,7 +619,7 @@ class qtype_multichoiceset extends question_type {
      * cf. https://moodle.org/plugins/pluginversions.php?plugin=qformat_htmltable
      *
      * @param stdObject $question the question object
-     * @param stdObject $format the format object so that helper methods can be used
+     * @param qformat_xml $format the format object so that helper methods can be used
      * @param mixed $extra any additional format specific data that may be passed by the format (see format code for info)
      * @return string the data to append to the output buffer or false if error
      */
@@ -594,7 +638,7 @@ class qtype_multichoiceset extends question_type {
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_multichoiceset_hint extends question_hint_with_parts {
-    /** @var boolean whether to show the feedback for each choice. */
+    /** @var bool whether to show the feedback for each choice. */
     public $showchoicefeedback;
 
     /**
@@ -627,7 +671,7 @@ class qtype_multichoiceset_hint extends question_hint_with_parts {
     /**
      * Adjust the display options
      *
-     * @param stdClass $options display options
+     * @param question_display_options $options display options
      * @return void
      */
     public function adjust_display_options(question_display_options $options) {

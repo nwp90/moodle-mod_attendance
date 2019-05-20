@@ -15,24 +15,32 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for the multiple choice all or nothing question type.
+ * Privacy Subsystem implementation for qtype_multichoiceset.
  *
  * @package    qtype_multichoiceset
- * @copyright  1999 onwards Martin Dougiamas  {@link http://moodle.com}
+ * @copyright  2019 Jean-Michel Vedrine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace qtype_multichoiceset\privacy;
+
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'qtype_multichoiceset';
-$plugin->version   = 2019050800;
+/**
+ * Privacy Subsystem for qtype_multichoiceset implementing null_provider.
+ *
+ * @copyright  2019 Jean-Michel Vedrine
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class provider implements \core_privacy\local\metadata\null_provider {
 
-$plugin->requires  = 2015111600;
-
-$plugin->cron      = 0;
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.6.5 for Moodle 3.5';
-
-$plugin->dependencies = array(
-    'qtype_multichoice' => ANY_VERSION,
-);
+    /**
+     * Get the language string identifier with the component's language
+     * file to explain why this plugin stores no data.
+     *
+     * @return  string
+     */
+    public static function get_reason() : string {
+        return 'privacy:metadata';
+    }
+}
