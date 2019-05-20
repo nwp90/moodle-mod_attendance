@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.6.4.2019051900+0facmed2-1) stretch; urgency=medium
+
+  * Fix error in mod_publication update
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 21 May 2019 11:36:27 +1200
+
 moodle-site-otagounifom (3.6.4.2019051900+0facmed1-1) stretch; urgency=medium
 
   * New upstream minor version
