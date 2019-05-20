@@ -22,9 +22,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/questionlib.php');
-require_once(dirname(__FILE__) . '/locallib.php');
+require_once(__DIR__ . '/locallib.php');
 
 // Get parameters.
 $cmid = required_param('cmid', PARAM_INT);
@@ -82,14 +82,15 @@ $hasprevious = $slot > $questionusage->get_first_question_number();
 $canfinish = $questionusage->can_question_finish_during_attempt($slot);
 
 if (data_submitted()) {
-    // There should be no question data if he has already answered them, as the fields are disabled.
-    if (optional_param('next', null, PARAM_BOOL)) {
-        // There is submitted data. Process it.
+    // On the following navigation steps the question has to be finished and the comment saved
+    if (optional_param('next', null, PARAM_BOOL) || optional_param('finish', null, PARAM_BOOL)) {
         $transaction = $DB->start_delegated_transaction();
         $questionusage->finish_question($slot);
-        // TODO: Update tracking data --> studentquiz progress, studentquiz_attempt.
         $transaction->allow_commit();
+    }
 
+    // There should be no question data if he has already answered them, as the fields are disabled.
+    if (optional_param('next', null, PARAM_BOOL)) {
         if ($hasnext) {
             $actionurl = new moodle_url($actionurl, array('slot' => $slot + 1));
             redirect($actionurl);
@@ -105,12 +106,6 @@ if (data_submitted()) {
             redirect($actionurl);
         }
     } else if (optional_param('finish', null, PARAM_BOOL)) {
-        $transaction = $DB->start_delegated_transaction();
-        $questionusage->finish_question($slot);
-        // TODO: Update tracking data --> studentquiz progress, studentquiz_attempt.
-        $transaction->allow_commit();
-
-        // TODO Trigger events?
         redirect($stopurl);
     } else {
         // On every submission save the attempt.
@@ -193,7 +188,11 @@ $headtags .= question_engine::initialise_js();
 $output = $PAGE->get_renderer('mod_studentquiz', 'attempt');
 // Start output.
 $PAGE->set_url($actionurl);
-$PAGE->requires->js_call_amd('mod_studentquiz/studentquiz', 'initialise');
+$jsparams = array(
+    boolval($studentquiz->forcerating),
+    boolval($studentquiz->forcecommenting)
+);
+$PAGE->requires->js_call_amd('mod_studentquiz/studentquiz', 'initialise', $jsparams);
 $title = format_string($question->name);
 $PAGE->set_title($cm->name);
 $PAGE->set_heading($cm->name);
@@ -204,7 +203,7 @@ $info = new stdClass();
 $info->total = $questionscount;
 $info->group = 0;
 $info->one = max($slot - (!$hasanswered ? 1 : 0), 0);
-$texttotal = $questionscount . ' ' . get_string('questions', 'studentquiz');
+$texttotal = get_string('num_questions', 'studentquiz', $questionscount);
 $html = '';
 
 $html .= html_writer::div($output->render_progress_bar($info, $texttotal, true), '', array('title' => $texttotal));
@@ -217,25 +216,14 @@ $html .= html_writer::tag('h2', $title);
 $html .= html_writer::start_tag('form', array('method' => 'post', 'action' => $actionurl,
     'enctype' => 'multipart/form-data', 'id' => 'responseform'));
 
-$html .= '<input type="hidden" class="cmid_field" name="cmid" value="' . $cmid . '" />';
+$html .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'cmid', 'value' => $cmid, 'class' => 'cmid_field'));
 
 // Output the question.
 $html .= $questionusage->render_question($slot, $options, (string)$slot);
 
 // Output the rating.
 if ($hasanswered) {
-    $comments = mod_studentquiz_get_comments_with_creators($question->id);
-
-    $anonymize = $studentquiz->anonymrank;
-    if (has_capability('mod/studentquiz:unhideanonymous', $context)) {
-        $anonymize = false;
-    }
-    $ismoderator = false;
-    if (mod_studentquiz_check_created_permission($cmid)) {
-        $ismoderator = true;
-    }
-
-    $html .= $output->feedback($question, $options, $cmid, $comments, $userid, $anonymize, $ismoderator);
+    $html .= $output->render_rate($question->id);
 }
 
 // Finish the question form.
@@ -259,7 +247,7 @@ $html .= html_writer::start_tag('div', array('class' => 'mdl-align'));
 if ($canfinish && ($hasnext || !$hasanswered)) {
     $html .= html_writer::empty_tag('input',
         array('type' => 'submit', 'name' => 'finish',
-            'value' => get_string('finish_button', 'studentquiz'), 'class' => 'btn btn-link'));
+            'value' => get_string('abort_button', 'studentquiz'), 'class' => 'btn'));
 }
 
 $html .= html_writer::end_tag('div');
@@ -282,6 +270,24 @@ if ($hasanswered) {
 $html .= html_writer::end_tag('div');
 $html .= html_writer::end_tag('div');
 $html .= html_writer::end_tag('div');
+
+// Output the comments.
+$html .= html_writer::empty_tag('hr');
+if ($hasanswered) {
+    $comments = mod_studentquiz_get_comments_with_creators($question->id);
+
+    $anonymize = $studentquiz->anonymrank;
+    if (has_capability('mod/studentquiz:unhideanonymous', $context)) {
+        $anonymize = false;
+    }
+    $ismoderator = false;
+    if (mod_studentquiz_check_created_permission($cmid)) {
+        $ismoderator = true;
+    }
+
+    $html .= $output->render_comment($cmid, $question->id, $comments, $userid, $anonymize, $ismoderator);
+}
+
 $html .= html_writer::end_tag('form');
 
 

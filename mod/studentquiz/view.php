@@ -25,36 +25,27 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(dirname(__DIR__)).'/config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/viewlib.php');
-require_once(__DIR__.'/classes/event/studentquiz_questionbank_viewed.php');
-require_once(__DIR__.'/reportlib.php');
+require_once(__DIR__ . '/reportlib.php');
 
 // Get parameters.
 if (!$cmid = optional_param('cmid', 0, PARAM_INT)) {
     $cmid = required_param('id', PARAM_INT);
+    // Some internal moodle functions (e.g. question_edit_setup()) require the cmid to be found in $_xxx['cmid'],
+    // but moodle allows to view a mod page with parameter id in place of cmid.
+    $_GET['cmid'] = $cmid;
 }
 
-// Load course and course module requested.
-if ($cmid) {
-    if (!$cm = get_coursemodule_from_id('studentquiz', $cmid)) {
-        print_error('invalidcoursemodule');
-    }
-    if (!$course = $DB->get_record('course', array('id' => $cm->course))) {
-        print_error('coursemisconf');
-    }
-} else {
-    print_error('invalidcoursemodule');
-}
+// TODO: make course-, context- and login-check in a better starting class (not magically hidden in "report").
+// And when doing that, offer course, context and studentquiz object over it, which all following actions can use.
+$report = new mod_studentquiz_report($cmid);
+require_login($report->get_course(), false, $report->get_coursemodule());
 
-// Authentication check.
-require_login($cm->course, false, $cm);
-
-// Load context.
-$context = context_module::instance($cm->id);
-
-// Load studentquiz.
-$studentquiz = mod_studentquiz_load_studentquiz($cm->id, $context->id);
+$course = $report->get_course();
+$context = $report->get_context();
+$cm = $report->get_coursemodule();
+$studentquiz = mod_studentquiz_load_studentquiz($cmid, $context->id);
 
 // Redirect if we have received valid POST data.
 if (data_submitted()) {
@@ -77,9 +68,7 @@ $renderer = $PAGE->get_renderer('mod_studentquiz', 'overview');
 $renderer->init_question_table_wanted_columns();
 
 // Load view.
-$report = new mod_studentquiz_report($cmid);
 $view = new mod_studentquiz_view($course, $context, $cm, $studentquiz, $USER->id, $report);
-
 
 $PAGE->set_url($view->get_pageurl());
 $PAGE->set_title($view->get_title());
@@ -88,8 +77,8 @@ $PAGE->set_heading($COURSE->fullname);
 // Process actions.
 $view->process_actions();
 
-// Fire view event for completion API and event API.
-mod_studentquiz_overview_viewed($course, $cm, $context);
+// Trigger completion.
+mod_studentquiz_completion($course, $cm);
 
 $renderer->add_fake_block($report);
 
@@ -97,7 +86,9 @@ echo $OUTPUT->header();
 // Render view.
 echo $renderer->render_overview($view);
 
-$PAGE->requires->js_init_code($renderer->render_bar_javascript_snippet());
+$PAGE->requires->js_init_code($renderer->render_bar_javascript_snippet(), true);
 
 echo $OUTPUT->footer();
 
+// Trigger overview viewed event.
+mod_studentquiz_overview_viewed($cm->id, $context);

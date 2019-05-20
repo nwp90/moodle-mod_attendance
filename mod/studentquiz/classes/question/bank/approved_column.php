@@ -53,10 +53,18 @@ class approved_column extends \core_question\bank\column_base {
     }
 
     /**
-     * Get title
+     * Get title to return the very short column name
      * @return string column title
      */
     protected function get_title() {
+        return get_string('approved_veryshort', 'studentquiz');
+    }
+
+    /**
+     * Get title tip to return the full column name
+     * @return string column title
+     */
+    protected function get_title_tip() {
         return get_string('approved_column_name', 'studentquiz');
     }
 
@@ -75,7 +83,10 @@ class approved_column extends \core_question\bank\column_base {
      * @return array modified select left join
      */
     public function get_extra_joins() {
-        return array('ap' => ' LEFT JOIN (SELECT questionid, approved FROM {studentquiz_question}) ap ON ap.questionid = q.id');
+        return array('ap' => " LEFT JOIN (
+                                           SELECT questionid, approved
+                                             FROM {studentquiz_question}
+                                         ) ap ON ap.questionid = q.id");
     }
 
     /**

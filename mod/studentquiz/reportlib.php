@@ -114,8 +114,6 @@ class mod_studentquiz_report {
     public function get_zero_user_stats() {
         $r = new stdClass();
         $r->userid = 0;
-        $r->firstname = get_string('creator_anonym_firstname', 'studentquiz');
-        $r->lastname = get_string('creator_anonym_lastname', 'studentquiz');
         $r->points = 0;
         $r->questions_created = 0;
         $r->questions_approved = 0;
@@ -329,8 +327,9 @@ class mod_studentquiz_report {
      * @return moodle_recordset of paginated ranking table
      */
     public function get_user_ranking_table($limitfrom = 0, $limitnum = 0) {
+        $excluderoles = (!empty($this->studentquiz->excluderoles)) ? explode(',', $this->studentquiz->excluderoles) : array();
         return mod_studentquiz_get_user_ranking_table($this->get_cm_id(), $this->get_quantifiers(),
-            $this->studentquiz->aggregated, 0, $limitfrom, $limitnum);
+            $this->studentquiz->aggregated, $excluderoles, 0, $limitfrom, $limitnum);
     }
 
     /**
