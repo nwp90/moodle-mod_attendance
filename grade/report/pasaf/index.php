@@ -89,6 +89,16 @@ $USER->grade_last_report[$course->id] = 'pasaf'; //KJ - pasaf was user
 // First make sure we have proper final grades.
 grade_regrade_final_grades_if_required($course);
 
+$asmapapi = new gradereport_pasaf\api(
+    new gradereport_pasaf\transport(
+        'https://medmap.otago.ac.nz/asmapapi/api',
+        null
+    )
+);
+$asmapcourses = $asmapapi->get_courses();
+$asmapcourse = $asmapcourses[$course->shortname];
+$asmapassessments = $asmapapi->get_course_assessments($asmapcourse);
+
 if (has_capability('moodle/grade:viewall', $context)) { //Teachers will see all student reports
     $groupmode    = groups_get_course_groupmode($course);   // Groups are being used
     $currentgroup = groups_get_course_group($course, true);
@@ -118,16 +128,6 @@ if (has_capability('moodle/grade:viewall', $context)) { //Teachers will see all 
     } else {
         $viewasuser = false;
     }
-
-    $asmapapi = new gradereport_pasaf\api(
-        new gradereport_pasaf\transport(
-            'https://medmap.otago.ac.nz/asmapapi/api',
-            null
-        )
-    );
-    $asmapcourses = $asmapapi->get_courses();
-    $asmapcourse = $asmapcourses[$course->shortname];
-    $asmapassessments = $asmapapi->get_course_assessments($asmapcourse);
 
     if (empty($userid)) {
         $gui = new graded_users_iterator($course, null, $currentgroup);
@@ -186,7 +186,7 @@ if (has_capability('moodle/grade:viewall', $context)) { //Teachers will see all 
     $report = new grade_report_pasaf($courseid, $gpr, $context, $asmapassessments, $userid);
 
     // print the page
-    print_grade_page_head($courseid, 'report', 'user', get_string('pluginname', 'gradereport_pasaf'). ' - '.fullname($report->user));
+    print_grade_page_head($courseid, 'report', 'pasaf', get_string('pluginname', 'gradereport_pasaf'). ' - '.fullname($report->user));
 
     if ($report->fill_table()) {
         echo '<br />'.$report->print_table(true);

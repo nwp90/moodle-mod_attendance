@@ -108,7 +108,7 @@ class grade_report_pasaf extends grade_report {
     /**
      * show grade edit
      */
-    public $showedit;
+    public $showedit = false;
 
     /**
      * Show range
@@ -250,9 +250,6 @@ class grade_report_pasaf extends grade_report {
         $this->showweight = grade_get_setting($this->courseid, 'report_pasaf_showweight',
             !empty($CFG->grade_report_pasaf_showweight));
 
-$this->showedit = grade_get_setting($this->courseid, 'report_pasaf_showedit',
-            !empty($CFG->grade_report_pasaf_showedit));
-
         $this->showcontributiontocoursetotal = grade_get_setting($this->courseid, 'report_pasaf_showcontributiontocoursetotal',
             !empty($CFG->grade_report_pasaf_showcontributiontocoursetotal));
 
@@ -294,6 +291,10 @@ $this->showedit = grade_get_setting($this->courseid, 'report_pasaf_showedit',
             $this->modinfo = $this->gtree->modinfo;
             $this->canviewhidden = has_capability('moodle/grade:viewhidden', $this->coursecontext);
             $this->usermodinfo = new course_modinfo($this->course, $this->user->id);
+        }
+        if (has_any_capability(array('moodle/grade:manage', 'moodle/grade:edit'), $this->coursecontext)) {
+            $this->showedit = grade_get_setting($this->courseid, 'report_pasaf_showedit',
+                !empty($CFG->grade_report_pasaf_showedit));
         }
 
         // Determine the number of rows and indentation.
