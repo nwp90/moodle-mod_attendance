@@ -59,7 +59,7 @@ class checklist_class {
     /** @var mod_checklist_renderer */
     protected $output;
 
-    protected $canlinkcourses = null;
+    protected $canlinkcourses;
 
     /**
      * @param int|string $cmid optional
@@ -69,9 +69,9 @@ class checklist_class {
      * @param object $course optional
      */
     public function __construct($cmid = 'staticonly', $userid = 0, $checklist = null, $cm = null, $course = null) {
-        global $COURSE, $DB, $CFG;
+        global $COURSE, $DB;
 
-        if ($cmid == 'staticonly') {
+        if ($cmid === 'staticonly') {
             // Use static functions only!
             return;
         }
@@ -922,7 +922,7 @@ class checklist_class {
     }
 
     protected function view_report() {
-        global $DB, $OUTPUT, $CFG;
+        global $DB, $OUTPUT;
 
         $reportsettings = $this->get_report_settings();
 
@@ -954,41 +954,41 @@ class checklist_class {
             }
         }
 
-        echo '&nbsp;&nbsp;<form style="display: inline;" action="'.$thisurl->out_omit_querystring().'" method="get" />';
+        echo '&nbsp;&nbsp;<form style="display: inline;" class="form-inline" action="'.$thisurl->out_omit_querystring().'" method="get" />';
         echo html_writer::input_hidden_params($thisurl, array('action'));
         if ($reportsettings->showoptional) {
             echo '<input type="hidden" name="action" value="hideoptional" />';
-            echo '<input type="submit" name="submit" value="'.get_string('optionalhide', 'checklist').'" />';
+            echo '<input type="submit" class="btn btn-secondary" name="submit" value="'.get_string('optionalhide', 'checklist').'" />';
         } else {
             echo '<input type="hidden" name="action" value="showoptional" />';
-            echo '<input type="submit" name="submit" value="'.get_string('optionalshow', 'checklist').'" />';
+            echo '<input type="submit" class="btn btn-secondary" name="submit" value="'.get_string('optionalshow', 'checklist').'" />';
         }
         echo '</form>';
 
-        echo '&nbsp;&nbsp;<form style="display: inline;" action="'.$thisurl->out_omit_querystring().'" method="get" />';
+        echo '&nbsp;&nbsp;<form style="display: inline;" class="form-inline" action="'.$thisurl->out_omit_querystring().'" method="get" />';
         echo html_writer::input_hidden_params($thisurl);
         if ($reportsettings->showprogressbars) {
             $editchecks = false;
             echo '<input type="hidden" name="action" value="hideprogressbars" />';
-            echo '<input type="submit" name="submit" value="'.get_string('showfulldetails', 'checklist').'" />';
+            echo '<input type="submit" class="btn btn-secondary" name="submit" value="'.get_string('showfulldetails', 'checklist').'" />';
         } else {
             echo '<input type="hidden" name="action" value="showprogressbars" />';
-            echo '<input type="submit" name="submit" value="'.get_string('showprogressbars', 'checklist').'" />';
+            echo '<input type="submit" class="btn btn-secondary" name="submit" value="'.get_string('showprogressbars', 'checklist').'" />';
         }
         echo '</form>';
 
         if ($editchecks) {
-            echo '&nbsp;&nbsp;<form style="display: inline;" action="'.$thisurl->out_omit_querystring().'" method="post" />';
+            echo '&nbsp;&nbsp;<form style="display: inline;" class="form-inline" action="'.$thisurl->out_omit_querystring().'" method="post" />';
             echo html_writer::input_hidden_params($thisurl);
             echo '<input type="hidden" name="action" value="updateallchecks"/>';
-            echo '<input type="submit" name="submit" value="'.get_string('savechecks', 'checklist').'" />';
+            echo '<input type="submit" class="btn btn-secondary" name="submit" value="'.get_string('savechecks', 'checklist').'" />';
         } else if (!$reportsettings->showprogressbars && $this->caneditother()
             && $this->checklist->teacheredit != CHECKLIST_MARKING_STUDENT
         ) {
-            echo '&nbsp;&nbsp;<form style="display: inline;" action="'.$thisurl->out_omit_querystring().'" method="get" />';
+            echo '&nbsp;&nbsp;<form style="display: inline;" class="form-inline" action="'.$thisurl->out_omit_querystring().'" method="get" />';
             echo html_writer::input_hidden_params($thisurl);
             echo '<input type="hidden" name="editchecks" value="on" />';
-            echo '<input type="submit" name="submit" value="'.get_string('editchecks', 'checklist').'" />';
+            echo '<input type="submit" class="btn btn-secondary" name="submit" value="'.get_string('editchecks', 'checklist').'" />';
             echo '</form>';
         }
 
@@ -1200,7 +1200,7 @@ class checklist_class {
             echo '</div>';
 
             if ($editchecks) {
-                echo '<input type="submit" name="submit" value="'.get_string('savechecks', 'checklist').'" />';
+                echo '<input type="submit" class="btn btn-secondary" name="submit" value="'.get_string('savechecks', 'checklist').'" />';
                 echo '</form>';
             }
         }
@@ -1232,7 +1232,7 @@ class checklist_class {
             } else {
                 $size = $table->size[$key];
                 $cellclass = 'cell c'.$key.' level'.$table->level[$key];
-                list($teachermark, $studentmark, $heading, $userid, $checkid) = $item;
+                list(, , $heading, , $checkid) = $item;
                 if ($heading) {
                     // Heading items have no buttons.
                     $output .= '<td style=" text-align: center; width: '.$size.';" class="cell c0">&nbsp;</td>';
@@ -1241,7 +1241,7 @@ class checklist_class {
                     $output .= '<td style=" text-align: center; width: '.$size.';" class="'.$cellclass.'">';
                     $output .= html_writer::tag('button', get_string('togglecolumn', 'checklist'),
                                                 array(
-                                                    'class' => 'make_col_c',
+                                                    'class' => 'make_col_c btn btn-secondary',
                                                     'id' => $checkid,
                                                     'type' => 'button'
                                                 ));
@@ -1332,7 +1332,7 @@ class checklist_class {
                         $output .= '<td style=" text-align: center; width: '.$size.';" class="'.$cellclass.'">';
                         $output .= html_writer::tag('button', get_string('togglerow', 'checklist'),
                                                     array(
-                                                        'class' => 'make_c',
+                                                        'class' => 'make_c btn btn-secondary',
                                                         'id' => $this->find_userid($row),
                                                         'type' => 'button'
                                                     ));
@@ -1401,7 +1401,7 @@ class checklist_class {
             if ($colkey == 0) {
                 continue;
             }
-            list($teachermark, $studentmark, $heading, $userid, $checkid) = $item;
+            list(, , , $userid, ) = $item;
             if ($userid) {
                 return $userid;
             }
@@ -1612,13 +1612,13 @@ class checklist_class {
         global $SESSION, $CFG;
 
         $currsettings = $this->get_report_settings();
-        foreach ($currsettings as $key => $currval) {
+        foreach (array_keys((array)$currsettings) as $key) {
             if (isset($settings->$key)) {
                 $currsettings->$key = $settings->$key; // Only set values if they already exist.
             }
         }
         if ($CFG->debug == DEBUG_DEVELOPER) { // Show dev error if attempting to set non-existent setting.
-            foreach ($settings as $key => $val) {
+            foreach ((array)$settings as $key => $val) {
                 if (!isset($currsettings->$key)) {
                     debugging("Attempting to set invalid setting '$key'", DEBUG_DEVELOPER);
                 }
@@ -1797,10 +1797,7 @@ class checklist_class {
                 $event = null; // Do something here to stop codechecker complaining.
             }
             $item->eventid = 0;
-            if ($add) {
-                // Don't bother updating the record if we are deleting.
-                $item->update();
-            }
+            $item->update();
 
         } else {  // Add/update event.
             $eventdata = new stdClass();
@@ -1829,6 +1826,8 @@ class checklist_class {
     }
 
     public function setallevents() {
+        $this->clear_orphaned_events();
+
         if (!$this->items) {
             return;
         }
@@ -1836,6 +1835,27 @@ class checklist_class {
         $add = $this->checklist->duedatesoncalendar;
         foreach ($this->items as $item) {
             $this->setevent($item, $add);
+        }
+    }
+
+    protected function clear_orphaned_events() {
+        global $DB, $CFG;
+        require_once($CFG->dirroot.'/calendar/lib.php');
+        $sql = "
+            SELECT e.id
+              FROM {event} e
+             WHERE e.modulename = 'checklist' AND e.instance = :checklistid
+               AND NOT EXISTS (
+                   SELECT 1
+                     FROM {checklist_item} i
+                    WHERE i.checklist = e.instance AND i.eventid = e.id
+               )
+        ";
+        $params = ['checklistid' => $this->checklist->id];
+        $eventids = $DB->get_fieldset_sql($sql, $params);
+        foreach ($eventids as $eventid) {
+            $event = calendar_event::load($eventid);
+            $event->delete();
         }
     }
 
@@ -1944,8 +1964,6 @@ class checklist_class {
     }
 
     protected function moveitemto($itemid, $newposition, $forceupdate = false) {
-        global $DB;
-
         if (!isset($this->items[$itemid])) {
             if (isset($this->useritems[$itemid])) {
                 if ($this->canupdateown()) {
@@ -2064,8 +2082,6 @@ class checklist_class {
     }
 
     protected function makeoptional($itemid, $optional, $heading = false) {
-        global $DB;
-
         if (!isset($this->items[$itemid])) {
             return;
         }

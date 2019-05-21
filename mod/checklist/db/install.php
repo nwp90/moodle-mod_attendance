@@ -15,18 +15,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information
+ * Extra install steps
  *
- * @package   gradeexport_checklist
- * @copyright 2010 Davo Smith
+ * @package   mod_checklist
+ * @copyright 2018 Davo Smith, Synergy Learning
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 2019051900;
-$plugin->requires = 2017111300; // Moodle 3.4+.
-$plugin->release = '3.4+ (Build: 2019051900)';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->component = 'gradeexport_checklist';
-$plugin->dependencies = array('mod_checklist' => 2010041800); // Must have checklist activity module installed.
+function xmldb_checklist_install() {
+    global $CFG;
+
+    // This version includes the extended privacy API only found in M3.4.6, M3.5.3 and M3.6+.
+    if ($CFG->version > 2018051700 && $CFG->version < 2018051703) {
+        // Main version.php takes care of Moodle below 3.4.6.
+        die('You must upgrade to Moodle 3.5.3 (or above) before installing this version of mod_checklist');
+    }
+}
