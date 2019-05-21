@@ -1,3 +1,9 @@
+moodle-site-otagounifom (3.6.4.2019051900+0facmed3-1) stretch; urgency=medium
+
+  * Fixes to gradereport_pasaf
+
+ -- Nick Phillips <nwp@debian.org>  Tue, 21 May 2019 16:21:29 +1200
+
 moodle-site-otagounifom (3.6.4.2019051900+0facmed2-1) stretch; urgency=medium
 
   * Fix error in mod_publication update
