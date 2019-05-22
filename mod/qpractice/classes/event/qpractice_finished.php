@@ -28,16 +28,32 @@ namespace qpractice\finish;
 defined('MOODLE_INTERNAL') || die();
 
 namespace mod_qpractice\event;
-
+/**
+ * The qpractice_viewed event.
+ *
+ * @package    mod_qpractice
+ * @copyright  2019 Marcus Green
+ * @since     Moodle 2.9
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class qpractice_finished extends \core\event\base {
-
+    /**
+     * initialization
+     *
+     * @return void
+     */
     protected function init() {
         $this->data['crud'] = 'r';
         $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
         $this->data['objecttable'] = 'qpractice';
     }
 
-    public function get_description() {
+    /**
+     * text to appear in the log
+     *
+     * @return string
+     */
+    public function get_description() : string {
         return "On course: {$this->courseid} qpracticeid: {$this->objectid} was attempted";
     }
 

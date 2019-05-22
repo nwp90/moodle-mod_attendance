@@ -15,11 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file replaces the legacy STATEMENTS section in db/install.xml,
- * lib.php/modulename_install() post installation hook and partially defaults.php
+ * Placeholder for potential future requirements
  *
  * @package    mod_qpractice
- * @copyright  2016 Marcus Green
+ * @copyright  2019 Marcus Green
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -29,7 +28,11 @@
  * @see upgrade_plugins_modules()
  */
 defined('MOODLE_INTERNAL') || die();
-
+/**
+ * A placeholder for potentil future use
+ *
+ * @return void
+ */
 function xmldb_qpractice_install() {
 }
 

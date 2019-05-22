@@ -57,7 +57,7 @@ function qpractice_supports($feature) {
  * will create a new instance and return the id number
  * of the new instance.
  *
- * @param object $qpractice An object from the form in mod_form.php
+ * @param stdClass $qpractice An object from the form in mod_form.php
  * @param mod_qpractice_mod_form $mform
  * @return int The id of the newly inserted qpractice record
  */
@@ -84,7 +84,7 @@ function qpractice_add_instance(stdClass $qpractice, mod_qpractice_mod_form $mfo
  * (defined by the form in mod_form.php) this function
  * will update an existing instance with new data.
  *
- * @param object $qpractice An object from the form in mod_form.php
+ * @param stdClass $qpractice An object from the form in mod_form.php
  * @param mod_qpractice_mod_form $mform
  * @return boolean Success/Fail
  */
@@ -146,9 +146,13 @@ function qpractice_after_add_or_update($qpractice) {
  * $return->time = the time they did it
  * $return->info = a short text description
  *
+ * @param int $course
+ * @param int $user
+ * @param int $mod
+ * @param int $qpractice
  * @return stdClass|null
  */
-function qpractice_user_outline($course, $user, $mod, $qpractice) {
+function qpractice_user_outline(int $course, int $user, int $mod, int $qpractice) {
     $return = new stdClass();
     $return->time = 0;
     $return->info = '';
@@ -175,7 +179,15 @@ function qpractice_user_complete($course, $user, $mod, $qpractice) {
  *
  * @return boolean
  */
-function qpractice_print_recent_activity($course, $viewfullnames, $timestart) {
+/**
+ * Always returns false (?)
+ *
+ * @param int $course
+ * @param bool $viewfullnames
+ * @param int $timestart
+ * @return void
+ */
+function qpractice_print_recent_activity(int $course, bool $viewfullnames, int $timestart) {
     return false;  // True if anything was printed, otherwise false.
 }
 
@@ -199,12 +211,7 @@ function qpractice_get_recent_mod_activity(&$activities, &$index, $timestart, $c
 
 }
 
-/**
- * Prints single activity item prepared by {@see qpractice_get_recent_mod_activity()}
- * @return void
- */
-function qpractice_print_recent_mod_activity($activity, $courseid, $detail, $modnames, $viewfullnames) {
-}
+
 
 /**
  * Function to be run periodically according to the moodle cron
@@ -221,7 +228,6 @@ function qpractice_cron() {
 /**
  * Returns all other caps used in the module
  *
- * @example return array('moodle/site:accessallgroups');
  * @return array
  */
 function qpractice_get_extra_capabilities() {
@@ -333,8 +339,22 @@ function qpractice_pluginfile($course, $cm, $context, $filearea, array $args, $f
     send_file_not_found();
 }
 
-function qpractice_question_pluginfile($course, $context, $component, $filearea, $qubaid, $slot, $args,
-        $forcedownload, array $options = array()) {
+/**
+ * Deal with attached files (do we have any?)
+ *
+ * @param int $course
+ * @param \context $context
+ * @param int $component
+ * @param int $filearea
+ * @param int $qubaid
+ * @param int $slot
+ * @param array $args
+ * @param [type] $forcedownload
+ * @param array $options
+ * @return void
+ */
+function qpractice_question_pluginfile(int $course, \context $context, int $component, int $filearea,
+    int $qubaid, int $slot, array $args, $forcedownload, array $options = array()) {
     $fs = get_file_storage();
     $relativepath = implode('/', $args);
     $fullpath = "/$context->id/$component/$filearea/$relativepath";
@@ -355,7 +375,7 @@ function qpractice_question_pluginfile($course, $context, $component, $filearea,
  * @param stdClass $module
  * @param cm_info $cm
  */
-function qpractice_extend_navigation(navigation_node $navref, stdclass $course, stdclass $module, cm_info $cm) {
+function qpractice_extend_navigation(navigation_node $navref, stdClass $course, stdClass $module, cm_info $cm) {
 }
 
 /**

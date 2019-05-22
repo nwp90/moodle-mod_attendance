@@ -28,9 +28,16 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/mod/qpractice/backup/moodle2/backup_qpractice_stepslib.php');
 
+
 /**
+ * Backup code
+ *
  * choice backup task that provides all the settings and steps to perform one
  * complete backup of the activity
+ *
+ * @package    mod_qpractice
+ * @copyright  2019 Marcus Green
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class backup_qpractice_activity_task extends backup_activity_task {
 

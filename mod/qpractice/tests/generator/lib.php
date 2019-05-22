@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Question practice module test data generator class
+ *
+ * @package mod_qpractice
+ * @copyright 2019 Marcus Green
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -25,7 +32,14 @@ defined('MOODLE_INTERNAL') || die();
  */
 class mod_qpractice_generator extends testing_module_generator {
 
-    public function create_instance($record = null, array $options = null) {
+    /**
+     * create an instance
+     *
+     * @param array $record
+     * @param array $options
+     * @return stdClass
+     */
+    public function create_instance(array $record = null, array $options = null) : stdClass {
         global $CFG;
         require_once($CFG->dirroot.'/mod/qpractice/locallib.php');
         $record = (object)(array)$record;

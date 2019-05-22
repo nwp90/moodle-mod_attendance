@@ -28,20 +28,41 @@ namespace qpractice\attempt;
 defined('MOODLE_INTERNAL') || die();
 
 namespace mod_qpractice\event;
-
+/**
+ * The qpractice_viewed event.
+ *
+ * @package    mod_qpractice
+ * @copyright  2019 Marcus Green
+ * @since      Moodle 2.9
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class qpractice_summary_viewed extends \core\event\base {
-
+    /**
+     * initialization
+     *
+     * @return void
+     */
     protected function init() {
         $this->data['crud'] = 'r';
         $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
         $this->data['objecttable'] = 'qpractice';
     }
 
-    public function get_url() {
+    /**
+     * Clickable link in log taking you to the activity
+     *
+     * @return \moodle_url
+     */
+    public function get_url() :\moodle_url {
         return new \moodle_url('/mod/qpractice/summary.php', array('id' => $this->objectid));
     }
 
-    public function get_description() {
+    /**
+     * text description for the log
+     *
+     * @return string
+     */
+    public function get_description(): string {
         return "The user with id {$this->userid} viewed the summary for qpractice id :  {$this->objectid}.";
     }
 

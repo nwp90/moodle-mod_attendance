@@ -15,8 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ *  Log attempts
+ *
  * @package    mod_qpractice
- * @copyright  2015 Marcus Green
+ * @copyright  2019 Marcus Green
  * @since      Moodle 2.9
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  **/
@@ -27,19 +29,37 @@ defined('MOODLE_INTERNAL') || die();
 
 namespace mod_qpractice\event;
 
+/**
+ * Log attempts
+ *
+ * @package    mod_qpractice
+ * @copyright  2019 Marcus Green
+ * @since      Moodle 3.6
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ **/
 class qpractice_attempted extends \core\event\base {
 
+    /** initialisation */
     protected function init() {
         $this->data['crud'] = 'r';
         $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
         $this->data['objecttable'] = 'qpractice';
     }
-
-    public function get_description() {
+    /**
+     * Description for log
+     *
+     * @return string
+     */
+    public function get_description(): string {
         return "On course: {$this->courseid} qpracticeid: {$this->objectid} was attempted";
     }
 
-    public function get_url() {
+    /**
+     * Clickable link in log
+     *
+     * @return string
+     */
+    public function get_url(): \moodle_url {
         return new \moodle_url('/mod/qpractice/view.php', array('id' => $this->objectid));
     }
 

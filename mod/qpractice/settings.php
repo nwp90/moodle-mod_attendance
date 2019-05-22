@@ -15,18 +15,28 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @see uninstall_plugin()
+ * Global configuration for new instances of qpractice
  *
  * @package    mod_qpractice
- * @copyright  2013 Jayesh Anandani
+ * @copyright  2016 Marcus Green
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die;
+require_once($CFG->libdir . '/questionlib.php');
 
-/**
- * Custom uninstallation procedure
- */
-defined('MOODLE_INTERNAL') || die();
+if ($ADMIN->fulltree) {
+    $settings->add(new admin_setting_heading(
+            'qpractice/questionbehaviours', 'Question Behaviours', '')
+    );
 
-function xmldb_qpractice_uninstall() {
-    return true;
+    $behaviours = question_engine::get_behaviour_options('');
+    foreach ($behaviours as $key => $langstring) {
+        if (!in_array('correctness', question_engine::get_behaviour_unused_display_options($key))) {
+            $settings->add(
+                new admin_setting_configcheckbox('mod_qpractice/' . $key, $key, $langstring, 1)
+            );
+        }
+    }
 }
+
+

@@ -23,25 +23,45 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace qpractice\viewed;
 
 defined('MOODLE_INTERNAL') || die();
 
 namespace mod_qpractice\event;
 
+/**
+ * The qpractice_viewed event.
+ *
+ * @since      Moodle 2.9
+ * @package    mod_qpractice
+ * @copyright  2019 Marcus Green
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class qpractice_viewed extends \core\event\base {
-
+    /**
+     * initialize
+     *
+     * @return void
+     */
     protected function init() {
         $this->data['crud'] = 'r';
         $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
         $this->data['objecttable'] = 'qpractice';
     }
-
-    public function get_description() {
+    /**
+     * text to appear in the log
+     *
+     * @return void
+     */
+    public function get_description(): string {
         return "The user with id {$this->userid} viewed qpractice id :  {$this->objectid}.";
     }
 
-    public function get_url() {
+    /**
+     * Clickable link, goes to the module
+     *
+     * @return \moodle_url
+     */
+    public function get_url(): \moodle_url {
         return new \moodle_url('/mod/qpractice/view.php', array('id' => $this->courseid));
     }
 

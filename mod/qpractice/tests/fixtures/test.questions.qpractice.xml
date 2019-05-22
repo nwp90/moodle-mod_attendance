@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+<!-- question: 0  -->
+  <question type="category">
+    <category>
+        <text>$module$/Default for Question Practice Demonstration/QuestionPracticeEnglishLanguageDemo/English language core Moodle question types</text>
+
+    </category>
+  </question>
+
+<!-- question: 1  -->
+  <question type="cloze">
+    <name>
+      <text>ChildrenChilds</text>
+    </name>
+    <questiontext format="html">
+      <text><![CDATA[<p>At the party all the {1:MULTICHOICE:~%100%children~childs} wore a badge. I made sandwiches and used three&nbsp;{1:MULTICHOICE:~%100%loafs~loaves} of bread. Two of the&nbsp;{1:MULTICHOICE:~%100%women~womens} who worked at the bakers delivered cakes.</p><p><br></p>]]></text>
+    </questiontext>
+    <generalfeedback format="html">
+      <text></text>
+    </generalfeedback>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <tags>
+      <tag><text>Plurals</text>
+</tag>
+    </tags>
+  </question>
+
+<!-- question: 5  -->
+  <question type="cloze">
+    <name>
+      <text>during</text>
+    </name>
+    <questiontext format="html">
+      <text><![CDATA[<p>I fell asleep&nbsp;{1:MULTICHOICE:~%100%during~while~for} the concert.</p>]]></text>
+    </questiontext>
+    <generalfeedback format="html">
+      <text></text>
+    </generalfeedback>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <tags>
+      <tag><text>ForWhileDuring</text>
+</tag>
+    </tags>
+  </question>
+
+<!-- question: 7  -->
+  <question type="cloze">
+    <name>
+      <text>Find/Found</text>
+    </name>
+    <questiontext format="html">
+      <text><![CDATA[<p>I searched &nbsp;{1:MULTICHOICE:~%100%for~during~while} and hour but I never&nbsp;{1:MULTICHOICE:~%100%found~find#No that is not the past tense~finded#Find is irregular and cannot be put in the past tense by adding ed at the end}</p>]]></text>
+    </questiontext>
+    <generalfeedback format="html">
+      <text></text>
+    </generalfeedback>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <tags>
+      <tag><text>Past Tense</text>
+</tag>
+    </tags>
+  </question>
+
+</quiz>
