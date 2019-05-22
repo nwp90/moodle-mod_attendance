@@ -22,10 +22,22 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
-
+/**
+ * Mainly things about reporting
+ *
+ * @package    mod_qpractice
+ * @copyright  2019 Marcus Green
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class mod_qpractice_renderer extends plugin_renderer_base {
 
-    public function summary_table($sessionid) {
+    /**
+     * shown at the end of a session
+     *
+     * @param int $sessionid
+     * @return void
+     */
+    public function summary_table(int $sessionid) {
         global $DB;
 
         $session = $DB->get_record('qpractice_session', array('id' => $sessionid));
@@ -40,8 +52,14 @@ class mod_qpractice_renderer extends plugin_renderer_base {
         echo html_writer::table($table);
     }
 
-    public function summary_form($sessionid) {
-
+    /**
+     * Show buttons after summary table for resume practice or
+     * submit and finish
+     *
+     * @param int $sessionid
+     * @return void
+     */
+    public function summary_form(int $sessionid) {
         $actionurl = new moodle_url('/mod/qpractice/summary.php', array('id' => $sessionid));
         $output = '';
         $output .= html_writer::start_tag('form', array('method' => 'post', 'action' => $actionurl,
@@ -59,7 +77,15 @@ class mod_qpractice_renderer extends plugin_renderer_base {
         echo $output;
     }
 
-    public function report_table($cm, $context) {
+
+    /**
+     * Used for 'show past sessions'
+     *
+     * @param stdClass $cm
+     * @param \context $context
+     * @return void
+     */
+    public function report_table(stdClass $cm, \context $context) {
         global $DB, $USER;
 
         $canviewallreports = has_capability('mod/qpractice:viewallreports', $context);

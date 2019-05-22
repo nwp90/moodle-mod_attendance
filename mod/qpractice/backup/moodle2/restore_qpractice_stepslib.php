@@ -28,9 +28,17 @@
 defined('MOODLE_INTERNAL') || die();
 /**
  * Structure step to restore one qpractice activity
+ *
+ * @package    mod_qpractice
+ * @copyright  2019 Marcus Green
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class restore_qpractice_activity_structure_step extends restore_questions_activity_structure_step {
-
+    /**
+     * Convert xml structure to structure for database
+     *
+     * @return void
+     */
     protected function define_structure() {
 
         $paths = array();
@@ -49,7 +57,13 @@ class restore_qpractice_activity_structure_step extends restore_questions_activi
         return $this->prepare_activity_structure($paths);
     }
 
-    protected function process_qpractice($data) {
+    /**
+     * Where the work happens
+     *
+     * @param array $data
+     * @return void
+     */
+    protected function process_qpractice(array $data) {
         global $CFG, $DB;
         $data = (object)$data;
         $oldid = $data->id;
@@ -62,8 +76,13 @@ class restore_qpractice_activity_structure_step extends restore_questions_activi
         // Immediately after inserting "activity" record, call this.
         $this->apply_activity_instance($newitemid);
     }
-
-    protected function process_qpractice_session($data) {
+    /**
+     * Deal with student sessions
+     *
+     * @param array $data
+     * @return void
+     */
+    protected function process_qpractice_session(array $data) {
         global $DB;
 
         $data = (object)$data;
@@ -78,10 +97,20 @@ class restore_qpractice_activity_structure_step extends restore_questions_activi
         $DB->insert_record('qpractice_session', $data);
     }
 
+    /**
+     * Abstract in parent so this is an empty implementation
+     * @param int $newusageid
+     * @return void
+     */
     protected function inform_new_usage_id($newusageid) {
-
     }
-
+    
+    /**
+     * Deal with files check this works
+     * @todo check this works
+     *
+     * @return void
+     */
     protected function after_execute() {
         parent::after_execute();
         // Add qpractice related files, no need to match by itemname (just internally handled context).

@@ -1,4 +1,7 @@
-###Moodle Question Practice 1.2 Changes Nov 2016
+### Moodle Question Practice 1.3 Changes Mar 2019
+--Added a top category of questions for instance setting. Thanks to Steve Gallagher and Scott Hallman for feedback on this.
+
+### Moodle Question Practice 1.2 Changes Nov 2016
  - Fixed parameters in question_extend_settings_navigation, essential to make menu work in MDL3.2
  - Removed display of empty question categories in the questions dropdown (startattempt.php)
  - Deleted functions to do with scales that were never implemented
@@ -6,7 +9,7 @@
  - Created 1 phpUnit test and 1 behat test, will create more of both in the future
 
 
-###Moodle Question Practice 1.1 Changes Mar 2016
+### Moodle Question Practice 1.1 Changes Mar 2016
 - Creation of new icon more inline with other Moodle activity icons
 - Creation of event classes for logging instead of add_to_log
 - Added FEATURE_USES_QUESTIONS as warning was thrown during backup

@@ -20,18 +20,14 @@
  * It will end up redirecting to attempt.php.
  *
  * @package    mod_qpractice
- * @copyright  2016 Marcus Green
+ * @copyright  2013 Jayesh Anandani
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
-defined('MOODLE_INTERNAL') || die();
-
 require_once(dirname(__FILE__) . '/lib.php');
 require_once(dirname(__FILE__) . '/locallib.php');
 require_once(dirname(__FILE__) . '/startattempt_form.php');
 require_once($CFG->libdir . '/questionlib.php');
-
 
 $id = required_param('id', PARAM_INT); // Course_module ID.
 
@@ -50,12 +46,13 @@ if ($id) {
 }
 
 require_login($course, true, $cm);
+global $PAGE;
+
 $context = context_module::instance($cm->id);
+$coursecontext = $context->get_course_context();
+$categories = qpractice_get_question_categories($coursecontext, $qpractice->topcategory);
 
 $behaviours = get_options_behaviour($cm);
-
-$categories = $DB->get_records_menu('question_categories', array('contextid' => $context->id, 'parent' => 0), 'name', 'id, name');
-$categories = remove_empty($context, $categories);
 
 $data = array();
 $data['categories'] = $categories;
@@ -90,78 +87,3 @@ $mform->display();
 
 // Finish the page.
 echo $OUTPUT->footer();
-
-/**
- *
- * @param type $context
- * @param type $categories all level 0 categories
- * @return type
- *
- * Get only the question categories that have questions in them or
- * their sub categories. Categories have a parent child relationship
- * so you cannot do a simple query
- *
- */
-function remove_empty($context, $categories) {
-    foreach ($categories as $key => $category) {
-        $subcategories = get_subcategories($context, $key);
-        /*in case there are questions in the root category */
-        $subcategories[] = $key;
-        if (!(contains_questions($subcategories))) {
-            unset($categories[$key]);
-        }
-    }
-    return $categories;
-}
-
-/**
- *
- * @global type $DB
- * @param type $context
- * @param type $categoryid
- * @return type array
- * get a single question category by context and id
- */
-function get_one_level($context, $categoryid) {
-    global $DB;
-    $categories = $DB->get_records_sql("select id  from {question_categories} where contextid=? and parent=?",
-            array($context->id, $categoryid));
-    return(array_keys($categories));
-}
-/**
- *
- * @param type $context
- * @param type $categoryid
- * @param type $categories
- * @return type array
- * Get all the children for a given category. This function calls itself
- * recursively, not the pass by reference of &categories
- */
-function get_subcategories($context, $categoryid, &$categories = array()) {
-    $tree = array();
-    $tree = get_one_level($context, $categoryid);
-    if (count($tree) > 0 && is_array($tree)) {
-        $categories = array_merge($categories, $tree);
-    }
-    foreach ($tree as $key => $val) {
-        get_subcategories($context, $val, $categories);
-    }
-    return $categories;
-}
-/**
- *
- * @global type $DB
- * @param type $categories
- * @return boolean
- * Does this question category contain any questions?
- */
-function contains_questions($categories) {
-    global $DB;
-    foreach ($categories as $category) {
-        $questions = $DB->get_records_sql("select id from {question} where category=?", array($category));
-        if (count($questions) > 0) {
-            return true;
-        }
-    }
-    return false;
-}

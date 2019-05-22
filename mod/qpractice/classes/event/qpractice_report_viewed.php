@@ -23,25 +23,45 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace qpractice\attempt;
+namespace mod_qpractice\event;
 
 defined('MOODLE_INTERNAL') || die();
 
-namespace mod_qpractice\event;
-
+/**
+ * Log viewings of qpractice
+ *
+ * @package    mod_qpractice
+ * @copyright  2015 Marcus Green
+ * @since     Moodle 2.9
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class qpractice_report_viewed extends \core\event\base {
-
+    /**
+     * initialize
+     *
+     * @return void
+     */
     protected function init() {
         $this->data['crud'] = 'r';
         $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
         $this->data['objecttable'] = 'qpractice';
     }
-
+    /**
+     * Clickable link for the log
+     *
+     * @return $moodle_url
+     */
     public function get_url() {
         return new \moodle_url('/mod/qpractice/report.php', array('id' => $this->objectid));
     }
 
-    public function get_description() {
+
+    /**
+     * Text written to log
+     *
+     * @return string
+     */
+    public function get_description(): string {
         return "The user with id {$this->userid} viewed the report for qpractice id :  {$this->objectid}.";
     }
 

@@ -33,8 +33,13 @@ require_once($CFG->dirroot . '/mod/qpractice/backup/moodle2/restore_qpractice_st
 
 
 /**
+ * Restore .mbz backups
+ *
  * qpractice restore task that provides all the settings and steps to perform one
  * complete restore of the activity
+ * @package    mod_qpractice
+ * @copyright  2019 Marcus Green
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class restore_qpractice_activity_task extends restore_activity_task {
 

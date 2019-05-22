@@ -28,17 +28,28 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once("$CFG->libdir/formslib.php");
 
+/**
+ * Runs when the student makes an attempt
+ *
+ * @package    mod_qpractice
+ * @copyright  2019 Marcus Green
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class mod_qpractice_startattempt_form extends moodleform {
-
+    /**
+     * set up the form elements
+     *
+     * @return void
+     */
     public function definition() {
 
         $mform = $this->_form;
         // Adding the "general" fieldset, where all the common settings are showed.
         $mform->addElement('header', 'general', get_string('general', 'form'));
-        $select = $mform->addElement('select', 'categories', get_string('category'), $this->_customdata['categories']);
+        $mform->addElement('select', 'categories', get_string('category'), $this->_customdata['categories']);
 
         $mform->addElement('header', 'qpracticebehaviour', get_string('qpracticebehaviour', 'qpractice'));
-        $select = $mform->addElement('select', 'behaviour', get_string('behaviour', 'qpractice'), $this->_customdata['behaviours']);
+        $mform->addElement('select', 'behaviour', get_string('behaviour', 'qpractice'), $this->_customdata['behaviours']);
 
         $this->add_action_buttons(true, get_string('startpractice', 'qpractice'));
 
