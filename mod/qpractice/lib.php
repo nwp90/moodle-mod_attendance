@@ -187,7 +187,7 @@ function qpractice_user_complete($course, $user, $mod, $qpractice) {
  * @param int $timestart
  * @return void
  */
-function qpractice_print_recent_activity(int $course, bool $viewfullnames, int $timestart) {
+function qpractice_print_recent_activity($course, bool $viewfullnames, int $timestart) {
     return false;  // True if anything was printed, otherwise false.
 }
 
