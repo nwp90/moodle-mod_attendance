@@ -26,8 +26,8 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin = new StdClass();
 $plugin->component = 'atto_ereserve';
-$plugin->version = 2018040601;
+$plugin->version = 2019061701;
 $plugin->requires = 2017051504; //Moodle 3.3.4
-$plugin->release = '1.0.0 (Build 2018040601)';
+$plugin->release = '1.0.0 (Build 2019061701)';
 $plugin->maturity = MATURITY_STABLE;
 

@@ -24,12 +24,21 @@
 require_once('../../../config.php');
 defined('MOODLE_INTERNAL') || die('Invalid access');
 
+global $DB, $CFG, $COURSE;
 
 require_once $CFG->dirroot . '/local/ereserve_plus/lib.php';
 require_once 'ereserve/resource_link.class.php';
 
 $id = required_param('id', PARAM_INT);
-$course_id = required_param('course_id', PARAM_INT);
-$course = $DB->get_record('course', array('id' => (int)$course_id), '*', MUST_EXIST);
+$course_id = optional_param('course_id', '', PARAM_INT);
+if ($course_id != '') {
+    $course = $DB->get_record('course', array('id' => (int)$course_id), '*', IGNORE_MISSING);
+    if ($course === null) {
+        $course = $COURSE;
+    }
+} else {
+    $course = $COURSE;
+}
 
 echo (new eReserve\ResourceLink($course))->launchForShow($id);
+

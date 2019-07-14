@@ -81,7 +81,7 @@ $string['setting_scheme_desc'] =
     '<br/>';
 
 $string['setting_debug_label'] = 'Enable debugging';
-$string['setting_devug_desc'] =
+$string['setting_debug_desc'] =
     '<span style="font-weight: bold">DEVELOPMENT ONLY</span></br>' .
     'This setting enables debugging messages for developers.  This is off by default<br/>' .
     '<br/>';
