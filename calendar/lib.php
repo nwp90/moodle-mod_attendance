@@ -3234,10 +3234,12 @@ function core_calendar_user_preferences() {
  *                              or events in progress/already started selected as well
  * @param boolean $ignorehidden whether to select only visible events or all events
  * @param array $categories array of category ids and/or objects.
+ * @param int $limitnum Number of events to fetch or zero to fetch all.
+ *
  * @return array $events of selected events or an empty array if there aren't any (or there was an error)
  */
 function calendar_get_legacy_events($tstart, $tend, $users, $groups, $courses,
-        $withduration = true, $ignorehidden = true, $categories = []) {
+        $withduration = true, $ignorehidden = true, $categories = [], $limitnum = 0) {
     // Normalise the users, groups and courses parameters so that they are compliant with \core_calendar\local\api::get_events().
     // Existing functions that were using the old calendar_get_events() were passing a mixture of array, int, boolean for these
     // parameters, but with the new API method, only null and arrays are accepted.
@@ -3274,7 +3276,7 @@ function calendar_get_legacy_events($tstart, $tend, $users, $groups, $courses,
         null,
         null,
         null,
-        0,
+        $limitnum,
         null,
         $userparam,
         $groupparam,
@@ -3493,7 +3495,7 @@ function calendar_output_fragment_event_form($args) {
         $eventtypes = calendar_get_allowed_event_types($courseid);
 
         // If the user is on course context and is allowed to add course events set the event type default to course.
-        if ($courseid != SITEID && !empty($eventtypes['course'])) {
+        if (!empty($courseid) && !empty($eventtypes['course'])) {
             $data['eventtype'] = 'course';
             $data['courseid'] = $courseid;
             $data['groupcourseid'] = $courseid;
@@ -3679,7 +3681,7 @@ function calendar_get_allowed_event_types(int $courseid = null) {
 
         $types['user'] = has_capability('moodle/calendar:manageownentries', $context);
 
-        if (has_capability('moodle/calendar:manageentries', $context) || !empty($CFG->calendar_adminseesall)) {
+        if (has_capability('moodle/calendar:manageentries', $context)) {
             $types['course'] = true;
 
             $types['group'] = (!empty($groups) && has_capability('moodle/site:accessallgroups', $context))

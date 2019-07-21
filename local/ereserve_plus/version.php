@@ -25,7 +25,7 @@ defined('MOODLE_INTERNAL') || die('Invalid access');
 
 $plugin = new stdClass();
 $plugin->component = 'local_ereserve_plus';
-$plugin->version = 2018040601;
+$plugin->version = 2019021502;
 $plugin->requires = 2017051504; //Moodle 3.3.4
-$plugin->release = '1.0.0 (Build 2018040601)';
+$plugin->release = '1.0.0 (Build 2019021502)';
 $plugin->maturity = MATURITY_STABLE;

@@ -203,6 +203,7 @@ class local_presentation_external extends external_api {
         return new external_function_parameters (
             array(
                 'course' => new external_value(PARAM_ALPHANUMEXT, 'course shortname'),
+                'stdtags' => new external_value(PARAM_BOOL, 'restrict to standard tags?', VALUE_DEFAULT, true)
             )
         );
     }
@@ -224,11 +225,15 @@ class local_presentation_external extends external_api {
      * @return array the resource details
      * @since Moodle 2.5
      */
-    public static function get_tagged_resources_by_course($course = '') {
+    public static function get_tagged_resources_by_course($course = '', $stdtags = true) {
         global $CFG, $DB, $USER;
         $returnfiles = array();
-        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course));
+        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course, 'stdtags' => $stdtags));
         $course = $params['course'];
+        $tagsql = '';
+        if ($params['stdtags']) {
+            $tagsql = 'and t.isstandard = 1';
+        }
         if ($course != '') {
             $sql = "select
                         u.id as id, u.name as name,
@@ -281,6 +286,7 @@ class local_presentation_external extends external_api {
                             on f.contextid = cx.id
                     where
                         c.shortname = ?
+                        $tagsql
                         and f.filename not like '.'
                     ";
             $taginstances = $DB->get_records_sql($sql, array($course));
@@ -348,11 +354,15 @@ class local_presentation_external extends external_api {
      * @return array the lesson details
      * @since Moodle 3.0
      */
-    public static function get_tagged_lessons_by_course($course = '') {
+    public static function get_tagged_lessons_by_course($course = '', $stdtags=true) {
         global $CFG, $DB, $USER;
         $returnlessons = array();
-        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course));
+        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course, 'stdtags' => $stdtags));
         $course = $params['course'];
+        $tagsql = '';
+        if ($params['stdtags']) {
+            $tagsql = 'and t.isstandard = 1';
+        }
         if ($course != '') {
             $sql = "select
                         u.id as id, u.name as name,
@@ -400,6 +410,7 @@ class local_presentation_external extends external_api {
                             on t.id = u.tagid
                     where
                         c.shortname = ?
+                        $tagsql
                     ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $lessons = array();
@@ -460,11 +471,15 @@ class local_presentation_external extends external_api {
      * @return array the quiz details
      * @since Moodle 3.0
      */
-    public static function get_tagged_quizzes_by_course($course = '') {
+    public static function get_tagged_quizzes_by_course($course = '', $stdtags=true) {
         global $CFG, $DB, $USER;
         $returnquizzes = array();
-        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course));
+        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course, 'stdtags' => $stdtags));
         $course = $params['course'];
+        $tagsql = '';
+        if ($params['stdtags']) {
+            $tagsql = 'and t.isstandard = 1';
+        }
         if ($course != '') {
             $sql = "select
                         u.id as id, u.name as name,
@@ -513,6 +528,7 @@ class local_presentation_external extends external_api {
                             on t.id = u.tagid
                     where
                         c.shortname = ?
+                        $tagsql
                     ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $quizzes = array();
@@ -573,11 +589,15 @@ class local_presentation_external extends external_api {
      * @return array the url details
      * @since Moodle 3.0
      */
-    public static function get_tagged_urls_by_course($course = '') {
+    public static function get_tagged_urls_by_course($course = '', $stdtags=true) {
         global $CFG, $DB, $USER;
         $returnurls = array();
-        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course));
+        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course, 'stdtags' => $stdtags));
         $course = $params['course'];
+        $tagsql = '';
+        if ($params['stdtags']) {
+            $tagsql = 'and t.isstandard = 1';
+        }
         if ($course != '') {
             $sql = "select
                         u.id as id, u.name as name, u.externalurl as url,
@@ -627,6 +647,7 @@ class local_presentation_external extends external_api {
                             on t.id = u.tagid
                     where
                         c.shortname = ?
+                        $tagsql
                     ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $urls = array();
@@ -688,11 +709,15 @@ class local_presentation_external extends external_api {
      * @return array the workshop details
      * @since Moodle 3.0
      */
-    public static function get_tagged_workshops_by_course($course = '') {
+    public static function get_tagged_workshops_by_course($course = '', $stdtags=true) {
         global $CFG, $DB, $USER;
         $returnworkshops = array();
-        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course));
+        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course, 'stdtags' => $stdtags));
         $course = $params['course'];
+        $tagsql = '';
+        if ($params['stdtags']) {
+            $tagsql = 'and t.isstandard = 1';
+        }
         if ($course != '') {
             $sql = "select
                         u.id as id, u.name as name,
@@ -740,6 +765,7 @@ class local_presentation_external extends external_api {
                             on t.id = u.tagid
                     where
                         c.shortname = ?
+                        $tagsql
                     ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $workshops = array();
@@ -800,11 +826,15 @@ class local_presentation_external extends external_api {
      * @return array the assignment details
      * @since Moodle 3.0
      */
-    public static function get_tagged_assignments_by_course($course = '') {
+    public static function get_tagged_assignments_by_course($course = '', $stdtags=true) {
         global $CFG, $DB, $USER;
         $returnassignments = array();
-        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course));
+        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course, 'stdtags' => $stdtags));
         $course = $params['course'];
+        $tagsql = '';
+        if ($params['stdtags']) {
+            $tagsql = 'and t.isstandard = 1';
+        }
         if ($course != '') {
             $sql = "select
                         u.id as id, u.name as name,
@@ -852,6 +882,7 @@ class local_presentation_external extends external_api {
                             on t.id = u.tagid
                     where
                         c.shortname = ?
+                        $tagsql
                     ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $assignments = array();
@@ -912,11 +943,15 @@ class local_presentation_external extends external_api {
      * @return array the page details
      * @since Moodle 3.0
      */
-    public static function get_tagged_pages_by_course($course = '') {
+    public static function get_tagged_pages_by_course($course = '', $stdtags=true) {
         global $CFG, $DB, $USER;
         $returnpages = array();
-        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course));
+        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course, 'stdtags' => $stdtags));
         $course = $params['course'];
+        $tagsql = '';
+        if ($params['stdtags']) {
+            $tagsql = 'and t.isstandard = 1';
+        }
         if ($course != '') {
             $sql = "select
                         u.id as id, u.name as name,
@@ -964,6 +999,7 @@ class local_presentation_external extends external_api {
                             on t.id = u.tagid
                     where
                         c.shortname = ?
+                        $tagsql
                     ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $pages = array();
@@ -1024,11 +1060,15 @@ class local_presentation_external extends external_api {
      * @return array the book details
      * @since Moodle 3.0
      */
-    public static function get_tagged_books_by_course($course = '') {
+    public static function get_tagged_books_by_course($course = '', $stdtags=true) {
         global $CFG, $DB, $USER;
         $returnbooks = array();
-        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course));
+        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course, 'stdtags' => $stdtags));
         $course = $params['course'];
+        $tagsql = '';
+        if ($params['stdtags']) {
+            $tagsql = 'and t.isstandard = 1';
+        }
         if ($course != '') {
             $sql = "select
                         u.id as id, u.name as name,
@@ -1076,6 +1116,7 @@ class local_presentation_external extends external_api {
                             on t.id = u.tagid
                     where
                         c.shortname = ?
+                        $tagsql
                     ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $books = array();
@@ -1136,11 +1177,15 @@ class local_presentation_external extends external_api {
      * @return array the scorm details
      * @since Moodle 3.0
      */
-    public static function get_tagged_scorms_by_course($course = '') {
+    public static function get_tagged_scorms_by_course($course = '', $stdtags=true) {
         global $CFG, $DB, $USER;
         $returnscorms = array();
-        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course));
+        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course, 'stdtags' => $stdtags));
         $course = $params['course'];
+        $tagsql = '';
+        if ($params['stdtags']) {
+            $tagsql = 'and t.isstandard = 1';
+        }
         if ($course != '') {
             $sql = "select
                         u.id as id, u.name as name,
@@ -1192,6 +1237,7 @@ class local_presentation_external extends external_api {
                             on f.contextid = cx.id
                     where
                         c.shortname = ?
+                        $tagsql
                         and f.filearea = 'package'
                         and f.filename not like '.'
                     ";
@@ -1259,11 +1305,15 @@ class local_presentation_external extends external_api {
      * @return array the glossary details
      * @since Moodle 3.0
      */
-    public static function get_tagged_glossaries_by_course($course = '') {
+    public static function get_tagged_glossaries_by_course($course = '', $stdtags=true) {
         global $CFG, $DB, $USER;
         $returnglossaries = array();
-        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course));
+        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course, 'stdtags' => $stdtags));
         $course = $params['course'];
+        $tagsql = '';
+        if ($params['stdtags']) {
+            $tagsql = 'and t.isstandard = 1';
+        }
         if ($course != '') {
             $sql = "select
                         u.id as id, u.name as name,
@@ -1311,6 +1361,7 @@ class local_presentation_external extends external_api {
                             on t.id = u.tagid
                     where
                         c.shortname = ?
+                        $tagsql
                     ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $glossaries = array();
@@ -1371,11 +1422,15 @@ class local_presentation_external extends external_api {
      * @return array the lti details
      * @since Moodle 3.0
      */
-    public static function get_tagged_ltis_by_course($course = '') {
+    public static function get_tagged_ltis_by_course($course = '', $stdtags=true) {
         global $CFG, $DB, $USER;
         $returnltis = array();
-        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course));
+        $params = self::validate_parameters(self::get_tagged_objects_by_course_parameters(), array('course' => $course, 'stdtags' => $stdtags));
         $course = $params['course'];
+        $tagsql = '';
+        if ($params['stdtags']) {
+            $tagsql = 'and t.isstandard = 1';
+        }
         if ($course != '') {
             $sql = "select
                         u.id as id, u.name as name, u.typeid,
@@ -1428,6 +1483,7 @@ class local_presentation_external extends external_api {
                             on t.id = u.tagid
                     where
                         c.shortname = ?
+                        $tagsql
                     ";
             $taginstances = $DB->get_records_sql($sql, array($course));
             $ltis = array();
