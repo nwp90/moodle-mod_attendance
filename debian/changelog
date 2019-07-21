@@ -1,3 +1,12 @@
+moodle-site-otagounifom (3.6.5.2019071800+0facmed1-1) stretch; urgency=medium
+
+  * Security & more upstream updates
+  * Fix to local_presentation to allow getting only standard-tagged resources
+  * Update ereserve plugins
+  * Fix to mod_qpractice
+
+ -- Nick Phillips <nwp@debian.org>  Mon, 22 Jul 2019 10:17:19 +1200
+
 moodle-site-otagounifom (3.6.4.2019051900+0facmed5-1) stretch; urgency=medium
 
   * Actually do the H5P update that was supposed to be in previous version.
